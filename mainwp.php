@@ -119,6 +119,15 @@ require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'core-functi
 require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'compatible.php'; // NOSONAR -- WP compatible.
 require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'class-mainwp-includes.php'; // NOSONAR -- WP compatible.
 
+// Load Abilities API integration (feature-gated).
+require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities-util.php'; // NOSONAR -- WP compatible.
+require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities-sites.php'; // NOSONAR -- WP compatible.
+require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities-updates.php'; // NOSONAR -- WP compatible.
+require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities.php'; // NOSONAR -- WP compatible.
+
+// Initialize Abilities API integration (does nothing if Abilities API not available).
+\MainWP\Dashboard\MainWP_Abilities::init();
+
 // Detect if secupress_scanner is running.
 $mainwp_is_secupress_scanning = false;
 if ( ! empty( $_GET ) && isset( $_GET['test'] ) && isset( $_GET['action'] ) && 'secupress_scanner' === $_GET['action'] ) { // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized.Recommended
