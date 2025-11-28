@@ -405,12 +405,13 @@ class MainWP_Abilities_Util {
     /**
      * Map a site object to the standard output format.
      *
-     * @param object $site         Site object from database.
-     * @param bool   $full_details Whether to include full site details (default: false).
+     * @param object $site          Site object from database.
+     * @param bool   $full_details  Whether to include full site details (default: false).
+     * @param bool   $include_stats Whether to include site statistics (default: false).
      * @return array Formatted site data.
      */
-    public static function format_site_for_output( $site, bool $full_details = false ): array {
-        $output = [
+    public static function format_site_for_output( $site, bool $full_details = false, bool $include_stats = false ): array {
+        $output = array(
             'id'        => (int) $site->id,
             'url'       => (string) $site->url,
             'name'      => (string) $site->name,
@@ -418,22 +419,68 @@ class MainWP_Abilities_Util {
             'client_id' => isset( $site->client_id ) && $site->client_id > 0
                 ? (int) $site->client_id
                 : null,
-        ];
+        );
 
         if ( $full_details ) {
             // Add extended site details for single-site retrieval.
             $output['admin_username'] = $site->adminname ?? '';
 
-            // Get wp_version from site_info JSON (same as REST controller).
-            $site_info  = MainWP_DB::instance()->get_website_option( $site->id, 'site_info' );
-            $site_info  = ! empty( $site_info ) ? json_decode( $site_info, true ) : array();
-            $output['wp_version']     = isset( $site_info['wpversion'] ) ? $site_info['wpversion'] : '';
-            $output['child_version']  = $site->version ?? '';
-            $output['last_sync']      = $site->dtsSync ?? null;
-            $output['notes']          = $site->note ?? '';
+            // Get site_info from DB option (stored as JSON).
+            // Pass full $site object to allow property check before DB query.
+            $site_info = MainWP_DB::instance()->get_website_option( $site, 'site_info' );
+            $site_info = ! empty( $site_info ) ? json_decode( $site_info, true ) : array();
+
+            $output['wp_version']    = isset( $site_info['wpversion'] ) ? $site_info['wpversion'] : '';
+            $output['php_version']   = isset( $site_info['phpversion'] ) ? $site_info['phpversion'] : '';
+            $output['child_version'] = $site->version ?? '';
+
+            // Format last_sync as ISO 8601 timestamp.
+            $output['last_sync'] = ! empty( $site->dtsSync ) ? gmdate( 'c', (int) $site->dtsSync ) : null;
+
+            $output['notes'] = $site->note ?? '';
+        }
+
+        // Include site statistics if requested.
+        if ( $include_stats ) {
+            $output['stats'] = self::get_site_stats( $site );
         }
 
         return $output;
+    }
+
+    /**
+     * Get site statistics for include_stats option.
+     *
+     * @param object $site Site object from database.
+     * @return array Site statistics array.
+     */
+    public static function get_site_stats( $site ): array {
+        // Count plugin updates.
+        $plugin_updates = ! empty( $site->plugin_upgrades ) ? json_decode( $site->plugin_upgrades, true ) : array();
+        $plugin_count   = is_array( $plugin_updates ) ? count( $plugin_updates ) : 0;
+
+        // Count theme updates.
+        $theme_updates = ! empty( $site->theme_upgrades ) ? json_decode( $site->theme_upgrades, true ) : array();
+        $theme_count   = is_array( $theme_updates ) ? count( $theme_updates ) : 0;
+
+        // Check for WordPress core update.
+        // Pass full $site object to allow property check before DB query.
+        $wp_upgrades         = MainWP_DB::instance()->get_website_option( $site, 'wp_upgrades' );
+        $wp_upgrades         = ! empty( $wp_upgrades ) ? json_decode( $wp_upgrades, true ) : array();
+        $wp_update_available = is_array( $wp_upgrades ) && ! empty( $wp_upgrades );
+
+        // Get health score if available.
+        $health_score = null;
+        if ( isset( $site->health_value ) ) {
+            $health_score = (int) $site->health_value;
+        }
+
+        return array(
+            'plugin_updates'      => $plugin_count,
+            'theme_updates'       => $theme_count,
+            'wp_update_available' => $wp_update_available,
+            'health_score'        => $health_score,
+        );
     }
 
     /**
@@ -459,5 +506,162 @@ class MainWP_Abilities_Util {
         }
 
         return 'connected';
+    }
+
+    /**
+     * Queue a batch sync operation for background processing.
+     *
+     * Used when >50 sites need to be synced to avoid request timeouts.
+     * Stores job data in a transient and schedules a cron event for processing.
+     *
+     * @param array $sites Array of site objects to sync.
+     * @return string|\WP_Error Job ID for status polling, or WP_Error on failure.
+     */
+    public static function queue_batch_sync( array $sites ) {
+        // Generate unique job ID.
+        $job_id = 'sync_' . wp_generate_uuid4();
+
+        // Extract site IDs from site objects.
+        $site_ids = array_map(
+            function ( $site ) {
+                return (int) $site->id;
+            },
+            $sites
+        );
+
+        // Store job data in transient (expires in 24 hours).
+        // Structure aligns with REST v2 job status endpoint expectations.
+        // Status values: 'queued' -> 'processing' -> 'completed' | 'failed'.
+        $job_data = array(
+            'job_type'   => 'sync',                  // Distinguishes from 'update' jobs.
+            'sites'      => $site_ids,
+            'status'     => 'queued',                // queued | processing | completed | failed.
+            'created'    => time(),
+            'started'    => null,
+            'completed'  => null,
+            'synced'     => array(),                 // Successfully synced sites.
+            'errors'     => array(),                 // Failed syncs array.
+            'progress'   => 0,                       // 0-100 percentage.
+            'total'      => count( $site_ids ),      // Total sites to process.
+            'processed'  => 0,                       // Sites processed so far.
+        );
+
+        set_transient( 'mainwp_sync_job_' . $job_id, $job_data, DAY_IN_SECONDS );
+
+        // Verify transient was stored successfully.
+        $stored = get_transient( 'mainwp_sync_job_' . $job_id );
+        if ( empty( $stored ) || ! is_array( $stored ) ) {
+            return new \WP_Error(
+                'mainwp_queue_failed',
+                __( 'Failed to store sync job data. Please try again.', 'mainwp' ),
+                array( 'status' => 500 )
+            );
+        }
+
+        // Only schedule if no matching event already exists.
+        if ( ! wp_next_scheduled( 'mainwp_process_sync_job', array( $job_id ) ) ) {
+            wp_schedule_single_event( time() + 60, 'mainwp_process_sync_job', array( $job_id ) );
+        }
+
+        return $job_id;
+    }
+
+    /**
+     * Get batch sync job status.
+     *
+     * @param string $job_id Job ID to check.
+     * @return array|null Job data array or null if not found.
+     */
+    public static function get_batch_sync_status( string $job_id ): ?array {
+        $job_data = get_transient( 'mainwp_sync_job_' . $job_id );
+        return is_array( $job_data ) ? $job_data : null;
+    }
+
+    /**
+     * Queue a batch update operation for background processing.
+     *
+     * Used when >50 sites need updates to avoid request timeouts.
+     * Stores job data in a transient and schedules a cron event for processing.
+     *
+     * @param array $sites         Array of site objects to update.
+     * @param array $update_params Update parameters with keys: types (array), specific_items (array).
+     * @return string|\WP_Error Job ID for status polling, or WP_Error on failure.
+     */
+    public static function queue_batch_updates( array $sites, array $update_params ) {
+        // Generate unique job ID.
+        $job_id = 'update_' . wp_generate_uuid4();
+
+        // Extract site IDs from site objects.
+        $site_ids = array_map(
+            function ( $site ) {
+                return (int) $site->id;
+            },
+            $sites
+        );
+
+        // Normalize and validate types parameter.
+        $allowed_types = array( 'core', 'plugins', 'themes', 'translations' );
+        $types         = isset( $update_params['types'] ) && is_array( $update_params['types'] )
+            ? array_values( array_intersect( $update_params['types'], $allowed_types ) )
+            : array();
+
+        // Normalize specific_items to array of strings.
+        $specific_items = array();
+        if ( isset( $update_params['specific_items'] ) && is_array( $update_params['specific_items'] ) ) {
+            foreach ( $update_params['specific_items'] as $item ) {
+                if ( is_string( $item ) && '' !== $item ) {
+                    $specific_items[] = $item;
+                }
+            }
+        }
+
+        // Store job data in transient (expires in 24 hours).
+        // Structure aligns with REST v2 job status endpoint expectations.
+        // Status values: 'queued' -> 'processing' -> 'completed' | 'failed'.
+        $job_data = array(
+            'job_type'       => 'update',            // Distinguishes from 'sync' jobs.
+            'sites'          => $site_ids,
+            'types'          => $types,
+            'specific_items' => $specific_items,
+            'status'         => 'queued',            // queued | processing | completed | failed.
+            'created'        => time(),
+            'started'        => null,
+            'completed'      => null,
+            'updated'        => array(),             // Successful updates array.
+            'errors'         => array(),             // Failed updates array.
+            'progress'       => 0,                   // 0-100 percentage.
+            'total'          => count( $site_ids ),  // Total sites to process.
+            'processed'      => 0,                   // Sites processed so far.
+        );
+
+        set_transient( 'mainwp_update_job_' . $job_id, $job_data, DAY_IN_SECONDS );
+
+        // Verify transient was stored successfully.
+        $stored = get_transient( 'mainwp_update_job_' . $job_id );
+        if ( empty( $stored ) || ! is_array( $stored ) ) {
+            return new \WP_Error(
+                'mainwp_queue_failed',
+                __( 'Failed to store update job data. Please try again.', 'mainwp' ),
+                array( 'status' => 500 )
+            );
+        }
+
+        // Only schedule if no matching event already exists.
+        if ( ! wp_next_scheduled( 'mainwp_process_update_job', array( $job_id ) ) ) {
+            wp_schedule_single_event( time() + 60, 'mainwp_process_update_job', array( $job_id ) );
+        }
+
+        return $job_id;
+    }
+
+    /**
+     * Get batch update job status.
+     *
+     * @param string $job_id Job ID to check.
+     * @return array|null Job data array or null if not found.
+     */
+    public static function get_batch_update_status( string $job_id ): ?array {
+        $job_data = get_transient( 'mainwp_update_job_' . $job_id );
+        return is_array( $job_data ) ? $job_data : null;
     }
 }
