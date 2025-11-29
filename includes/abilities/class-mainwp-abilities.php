@@ -30,6 +30,13 @@ class MainWP_Abilities {
             return;
         }
 
+        // Hook into MainWP REST authentication to include Abilities API routes.
+        // This allows consumer_key/consumer_secret authentication to work for abilities.
+        add_filter(
+            'mainwp_rest_is_request_to_rest_api',
+            [ static::class, 'include_abilities_in_rest_auth' ]
+        );
+
         add_action(
             'wp_abilities_api_categories_init',
             [ static::class, 'register_categories' ]
@@ -39,6 +46,33 @@ class MainWP_Abilities {
             'wp_abilities_api_init',
             [ static::class, 'register_abilities' ]
         );
+    }
+
+    /**
+     * Include Abilities API routes in MainWP REST authentication.
+     *
+     * This filter callback ensures that requests to wp-abilities/v1/abilities/mainwp/*
+     * are authenticated using MainWP's consumer_key/consumer_secret mechanism.
+     *
+     * @param bool $is_mainwp_api Whether the current request is to a MainWP REST API.
+     * @return bool True if this is a MainWP REST API or MainWP ability request.
+     */
+    public static function include_abilities_in_rest_auth( bool $is_mainwp_api ): bool {
+        // Already matched as MainWP API, no need to check further.
+        if ( $is_mainwp_api ) {
+            return true;
+        }
+
+        // Check if this is a request to a MainWP ability.
+        if ( empty( $_SERVER['REQUEST_URI'] ) ) {
+            return false;
+        }
+
+        $rest_prefix = trailingslashit( rest_get_url_prefix() );
+        $request_uri = esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+
+        // Match wp-abilities/v1/abilities/mainwp/* routes.
+        return ( false !== strpos( $request_uri, $rest_prefix . 'wp-abilities/v1/abilities/mainwp/' ) );
     }
 
     /**

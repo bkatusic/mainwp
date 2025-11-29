@@ -60,6 +60,7 @@ WP_TESTS_DIR=/path/to/wordpress-tests-lib phpunit --bootstrap tests/bootstrap.ph
 | `test-permissions.php` | Permission callbacks, ACL enforcement, REST auth |
 | `test-batch-operations.php` | Queuing, thresholds, job storage, cron scheduling |
 | `test-rest-integration.php` | REST v2 abilities-first pattern and fallback |
+| `test-rest-api-execution.php` | Direct execution of abilities via Abilities API REST endpoints |
 
 ## Test Coverage
 
@@ -89,6 +90,7 @@ WP_TESTS_DIR=/path/to/wordpress-tests-lib phpunit --bootstrap tests/bootstrap.ph
 | Batch operations | Queuing for >50 sites, immediate execution for ≤50 |
 | Error handling | Offline sites, child version checks, not found, partial failures |
 | REST integration | Abilities-first pattern, parameter mapping, fallback |
+| REST API execution | Direct HTTP execution via /wp-abilities/v1/abilities/{name}/run |
 
 ## Test Patterns
 
@@ -169,6 +171,21 @@ $this->mock_partial_update_result(
 - Batch queuing tests create many sites (50-60) and may be slow
 - REST integration tests require REST API infrastructure
 - Some tests may need actual plugin/theme data seeded for full coverage
+
+## REST API Execution Tests
+
+The `test-rest-api-execution.php` file tests the Abilities API REST endpoints directly, verifying that all 9 MainWP abilities can be executed via HTTP requests to `/wp-abilities/v1/abilities/{name}/run`. This is distinct from `test-rest-integration.php`, which tests MainWP's REST v2 controllers that internally use abilities.
+
+Key differences:
+- **test-rest-integration.php**: Tests `/mainwp/v2/sites`, `/mainwp/v2/updates` (MainWP REST controllers)
+- **test-rest-api-execution.php**: Tests `/wp-abilities/v1/abilities/mainwp/*/run` (Abilities API endpoints)
+
+The REST API execution tests cover:
+- GET vs POST method validation based on `readonly` annotation
+- Input handling (no input, empty object, partial, full)
+- Authentication requirements
+- Error responses (400, 403, 404, 405 status codes)
+- Response structure validation against output schemas
 
 ## Integration Plan Reference
 

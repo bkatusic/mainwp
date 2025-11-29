@@ -148,7 +148,10 @@ class MainWP_Abilities_Discovery_Test extends MainWP_Abilities_Test_Case {
 			$input_schema = $ability->get_input_schema();
 			$this->assertIsArray( $input_schema, "Input schema for {$name} should be an array." );
 			$this->assertArrayHasKey( 'type', $input_schema, "Input schema for {$name} should have 'type' key." );
-			$this->assertEquals( 'object', $input_schema['type'], "Input schema for {$name} should be of type 'object'." );
+			// Type can be a string ('object') or an array (['object', 'null']) for nullable schemas.
+			$type = $input_schema['type'];
+			$is_object_type = ( 'object' === $type ) || ( is_array( $type ) && in_array( 'object', $type, true ) );
+			$this->assertTrue( $is_object_type, "Input schema for {$name} should include 'object' type." );
 			$this->assertArrayHasKey( 'properties', $input_schema, "Input schema for {$name} should have 'properties' key." );
 
 			// Check output schema structure.
@@ -156,10 +159,25 @@ class MainWP_Abilities_Discovery_Test extends MainWP_Abilities_Test_Case {
 			$this->assertIsArray( $output_schema, "Output schema for {$name} should be an array." );
 			$this->assertArrayHasKey( 'type', $output_schema, "Output schema for {$name} should have 'type' key." );
 			$this->assertEquals( 'object', $output_schema['type'], "Output schema for {$name} should be of type 'object'." );
-			$this->assertArrayHasKey( 'properties', $output_schema, "Output schema for {$name} should have 'properties' key." );
+
+			// Handle polymorphic schemas (using oneOf) vs standard properties.
+			// Some abilities like run-updates-v1 use oneOf to define different response shapes
+			// for immediate vs queued execution modes.
+			if ( isset( $output_schema['oneOf'] ) && is_array( $output_schema['oneOf'] ) ) {
+				// For oneOf schemas, collect all properties from all variants.
+				$output_properties = [];
+				foreach ( $output_schema['oneOf'] as $variant ) {
+					if ( isset( $variant['properties'] ) ) {
+						$output_properties = array_merge( $output_properties, $variant['properties'] );
+					}
+				}
+				$this->assertNotEmpty( $output_properties, "Output schema for {$name} with oneOf should have properties in variants." );
+			} else {
+				$this->assertArrayHasKey( 'properties', $output_schema, "Output schema for {$name} should have 'properties' key." );
+				$output_properties = $output_schema['properties'];
+			}
 
 			// Check expected output properties exist.
-			$output_properties = $output_schema['properties'];
 			foreach ( $expected_keys as $key ) {
 				$this->assertArrayHasKey(
 					$key,

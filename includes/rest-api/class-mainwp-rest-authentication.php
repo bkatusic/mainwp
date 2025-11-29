@@ -895,9 +895,17 @@ class MainWP_REST_Authentication { //phpcs:ignore -- NOSONAR - maximumMethodThre
      *
      * @param WP_REST_Request $request Request used to generate the response.
      *
-     * @return mixed user rest data.
+     * @return bool|\WP_Error True if valid, WP_Error otherwise.
      */
     public function is_valid_permissions( $request ) {
+        // If no user is authenticated, deny permission.
+        if ( null === $this->user ) {
+            return new WP_Error(
+                'mainwp_rest_authentication_error',
+                __( 'You are not authenticated.', 'mainwp' ),
+                array( 'status' => 401 )
+            );
+        }
         return $this->check_permissions( $request->get_method() );
     }
 }

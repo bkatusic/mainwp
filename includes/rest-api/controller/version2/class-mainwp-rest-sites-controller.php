@@ -648,6 +648,9 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
 
         if ( null !== $ability ) {
             // Build ability input from REST parameters.
+            // Note: include/exclude are not part of the ability schema; the ability
+            // handles pagination and filtering, then the controller can apply
+            // include/exclude when refetching full data from DB.
             $ability_input = array(
                 'page'      => isset( $args['paged'] ) ? (int) $args['paged'] : 1,
                 'per_page'  => isset( $args['items_per_page'] ) ? (int) $args['items_per_page'] : 20,
@@ -655,12 +658,13 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
                 'search'    => isset( $args['s'] ) ? $args['s'] : '',
                 'tag_id'    => isset( $args['group_id'] ) ? (int) $args['group_id'] : null,
                 'client_id' => isset( $args['client_id'] ) ? (int) $args['client_id'] : null,
-                'include'   => isset( $args['include'] ) ? $args['include'] : array(),
-                'exclude'   => isset( $args['exclude'] ) ? $args['exclude'] : array(),
             );
 
             // Remove null values to avoid passing unneeded parameters.
             $ability_input = array_filter( $ability_input, fn( $v ) => null !== $v );
+
+            // Remove empty string values as well to avoid passing empty search params.
+            $ability_input = array_filter( $ability_input, fn( $v ) => '' !== $v );
 
             $result = $ability->execute( $ability_input );
 

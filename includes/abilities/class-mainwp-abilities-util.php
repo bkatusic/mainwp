@@ -139,6 +139,27 @@ class MainWP_Abilities_Util {
             }
         }
 
+        /**
+         * Filters whether the current user can access a specific site.
+         *
+         * Allows plugins and tests to override or extend access control.
+         *
+         * @since 6.0.0
+         *
+         * @param bool       $can_access Whether access is allowed (default true).
+         * @param int        $site_id    The site ID being checked.
+         * @param mixed|null $input      The ability input, if available.
+         */
+        $can_access = apply_filters( 'mainwp_check_site_access', true, $site_id, $input );
+
+        if ( ! $can_access ) {
+            return new \WP_Error(
+                'mainwp_access_denied',
+                __( 'You do not have permission to access this site.', 'mainwp' ),
+                [ 'status' => 403 ]
+            );
+        }
+
         return true;
     }
 
@@ -663,5 +684,82 @@ class MainWP_Abilities_Util {
     public static function get_batch_update_status( string $job_id ): ?array {
         $job_data = get_transient( 'mainwp_update_job_' . $job_id );
         return is_array( $job_data ) ? $job_data : null;
+    }
+
+    /**
+     * Normalize ability input to ensure it's always an array.
+     *
+     * Workaround for Abilities API REST controller bug where missing or empty
+     * input is passed as null instead of an empty array. The REST controller
+     * fails JSON Schema validation before schema defaults can be applied.
+     *
+     * Use this at the start of execute callbacks as defensive coding:
+     *
+     * ```php
+     * public static function execute_list_sites( $input ) {
+     *     $input = MainWP_Abilities_Util::normalize_input( $input, [
+     *         'page' => 1,
+     *         'per_page' => 20,
+     *     ] );
+     *     // ... continue with normalized input
+     * }
+     * ```
+     *
+     * NOTE: This workaround only helps if the ability passes REST validation.
+     * The bug causes validation to fail BEFORE the execute callback is called.
+     * This helper is provided for defensive coding once the upstream bug is fixed.
+     *
+     * @see .mwpdev/debugging/abilities-api-input-investigation.md
+     * @see .mwpdev/docs/abilities-api-docs/known-issues.md
+     *
+     * @param mixed $input    Raw input from ability execution (may be null, array, or object).
+     * @param array $defaults Default values from input schema properties.
+     * @return array Normalized input array with defaults applied.
+     */
+    public static function normalize_input( $input, array $defaults = array() ): array {
+        // Convert objects to arrays.
+        if ( is_object( $input ) ) {
+            $input = (array) $input;
+        }
+
+        // If input is null, empty, or not an array, start with empty array.
+        if ( ! is_array( $input ) ) {
+            $input = array();
+        }
+
+        // Merge with defaults (input values take precedence over defaults).
+        return array_merge( $defaults, $input );
+    }
+
+    /**
+     * Get default values from an input schema.
+     *
+     * Extracts default values from a JSON Schema's properties definitions.
+     * Useful when you need to programmatically obtain defaults without hardcoding.
+     *
+     * Example:
+     * ```php
+     * $schema = self::get_list_sites_input_schema();
+     * $defaults = MainWP_Abilities_Util::get_schema_defaults( $schema );
+     * $input = MainWP_Abilities_Util::normalize_input( $input, $defaults );
+     * ```
+     *
+     * @param array $schema JSON Schema with 'properties' containing 'default' values.
+     * @return array Associative array of property names to their default values.
+     */
+    public static function get_schema_defaults( array $schema ): array {
+        $defaults = array();
+
+        if ( ! isset( $schema['properties'] ) || ! is_array( $schema['properties'] ) ) {
+            return $defaults;
+        }
+
+        foreach ( $schema['properties'] as $property_name => $property_schema ) {
+            if ( isset( $property_schema['default'] ) ) {
+                $defaults[ $property_name ] = $property_schema['default'];
+            }
+        }
+
+        return $defaults;
     }
 }

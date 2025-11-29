@@ -71,22 +71,34 @@ class MainWP_Get_Site_Ability_Test extends MainWP_Abilities_Test_Case {
 	/**
 	 * Test that get-site returns error for non-existent site.
 	 *
+	 * Note: The Abilities API wraps permission_callback errors with the code
+	 * 'ability_invalid_permissions'. The original error is preserved in the message.
+	 *
 	 * @return void
 	 */
 	public function test_get_site_not_found_returns_error() {
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_admin();
 
+		// Abilities API triggers _doing_it_wrong() when permission_callback returns WP_Error.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
 		$result = $this->execute_ability( 'mainwp/get-site-v1', [
 			'site_id_or_domain' => 999999,
 		] );
 
 		$this->assertWPError( $result );
-		$this->assertEquals( 'mainwp_site_not_found', $result->get_error_code() );
+		// Abilities API wraps permission errors with ability_invalid_permissions.
+		$this->assertEquals( 'ability_invalid_permissions', $result->get_error_code() );
+		// Original error message should mention the site was not found.
+		$this->assertStringContainsString( 'site', strtolower( $result->get_error_message() ) );
 	}
 
 	/**
 	 * Test that get-site returns error for non-existent domain.
+	 *
+	 * Note: The Abilities API wraps permission_callback errors with the code
+	 * 'ability_invalid_permissions'. The original error is preserved in the message.
 	 *
 	 * @return void
 	 */
@@ -94,12 +106,18 @@ class MainWP_Get_Site_Ability_Test extends MainWP_Abilities_Test_Case {
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_admin();
 
+		// Abilities API triggers _doing_it_wrong() when permission_callback returns WP_Error.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
 		$result = $this->execute_ability( 'mainwp/get-site-v1', [
 			'site_id_or_domain' => 'nonexistent-domain.example.com',
 		] );
 
 		$this->assertWPError( $result );
-		$this->assertEquals( 'mainwp_site_not_found', $result->get_error_code() );
+		// Abilities API wraps permission errors with ability_invalid_permissions.
+		$this->assertEquals( 'ability_invalid_permissions', $result->get_error_code() );
+		// Original error message should mention the site was not found.
+		$this->assertStringContainsString( 'site', strtolower( $result->get_error_message() ) );
 	}
 
 	/**
@@ -164,6 +182,9 @@ class MainWP_Get_Site_Ability_Test extends MainWP_Abilities_Test_Case {
 	/**
 	 * Test that get-site handles URL with www prefix.
 	 *
+	 * The normalize_url() function strips the www prefix, so a query with
+	 * 'www.example.com' should match a site stored as 'https://example.com/'.
+	 *
 	 * @return void
 	 */
 	public function test_get_site_by_domain_with_www() {
@@ -176,17 +197,16 @@ class MainWP_Get_Site_Ability_Test extends MainWP_Abilities_Test_Case {
 			'url'  => 'https://test-wwwtest.example.com/',
 		] );
 
-		// Try to resolve with www prefix.
+		// Query with www prefix - should resolve due to URL normalization.
 		$result = $this->execute_ability( 'mainwp/get-site-v1', [
 			'site_id_or_domain' => 'www.test-wwwtest.example.com',
 		] );
 
-		// Resolution depends on normalization implementation.
-		// Just verify no crash and proper response type.
-		$this->assertTrue(
-			is_array( $result ) || is_wp_error( $result ),
-			'Result should be array or WP_Error.'
-		);
+		// normalize_url() strips 'www.' prefix, so this should match.
+		$this->assertNotWPError( $result, 'www-prefixed domain should resolve to non-www site.' );
+		$this->assertIsArray( $result );
+		$this->assertEquals( $site_id, $result['id'], 'Should resolve to the correct site.' );
+		$this->assertEquals( 'WWW Test Site', $result['name'] );
 	}
 
 	/**
@@ -329,12 +349,12 @@ class MainWP_Get_Site_Ability_Test extends MainWP_Abilities_Test_Case {
 			'name' => 'Sync Time Test',
 		] );
 
-		// Update dtsSync directly.
+		// Update dtsSync in the sync table (not mainwp_wp).
 		$sync_time = time();
 		$wpdb->update(
-			$wpdb->prefix . 'mainwp_wp',
+			$wpdb->prefix . 'mainwp_wp_sync',
 			[ 'dtsSync' => $sync_time ],
-			[ 'id' => $site_id ],
+			[ 'wpid' => $site_id ],
 			[ '%d' ],
 			[ '%d' ]
 		);

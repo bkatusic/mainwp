@@ -149,16 +149,16 @@ class MainWP_List_Sites_Ability_Test extends MainWP_Abilities_Test_Case {
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_admin();
 
-		// Create an online site.
+		// Create a connected site (empty sync_errors = connected).
 		$online_id = $this->create_test_site( [
-			'name'                 => 'Online Site',
-			'offline_check_result' => 1,
+			'name'        => 'Online Site',
+			'sync_errors' => '', // Empty = connected.
 		] );
 
-		// Create an offline site.
+		// Create a disconnected site (non-empty sync_errors = disconnected).
 		$offline_id = $this->create_test_site( [
-			'name'                 => 'Offline Site',
-			'offline_check_result' => -1,
+			'name'        => 'Offline Site',
+			'sync_errors' => 'Connection failed', // Non-empty = disconnected.
 		] );
 
 		// Test connected filter.
@@ -236,25 +236,33 @@ class MainWP_List_Sites_Ability_Test extends MainWP_Abilities_Test_Case {
 	/**
 	 * Test that list-sites validates input.
 	 *
+	 * Per WordPress REST API schema validation, values exceeding 'maximum' constraint
+	 * return WP_Error (not clamped). The Abilities API wraps this as 'ability_invalid_input'.
+	 *
 	 * @return void
 	 */
 	public function test_list_sites_validates_input() {
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_admin();
 
-		// Test with invalid per_page value (exceeds maximum).
+		// Test with invalid per_page value (exceeds maximum of 100).
 		$result = $this->execute_ability( 'mainwp/list-sites-v1', [
 			'page'     => 1,
-			'per_page' => 500, // Exceeds max of 100.
+			'per_page' => 500,
 		] );
 
-		// Schema validation should either return error or clamp value.
-		// Behavior depends on Abilities API implementation.
-		// If error, it should be WP_Error.
-		// If clamped, per_page should be <= 100.
-		if ( ! is_wp_error( $result ) ) {
-			$this->assertLessThanOrEqual( 100, $result['per_page'], 'per_page should be clamped to maximum.' );
-		}
+		// WordPress schema validation rejects values exceeding maximum with WP_Error.
+		// Abilities API wraps schema validation errors as 'ability_invalid_input'.
+		$this->assertWPError( $result, 'per_page exceeding maximum should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_input',
+			$result->get_error_code(),
+			'Error code should be ability_invalid_input for schema validation failure.'
+		);
+
+		// Verify the error message mentions the constraint.
+		$error_message = $result->get_error_message();
+		$this->assertNotEmpty( $error_message, 'Error should have a message.' );
 	}
 
 	/**

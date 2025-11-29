@@ -22,6 +22,20 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - mainwp/sync-sites-v1: Trigger synchronization for one or more sites
  * - mainwp/get-site-plugins-v1: Get list of plugins installed on a site
  * - mainwp/get-site-themes-v1: Get list of themes installed on a site
+ *
+ * ## Input Handling for GET Requests
+ *
+ * Read-only abilities (readonly: true) use GET requests. WordPress REST API does NOT
+ * auto-parse JSON from query strings, so:
+ *
+ * - Omit `?input` parameter entirely to use schema defaults (recommended)
+ * - Use `?input=` (empty) which also triggers defaults
+ * - DO NOT use `?input=%7B%7D` (URL-encoded JSON) - it arrives as a string and fails validation
+ *
+ * Our input schemas use `'type' => array('object', 'null')` with defaults, so callers
+ * can simply call the endpoint without any input parameter.
+ *
+ * @see .mwpdev/docs/abilities-api-docs/known-issues.md for detailed explanation
  */
 class MainWP_Abilities_Sites {
 
@@ -194,11 +208,15 @@ class MainWP_Abilities_Sites {
     /**
      * Get input schema for list-sites-v1.
      *
+     * Note: Uses 'type' => array('object', 'null') to allow callers to omit the input
+     * parameter entirely on GET requests. All properties have defaults, so no input
+     * is required. See class docblock for GET request input handling details.
+     *
      * @return array
      */
     public static function get_list_sites_input_schema(): array {
         return array(
-            'type'                 => 'object',
+            'type'                 => array( 'object', 'null' ),
             'properties'           => array(
                 'page'      => array(
                     'type'        => 'integer',
@@ -242,6 +260,9 @@ class MainWP_Abilities_Sites {
     /**
      * Get input schema for get-site-v1.
      *
+     * Note: We use type: ["integer", "string"] instead of oneOf because JSON Schema
+     * validators fail when a numeric string like "123" matches multiple oneOf branches.
+     *
      * @return array
      */
     private static function get_get_site_input_schema(): array {
@@ -249,16 +270,7 @@ class MainWP_Abilities_Sites {
             'type'                 => 'object',
             'properties'           => array(
                 'site_id_or_domain' => array(
-                    'oneOf'       => array(
-                        array(
-                            'type'    => 'integer',
-                            'minimum' => 1,
-                        ),
-                        array(
-                            'type'      => 'string',
-                            'minLength' => 1,
-                        ),
-                    ),
+                    'type'        => array( 'integer', 'string' ),
                     'description' => __( 'Site ID (integer) or domain/URL (string).', 'mainwp' ),
                 ),
                 'include_stats'     => array(
@@ -279,22 +291,13 @@ class MainWP_Abilities_Sites {
      */
     private static function get_sync_sites_input_schema(): array {
         return array(
-            'type'                 => 'object',
+            'type'                 => array( 'object', 'null' ),
             'properties'           => array(
                 'site_ids_or_domains' => array(
                     'type'        => 'array',
                     'description' => __( 'Site IDs or domains to sync. Empty array means all sites.', 'mainwp' ),
                     'items'       => array(
-                        'oneOf' => array(
-                            array(
-                                'type'    => 'integer',
-                                'minimum' => 1,
-                            ),
-                            array(
-                                'type'      => 'string',
-                                'minLength' => 1,
-                            ),
-                        ),
+                        'type' => array( 'integer', 'string' ),
                     ),
                     'default'     => array(),
                 ),
@@ -313,16 +316,7 @@ class MainWP_Abilities_Sites {
             'type'                 => 'object',
             'properties'           => array(
                 'site_id_or_domain' => array(
-                    'oneOf'       => array(
-                        array(
-                            'type'    => 'integer',
-                            'minimum' => 1,
-                        ),
-                        array(
-                            'type'      => 'string',
-                            'minLength' => 1,
-                        ),
-                    ),
+                    'type'        => array( 'integer', 'string' ),
                     'description' => __( 'Site ID or domain/URL.', 'mainwp' ),
                 ),
                 'status'            => array(
@@ -351,16 +345,7 @@ class MainWP_Abilities_Sites {
             'type'                 => 'object',
             'properties'           => array(
                 'site_id_or_domain' => array(
-                    'oneOf'       => array(
-                        array(
-                            'type'    => 'integer',
-                            'minimum' => 1,
-                        ),
-                        array(
-                            'type'      => 'string',
-                            'minLength' => 1,
-                        ),
-                    ),
+                    'type'        => array( 'integer', 'string' ),
                     'description' => __( 'Site ID or domain/URL.', 'mainwp' ),
                 ),
                 'status'            => array(
@@ -720,23 +705,33 @@ class MainWP_Abilities_Sites {
     /**
      * Execute callback for mainwp/list-sites-v1.
      *
-     * @param array $input Validated input from Abilities API.
+     * @param array|null $input Validated input from Abilities API.
      * @return array|\WP_Error
      */
-    public static function execute_list_sites( array $input ) {
-        $db = MainWP_DB::instance();
+    public static function execute_list_sites( $input ) {
+        $input = is_array( $input ) ? $input : array();
+        $db    = MainWP_DB::instance();
 
         // Map ability input to DB method parameters.
         $db_params = array(
             'paged'          => $input['page'] ?? 1,
             'items_per_page' => $input['per_page'] ?? 20,
             's'              => $input['search'] ?? '',
+            // Include status-related fields for format_site_for_output().
+            'fields'         => array( 'suspended', 'offline_check_result', 'sync_errors' ),
         );
 
         // Status mapping: 'any' means no filter, otherwise wrap in array.
+        // Note: 'connected' filter adds 'unsuspended' to exclude suspended sites,
+        // ensuring returned items have consistent status='connected' in output.
         $status = $input['status'] ?? 'any';
         if ( 'any' !== $status ) {
-            $db_params['status'] = array( $status );
+            $db_status = array( $status );
+            // When filtering for 'connected', also exclude suspended sites.
+            if ( 'connected' === $status ) {
+                $db_status[] = 'unsuspended';
+            }
+            $db_params['status'] = $db_status;
         }
 
         // Client filter.
@@ -749,28 +744,21 @@ class MainWP_Abilities_Sites {
             $db_params['group_id'] = $input['tag_id'];
         }
 
+        // First get total count (without pagination) to know actual total.
+        // Use same filters but without pagination limits.
+        $count_params = array_merge( $db_params, array(
+            'paged'          => 1,
+            'items_per_page' => 99999, // Large number to get all matching sites.
+        ) );
+        $all_websites = $db->get_websites_for_current_user( $count_params );
+        $total        = is_array( $all_websites ) ? count( $all_websites ) : 0;
+
+        // Now get the paginated subset.
         $websites = $db->get_websites_for_current_user( $db_params );
 
         if ( is_wp_error( $websites ) ) {
             return $websites;
         }
-
-        // Get total count WITH SAME FILTERS for accurate pagination.
-        $count_params = array();
-        if ( 'any' !== $status ) {
-            $count_params['status'] = array( $status );
-        }
-        if ( ! empty( $input['search'] ) ) {
-            $count_params['s'] = $input['search'];
-        }
-        if ( isset( $input['client_id'] ) ) {
-            $count_params['client'] = (string) $input['client_id'];
-        }
-        if ( isset( $input['tag_id'] ) ) {
-            $count_params['group_id'] = $input['tag_id'];
-        }
-
-        $total = $db->get_websites_count( $count_params );
 
         // Map DB records to output schema shape.
         $items = array();
@@ -814,10 +802,11 @@ class MainWP_Abilities_Sites {
     /**
      * Execute callback for mainwp/sync-sites-v1.
      *
-     * @param array $input Validated input from Abilities API.
+     * @param array|null $input Validated input from Abilities API.
      * @return array|\WP_Error
      */
-    public static function execute_sync_sites( array $input ) { // phpcs:ignore -- NOSONAR - complexity method.
+    public static function execute_sync_sites( $input ) { // phpcs:ignore -- NOSONAR - complexity method.
+        $input               = is_array( $input ) ? $input : array();
         $site_ids_or_domains = $input['site_ids_or_domains'] ?? array();
 
         // If empty, get all sites for current user.
@@ -887,7 +876,16 @@ class MainWP_Abilities_Sites {
             try {
                 $result = MainWP_Sync::sync_site( $site );
 
-                if ( false === $result ) {
+                // Allow filtering of sync result for testing/extension purposes.
+                $result = apply_filters( 'mainwp_sync_site_result', $result, (int) $site->id );
+
+                if ( is_wp_error( $result ) ) {
+                    $errors[] = array(
+                        'identifier' => (int) $site->id,
+                        'code'       => $result->get_error_code(),
+                        'message'    => $result->get_error_message(),
+                    );
+                } elseif ( false === $result ) {
                     $errors[] = array(
                         'identifier' => (int) $site->id,
                         'code'       => 'mainwp_sync_failed',

@@ -5,6 +5,9 @@
  * @package Mainwp
  */
 
+// Load Composer autoloader for test classes.
+require_once dirname( dirname( __FILE__ ) ) . '/vendor/autoload.php';
+
 $_tests_dir = getenv( 'WP_TESTS_DIR' );
 
 if ( ! $_tests_dir ) {
@@ -20,6 +23,27 @@ if ( ! file_exists( $_tests_dir . '/includes/functions.php' ) ) {
 require_once $_tests_dir . '/includes/functions.php';
 
 /**
+ * Disable log module during tests.
+ *
+ * The log module tries to create archive tables from `wp_logs` during plugins_loaded,
+ * but this table doesn't exist in a fresh test database. Since Abilities tests don't
+ * test logging functionality, we disable the module via constant before loading the plugin.
+ */
+define( 'MAINWP_MODULE_LOG_ENABLED', false );
+
+/**
+ * Enable REST API v2 for tests BEFORE plugin loads.
+ *
+ * The mainwp_rest_api_v2_enabled filter defaults to false in production
+ * and is controlled by Rest_Api_V1::hook_rest_api_v2_enabled() at priority 10
+ * which checks for enabled API keys in the database.
+ *
+ * In tests, we don't have API keys configured, so we override at priority 99
+ * (AFTER the database check) to force REST v2 routes to be registered.
+ */
+tests_add_filter( 'mainwp_rest_api_v2_enabled', '__return_true', 99 );
+
+/**
  * Manually load the plugin being tested.
  */
 function _manually_load_plugin() {
@@ -29,3 +53,6 @@ tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 
 // Start up the WP testing environment.
 require $_tests_dir . '/includes/bootstrap.php';
+
+// Load custom test case base classes.
+require_once dirname( __FILE__ ) . '/abilities/class-mainwp-abilities-test-case.php';

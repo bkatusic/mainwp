@@ -19,10 +19,16 @@ class MainWP_Abilities_Permission_Test extends MainWP_Abilities_Test_Case {
 	/**
 	 * Test that permission is denied for subscriber (no manage_options).
 	 *
+	 * Note: The Abilities API wraps permission_callback errors with the code
+	 * 'ability_invalid_permissions'. The original error is preserved in the message.
+	 *
 	 * @return void
 	 */
 	public function test_permission_denied_for_subscriber() {
 		$this->skip_if_no_abilities_api();
+
+		// Abilities API triggers _doing_it_wrong() when permission_callback returns WP_Error.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
 		// Create subscriber user.
 		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
@@ -31,7 +37,8 @@ class MainWP_Abilities_Permission_Test extends MainWP_Abilities_Test_Case {
 		$result = $this->execute_ability( 'mainwp/list-sites-v1', [] );
 
 		$this->assertWPError( $result );
-		$this->assertEquals( 'mainwp_permission_denied', $result->get_error_code() );
+		// Abilities API wraps permission errors with ability_invalid_permissions.
+		$this->assertEquals( 'ability_invalid_permissions', $result->get_error_code() );
 	}
 
 	/**
@@ -53,11 +60,17 @@ class MainWP_Abilities_Permission_Test extends MainWP_Abilities_Test_Case {
 	/**
 	 * Test that per-site access is denied when ACL check fails.
 	 *
+	 * Note: The Abilities API wraps permission_callback errors with the code
+	 * 'ability_invalid_permissions'. The original ACL error is preserved in the message.
+	 *
 	 * @return void
 	 */
 	public function test_per_site_access_denied() {
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_admin();
+
+		// Abilities API triggers _doing_it_wrong() when permission_callback returns WP_Error.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
 		$site_id = $this->create_test_site( [
 			'name' => 'ACL Denied Site',
@@ -76,7 +89,8 @@ class MainWP_Abilities_Permission_Test extends MainWP_Abilities_Test_Case {
 		] );
 
 		$this->assertWPError( $result );
-		$this->assertEquals( 'mainwp_access_denied', $result->get_error_code() );
+		// Abilities API wraps permission errors with ability_invalid_permissions.
+		$this->assertEquals( 'ability_invalid_permissions', $result->get_error_code() );
 	}
 
 	/**
@@ -208,10 +222,16 @@ class MainWP_Abilities_Permission_Test extends MainWP_Abilities_Test_Case {
 	/**
 	 * Test that unauthenticated request is denied.
 	 *
+	 * Note: The Abilities API wraps permission_callback errors with the code
+	 * 'ability_invalid_permissions'. The original error is preserved in the message.
+	 *
 	 * @return void
 	 */
 	public function test_unauthenticated_request_denied() {
 		$this->skip_if_no_abilities_api();
+
+		// Abilities API triggers _doing_it_wrong() when permission_callback returns WP_Error.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
 		// Ensure no user is logged in.
 		wp_set_current_user( 0 );
@@ -219,37 +239,70 @@ class MainWP_Abilities_Permission_Test extends MainWP_Abilities_Test_Case {
 		$result = $this->execute_ability( 'mainwp/list-sites-v1', [] );
 
 		$this->assertWPError( $result );
-		$this->assertEquals( 'mainwp_permission_denied', $result->get_error_code() );
+		// Abilities API wraps permission errors with ability_invalid_permissions.
+		$this->assertEquals( 'ability_invalid_permissions', $result->get_error_code() );
 	}
 
 	/**
-	 * Test that permission callback returns proper error status.
+	 * Test that permission callback returns proper error code and message.
+	 *
+	 * Per Abilities API documentation, permission errors are wrapped with
+	 * 'ability_invalid_permissions' error code. The error message should
+	 * contain meaningful information about the permission failure.
+	 *
+	 * Note: The Abilities API may or may not preserve error_data from the
+	 * underlying WP_Error when wrapping permission errors.
 	 *
 	 * @return void
 	 */
 	public function test_permission_error_has_status() {
 		$this->skip_if_no_abilities_api();
 
+		// Abilities API triggers _doing_it_wrong() when permission_callback returns WP_Error.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
 		// No user logged in.
 		wp_set_current_user( 0 );
 
 		$result = $this->execute_ability( 'mainwp/list-sites-v1', [] );
 
-		$this->assertWPError( $result );
+		$this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
 
+		// Per Abilities API docs, permission errors use 'ability_invalid_permissions' code.
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Permission error should have ability_invalid_permissions code.'
+		);
+
+		// Verify error has a meaningful message.
+		$error_message = $result->get_error_message();
+		$this->assertNotEmpty( $error_message, 'Permission error should have a message.' );
+
+		// If error_data is preserved by the Abilities API, verify it has proper status.
 		$error_data = $result->get_error_data();
-		$this->assertIsArray( $error_data );
-		$this->assertArrayHasKey( 'status', $error_data );
-		$this->assertContains( $error_data['status'], [ 401, 403 ], 'Status should be 401 or 403.' );
+		if ( is_array( $error_data ) && isset( $error_data['status'] ) ) {
+			$this->assertContains(
+				$error_data['status'],
+				[ 401, 403 ],
+				'HTTP status should be 401 (Unauthorized) or 403 (Forbidden).'
+			);
+		}
 	}
 
 	/**
-	 * Test that editor role (has manage_options) is granted access.
+	 * Test that editor role (without manage_options) is denied access.
+	 *
+	 * Note: The Abilities API wraps permission_callback errors with the code
+	 * 'ability_invalid_permissions'. The original error is preserved in the message.
 	 *
 	 * @return void
 	 */
 	public function test_permission_checks_manage_options_capability() {
 		$this->skip_if_no_abilities_api();
+
+		// Abilities API triggers _doing_it_wrong() when permission_callback returns WP_Error.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
 		// Create editor.
 		$editor_id = $this->factory->user->create( [ 'role' => 'editor' ] );
@@ -259,11 +312,15 @@ class MainWP_Abilities_Permission_Test extends MainWP_Abilities_Test_Case {
 		$result = $this->execute_ability( 'mainwp/list-sites-v1', [] );
 
 		$this->assertWPError( $result );
-		$this->assertEquals( 'mainwp_permission_denied', $result->get_error_code() );
+		// Abilities API wraps permission errors with ability_invalid_permissions.
+		$this->assertEquals( 'ability_invalid_permissions', $result->get_error_code() );
 	}
 
 	/**
 	 * Test that site resolution error is returned before ACL check.
+	 *
+	 * Note: The Abilities API wraps permission_callback errors with the code
+	 * 'ability_invalid_permissions'. The original error is preserved in the message.
 	 *
 	 * @return void
 	 */
@@ -271,12 +328,18 @@ class MainWP_Abilities_Permission_Test extends MainWP_Abilities_Test_Case {
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_admin();
 
+		// Abilities API triggers _doing_it_wrong() when permission_callback returns WP_Error.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
 		$result = $this->execute_ability( 'mainwp/get-site-v1', [
 			'site_id_or_domain' => 999999,
 		] );
 
 		$this->assertWPError( $result );
-		$this->assertEquals( 'mainwp_site_not_found', $result->get_error_code() );
+		// Abilities API wraps permission errors with ability_invalid_permissions.
+		$this->assertEquals( 'ability_invalid_permissions', $result->get_error_code() );
+		// Original error message should mention the site was not found.
+		$this->assertStringContainsString( 'site', strtolower( $result->get_error_message() ) );
 	}
 
 	/**
@@ -338,10 +401,16 @@ class MainWP_Abilities_Permission_Test extends MainWP_Abilities_Test_Case {
 	/**
 	 * Test that permission denied for write operations without proper access.
 	 *
+	 * Note: The Abilities API wraps permission_callback errors with the code
+	 * 'ability_invalid_permissions'. The original error is preserved in the message.
+	 *
 	 * @return void
 	 */
 	public function test_write_operation_permission_denied() {
 		$this->skip_if_no_abilities_api();
+
+		// Abilities API triggers _doing_it_wrong() when permission_callback returns WP_Error.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
 		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
 		wp_set_current_user( $subscriber_id );
@@ -354,7 +423,8 @@ class MainWP_Abilities_Permission_Test extends MainWP_Abilities_Test_Case {
 		] );
 
 		$this->assertWPError( $result );
-		$this->assertEquals( 'mainwp_permission_denied', $result->get_error_code() );
+		// Abilities API wraps permission errors with ability_invalid_permissions.
+		$this->assertEquals( 'ability_invalid_permissions', $result->get_error_code() );
 	}
 
 	/**

@@ -324,7 +324,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
             }
 
             if ( in_array( 'connected', $status ) ) {
-                $status_conds[] = ' ( wp_sync.sync_errors == "" ) ';
+                $status_conds[] = ' ( wp_sync.sync_errors = "" ) ';
             }
             if ( in_array( 'disconnected', $status ) ) {
                 $status_conds[] = " wp_sync.sync_errors <> '' ";
@@ -1258,7 +1258,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
                 }
 
                 if ( in_array( 'connected', $status ) ) {
-                    $status_conds[] = ' ( wp_sync.sync_errors == "" ) ';
+                    $status_conds[] = ' ( wp_sync.sync_errors = "" ) ';
                 }
                 if ( in_array( 'disconnected', $status ) ) {
                     $status_conds[] = " wp_sync.sync_errors <> '' ";

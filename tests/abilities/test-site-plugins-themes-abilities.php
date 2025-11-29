@@ -102,7 +102,10 @@ class MainWP_Site_Plugins_Themes_Ability_Test extends MainWP_Abilities_Test_Case
 	}
 
 	/**
-	 * Test that get-site-plugins includes updates when requested.
+	 * Test that get-site-plugins filters to plugins with updates when has_update=true.
+	 *
+	 * The has_update filter returns only plugins that have available updates.
+	 * The update_version field is always included for plugins with updates.
 	 *
 	 * @return void
 	 */
@@ -114,29 +117,56 @@ class MainWP_Site_Plugins_Themes_Ability_Test extends MainWP_Abilities_Test_Case
 			'name' => 'Plugin Updates Test Site',
 		] );
 
-		// Seed plugin upgrade data.
-		$this->set_site_plugin_upgrades( $site_id, [
+		// Seed installed plugins.
+		$this->set_site_plugins( $site_id, [
 			'akismet/akismet.php' => [
-				'Name'    => 'Akismet',
-				'Version' => '5.0',
-				'update'  => [
-					'new_version' => '5.1',
-				],
+				'name'    => 'Akismet',
+				'version' => '5.0',
+				'active'  => 1,
+			],
+			'hello-dolly/hello.php' => [
+				'name'    => 'Hello Dolly',
+				'version' => '1.0',
+				'active'  => 0,
 			],
 		] );
 
+		// Seed plugin upgrade data (only akismet has update).
+		$this->set_site_plugin_upgrades( $site_id, [
+			'akismet/akismet.php' => [
+				'Name'        => 'Akismet',
+				'Version'     => '5.0',
+				'new_version' => '5.1',
+			],
+		] );
+
+		// Without filter - should return all plugins.
+		$result_all = $this->execute_ability( 'mainwp/get-site-plugins-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertNotWPError( $result_all );
+		$this->assertCount( 2, $result_all['plugins'] );
+
+		// With has_update filter - should return only akismet.
 		$result = $this->execute_ability( 'mainwp/get-site-plugins-v1', [
 			'site_id_or_domain' => $site_id,
-			'include_updates'   => true,
+			'has_update'        => true,
 		] );
 
 		$this->assertNotWPError( $result );
 		$this->assertIsArray( $result );
-		// Update data should be included (exact structure depends on implementation).
+		$this->assertCount( 1, $result['plugins'] );
+		$this->assertEquals( 'akismet/akismet.php', $result['plugins'][0]['slug'] );
+		$this->assertEquals( '5.1', $result['plugins'][0]['update_version'] );
 	}
 
 	/**
 	 * Test that get-site-plugins returns error for non-existent site.
+	 *
+	 * Note: The Abilities API wraps permission_callback errors with the code
+	 * 'ability_invalid_permissions'. The original error (mainwp_site_not_found)
+	 * is preserved in the error message.
 	 *
 	 * @return void
 	 */
@@ -144,12 +174,18 @@ class MainWP_Site_Plugins_Themes_Ability_Test extends MainWP_Abilities_Test_Case
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_admin();
 
+		// Abilities API triggers _doing_it_wrong() when permission_callback returns WP_Error.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
 		$result = $this->execute_ability( 'mainwp/get-site-plugins-v1', [
 			'site_id_or_domain' => 999999,
 		] );
 
 		$this->assertWPError( $result );
-		$this->assertEquals( 'mainwp_site_not_found', $result->get_error_code() );
+		// Abilities API wraps permission errors with ability_invalid_permissions.
+		$this->assertEquals( 'ability_invalid_permissions', $result->get_error_code() );
+		// Original error message should mention the site was not found.
+		$this->assertStringContainsString( 'site', strtolower( $result->get_error_message() ) );
 	}
 
 	/**
@@ -282,7 +318,10 @@ class MainWP_Site_Plugins_Themes_Ability_Test extends MainWP_Abilities_Test_Case
 	}
 
 	/**
-	 * Test that get-site-themes includes updates when requested.
+	 * Test that get-site-themes filters to themes with updates when has_update=true.
+	 *
+	 * The has_update filter returns only themes that have available updates.
+	 * The update_version field is always included for themes with updates.
 	 *
 	 * @return void
 	 */
@@ -294,28 +333,55 @@ class MainWP_Site_Plugins_Themes_Ability_Test extends MainWP_Abilities_Test_Case
 			'name' => 'Theme Updates Test Site',
 		] );
 
-		// Seed theme upgrade data.
-		$this->set_site_theme_upgrades( $site_id, [
+		// Seed installed themes.
+		$this->set_site_themes( $site_id, [
 			'twentytwentyfour' => [
-				'Name'    => 'Twenty Twenty-Four',
-				'Version' => '1.0',
-				'update'  => [
-					'new_version' => '1.1',
-				],
+				'name'    => 'Twenty Twenty-Four',
+				'version' => '1.0',
+				'active'  => 1,
+			],
+			'twentytwentythree' => [
+				'name'    => 'Twenty Twenty-Three',
+				'version' => '1.0',
+				'active'  => 0,
 			],
 		] );
 
+		// Seed theme upgrade data (only twentytwentyfour has update).
+		$this->set_site_theme_upgrades( $site_id, [
+			'twentytwentyfour' => [
+				'Name'        => 'Twenty Twenty-Four',
+				'Version'     => '1.0',
+				'new_version' => '1.1',
+			],
+		] );
+
+		// Without filter - should return all themes.
+		$result_all = $this->execute_ability( 'mainwp/get-site-themes-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertNotWPError( $result_all );
+		$this->assertCount( 2, $result_all['themes'] );
+
+		// With has_update filter - should return only twentytwentyfour.
 		$result = $this->execute_ability( 'mainwp/get-site-themes-v1', [
 			'site_id_or_domain' => $site_id,
-			'include_updates'   => true,
+			'has_update'        => true,
 		] );
 
 		$this->assertNotWPError( $result );
 		$this->assertIsArray( $result );
+		$this->assertCount( 1, $result['themes'] );
+		$this->assertEquals( 'twentytwentyfour', $result['themes'][0]['slug'] );
+		$this->assertEquals( '1.1', $result['themes'][0]['update_version'] );
 	}
 
 	/**
 	 * Test that get-site-themes returns error for non-existent site.
+	 *
+	 * Note: The Abilities API wraps permission_callback errors with the code
+	 * 'ability_invalid_permissions'. The original error is preserved in the message.
 	 *
 	 * @return void
 	 */
@@ -323,12 +389,18 @@ class MainWP_Site_Plugins_Themes_Ability_Test extends MainWP_Abilities_Test_Case
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_admin();
 
+		// Abilities API triggers _doing_it_wrong() when permission_callback returns WP_Error.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
 		$result = $this->execute_ability( 'mainwp/get-site-themes-v1', [
 			'site_id_or_domain' => 999999,
 		] );
 
 		$this->assertWPError( $result );
-		$this->assertEquals( 'mainwp_site_not_found', $result->get_error_code() );
+		// Abilities API wraps permission errors with ability_invalid_permissions.
+		$this->assertEquals( 'ability_invalid_permissions', $result->get_error_code() );
+		// Original error message should mention the site was not found.
+		$this->assertStringContainsString( 'site', strtolower( $result->get_error_message() ) );
 	}
 
 	/**

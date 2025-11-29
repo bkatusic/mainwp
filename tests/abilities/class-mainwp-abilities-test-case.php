@@ -31,6 +31,13 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 	protected $created_update_job_ids = [];
 
 	/**
+	 * Whether abilities have been initialized for tests.
+	 *
+	 * @var bool
+	 */
+	private static $abilities_initialized = false;
+
+	/**
 	 * Set up test environment.
 	 *
 	 * @return void
@@ -42,10 +49,18 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 		$this->created_sync_job_ids   = [];
 		$this->created_update_job_ids = [];
 
-		// Ensure abilities are registered.
-		\MainWP\Dashboard\MainWP_Abilities::init();
-		do_action( 'wp_abilities_api_categories_init' );
-		do_action( 'wp_abilities_api_init' );
+		// Ensure abilities are registered (only once across all tests).
+		if ( ! self::$abilities_initialized && function_exists( 'wp_get_ability' ) ) {
+			// Check if abilities are already registered by the plugin.
+			$test_ability = wp_get_ability( 'mainwp/list-sites-v1' );
+			if ( ! $test_ability ) {
+				// Abilities not yet registered, initialize them.
+				\MainWP\Dashboard\MainWP_Abilities::init();
+				do_action( 'wp_abilities_api_categories_init' );
+				do_action( 'wp_abilities_api_init' );
+			}
+			self::$abilities_initialized = true;
+		}
 	}
 
 	/**
@@ -81,45 +96,67 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 	/**
 	 * Create a test site in the MainWP database.
 	 *
+	 * Creates a site in mainwp_wp table and corresponding records in
+	 * mainwp_wp_sync and mainwp_wp_options tables as needed.
+	 *
 	 * @param array $args Optional. Site properties to override defaults.
+	 *                    Supports 'verify_method' (stored in options) and
+	 *                    'version' (stored in sync table) as convenience keys.
 	 * @return int Site ID.
 	 */
 	protected function create_test_site( array $args = [] ): int {
 		global $wpdb;
 
-		$defaults = [
+		// Extract values that go to other tables (not columns in mainwp_wp).
+		$verify_method = $args['verify_method'] ?? 1;
+		$version       = $args['version'] ?? '5.0.0';
+		$sync_errors   = $args['sync_errors'] ?? '';
+
+		// Remove non-column fields from args before merging.
+		unset( $args['verify_method'], $args['version'], $args['sync_errors'] );
+
+		// Defaults for mainwp_wp table columns only.
+		// Use current user ID if available, otherwise use 1.
+		$current_user_id = get_current_user_id();
+		$defaults        = [
+			'userid'               => $current_user_id > 0 ? $current_user_id : 1,
 			'url'                  => 'https://test-' . wp_generate_uuid4() . '.example.com/',
 			'name'                 => 'Test Site',
 			'adminname'            => 'admin',
 			'pubkey'               => 'test-pubkey',
 			'privkey'              => 'test-privkey',
-			'verify_method'        => 1,
 			'ssl_version'          => 0,
 			'http_user'            => '',
 			'http_pass'            => '',
 			'suspended'            => 0,
-			'offline_check_result' => 1, // 1 = online, -1 = offline
-			'sync_errors'          => '',
+			'offline_check_result' => 1, // 1 = online, -1 = offline.
 			'client_id'            => 0,
-			'version'              => '5.0.0', // Child plugin version
+			// Initialize upgrade fields to empty string to avoid json_decode(null) warnings.
+			// Column names per class-mainwp-install.php table definition.
+			'plugin_upgrades'      => '',
+			'theme_upgrades'       => '',
+			'translation_upgrades' => '',
+			'premium_upgrades'     => '',
 		];
 
 		// Format specifiers matching the column types.
 		$formats = [
+			'userid'               => '%d',
 			'url'                  => '%s',
 			'name'                 => '%s',
 			'adminname'            => '%s',
 			'pubkey'               => '%s',
 			'privkey'              => '%s',
-			'verify_method'        => '%d',
 			'ssl_version'          => '%d',
 			'http_user'            => '%s',
 			'http_pass'            => '%s',
 			'suspended'            => '%d',
 			'offline_check_result' => '%d',
-			'sync_errors'          => '%s',
 			'client_id'            => '%d',
-			'version'              => '%s',
+			'plugin_upgrades'      => '%s',
+			'theme_upgrades'       => '%s',
+			'translation_upgrades' => '%s',
+			'premium_upgrades'     => '%s',
 		];
 
 		$data = array_merge( $defaults, $args );
@@ -136,7 +173,51 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 			$format_array
 		);
 
-		return (int) $wpdb->insert_id;
+		$site_id = (int) $wpdb->insert_id;
+
+		// Store verify_method in options table.
+		$this->set_site_option( $site_id, 'verify_method', $verify_method );
+
+		// Create sync record with version and sync_errors.
+		$this->create_test_site_sync(
+			$site_id,
+			[
+				'version'     => $version,
+				'sync_errors' => $sync_errors,
+			]
+		);
+
+		return $site_id;
+	}
+
+	/**
+	 * Create a sync record for a test site.
+	 *
+	 * Creates a record in mainwp_wp_sync table with version and sync status data.
+	 *
+	 * @param int   $site_id Site ID.
+	 * @param array $args    Optional. Sync properties to override defaults.
+	 * @return void
+	 */
+	protected function create_test_site_sync( int $site_id, array $args = [] ): void {
+		global $wpdb;
+
+		$defaults = [
+			'wpid'        => $site_id,
+			'version'     => '5.0.0',
+			'sync_errors' => '',
+		];
+
+		$data = array_merge( $defaults, $args );
+
+		// Ensure wpid is set correctly.
+		$data['wpid'] = $site_id;
+
+		$wpdb->insert(
+			$wpdb->prefix . 'mainwp_wp_sync',
+			$data,
+			[ '%d', '%s', '%s' ]
+		);
 	}
 
 	/**
@@ -152,6 +233,48 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 		update_user_meta( $user_id, 'mainwp_api_enabled', 1 );
 
 		return $user_id;
+	}
+
+	/**
+	 * Create a REST API key for testing.
+	 *
+	 * Creates an API key in the mainwp_api_keys table and returns the
+	 * consumer key and secret for use in test requests.
+	 *
+	 * @param int    $user_id     User ID to associate with the key.
+	 * @param string $permissions Permissions level: 'read', 'write', or 'read_write'.
+	 * @return array Array with 'consumer_key' and 'consumer_secret'.
+	 */
+	protected function create_rest_api_key( int $user_id, string $permissions = 'read_write' ): array {
+		global $wpdb;
+
+		$consumer_key    = 'ck_' . bin2hex( random_bytes( 16 ) );
+		$consumer_secret = 'cs_' . bin2hex( random_bytes( 16 ) );
+
+		$table = $wpdb->prefix . 'mainwp_api_keys';
+
+		// Hash using the same method as MainWP (mainwp_api_hash function).
+		$hashed_key = mainwp_api_hash( $consumer_key );
+
+		$wpdb->insert(
+			$table,
+			[
+				'user_id'         => $user_id,
+				'description'     => 'Test API Key',
+				'permissions'     => $permissions,
+				'consumer_key'    => $hashed_key,
+				'consumer_secret' => $consumer_secret,
+				'truncated_key'   => substr( $consumer_key, -7 ),
+				'enabled'         => 1,
+				'last_access'     => current_time( 'mysql' ),
+			],
+			[ '%d', '%s', '%s', '%s', '%s', '%s', '%d', '%s' ]
+		);
+
+		return [
+			'consumer_key'    => $consumer_key,
+			'consumer_secret' => $consumer_secret,
+		];
 	}
 
 	/**
@@ -197,6 +320,11 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 	/**
 	 * Mock a partial update result for testing batch operations.
 	 *
+	 * The mainwp_run_update_result filter receives:
+	 * - $result: null initially, or previous filter result
+	 * - $site_id: Site ID being processed
+	 * - $types: Array of update types being applied
+	 *
 	 * @param array $successes Array of successful site IDs.
 	 * @param array $failures  Array of failed site IDs with error info.
 	 * @return void
@@ -204,9 +332,10 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 	protected function mock_partial_update_result( array $successes, array $failures ): void {
 		add_filter(
 			'mainwp_run_update_result',
-			function ( $result, $site_id ) use ( $successes, $failures ) {
+			function ( $result, $site_id, $types = [] ) use ( $successes, $failures ) {
 				if ( in_array( $site_id, $successes, true ) ) {
-					return [ 'success' => true ];
+					// Return null to let the real execution proceed.
+					return null;
 				}
 				foreach ( $failures as $failure ) {
 					if ( $failure['site_id'] === $site_id ) {
@@ -216,7 +345,7 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 				return $result;
 			},
 			10,
-			2
+			3
 		);
 	}
 

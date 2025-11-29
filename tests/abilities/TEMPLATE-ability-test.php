@@ -1,0 +1,240 @@
+<?php
+/**
+ * Template: Ability Tests
+ *
+ * Copy this file when creating tests for a new ability.
+ *
+ * Instructions:
+ * 1. Copy this file to: test-{ability-name}.php
+ * 2. Rename the class: Test_{Ability_Name}_Ability
+ * 3. Replace {ability-name} with your ability slug (e.g., "list-clients-v1")
+ * 4. Replace {Category} with the category name (e.g., "Clients")
+ * 5. Fill in the test methods with your specific assertions
+ * 6. Delete this header comment block
+ *
+ * @package MainWP\Dashboard\Tests\Abilities
+ */
+
+namespace MainWP\Dashboard\Tests\Abilities;
+
+/**
+ * Tests for mainwp/{ability-name} ability.
+ *
+ * @group abilities
+ * @group abilities-{category}
+ */
+class Test_{Ability_Name}_Ability extends MainWP_Abilities_Test_Case {
+
+    /**
+     * Test that the ability is registered and discoverable.
+     *
+     * @return void
+     */
+    public function test_ability_is_registered() {
+        $this->skip_if_no_abilities_api();
+
+        $abilities = wp_abilities()->get_abilities();
+
+        $this->assertArrayHasKey(
+            'mainwp/{ability-name}',
+            $abilities,
+            'Ability mainwp/{ability-name} should be registered.'
+        );
+    }
+
+    /**
+     * Test successful execution with valid input.
+     *
+     * This is your "happy path" test - what happens when everything works.
+     *
+     * @return void
+     */
+    public function test_{ability}_returns_expected_structure() {
+        $this->skip_if_no_abilities_api();
+        $this->set_current_user_as_admin();
+
+        // Arrange: Set up any test data needed
+        // $site_id = $this->create_test_site(['name' => 'Test Site']);
+
+        // Act: Execute the ability
+        $result = $this->execute_ability( 'mainwp/{ability-name}', [
+            // Add your input parameters here
+        ] );
+
+        // Assert: Verify the result
+        $this->assertNotWPError( $result, 'Should return successful result.' );
+        $this->assertIsArray( $result );
+
+        // Add specific assertions for your ability's output schema:
+        // $this->assertArrayHasKey( 'id', $result );
+        // $this->assertArrayHasKey( 'name', $result );
+        // $this->assertEquals( 'expected_value', $result['field'] );
+    }
+
+    /**
+     * Test that unauthenticated users are denied.
+     *
+     * @return void
+     */
+    public function test_{ability}_requires_authentication() {
+        $this->skip_if_no_abilities_api();
+
+        // Abilities API triggers _doing_it_wrong() for permission errors.
+        $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+        // No user logged in.
+        wp_set_current_user( 0 );
+
+        $result = $this->execute_ability( 'mainwp/{ability-name}', [] );
+
+        $this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
+        $this->assertEquals(
+            'ability_invalid_permissions',
+            $result->get_error_code(),
+            'Should return ability_invalid_permissions error code.'
+        );
+    }
+
+    /**
+     * Test that users without manage_options capability are denied.
+     *
+     * @return void
+     */
+    public function test_{ability}_requires_manage_options() {
+        $this->skip_if_no_abilities_api();
+        $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+        // Create a subscriber (no manage_options capability).
+        $subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
+        wp_set_current_user( $subscriber_id );
+
+        $result = $this->execute_ability( 'mainwp/{ability-name}', [] );
+
+        $this->assertWPError( $result, 'Subscriber should be denied.' );
+        $this->assertEquals(
+            'ability_invalid_permissions',
+            $result->get_error_code(),
+            'Should return ability_invalid_permissions error code.'
+        );
+    }
+
+    /**
+     * Test input validation rejects invalid values.
+     *
+     * @return void
+     */
+    public function test_{ability}_validates_input() {
+        $this->skip_if_no_abilities_api();
+        $this->set_current_user_as_admin();
+
+        // Provide invalid input that should fail schema validation.
+        $result = $this->execute_ability( 'mainwp/{ability-name}', [
+            // Example: 'per_page' => 9999, // Exceeds maximum
+            // Example: 'required_field' => null, // Missing required
+        ] );
+
+        $this->assertWPError( $result, 'Invalid input should return WP_Error.' );
+        $this->assertEquals(
+            'ability_invalid_input',
+            $result->get_error_code(),
+            'Should return ability_invalid_input for schema validation failure.'
+        );
+    }
+
+    /**
+     * Test behavior when resource is not found.
+     *
+     * Uncomment and customize if your ability can return "not found" errors.
+     *
+     * @return void
+     */
+    /*
+    public function test_{ability}_returns_error_for_not_found() {
+        $this->skip_if_no_abilities_api();
+        $this->set_current_user_as_admin();
+
+        $result = $this->execute_ability( 'mainwp/{ability-name}', [
+            'id' => 999999, // Non-existent ID
+        ] );
+
+        $this->assertWPError( $result );
+        $this->assertEquals( 'mainwp_{resource}_not_found', $result->get_error_code() );
+    }
+    */
+
+    /**
+     * Test behavior with empty results.
+     *
+     * Uncomment and customize if your ability can return empty arrays.
+     *
+     * @return void
+     */
+    /*
+    public function test_{ability}_returns_empty_array_when_no_results() {
+        $this->skip_if_no_abilities_api();
+        $this->set_current_user_as_admin();
+
+        // Don't create any test data.
+
+        $result = $this->execute_ability( 'mainwp/{ability-name}', [] );
+
+        $this->assertNotWPError( $result );
+        $this->assertIsArray( $result );
+        $this->assertEmpty( $result['items'] ); // or $result directly if flat array
+    }
+    */
+
+    /**
+     * Test pagination parameters.
+     *
+     * Uncomment and customize if your ability supports pagination.
+     *
+     * @return void
+     */
+    /*
+    public function test_{ability}_pagination() {
+        $this->skip_if_no_abilities_api();
+        $this->set_current_user_as_admin();
+
+        // Create multiple test items.
+        for ( $i = 1; $i <= 15; $i++ ) {
+            $this->create_test_site( [ 'name' => "Site $i" ] );
+        }
+
+        $result = $this->execute_ability( 'mainwp/{ability-name}', [
+            'page'     => 2,
+            'per_page' => 5,
+        ] );
+
+        $this->assertNotWPError( $result );
+        $this->assertCount( 5, $result['items'] );
+        $this->assertEquals( 2, $result['page'] );
+        $this->assertEquals( 15, $result['total'] );
+    }
+    */
+
+    /**
+     * Test filtering/search parameters.
+     *
+     * Uncomment and customize if your ability supports filtering.
+     *
+     * @return void
+     */
+    /*
+    public function test_{ability}_filtering() {
+        $this->skip_if_no_abilities_api();
+        $this->set_current_user_as_admin();
+
+        $this->create_test_site( [ 'name' => 'Alpha Site' ] );
+        $this->create_test_site( [ 'name' => 'Beta Site' ] );
+
+        $result = $this->execute_ability( 'mainwp/{ability-name}', [
+            'search' => 'Alpha',
+        ] );
+
+        $this->assertNotWPError( $result );
+        $this->assertCount( 1, $result['items'] );
+        $this->assertEquals( 'Alpha Site', $result['items'][0]['name'] );
+    }
+    */
+}

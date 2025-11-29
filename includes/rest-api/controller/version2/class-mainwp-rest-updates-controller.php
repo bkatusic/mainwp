@@ -288,11 +288,19 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
             // to maintain consistent behavior. Callers who need paginated results should
             // use the ability directly with explicit page/per_page values.
             // See: .mwpdev/plans/abilities-api/phase-3-rest-integration-notes.md
+
+            // Determine site IDs to include.
+            // The ability uses site_ids_or_domains (array of IDs or domains).
+            // REST API uses 'include' for site IDs to include.
+            $site_ids = ! empty( $includ ) ? $includ : array();
+
+            // Map REST 'type' parameter to ability 'types' parameter.
+            // REST uses 'type' (singular), ability uses 'types' (plural).
+            $ability_types = ! empty( $type ) ? $type : array();
+
             $ability_input = array(
-                'type'    => ! empty( $type ) ? $type : array( 'all' ),
-                'search'  => $s,
-                'include' => $includ,
-                'exclude' => $exclud,
+                'site_ids_or_domains' => $site_ids,
+                'types'               => $ability_types,
             );
 
             $result = $ability->execute( $ability_input );
@@ -866,8 +874,10 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
 
         if ( null !== $ability ) {
             // Build ability input for updating all sites with all update types.
+            // Empty arrays mean "all sites" and "all types" respectively.
             $ability_input = array(
-                'updates' => array( array( 'type' => 'all' ) ),
+                'site_ids_or_domains' => array(),  // All sites.
+                'types'               => array(),  // All types.
             );
 
             $result = $ability->execute( $ability_input );
@@ -982,11 +992,10 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
 
         if ( null !== $ability ) {
             // Build ability input for single-site update.
+            // Empty types array means "all types".
             $ability_input = array(
-                'site_ids' => array( $website->id ),
-                'updates'  => array(
-                    array( 'type' => 'all' ),
-                ),
+                'site_ids_or_domains' => array( (int) $website->id ),
+                'types'               => array(),  // All types.
             );
 
             $result = $ability->execute( $ability_input );

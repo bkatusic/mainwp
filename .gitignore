@@ -1,2 +1,9 @@
 .vscode-upload.json
 .idea/
+
+# Composer
+/vendor/
+composer.lock
+
+# PHPUnit
+.phpunit.result.cache

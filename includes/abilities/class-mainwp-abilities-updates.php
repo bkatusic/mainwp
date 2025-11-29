@@ -21,6 +21,20 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - mainwp/run-updates-v1: Execute updates (core, plugins, themes, translations)
  * - mainwp/list-ignored-updates-v1: List ignored updates
  * - mainwp/set-ignored-updates-v1: Manage ignored updates
+ *
+ * ## Input Handling for GET Requests
+ *
+ * Read-only abilities (readonly: true) use GET requests. WordPress REST API does NOT
+ * auto-parse JSON from query strings, so:
+ *
+ * - Omit `?input` parameter entirely to use schema defaults (recommended)
+ * - Use `?input=` (empty) which also triggers defaults
+ * - DO NOT use `?input=%7B%7D` (URL-encoded JSON) - it arrives as a string and fails validation
+ *
+ * Our input schemas use `'type' => array('object', 'null')` with defaults, so callers
+ * can simply call the endpoint without any input parameter.
+ *
+ * @see .mwpdev/docs/abilities-api-docs/known-issues.md for detailed explanation
  */
 class MainWP_Abilities_Updates {
 
@@ -176,26 +190,21 @@ class MainWP_Abilities_Updates {
     /**
      * Get input schema for list-updates-v1.
      *
+     * Note: Uses 'type' => array('object', 'null') to allow callers to omit the input
+     * parameter entirely on GET requests. All properties have defaults, so no input
+     * is required. See class docblock for GET request input handling details.
+     *
      * @return array
      */
     public static function get_list_updates_input_schema(): array {
         return array(
-            'type'                 => 'object',
+            'type'                 => array( 'object', 'null' ),
             'properties'           => array(
                 'site_ids_or_domains' => array(
                     'type'        => 'array',
                     'description' => __( 'Filter to specific sites. Empty array means all sites.', 'mainwp' ),
                     'items'       => array(
-                        'oneOf' => array(
-                            array(
-                                'type'    => 'integer',
-                                'minimum' => 1,
-                            ),
-                            array(
-                                'type'      => 'string',
-                                'minLength' => 1,
-                            ),
-                        ),
+                        'type' => array( 'integer', 'string' ),
                     ),
                     'default'     => array(),
                 ),
@@ -233,22 +242,13 @@ class MainWP_Abilities_Updates {
      */
     public static function get_run_updates_input_schema(): array {
         return array(
-            'type'                 => 'object',
+            'type'                 => array( 'object', 'null' ),
             'properties'           => array(
                 'site_ids_or_domains' => array(
                     'type'        => 'array',
                     'description' => __( 'Sites to update. Empty array means all sites with available updates.', 'mainwp' ),
                     'items'       => array(
-                        'oneOf' => array(
-                            array(
-                                'type'    => 'integer',
-                                'minimum' => 1,
-                            ),
-                            array(
-                                'type'      => 'string',
-                                'minLength' => 1,
-                            ),
-                        ),
+                        'type' => array( 'integer', 'string' ),
                     ),
                     'default'     => array(),
                 ),
@@ -275,26 +275,21 @@ class MainWP_Abilities_Updates {
     /**
      * Get input schema for list-ignored-updates-v1.
      *
+     * Note: Uses 'type' => array('object', 'null') to allow callers to omit the input
+     * parameter entirely on GET requests. All properties have defaults, so no input
+     * is required. See class docblock for GET request input handling details.
+     *
      * @return array
      */
     public static function get_list_ignored_updates_input_schema(): array {
         return array(
-            'type'                 => 'object',
+            'type'                 => array( 'object', 'null' ),
             'properties'           => array(
                 'site_ids_or_domains' => array(
                     'type'        => 'array',
                     'description' => __( 'Filter to specific sites. Empty array means all sites.', 'mainwp' ),
                     'items'       => array(
-                        'oneOf' => array(
-                            array(
-                                'type'    => 'integer',
-                                'minimum' => 1,
-                            ),
-                            array(
-                                'type'      => 'string',
-                                'minLength' => 1,
-                            ),
-                        ),
+                        'type' => array( 'integer', 'string' ),
                     ),
                     'default'     => array(),
                 ),
@@ -327,16 +322,7 @@ class MainWP_Abilities_Updates {
                     'description' => __( 'Action to perform.', 'mainwp' ),
                 ),
                 'site_id_or_domain' => array(
-                    'oneOf'       => array(
-                        array(
-                            'type'    => 'integer',
-                            'minimum' => 1,
-                        ),
-                        array(
-                            'type'      => 'string',
-                            'minLength' => 1,
-                        ),
-                    ),
+                    'type'        => array( 'integer', 'string' ),
                     'description' => __( 'Site ID or domain/URL.', 'mainwp' ),
                 ),
                 'type'              => array(
@@ -671,10 +657,11 @@ class MainWP_Abilities_Updates {
     /**
      * Execute callback for mainwp/list-updates-v1.
      *
-     * @param array $input Validated input from Abilities API.
+     * @param array|null $input Validated input from Abilities API.
      * @return array|\WP_Error
      */
-    public static function execute_list_updates( array $input ) { // phpcs:ignore -- NOSONAR - complex method.
+    public static function execute_list_updates( $input ) { // phpcs:ignore -- NOSONAR - complex method.
+        $input               = is_array( $input ) ? $input : array();
         $site_ids_or_domains = $input['site_ids_or_domains'] ?? array();
         $types               = $input['types'] ?? array();
         $page                = $input['page'] ?? 1;
@@ -806,7 +793,10 @@ class MainWP_Abilities_Updates {
      * @param array $input Validated input from Abilities API.
      * @return array|\WP_Error
      */
-    public static function execute_run_updates( array $input ) { // phpcs:ignore -- NOSONAR - complex method.
+    public static function execute_run_updates( ?array $input ) { // phpcs:ignore -- NOSONAR - complex method.
+        // Handle null input (when called without input parameter).
+        $input = $input ?? array();
+
         $site_ids_or_domains = $input['site_ids_or_domains'] ?? array();
         $types               = $input['types'] ?? array();
         $specific_items      = $input['specific_items'] ?? array();
@@ -976,6 +966,21 @@ class MainWP_Abilities_Updates {
             // Execute updates by type.
             $site_had_updates = false;
 
+            // Allow filtering of update result for testing/extension purposes.
+            // Filter can return WP_Error to simulate site-level failure.
+            $pre_result = apply_filters( 'mainwp_run_update_result', null, (int) $site->id, $types );
+            if ( is_wp_error( $pre_result ) ) {
+                $errors[] = array(
+                    'site_id'  => (int) $site->id,
+                    'site_url' => $site->url,
+                    'type'     => 'site',
+                    'slug'     => '',
+                    'code'     => $pre_result->get_error_code(),
+                    'message'  => $pre_result->get_error_message(),
+                );
+                continue;
+            }
+
             // Core updates.
             if ( in_array( 'core', $types, true ) && ! empty( $grouped['core'] ) ) {
                 $core_result = self::execute_core_update( $site, $grouped['core'][0] );
@@ -1049,10 +1054,11 @@ class MainWP_Abilities_Updates {
     /**
      * Execute callback for mainwp/list-ignored-updates-v1.
      *
-     * @param array $input Validated input from Abilities API.
+     * @param array|null $input Validated input from Abilities API.
      * @return array|\WP_Error
      */
-    public static function execute_list_ignored_updates( array $input ) { // phpcs:ignore -- NOSONAR - complex method.
+    public static function execute_list_ignored_updates( $input ) { // phpcs:ignore -- NOSONAR - complex method.
+        $input               = is_array( $input ) ? $input : array();
         $site_ids_or_domains = $input['site_ids_or_domains'] ?? array();
         $types               = $input['types'] ?? array();
 
