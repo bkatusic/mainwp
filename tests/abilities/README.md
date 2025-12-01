@@ -187,6 +187,45 @@ The REST API execution tests cover:
 - Error responses (400, 403, 404, 405 status codes)
 - Response structure validation against output schemas
 
+## Intentionally Omitted Test Scenarios
+
+The following scenarios from the implementation plan are **intentionally not covered** in `test-rest-api-execution.php`. These decisions were made after careful technical analysis:
+
+### Application Password Authentication Tests
+
+**Not implemented because:**
+- The existing tests (`test_rest_ability_requires_authentication`, `test_rest_ability_permission_denied_for_subscriber`) already verify that unauthenticated and low-privilege users are denied
+- Using `wp_set_current_user()` is the standard WordPress PHPUnit pattern for REST API permission tests
+- Testing Application Password validation would test WordPress Core's `WP_Application_Passwords` class, not MainWP code
+- MainWP REST API key authentication is already tested in `test-rest-integration.php`
+
+### WordPress HTTP API Tests (`wp_remote_get`/`wp_remote_post`)
+
+**Not implemented because:**
+- PHPUnit unit tests run without an HTTP server
+- `wp_remote_*` functions make actual HTTP requests that would fail without a listening server
+- Using `rest_do_request()` is the standard and recommended approach for WordPress REST API unit tests
+- WordPress Core itself uses `rest_do_request()` for REST API tests, not `wp_remote_*`
+
+If true HTTP-level integration tests are needed in the future, they would require a separate E2E test suite (e.g., Playwright, Codeception) with a running WordPress instance.
+
+### Content-Type Response Header Assertions
+
+**Not implemented because:**
+- WordPress REST API automatically sets `Content-Type: application/json` for all responses
+- Testing this would verify WordPress Core behavior, not MainWP behavior
+- The `test_rest_ability_response_is_json()` test verifies responses are JSON-serializable, which is the meaningful check
+
+### Current Test Scope
+
+The `test-rest-api-execution.php` file focuses on:
+- Controller-level behavior via `rest_do_request()`
+- Input validation and schema conformance
+- Permission callbacks (both grant and deny paths)
+- HTTP method validation (GET for readonly, POST for write)
+- Response structure validation against output schemas
+- MainWP-specific error codes and handling
+
 ## Integration Plan Reference
 
 These tests implement the testing strategy from:

@@ -98,11 +98,31 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		global $wpdb, $wp_rest_server;
 		$wp_rest_server = null;
 
-		// Clean up test sites.
+		// Get site IDs before deleting main records.
+		$site_ids = $this->created_site_ids;
+
+		// Clean up related tables for tracked site IDs.
+		if ( ! empty( $site_ids ) ) {
+			$ids_placeholder = implode( ',', array_map( 'intval', $site_ids ) );
+			$wpdb->query( "DELETE FROM {$wpdb->prefix}mainwp_wp_sync WHERE wpid IN ({$ids_placeholder})" );
+			$wpdb->query( "DELETE FROM {$wpdb->prefix}mainwp_wp_options WHERE wpid IN ({$ids_placeholder})" );
+		}
+
+		// Also clean by URL pattern (catches any sites not in created_site_ids).
+		$wpdb->query(
+			"DELETE FROM {$wpdb->prefix}mainwp_wp_sync
+			 WHERE wpid IN (SELECT id FROM {$wpdb->prefix}mainwp_wp WHERE url LIKE 'https://test-%')"
+		);
+		$wpdb->query(
+			"DELETE FROM {$wpdb->prefix}mainwp_wp_options
+			 WHERE wpid IN (SELECT id FROM {$wpdb->prefix}mainwp_wp WHERE url LIKE 'https://test-%')"
+		);
+
+		// Clean up test sites (main table - do this AFTER related tables).
 		$wpdb->query( "DELETE FROM {$wpdb->prefix}mainwp_wp WHERE url LIKE 'https://test-%'" );
 
 		// Clean up any job transients.
-		foreach ( $this->created_site_ids as $site_id ) {
+		foreach ( $site_ids as $site_id ) {
 			delete_transient( 'mainwp_sync_job_' . $site_id );
 		}
 
@@ -1093,6 +1113,11 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 
 		$data = $response->get_data();
 		$this->assertArrayHasKey( 'code', $data, 'Error response should have code key.' );
+		$this->assertEquals(
+			'mainwp_site_not_found',
+			$data['code'],
+			'Error code should be mainwp_site_not_found for non-existent site.'
+		);
 	}
 
 	/**
@@ -1182,6 +1207,75 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 			$response->get_status(),
 			'Partial input should apply defaults for missing params.'
 		);
+	}
+
+	/**
+	 * Test that invalid input type (string instead of object) returns error.
+	 *
+	 * When input is passed as a plain string instead of an object/array,
+	 * the Abilities API should return a 400 error with ability_invalid_input code.
+	 *
+	 * @return void
+	 */
+	public function test_rest_ability_invalid_input_type_returns_error() {
+		$this->skip_if_no_abilities_api();
+		$this->authenticate_as_admin();
+
+		// POST to sync-sites-v1 with input as plain string instead of object.
+		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/sync-sites-v1' ) );
+		$request->set_header( 'Content-Type', 'application/json' );
+		$request->set_body( wp_json_encode( [ 'input' => 'not-an-object' ] ) );
+
+		$response = rest_do_request( $request );
+
+		$this->assertEquals(
+			400,
+			$response->get_status(),
+			'Invalid input type should return 400 Bad Request.'
+		);
+
+		$data = $response->get_data();
+		$this->assertArrayHasKey( 'code', $data, 'Error response should have code key.' );
+		$this->assertEquals(
+			'ability_invalid_input',
+			$data['code'],
+			'Error code should be ability_invalid_input.'
+		);
+	}
+
+	/**
+	 * Test that empty input query param on GET uses defaults.
+	 *
+	 * Passing an explicit empty input parameter should behave the same
+	 * as omitting the input parameter entirely (use schema defaults).
+	 *
+	 * @return void
+	 */
+	public function test_rest_ability_empty_input_query_param_uses_defaults() {
+		$this->skip_if_no_abilities_api();
+		$this->authenticate_as_admin();
+
+		// Create a site to ensure we have data.
+		$this->create_test_site( [ 'name' => 'Empty Input Param Test' ] );
+
+		// GET list-sites-v1 with explicit empty input param.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
+		$request->set_query_params( [ 'input' => '' ] );
+
+		$response = rest_do_request( $request );
+
+		// Should succeed and use defaults (same as no input).
+		$this->assertEquals(
+			200,
+			$response->get_status(),
+			'Empty input query param should use defaults and return 200 OK.'
+		);
+
+		$data = $response->get_data();
+		$this->assertArrayHasKey( 'items', $data, 'Response should have items key.' );
+		$this->assertArrayHasKey( 'page', $data, 'Response should have page key.' );
+		$this->assertEquals( 1, $data['page'], 'Default page should be 1.' );
+		$this->assertEquals( 20, $data['per_page'], 'Default per_page should be 20.' );
 	}
 
 	// =========================================================================
@@ -1325,6 +1419,304 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		$this->assertIsArray( $data['errors'] );
 		$this->assertIsInt( $data['total_synced'] );
 		$this->assertIsInt( $data['total_errors'] );
+	}
+
+	/**
+	 * Test that get-site-v1 response matches output schema.
+	 *
+	 * @return void
+	 */
+	public function test_get_site_response_matches_output_schema() {
+		$this->skip_if_no_abilities_api();
+		$this->authenticate_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'    => 'Get Site Schema Test',
+			'version' => '6.4.0',
+		] );
+
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/get-site-v1' ) );
+		$request->set_query_params( [ 'input' => [ 'site_id_or_domain' => $site_id ] ] );
+
+		$response = rest_do_request( $request );
+
+		$this->assertEquals( 200, $response->get_status(), 'get-site-v1 should return 200 OK.' );
+
+		$data = $response->get_data();
+
+		// Required fields per output schema.
+		$this->assertArrayHasKey( 'id', $data, 'Response should have id key.' );
+		$this->assertArrayHasKey( 'url', $data, 'Response should have url key.' );
+		$this->assertArrayHasKey( 'name', $data, 'Response should have name key.' );
+		$this->assertArrayHasKey( 'status', $data, 'Response should have status key.' );
+
+		// Verify field types.
+		$this->assertIsInt( $data['id'], 'id should be an integer.' );
+		$this->assertIsString( $data['url'], 'url should be a string.' );
+		$this->assertIsString( $data['name'], 'name should be a string.' );
+		$this->assertIsString( $data['status'], 'status should be a string.' );
+
+		// Verify correct values.
+		$this->assertEquals( $site_id, $data['id'], 'id should match the created site.' );
+		$this->assertEquals( 'Get Site Schema Test', $data['name'], 'name should match.' );
+	}
+
+	/**
+	 * Test that get-site-plugins-v1 response matches output schema.
+	 *
+	 * @return void
+	 */
+	public function test_get_site_plugins_response_matches_output_schema() {
+		$this->skip_if_no_abilities_api();
+		$this->authenticate_as_admin();
+
+		$site_id = $this->create_test_site( [ 'name' => 'Plugins Schema Test' ] );
+
+		// Seed plugin data.
+		$this->set_site_plugins(
+			$site_id,
+			[
+				'akismet/akismet.php' => [
+					'name'    => 'Akismet Anti-spam',
+					'version' => '5.3',
+					'active'  => 1,
+				],
+				'hello-dolly/hello.php' => [
+					'name'    => 'Hello Dolly',
+					'version' => '1.7.2',
+					'active'  => 0,
+				],
+			]
+		);
+
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/get-site-plugins-v1' ) );
+		$request->set_query_params( [ 'input' => [ 'site_id_or_domain' => $site_id ] ] );
+
+		$response = rest_do_request( $request );
+
+		$this->assertEquals( 200, $response->get_status(), 'get-site-plugins-v1 should return 200 OK.' );
+
+		$data = $response->get_data();
+
+		// Required fields per output schema.
+		$this->assertArrayHasKey( 'plugins', $data, 'Response should have plugins key.' );
+		$this->assertArrayHasKey( 'total', $data, 'Response should have total key.' );
+
+		// Verify field types.
+		$this->assertIsArray( $data['plugins'], 'plugins should be an array.' );
+		$this->assertIsInt( $data['total'], 'total should be an integer.' );
+		$this->assertEquals( 2, $data['total'], 'total should be 2.' );
+
+		// Verify per-plugin structure if non-empty.
+		if ( ! empty( $data['plugins'] ) ) {
+			$plugin = $data['plugins'][0];
+			$this->assertArrayHasKey( 'slug', $plugin, 'Plugin should have slug key.' );
+			$this->assertArrayHasKey( 'name', $plugin, 'Plugin should have name key.' );
+			$this->assertArrayHasKey( 'version', $plugin, 'Plugin should have version key.' );
+			$this->assertArrayHasKey( 'active', $plugin, 'Plugin should have active key.' );
+
+			$this->assertIsString( $plugin['slug'], 'Plugin slug should be a string.' );
+			$this->assertIsString( $plugin['name'], 'Plugin name should be a string.' );
+			$this->assertIsString( $plugin['version'], 'Plugin version should be a string.' );
+			$this->assertIsBool( $plugin['active'], 'Plugin active should be a boolean.' );
+		}
+	}
+
+	/**
+	 * Test that get-site-themes-v1 response matches output schema.
+	 *
+	 * @return void
+	 */
+	public function test_get_site_themes_response_matches_output_schema() {
+		$this->skip_if_no_abilities_api();
+		$this->authenticate_as_admin();
+
+		$site_id = $this->create_test_site( [ 'name' => 'Themes Schema Test' ] );
+
+		// Seed theme data.
+		$this->set_site_themes(
+			$site_id,
+			[
+				'twentytwentyfour' => [
+					'name'    => 'Twenty Twenty-Four',
+					'version' => '1.0',
+					'active'  => 1,
+				],
+				'twentytwentythree' => [
+					'name'    => 'Twenty Twenty-Three',
+					'version' => '1.2',
+					'active'  => 0,
+				],
+			]
+		);
+
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/get-site-themes-v1' ) );
+		$request->set_query_params( [ 'input' => [ 'site_id_or_domain' => $site_id ] ] );
+
+		$response = rest_do_request( $request );
+
+		$this->assertEquals( 200, $response->get_status(), 'get-site-themes-v1 should return 200 OK.' );
+
+		$data = $response->get_data();
+
+		// Required fields per output schema.
+		$this->assertArrayHasKey( 'themes', $data, 'Response should have themes key.' );
+		$this->assertArrayHasKey( 'active_theme', $data, 'Response should have active_theme key.' );
+		$this->assertArrayHasKey( 'total', $data, 'Response should have total key.' );
+
+		// Verify field types.
+		$this->assertIsArray( $data['themes'], 'themes should be an array.' );
+		$this->assertIsString( $data['active_theme'], 'active_theme should be a string.' );
+		$this->assertIsInt( $data['total'], 'total should be an integer.' );
+		$this->assertEquals( 2, $data['total'], 'total should be 2.' );
+		$this->assertEquals( 'twentytwentyfour', $data['active_theme'], 'active_theme should be twentytwentyfour.' );
+
+		// Verify per-theme structure if non-empty.
+		if ( ! empty( $data['themes'] ) ) {
+			$theme = $data['themes'][0];
+			$this->assertArrayHasKey( 'slug', $theme, 'Theme should have slug key.' );
+			$this->assertArrayHasKey( 'name', $theme, 'Theme should have name key.' );
+			$this->assertArrayHasKey( 'version', $theme, 'Theme should have version key.' );
+			$this->assertArrayHasKey( 'active', $theme, 'Theme should have active key.' );
+
+			$this->assertIsString( $theme['slug'], 'Theme slug should be a string.' );
+			$this->assertIsString( $theme['name'], 'Theme name should be a string.' );
+			$this->assertIsString( $theme['version'], 'Theme version should be a string.' );
+			$this->assertIsBool( $theme['active'], 'Theme active should be a boolean.' );
+		}
+	}
+
+	/**
+	 * Test that run-updates-v1 response matches output schema.
+	 *
+	 * @return void
+	 */
+	public function test_run_updates_response_matches_output_schema() {
+		$this->skip_if_no_abilities_api();
+		$this->authenticate_as_admin();
+
+		$this->create_test_site( [
+			'name'                 => 'Run Updates Schema Test',
+			'offline_check_result' => 1,
+		] );
+
+		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/run-updates-v1' ) );
+		$response = rest_do_request( $request );
+
+		$this->assertEquals( 200, $response->get_status(), 'run-updates-v1 should return 200 OK.' );
+
+		$data = $response->get_data();
+
+		// Required fields per output schema.
+		$this->assertArrayHasKey( 'updated', $data, 'Response should have updated key.' );
+		$this->assertArrayHasKey( 'errors', $data, 'Response should have errors key.' );
+		$this->assertArrayHasKey( 'summary', $data, 'Response should have summary key.' );
+
+		// Verify field types.
+		$this->assertIsArray( $data['updated'], 'updated should be an array.' );
+		$this->assertIsArray( $data['errors'], 'errors should be an array.' );
+		$this->assertIsArray( $data['summary'], 'summary should be an array.' );
+	}
+
+	/**
+	 * Test that list-ignored-updates-v1 response matches output schema.
+	 *
+	 * @return void
+	 */
+	public function test_list_ignored_updates_response_matches_output_schema() {
+		$this->skip_if_no_abilities_api();
+		$this->authenticate_as_admin();
+
+		$site_id = $this->create_test_site( [ 'name' => 'Ignored Updates Schema Test' ] );
+
+		// Seed ignored plugin data.
+		$this->set_site_ignored_plugins(
+			$site_id,
+			[
+				'akismet/akismet.php' => [
+					'Name' => 'Akismet',
+				],
+			]
+		);
+
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/list-ignored-updates-v1' ) );
+		$response = rest_do_request( $request );
+
+		$this->assertEquals( 200, $response->get_status(), 'list-ignored-updates-v1 should return 200 OK.' );
+
+		$data = $response->get_data();
+
+		// Required fields per output schema.
+		$this->assertArrayHasKey( 'ignored', $data, 'Response should have ignored key.' );
+		$this->assertArrayHasKey( 'total', $data, 'Response should have total key.' );
+
+		// Verify field types.
+		$this->assertIsArray( $data['ignored'], 'ignored should be an array.' );
+		$this->assertIsInt( $data['total'], 'total should be an integer.' );
+
+		// Verify per-item structure if non-empty.
+		if ( ! empty( $data['ignored'] ) ) {
+			$item = $data['ignored'][0];
+			$this->assertArrayHasKey( 'site_id', $item, 'Ignored item should have site_id key.' );
+			$this->assertArrayHasKey( 'type', $item, 'Ignored item should have type key.' );
+			$this->assertArrayHasKey( 'slug', $item, 'Ignored item should have slug key.' );
+			$this->assertArrayHasKey( 'name', $item, 'Ignored item should have name key.' );
+
+			$this->assertIsInt( $item['site_id'], 'site_id should be an integer.' );
+			$this->assertIsString( $item['type'], 'type should be a string.' );
+			$this->assertIsString( $item['slug'], 'slug should be a string.' );
+			$this->assertIsString( $item['name'], 'name should be a string.' );
+		}
+	}
+
+	/**
+	 * Test that set-ignored-updates-v1 response matches output schema.
+	 *
+	 * @return void
+	 */
+	public function test_set_ignored_updates_response_matches_output_schema() {
+		$this->skip_if_no_abilities_api();
+		$this->authenticate_as_admin();
+
+		$site_id = $this->create_test_site( [ 'name' => 'Set Ignored Schema Test' ] );
+
+		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/set-ignored-updates-v1' ) );
+		$request->set_header( 'Content-Type', 'application/json' );
+		$request->set_body( wp_json_encode( [
+			'input' => [
+				'action'            => 'ignore',
+				'site_id_or_domain' => $site_id,
+				'type'              => 'plugin',
+				'slug'              => 'test-plugin/test-plugin.php',
+			],
+		] ) );
+
+		$response = rest_do_request( $request );
+
+		$this->assertEquals( 200, $response->get_status(), 'set-ignored-updates-v1 should return 200 OK.' );
+
+		$data = $response->get_data();
+
+		// Required fields per output schema.
+		$this->assertArrayHasKey( 'success', $data, 'Response should have success key.' );
+		$this->assertArrayHasKey( 'action', $data, 'Response should have action key.' );
+		$this->assertArrayHasKey( 'site_id', $data, 'Response should have site_id key.' );
+		$this->assertArrayHasKey( 'type', $data, 'Response should have type key.' );
+		$this->assertArrayHasKey( 'slug', $data, 'Response should have slug key.' );
+
+		// Verify field types.
+		$this->assertIsBool( $data['success'], 'success should be a boolean.' );
+		$this->assertIsString( $data['action'], 'action should be a string.' );
+		$this->assertIsInt( $data['site_id'], 'site_id should be an integer.' );
+		$this->assertIsString( $data['type'], 'type should be a string.' );
+		$this->assertIsString( $data['slug'], 'slug should be a string.' );
+
+		// Verify correct values.
+		$this->assertTrue( $data['success'], 'success should be true.' );
+		$this->assertEquals( 'ignore', $data['action'], 'action should be ignore.' );
+		$this->assertEquals( $site_id, $data['site_id'], 'site_id should match.' );
+		$this->assertEquals( 'plugin', $data['type'], 'type should be plugin.' );
+		$this->assertEquals( 'test-plugin/test-plugin.php', $data['slug'], 'slug should match.' );
 	}
 
 	// =========================================================================
