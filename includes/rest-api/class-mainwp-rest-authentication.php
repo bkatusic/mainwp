@@ -99,11 +99,13 @@ class MainWP_REST_Authentication { //phpcs:ignore -- NOSONAR - maximumMethodThre
         $rest_prefix = trailingslashit( rest_get_url_prefix() );
         $request_uri = esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) );
 
-        // Check if the request is the API endpoints.
-        $mainwp_api = ( false !== strpos( $request_uri, $rest_prefix . 'mainwp/' ) );
+        // Check if the request is to the MainWP API namespace.
+        // Use strpos with exact prefix to avoid false positives from other APIs
+        // that may have 'mainwp/' in their URL path (e.g., wp-abilities/v1/abilities/mainwp/...).
+        $mainwp_api = ( false !== strpos( $request_uri, '/' . $rest_prefix . 'mainwp/' ) );
 
         // Allow third party plugins use our authentication methods.
-        $extension_api = ( false !== strpos( $request_uri, $rest_prefix . 'mainwp-' ) );
+        $extension_api = ( false !== strpos( $request_uri, '/' . $rest_prefix . 'mainwp-' ) );
 
         return apply_filters( 'mainwp_rest_is_request_to_rest_api', $mainwp_api || $extension_api );
     }
@@ -212,6 +214,13 @@ class MainWP_REST_Authentication { //phpcs:ignore -- NOSONAR - maximumMethodThre
     public function check_authentication_error( $error ) {
         // Pass through other errors.
         if ( ! empty( $error ) ) {
+            return $error;
+        }
+
+        // Only return MainWP auth errors for MainWP API endpoints.
+        // Other REST endpoints (e.g., wp-abilities, core WordPress) should use
+        // their own authentication mechanisms without MainWP interference.
+        if ( ! $this->is_request_to_rest_api() ) {
             return $error;
         }
 

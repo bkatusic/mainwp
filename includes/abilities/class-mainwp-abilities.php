@@ -51,28 +51,22 @@ class MainWP_Abilities {
     /**
      * Include Abilities API routes in MainWP REST authentication.
      *
-     * This filter callback ensures that requests to wp-abilities/v1/abilities/mainwp/*
-     * are authenticated using MainWP's consumer_key/consumer_secret mechanism.
+     * This filter allows MainWP abilities to be accessed via both:
+     * 1. MainWP's consumer_key/consumer_secret API authentication
+     * 2. WordPress Application Passwords (standard REST auth)
+     *
+     * For Application Passwords to work, we must NOT force MainWP auth
+     * on Abilities API requests, as that would conflict with WP's native auth.
      *
      * @param bool $is_mainwp_api Whether the current request is to a MainWP REST API.
-     * @return bool True if this is a MainWP REST API or MainWP ability request.
+     * @return bool True only for actual MainWP REST API requests (not abilities).
      */
     public static function include_abilities_in_rest_auth( bool $is_mainwp_api ): bool {
-        // Already matched as MainWP API, no need to check further.
-        if ( $is_mainwp_api ) {
-            return true;
-        }
-
-        // Check if this is a request to a MainWP ability.
-        if ( empty( $_SERVER['REQUEST_URI'] ) ) {
-            return false;
-        }
-
-        $rest_prefix = trailingslashit( rest_get_url_prefix() );
-        $request_uri = esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) );
-
-        // Match wp-abilities/v1/abilities/mainwp/* routes.
-        return ( false !== strpos( $request_uri, $rest_prefix . 'wp-abilities/v1/abilities/mainwp/' ) );
+        // Pass through the original detection - don't extend MainWP auth to Abilities API.
+        // Abilities API has its own permission_callback that checks current_user_can()
+        // which works with both MainWP API keys (via MainWP_REST_Authentication) and
+        // WordPress Application Passwords (via native WP REST auth).
+        return $is_mainwp_api;
     }
 
     /**
