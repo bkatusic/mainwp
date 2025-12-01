@@ -545,8 +545,13 @@ class MainWP_Abilities_Permission_Test extends MainWP_Abilities_Test_Case {
 	/**
 	 * Mock the REST API key authentication by setting the user property on the singleton.
 	 *
-	 * Uses reflection to set the protected $user property, simulating a valid
-	 * REST API key authentication.
+	 * Uses reflection to directly set the authenticated user on MainWP_REST_Authentication
+	 * without requiring actual HTTP requests or database API key records. This enables
+	 * testing permission logic for REST API key users without complex integration setup.
+	 *
+	 * @internal Tests depend on MainWP_REST_Authentication::$user property structure.
+	 *           If this property name, type, or structure changes, this method and
+	 *           reset_rest_authentication() must be updated accordingly.
 	 *
 	 * @param int $user_id User ID to set as the authenticated REST API user.
 	 * @return void

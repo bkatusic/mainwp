@@ -34,17 +34,17 @@ class MainWP_Abilities {
         // This allows consumer_key/consumer_secret authentication to work for abilities.
         add_filter(
             'mainwp_rest_is_request_to_rest_api',
-            [ static::class, 'include_abilities_in_rest_auth' ]
+            array( static::class, 'include_abilities_in_rest_auth' )
         );
 
         add_action(
             'wp_abilities_api_categories_init',
-            [ static::class, 'register_categories' ]
+            array( static::class, 'register_categories' )
         );
 
         add_action(
             'wp_abilities_api_init',
-            [ static::class, 'register_abilities' ]
+            array( static::class, 'register_abilities' )
         );
     }
 
@@ -88,19 +88,19 @@ class MainWP_Abilities {
         // Sites category.
         wp_register_ability_category(
             'mainwp-sites',
-            [
+            array(
                 'label'       => __( 'MainWP Sites', 'mainwp' ),
                 'description' => __( 'Abilities for managing MainWP child sites including listing, syncing, and monitoring.', 'mainwp' ),
-            ]
+            )
         );
 
         // Updates category.
         wp_register_ability_category(
             'mainwp-updates',
-            [
+            array(
                 'label'       => __( 'MainWP Updates', 'mainwp' ),
                 'description' => __( 'Abilities for managing updates across MainWP child sites including core, plugins, and themes.', 'mainwp' ),
-            ]
+            )
         );
     }
 

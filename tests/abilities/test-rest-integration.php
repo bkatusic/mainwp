@@ -43,6 +43,14 @@ class MainWP_REST_Integration_Test extends \WP_Test_REST_TestCase {
 	/**
 	 * Set up test environment.
 	 *
+	 * Uses reflection to reset MainWP_Rest_Server singleton state between tests.
+	 * This is required because the WordPress test framework doesn't provide clean
+	 * singleton isolation. The REST server caches controller instances, which
+	 * causes test pollution if not reset between test methods.
+	 *
+	 * @internal Tests depend on MainWP_Rest_Server::$instance and ::$controllers properties.
+	 *           Changes to these property names or visibility will require test updates.
+	 *
 	 * @return void
 	 */
 	public function setUp(): void {

@@ -34,10 +34,10 @@ class MainWP_Abilities_Util {
      * IMPORTANT: Returns true on success or WP_Error on failure.
      * This is required for abilities to surface proper error codes to consumers.
      *
-     * @param mixed $input The ability input (unused but required by signature).
+     * @param mixed $_input The ability input (unused but required by signature).
      * @return true|\WP_Error True on success, WP_Error with code on failure.
      */
-    public static function check_rest_api_permission( $input = null ) {
+    public static function check_rest_api_permission( $_input = null ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required by callback signature.
         // Prioritize MainWP REST API key authentication.
         // Note: Key-specific errors (invalid key, invalid secret, bad signature) are
         // handled by MainWP_REST_Authentication::check_authentication_error() which
@@ -53,7 +53,7 @@ class MainWP_Abilities_Util {
                     return new \WP_Error(
                         'mainwp_permission_denied',
                         __( 'API key user does not have sufficient permissions.', 'mainwp' ),
-                        [ 'status' => 403 ]
+                        array( 'status' => 403 )
                     );
                 }
                 return true;
@@ -65,7 +65,7 @@ class MainWP_Abilities_Util {
             return new \WP_Error(
                 'mainwp_permission_denied',
                 __( 'You must be logged in to access this ability.', 'mainwp' ),
-                [ 'status' => 401 ]
+                array( 'status' => 401 )
             );
         }
 
@@ -74,7 +74,7 @@ class MainWP_Abilities_Util {
             return new \WP_Error(
                 'mainwp_permission_denied',
                 __( 'You do not have permission to perform this action.', 'mainwp' ),
-                [ 'status' => 403 ]
+                array( 'status' => 403 )
             );
         }
 
@@ -133,7 +133,7 @@ class MainWP_Abilities_Util {
                     return new \WP_Error(
                         'mainwp_access_denied',
                         __( 'You do not have permission to access this site.', 'mainwp' ),
-                        [ 'status' => 403 ]
+                        array( 'status' => 403 )
                     );
                 }
             }
@@ -156,7 +156,7 @@ class MainWP_Abilities_Util {
             return new \WP_Error(
                 'mainwp_access_denied',
                 __( 'You do not have permission to access this site.', 'mainwp' ),
-                [ 'status' => 403 ]
+                array( 'status' => 403 )
             );
         }
 
@@ -194,7 +194,7 @@ class MainWP_Abilities_Util {
             return new \WP_Error(
                 'mainwp_internal_error',
                 __( 'Invalid site object provided.', 'mainwp' ),
-                [ 'status' => 500 ]
+                array( 'status' => 500 )
             );
         }
 
@@ -207,7 +207,10 @@ class MainWP_Abilities_Util {
                     __( 'Child plugin version %s or higher required.', 'mainwp' ),
                     $min_version
                 ),
-                [ 'status' => 400, 'site_id' => (int) $site->id ]
+                array(
+                    'status'  => 400,
+                    'site_id' => (int) $site->id,
+                )
             );
         }
         return true;
@@ -224,42 +227,42 @@ class MainWP_Abilities_Util {
      * @return array Array with 'allowed' (accessible sites) and 'denied' (access errors).
      */
     public static function check_batch_site_access( array $site_ids_or_domains, $input = null ): array {
-        $allowed = [];
-        $denied  = [];
+        $allowed = array();
+        $denied  = array();
 
         foreach ( $site_ids_or_domains as $identifier ) {
             $site = self::resolve_site( $identifier );
 
             if ( is_wp_error( $site ) ) {
                 $error_data = $site->get_error_data();
-                $denied[]   = [
+                $denied[]   = array(
                     'identifier' => $identifier,
                     'code'       => $site->get_error_code(),
                     'message'    => $site->get_error_message(),
                     'status'     => isset( $error_data['status'] ) ? $error_data['status'] : null,
-                ];
+                );
                 continue;
             }
 
             $access_check = self::check_site_access( $site, $input );
             if ( is_wp_error( $access_check ) ) {
                 $error_data = $access_check->get_error_data();
-                $denied[]   = [
+                $denied[]   = array(
                     'identifier' => $identifier,
                     'code'       => $access_check->get_error_code(),
                     'message'    => $access_check->get_error_message(),
                     'status'     => isset( $error_data['status'] ) ? $error_data['status'] : null,
-                ];
+                );
                 continue;
             }
 
             $allowed[] = $site;
         }
 
-        return [
+        return array(
             'allowed' => $allowed,
             'denied'  => $denied,
-        ];
+        );
     }
 
     /**
@@ -277,7 +280,7 @@ class MainWP_Abilities_Util {
             return new \WP_Error(
                 'mainwp_internal_error',
                 __( 'MainWP database class is not available.', 'mainwp' ),
-                [ 'status' => 500 ]
+                array( 'status' => 500 )
             );
         }
 
@@ -296,7 +299,7 @@ class MainWP_Abilities_Util {
                     __( 'No site found with ID %d.', 'mainwp' ),
                     (int) $site_id_or_domain
                 ),
-                [ 'status' => 404 ]
+                array( 'status' => 404 )
             );
         }
 
@@ -315,7 +318,7 @@ class MainWP_Abilities_Util {
                 __( 'No site found matching "%s".', 'mainwp' ),
                 $site_id_or_domain
             ),
-            [ 'status' => 404 ]
+            array( 'status' => 404 )
         );
     }
 
@@ -326,28 +329,28 @@ class MainWP_Abilities_Util {
      * @return array Array with 'sites' (resolved) and 'errors' (failed).
      */
     public static function resolve_sites( array $site_ids_or_domains ): array {
-        $sites  = [];
-        $errors = [];
+        $sites  = array();
+        $errors = array();
 
         foreach ( $site_ids_or_domains as $identifier ) {
             $site = self::resolve_site( $identifier );
             if ( is_wp_error( $site ) ) {
                 $error_data = $site->get_error_data();
-                $errors[]   = [
+                $errors[]   = array(
                     'identifier' => $identifier,
                     'code'       => $site->get_error_code(),
                     'message'    => $site->get_error_message(),
                     'status'     => isset( $error_data['status'] ) ? $error_data['status'] : null,
-                ];
+                );
             } else {
                 $sites[] = $site;
             }
         }
 
-        return [
+        return array(
             'sites'  => $sites,
             'errors' => $errors,
-        ];
+        );
     }
 
     /**
@@ -409,7 +412,7 @@ class MainWP_Abilities_Util {
                 return new \WP_Error(
                     'mainwp_invalid_input',
                     __( 'Site identifier is required.', 'mainwp' ),
-                    [ 'status' => 400 ]
+                    array( 'status' => 400 )
                 );
             }
 
@@ -554,17 +557,17 @@ class MainWP_Abilities_Util {
         // Structure aligns with REST v2 job status endpoint expectations.
         // Status values: 'queued' -> 'processing' -> 'completed' | 'failed'.
         $job_data = array(
-            'job_type'   => 'sync',                  // Distinguishes from 'update' jobs.
-            'sites'      => $site_ids,
-            'status'     => 'queued',                // queued | processing | completed | failed.
-            'created'    => time(),
-            'started'    => null,
-            'completed'  => null,
-            'synced'     => array(),                 // Successfully synced sites.
-            'errors'     => array(),                 // Failed syncs array.
-            'progress'   => 0,                       // 0-100 percentage.
-            'total'      => count( $site_ids ),      // Total sites to process.
-            'processed'  => 0,                       // Sites processed so far.
+            'job_type'  => 'sync',                  // Distinguishes from 'update' jobs.
+            'sites'     => $site_ids,
+            'status'    => 'queued',                // queued | processing | completed | failed.
+            'created'   => time(),
+            'started'   => null,
+            'completed' => null,
+            'synced'    => array(),                 // Successfully synced sites.
+            'errors'    => array(),                 // Failed syncs array.
+            'progress'  => 0,                       // 0-100 percentage.
+            'total'     => count( $site_ids ),      // Total sites to process.
+            'processed' => 0,                       // Sites processed so far.
         );
 
         set_transient( 'mainwp_sync_job_' . $job_id, $job_data, DAY_IN_SECONDS );

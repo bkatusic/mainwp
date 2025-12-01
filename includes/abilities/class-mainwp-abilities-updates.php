@@ -391,11 +391,11 @@ class MainWP_Abilities_Updates {
                 ),
                 'page'     => array( 'type' => 'integer' ),
                 'per_page' => array( 'type' => 'integer' ),
-                'total'  => array(
+                'total'    => array(
                     'type'        => 'integer',
                     'description' => __( 'Total number of updates matching filters.', 'mainwp' ),
                 ),
-                'errors' => array(
+                'errors'   => array(
                     'type'        => 'array',
                     'description' => __( 'Site resolution or access errors. Check errors.length > 0 to detect partial failures.', 'mainwp' ),
                     'items'       => array(
@@ -773,9 +773,9 @@ class MainWP_Abilities_Updates {
         }
 
         // Apply pagination.
-        $total        = count( $all_updates );
-        $offset       = ( $page - 1 ) * $per_page;
-        $paged_items  = array_slice( $all_updates, $offset, $per_page );
+        $total       = count( $all_updates );
+        $offset      = ( $page - 1 ) * $per_page;
+        $paged_items = array_slice( $all_updates, $offset, $per_page );
 
         return array(
             'updates'  => $paged_items,
@@ -994,8 +994,8 @@ class MainWP_Abilities_Updates {
                         'message'  => $core_result->get_error_message(),
                     );
                 } else {
-                    $updated[]         = $core_result;
-                    $site_had_updates  = true;
+                    $updated[]        = $core_result;
+                    $site_had_updates = true;
                 }
             }
 

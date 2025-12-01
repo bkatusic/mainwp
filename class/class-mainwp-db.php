@@ -2032,7 +2032,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
             $join_monitors . '
             JOIN ' . $this->table_name( 'wp_sync' ) . ' wp_sync ON wp.id = wp_sync.wpid
             JOIN ' . $this->get_wp_options_view( $extra_view, $view ) . ' wp_optionview ON wp.id = wp_optionview.wpid
-            WHERE 1 ' . $where_cache_ids . $where . $where_group . $where_client . $group_by  .
+            WHERE 1 ' . $where_cache_ids . $where . $where_group . $where_client . $group_by .
             $orderBy;
         }
 
@@ -2040,11 +2040,6 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
             $qry .= ' LIMIT ' . $offset . ', ' . $rowcount;
         } elseif ( false !== $rowcount ) {
             $qry .= ' LIMIT ' . $rowcount;
-        }
-
-        if ( ! empty( $params['dev_log_query'] ) ) {
-            error_log( print_r( $params, true ) ); //phpcs:ignore -- NOSONAR - for dev.
-            error_log( $qry ); //phpcs:ignore -- NOSONAR - for dev.
         }
 
         if ( ! empty( $_included_cache_ids ) ) {
@@ -3548,8 +3543,6 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
     public function log_system_query( $params, $sql, $caller = false ) {
         $params = apply_filters( 'mainwp_log_system_query_params', $params, $sql, $caller );
         if ( is_array( $params ) && ! empty( $params['dev_log_query'] ) && ! empty( $sql ) ) {
-            error_log( print_r($params, true ) ); //phpcs:ignore -- NOSONAR - for dev.
-            error_log( $sql ); //phpcs:ignore -- NOSONAR - for dev.
             do_action( 'mainwp_log_system_query', $params, $sql, $caller );
         }
     }

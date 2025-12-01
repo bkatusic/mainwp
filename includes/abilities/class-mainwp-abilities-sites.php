@@ -442,25 +442,25 @@ class MainWP_Abilities_Sites {
         return array(
             'type'       => 'object',
             'properties' => array(
-                'id'            => array(
+                'id'             => array(
                     'type'        => 'integer',
                     'description' => __( 'MainWP site ID.', 'mainwp' ),
                 ),
-                'url'           => array(
+                'url'            => array(
                     'type'        => 'string',
                     'format'      => 'uri',
                     'description' => __( 'Site URL.', 'mainwp' ),
                 ),
-                'name'          => array(
+                'name'           => array(
                     'type'        => 'string',
                     'description' => __( 'Site name or label.', 'mainwp' ),
                 ),
-                'status'        => array(
+                'status'         => array(
                     'type'        => 'string',
                     'enum'        => array( 'connected', 'disconnected', 'suspended' ),
                     'description' => __( 'Connection status.', 'mainwp' ),
                 ),
-                'client_id'     => array(
+                'client_id'      => array(
                     'oneOf'       => array(
                         array(
                             'type'    => 'integer',
@@ -470,15 +470,15 @@ class MainWP_Abilities_Sites {
                     ),
                     'description' => __( 'Associated client ID.', 'mainwp' ),
                 ),
-                'wp_version'    => array(
+                'wp_version'     => array(
                     'type'        => 'string',
                     'description' => __( 'WordPress version.', 'mainwp' ),
                 ),
-                'php_version'   => array(
+                'php_version'    => array(
                     'type'        => 'string',
                     'description' => __( 'PHP version.', 'mainwp' ),
                 ),
-                'last_sync'     => array(
+                'last_sync'      => array(
                     'oneOf'       => array(
                         array(
                             'type'   => 'string',
@@ -492,15 +492,15 @@ class MainWP_Abilities_Sites {
                     'type'        => 'string',
                     'description' => __( 'Admin username for child site.', 'mainwp' ),
                 ),
-                'child_version' => array(
+                'child_version'  => array(
                     'type'        => 'string',
                     'description' => __( 'MainWP Child plugin version.', 'mainwp' ),
                 ),
-                'notes'         => array(
+                'notes'          => array(
                     'type'        => 'string',
                     'description' => __( 'Site notes.', 'mainwp' ),
                 ),
-                'stats'         => array(
+                'stats'          => array(
                     'type'        => 'object',
                     'description' => __( 'Site statistics (only if include_stats=true).', 'mainwp' ),
                     'properties'  => array(
@@ -746,10 +746,13 @@ class MainWP_Abilities_Sites {
 
         // First get total count (without pagination) to know actual total.
         // Use same filters but without pagination limits.
-        $count_params = array_merge( $db_params, array(
-            'paged'          => 1,
-            'items_per_page' => 99999, // Large number to get all matching sites.
-        ) );
+        $count_params = array_merge(
+            $db_params,
+            array(
+                'paged'          => 1,
+                'items_per_page' => 99999, // Large number to get all matching sites.
+            )
+        );
         $all_websites = $db->get_websites_for_current_user( $count_params );
         $total        = is_array( $all_websites ) ? count( $all_websites ) : 0;
 
