@@ -76,7 +76,7 @@ class MainWP_Abilities_Sites {
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => true,
+                        'readonly'     => false, // Uses POST to support optional input parameters.
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -964,6 +964,11 @@ class MainWP_Abilities_Sites {
 
         $plugins = array();
         foreach ( $plugins_data as $slug => $plugin ) {
+            // Skip plugins with invalid slugs.
+            if ( empty( $slug ) || ! is_string( $slug ) ) {
+                continue;
+            }
+
             $is_active = ! empty( $plugin['active'] );
 
             // Apply status filter.
@@ -1050,7 +1055,7 @@ class MainWP_Abilities_Sites {
         // Determine active theme - check for 'active' flag in theme data.
         $active_theme_slug = '';
         foreach ( $themes_data as $slug => $theme ) {
-            if ( ! empty( $theme['active'] ) ) {
+            if ( ! empty( $theme['active'] ) && is_string( $slug ) && ! empty( $slug ) ) {
                 $active_theme_slug = $slug;
                 break;
             }
@@ -1061,6 +1066,11 @@ class MainWP_Abilities_Sites {
 
         $themes = array();
         foreach ( $themes_data as $slug => $theme ) {
+            // Skip themes with invalid slugs.
+            if ( empty( $slug ) || ! is_string( $slug ) ) {
+                continue;
+            }
+
             $is_active = ( $slug === $active_theme_slug );
 
             // Apply status filter.
