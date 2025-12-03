@@ -963,7 +963,12 @@ class MainWP_Abilities_Sites {
         $has_update_filter = $input['has_update'] ?? null;
 
         $plugins = array();
-        foreach ( $plugins_data as $slug => $plugin ) {
+        foreach ( $plugins_data as $key => $plugin ) {
+            // Support both formats:
+            // - Associative array: slug is the key (e.g., 'akismet/akismet.php' => [...])
+            // - Indexed array: slug is inside the plugin data (e.g., 0 => ['slug' => 'akismet/akismet.php', ...])
+            $slug = is_string( $key ) && ! empty( $key ) ? $key : ( $plugin['slug'] ?? '' );
+
             // Skip plugins with invalid slugs.
             if ( empty( $slug ) || ! is_string( $slug ) ) {
                 continue;
@@ -1053,10 +1058,12 @@ class MainWP_Abilities_Sites {
         }
 
         // Determine active theme - check for 'active' flag in theme data.
+        // Support both associative (slug as key) and indexed (slug inside theme) formats.
         $active_theme_slug = '';
-        foreach ( $themes_data as $slug => $theme ) {
-            if ( ! empty( $theme['active'] ) && is_string( $slug ) && ! empty( $slug ) ) {
-                $active_theme_slug = $slug;
+        foreach ( $themes_data as $key => $theme ) {
+            $theme_slug = is_string( $key ) && ! empty( $key ) ? $key : ( $theme['slug'] ?? '' );
+            if ( ! empty( $theme['active'] ) && ! empty( $theme_slug ) ) {
+                $active_theme_slug = $theme_slug;
                 break;
             }
         }
@@ -1065,7 +1072,12 @@ class MainWP_Abilities_Sites {
         $has_update_filter = $input['has_update'] ?? null;
 
         $themes = array();
-        foreach ( $themes_data as $slug => $theme ) {
+        foreach ( $themes_data as $key => $theme ) {
+            // Support both formats:
+            // - Associative array: slug is the key (e.g., 'twentytwentyfour' => [...])
+            // - Indexed array: slug is inside the theme data (e.g., 0 => ['slug' => 'twentytwentyfour', ...])
+            $slug = is_string( $key ) && ! empty( $key ) ? $key : ( $theme['slug'] ?? '' );
+
             // Skip themes with invalid slugs.
             if ( empty( $slug ) || ! is_string( $slug ) ) {
                 continue;
