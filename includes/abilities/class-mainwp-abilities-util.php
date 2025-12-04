@@ -323,6 +323,140 @@ class MainWP_Abilities_Util {
     }
 
     /**
+     * Resolve a client identifier to a MainWP client object.
+     *
+     * Resolution order:
+     * 1. If numeric → treat as client ID
+     * 2. Otherwise → treat as email and resolve (exact match, returns first by ID)
+     *
+     * Note: Client emails are not enforced as unique in the database.
+     * Email lookup uses exact match and returns the first matching client
+     * ordered by client_id ASC (first created). For precise lookup,
+     * use numeric client ID.
+     *
+     * @param int|string $client_id_or_email Client ID or email address.
+     * @return object|\WP_Error Client object on success, WP_Error on failure.
+     */
+    public static function resolve_client( $client_id_or_email ) {
+        if ( ! class_exists( 'MainWP\Dashboard\MainWP_DB_Client' ) ) {
+            return new \WP_Error(
+                'mainwp_internal_error',
+                __( 'MainWP client database class is not available.', 'mainwp' ),
+                array( 'status' => 500 )
+            );
+        }
+
+        $db = MainWP_DB_Client::instance();
+
+        // Numeric → try as client ID.
+        if ( is_numeric( $client_id_or_email ) ) {
+            $client = $db->get_wp_client_by( 'client_id', (int) $client_id_or_email );
+            if ( $client ) {
+                return $client;
+            }
+            return new \WP_Error(
+                'mainwp_client_not_found',
+                sprintf(
+                    /* translators: %d: client ID */
+                    __( 'No client found with ID %d.', 'mainwp' ),
+                    (int) $client_id_or_email
+                ),
+                array( 'status' => 404 )
+            );
+        }
+
+        // Non-numeric → treat as email.
+        // Use exact match on email with deterministic ordering.
+        global $wpdb;
+        $table  = $wpdb->prefix . 'mainwp_clients';
+        $client = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM {$table} WHERE client_email = %s ORDER BY client_id ASC LIMIT 1",
+                $client_id_or_email
+            )
+        );
+
+        if ( $client ) {
+            return $client;
+        }
+
+        return new \WP_Error(
+            'mainwp_client_not_found',
+            sprintf(
+                /* translators: %s: email address */
+                __( 'No client found with email "%s".', 'mainwp' ),
+                $client_id_or_email
+            ),
+            array( 'status' => 404 )
+        );
+    }
+
+    /**
+     * Map a client object to the standard output format.
+     *
+     * @param object $client Client object from database.
+     * @param array  $options Optional formatting options.
+     *                        - 'include_sites' (bool): Include associated sites count.
+     *                        - 'include_contacts' (bool): Include client contacts.
+     * @return array Formatted client data.
+     */
+    public static function format_client_for_output( $client, array $options = array() ): array {
+        $output = array(
+            'id'               => (int) $client->client_id,
+            'name'             => (string) $client->name,
+            'email'            => isset( $client->client_email ) ? (string) $client->client_email : '',
+            'phone'            => isset( $client->client_phone ) ? (string) $client->client_phone : '',
+            'address_1'        => isset( $client->address_1 ) ? (string) $client->address_1 : '',
+            'address_2'        => isset( $client->address_2 ) ? (string) $client->address_2 : '',
+            'city'             => isset( $client->city ) ? (string) $client->city : '',
+            'state'            => isset( $client->state ) ? (string) $client->state : '',
+            'zip'              => isset( $client->zip ) ? (string) $client->zip : '',
+            'country'          => isset( $client->country ) ? (string) $client->country : '',
+            'note'             => isset( $client->note ) ? (string) $client->note : '',
+            'suspended'        => isset( $client->suspended ) ? (int) $client->suspended : 0,
+            'created'          => isset( $client->created ) && $client->created > 0
+                ? gmdate( 'c', (int) $client->created )
+                : null,
+            'facebook'         => isset( $client->client_facebook ) ? (string) $client->client_facebook : '',
+            'twitter'          => isset( $client->client_twitter ) ? (string) $client->client_twitter : '',
+            'instagram'        => isset( $client->client_instagram ) ? (string) $client->client_instagram : '',
+            'linkedin'         => isset( $client->client_linkedin ) ? (string) $client->client_linkedin : '',
+        );
+
+        // Include sites count if requested.
+        if ( ! empty( $options['include_sites'] ) ) {
+            $sites                  = MainWP_DB_Client::instance()->get_websites_by_client_ids( $client->client_id );
+            $output['sites_count'] = is_array( $sites ) ? count( $sites ) : 0;
+        }
+
+        return $output;
+    }
+
+    /**
+     * Map a cost tracker entry to the standard output format.
+     *
+     * @param object $cost Cost tracker object from database.
+     * @return array Formatted cost data.
+     */
+    public static function format_cost_for_output( $cost ): array {
+        return array(
+            'id'             => (int) $cost->id,
+            'name'           => (string) $cost->name,
+            'type'           => isset( $cost->type ) ? (string) $cost->type : '',
+            'price'          => isset( $cost->price ) ? (float) $cost->price : 0.0,
+            'renewal_type'   => isset( $cost->renewal_type ) ? (string) $cost->renewal_type : '',
+            'payment_method' => isset( $cost->payment_method ) ? (string) $cost->payment_method : '',
+            'product_type'   => isset( $cost->product_type ) ? (string) $cost->product_type : '',
+            'last_renewal'   => isset( $cost->last_renewal ) && $cost->last_renewal > 0
+                ? gmdate( 'c', (int) $cost->last_renewal )
+                : null,
+            'next_renewal'   => isset( $cost->next_renewal ) && $cost->next_renewal > 0
+                ? gmdate( 'c', (int) $cost->next_renewal )
+                : null,
+        );
+    }
+
+    /**
      * Resolve multiple site identifiers.
      *
      * @param array $site_ids_or_domains Array of site IDs or URLs/domains.

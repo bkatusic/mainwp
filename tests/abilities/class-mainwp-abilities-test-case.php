@@ -8,6 +8,7 @@
 namespace MainWP\Dashboard\Tests;
 
 use WP_UnitTestCase;
+use MainWP\Dashboard\MainWP_DB_Client;
 
 /**
  * Base class for MainWP Abilities tests.
@@ -73,6 +74,10 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 
 		// Clean up test sites.
 		$wpdb->query( "DELETE FROM {$wpdb->prefix}mainwp_wp WHERE url LIKE 'https://test-%'" );
+
+		// Clean up test clients.
+		$wpdb->query( "DELETE FROM {$wpdb->prefix}mainwp_clients WHERE name LIKE 'Test Client%'" );
+		$wpdb->query( "DELETE FROM {$wpdb->prefix}mainwp_clients WHERE client_email LIKE 'test-%@example.com'" );
 
 		// Clean up job transients created during tests.
 		foreach ( $this->created_sync_job_ids as $job_id ) {
@@ -633,5 +638,48 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 				[ '%d', '%s', '%s' ]
 			);
 		}
+	}
+
+	/**
+	 * Create a test client in the MainWP database.
+	 *
+	 * @param array $args Optional. Client properties to override defaults.
+	 * @return int Client ID.
+	 */
+	protected function create_test_client( array $args = [] ): int {
+		$defaults = [
+			'name'             => 'Test Client ' . wp_generate_uuid4(),
+			'client_email'     => 'test-' . wp_generate_uuid4() . '@example.com',
+			'client_phone'     => '',
+			'address_1'        => '',
+			'address_2'        => '',
+			'city'             => '',
+			'state'            => '',
+			'zip'              => '',
+			'country'          => '',
+			'note'             => '',
+			'suspended'        => 0,
+			'created'          => time(),
+			'client_facebook'  => '',
+			'client_twitter'   => '',
+			'client_instagram' => '',
+			'client_linkedin'  => '',
+		];
+
+		$data = array_merge( $defaults, $args );
+
+		$client = MainWP_DB_Client::instance()->update_client( $data, true );
+
+		return (int) $client->client_id;
+	}
+
+	/**
+	 * Get a test client by ID.
+	 *
+	 * @param int $client_id Client ID.
+	 * @return object|null Client object or null if not found.
+	 */
+	protected function get_test_client( int $client_id ): ?object {
+		return MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $client_id );
 	}
 }

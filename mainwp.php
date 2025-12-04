@@ -123,6 +123,7 @@ require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'class-mainw
 require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities-util.php'; // NOSONAR -- WP compatible.
 require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities-sites.php'; // NOSONAR -- WP compatible.
 require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities-updates.php'; // NOSONAR -- WP compatible.
+require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities-clients.php'; // NOSONAR -- WP compatible.
 require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities.php'; // NOSONAR -- WP compatible.
 
 // Initialize Abilities API integration (does nothing if Abilities API not available).
