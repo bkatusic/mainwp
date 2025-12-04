@@ -72,12 +72,21 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 	public function tearDown(): void {
 		global $wpdb;
 
+		// Suppress errors during cleanup - tables may not exist in all test scenarios.
+		$wpdb->suppress_errors( true );
+
 		// Clean up test sites.
 		$wpdb->query( "DELETE FROM {$wpdb->prefix}mainwp_wp WHERE url LIKE 'https://test-%'" );
 
-		// Clean up test clients.
-		$wpdb->query( "DELETE FROM {$wpdb->prefix}mainwp_clients WHERE name LIKE 'Test Client%'" );
-		$wpdb->query( "DELETE FROM {$wpdb->prefix}mainwp_clients WHERE client_email LIKE 'test-%@example.com'" );
+		// Clean up test clients (correct table name is mainwp_wp_clients).
+		$wpdb->query( "DELETE FROM {$wpdb->prefix}mainwp_wp_clients WHERE name LIKE 'Test Client%'" );
+		$wpdb->query( "DELETE FROM {$wpdb->prefix}mainwp_wp_clients WHERE client_email LIKE 'test-%@example.com'" );
+
+		// Clean up test tags.
+		$wpdb->query( "DELETE FROM {$wpdb->prefix}mainwp_group WHERE name LIKE 'Test Tag%'" );
+
+		// Restore error reporting.
+		$wpdb->suppress_errors( false );
 
 		// Clean up job transients created during tests.
 		foreach ( $this->created_sync_job_ids as $job_id ) {
@@ -360,7 +369,7 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 	 * @return void
 	 */
 	protected function skip_if_no_abilities_api(): void {
-		if ( ! function_exists( 'wp_get_ability' ) ) {
+		if ( ! function_exists( 'wp_get_ability' ) || ! function_exists( 'wp_abilities' ) ) {
 			$this->markTestSkipped( 'Abilities API not available.' );
 		}
 	}
@@ -681,5 +690,21 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 	 */
 	protected function get_test_client( int $client_id ): ?object {
 		return MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $client_id );
+	}
+
+	/**
+	 * Create a test tag in the MainWP database.
+	 *
+	 * @param array $args Optional. Tag properties to override defaults.
+	 * @return int Tag ID.
+	 */
+	protected function create_test_tag( array $args = [] ): int {
+		$defaults = array(
+			'name'  => 'Test Tag ' . wp_generate_uuid4(),
+			'color' => '#3498db',
+		);
+		$data     = array_merge( $defaults, $args );
+		$tag      = \MainWP\Dashboard\MainWP_DB_Common::instance()->add_tag( $data );
+		return (int) $tag->id;
 	}
 }

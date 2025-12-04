@@ -392,6 +392,38 @@ class MainWP_Abilities_Util {
     }
 
     /**
+     * Resolve a tag identifier to a tag object.
+     *
+     * @param int $tag_id Tag ID.
+     * @return object|\WP_Error Tag object on success, WP_Error on failure.
+     */
+    public static function resolve_tag( int $tag_id ) {
+        if ( ! class_exists( 'MainWP\Dashboard\MainWP_DB_Common' ) ) {
+            return new \WP_Error(
+                'mainwp_internal_error',
+                __( 'MainWP database class is not available.', 'mainwp' ),
+                array( 'status' => 500 )
+            );
+        }
+
+        $tag = MainWP_DB_Common::instance()->get_group_by_id( $tag_id );
+
+        if ( empty( $tag ) ) {
+            return new \WP_Error(
+                'mainwp_tag_not_found',
+                sprintf(
+                    /* translators: %d: tag ID */
+                    __( 'No tag found with ID %d.', 'mainwp' ),
+                    $tag_id
+                ),
+                array( 'status' => 404 )
+            );
+        }
+
+        return $tag;
+    }
+
+    /**
      * Map a client object to the standard output format.
      *
      * @param object $client Client object from database.
@@ -454,6 +486,45 @@ class MainWP_Abilities_Util {
                 ? gmdate( 'c', (int) $cost->next_renewal )
                 : null,
         );
+    }
+
+    /**
+     * Format a tag object for ability output.
+     *
+     * Standardizes tag data structure for consistent API responses.
+     *
+     * @param object $tag     Tag object from MainWP_DB_Common::get_tags().
+     * @param array  $options Optional. Formatting options:
+     *                        - 'include_sites_ids' (bool): Include array of site IDs. Default true.
+     * @return array Formatted tag data.
+     */
+    public static function format_tag_for_output( object $tag, array $options = array() ): array {
+        $defaults = array(
+            'include_sites_ids' => true,
+        );
+        $options  = array_merge( $defaults, $options );
+
+        $formatted = array(
+            'id'          => (int) $tag->id,
+            'name'        => (string) $tag->name,
+            'color'       => ! empty( $tag->color ) ? (string) $tag->color : null,
+            'sites_count' => isset( $tag->count_sites ) ? (int) $tag->count_sites : 0,
+        );
+
+        if ( $options['include_sites_ids'] ) {
+            // Always include sites_ids key to match output schema.
+            $formatted['sites_ids'] = array();
+
+            if ( isset( $tag->sites_ids ) ) {
+                if ( is_string( $tag->sites_ids ) && ! empty( $tag->sites_ids ) ) {
+                    $formatted['sites_ids'] = array_map( 'intval', explode( ',', $tag->sites_ids ) );
+                } elseif ( is_array( $tag->sites_ids ) ) {
+                    $formatted['sites_ids'] = array_map( 'intval', $tag->sites_ids );
+                }
+            }
+        }
+
+        return $formatted;
     }
 
     /**

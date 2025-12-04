@@ -105,6 +105,15 @@ class MainWP_Abilities {
                 'description' => __( 'Abilities for managing MainWP clients including creation, updates, and client-site relationships.', 'mainwp' ),
             )
         );
+
+        // Tags category.
+        wp_register_ability_category(
+            'mainwp-tags',
+            array(
+                'label'       => __( 'MainWP Tags', 'mainwp' ),
+                'description' => __( 'Abilities for managing MainWP tags for organizing sites and clients.', 'mainwp' ),
+            )
+        );
     }
 
     /**
@@ -122,7 +131,10 @@ class MainWP_Abilities {
         // Client abilities.
         MainWP_Abilities_Clients::register();
 
+        // Tag abilities.
+        MainWP_Abilities_Tags::register();
+
         // NOTE: Extensions register their own abilities in their own codebases.
-        // Total core abilities: 20 (5 sites + 4 updates + 11 clients)
+        // Total core abilities: 27 (5 sites + 4 updates + 11 clients + 7 tags)
     }
 }

@@ -315,6 +315,7 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             $page           = isset( $params['page'] ) ? intval( $params['page'] ) : false;
             $per_page       = isset( $params['per_page'] ) ? intval( $params['per_page'] ) : false;
             $with_sites_ids = isset( $params['with_sites_ids'] ) && $params['with_sites_ids'] ? true : false;
+            $count_only     = ! empty( $params['count'] );
 
             if ( $with_sites_ids ) {
                 $select .= ', wp_tagview.* ';
@@ -330,6 +331,11 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
 
             if ( ! empty( $include ) ) {
                 $where .= ' AND  gr.id IN (' . implode( ',', $include ) . ') ';
+            }
+
+            // Return count only if requested.
+            if ( $count_only ) {
+                return (int) $this->wpdb->get_var( 'SELECT COUNT(*) FROM ' . $this->table_name( 'group' ) . ' gr WHERE 1 ' . $where );
             }
 
             if ( ! empty( $page ) && ! empty( $per_page ) ) {

@@ -54,5 +54,21 @@ tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );
 // Start up the WP testing environment.
 require $_tests_dir . '/includes/bootstrap.php';
 
+/**
+ * Install MainWP database tables.
+ *
+ * The plugin activation hook doesn't run during tests, so we need to
+ * manually trigger the database installation to create all required tables.
+ */
+function _mainwp_install_tables() {
+	// Instantiate DB classes that register table creation hooks.
+	\MainWP\Dashboard\MainWP_DB_Client::instance();
+	\MainWP\Dashboard\MainWP_DB_Site_Actions::instance();
+
+	// Run the installation (creates all tables via dbDelta).
+	\MainWP\Dashboard\MainWP_Install::instance()->install();
+}
+_mainwp_install_tables();
+
 // Load custom test case base classes.
 require_once dirname( __FILE__ ) . '/abilities/class-mainwp-abilities-test-case.php';
