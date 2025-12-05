@@ -54,6 +54,43 @@ class MainWP_Abilities_Sites {
         self::register_sync_sites();
         self::register_get_site_plugins();
         self::register_get_site_themes();
+
+        // Connection Management (8).
+        self::register_add_site();
+        self::register_update_site();
+        self::register_delete_site();
+        self::register_reconnect_site();
+        self::register_disconnect_site();
+        self::register_suspend_site();
+        self::register_unsuspend_site();
+        self::register_check_site();
+
+        // Plugin Management (4).
+        self::register_activate_site_plugins();
+        self::register_deactivate_site_plugins();
+        self::register_delete_site_plugins();
+        self::register_get_abandoned_plugins();
+
+        // Theme Management (3).
+        self::register_activate_site_theme();
+        self::register_delete_site_themes();
+        self::register_get_abandoned_themes();
+
+        // Security & Monitoring (2).
+        self::register_get_site_security();
+        self::register_get_site_changes();
+
+        // Related Data (4).
+        self::register_get_site_client();
+        self::register_get_site_costs();
+        self::register_count_sites();
+        self::register_get_sites_basic();
+
+        // Batch Operations (4).
+        self::register_reconnect_sites();
+        self::register_disconnect_sites();
+        self::register_check_sites();
+        self::register_suspend_sites();
     }
 
     /**
@@ -1124,6 +1161,3265 @@ class MainWP_Abilities_Sites {
             'active_theme' => $active_theme_slug,
             'themes'       => $themes,
             'total'        => count( $themes ),
+        );
+    }
+    // =========================================================================
+    // Connection Management Abilities (8)
+    // =========================================================================
+
+    /**
+     * Register mainwp/add-site-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_add_site(): void {
+        wp_register_ability(
+            'mainwp/add-site-v1',
+            array(
+                'label'               => __( 'Add MainWP Site', 'mainwp' ),
+                'description'         => __( 'Add a new MainWP child site.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_add_site_input_schema(),
+                'output_schema'       => self::get_site_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_add_site' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => false,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get input schema for add-site-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_add_site_input_schema(): array {
+        return array(
+            'type'       => 'object',
+            'required'   => array( 'url', 'name', 'admin_username' ),
+            'properties' => array(
+                'url'                => array(
+                    'type'        => 'string',
+                    'description' => __( 'Site URL', 'mainwp' ),
+                ),
+                'name'               => array(
+                    'type'        => 'string',
+                    'description' => __( 'Site name', 'mainwp' ),
+                ),
+                'admin_username'     => array(
+                    'type'        => 'string',
+                    'description' => __( 'Admin username', 'mainwp' ),
+                ),
+                'verify_certificate' => array(
+                    'type'        => 'integer',
+                    'description' => __( 'SSL verification (0=off, 1=on, 2=global)', 'mainwp' ),
+                    'default'     => 1,
+                    'enum'        => array( 0, 1, 2 ),
+                ),
+                'ssl_version'        => array(
+                    'type'        => 'integer',
+                    'description' => __( 'SSL version', 'mainwp' ),
+                    'default'     => 0,
+                ),
+                'http_user'          => array(
+                    'type'        => 'string',
+                    'description' => __( 'HTTP auth username', 'mainwp' ),
+                ),
+                'http_pass'          => array(
+                    'type'        => 'string',
+                    'description' => __( 'HTTP auth password', 'mainwp' ),
+                ),
+                'tag_ids'            => array(
+                    'type'        => 'array',
+                    'description' => __( 'Tag IDs to assign', 'mainwp' ),
+                    'items'       => array(
+                        'type' => 'integer',
+                    ),
+                ),
+                'client_id'          => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Client ID to assign', 'mainwp' ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Execute add-site-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Site data or error.
+     */
+    public static function execute_add_site( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        // Validate required fields.
+        $url            = isset( $input['url'] ) ? sanitize_text_field( $input['url'] ) : '';
+        $name           = isset( $input['name'] ) ? sanitize_text_field( $input['name'] ) : '';
+        $admin_username = isset( $input['admin_username'] ) ? sanitize_text_field( $input['admin_username'] ) : '';
+
+        if ( empty( $url ) || empty( $name ) || empty( $admin_username ) ) {
+            return new \WP_Error(
+                'mainwp_invalid_input',
+                __( 'Missing required fields: url, name, or admin_username.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        // Validate URL format.
+        if ( ! filter_var( $url, FILTER_VALIDATE_URL ) ) {
+            return new \WP_Error(
+                'mainwp_invalid_url',
+                __( 'Invalid site URL format.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        // Normalize URL for consistent storage and duplicate detection.
+        // This lowercases the host (per RFC 4343) and ensures trailing slash.
+        $url = MainWP_Abilities_Util::normalize_site_url( $url );
+
+        // Check if site already exists.
+        $existing = MainWP_DB::instance()->get_websites_by_url( $url );
+        if ( ! empty( $existing ) ) {
+            return new \WP_Error(
+                'mainwp_site_already_exists',
+                __( 'A site with this URL already exists.', 'mainwp' ),
+                array( 'status' => 409 )
+            );
+        }
+
+        // Prepare site data.
+        $site_data = array(
+            'url'                => $url,
+            'name'               => $name,
+            'admin'              => $admin_username,
+            'verify_certificate' => isset( $input['verify_certificate'] ) ? (int) $input['verify_certificate'] : 1,
+            'ssl_version'        => isset( $input['ssl_version'] ) ? (int) $input['ssl_version'] : 0,
+        );
+
+        if ( ! empty( $input['http_user'] ) ) {
+            $site_data['http_user'] = sanitize_text_field( $input['http_user'] );
+        }
+        if ( ! empty( $input['http_pass'] ) ) {
+            $site_data['http_pass'] = $input['http_pass'];
+        }
+
+        // Add site.
+        $result = \MainWP_Manage_Sites_Handler::add_site( $site_data );
+
+        if ( is_wp_error( $result ) ) {
+            // Map MainWP error codes to ability error codes.
+            $code    = $result->get_error_code();
+            $message = $result->get_error_message();
+
+            if ( strpos( $code, 'connection' ) !== false ) {
+                return new \WP_Error( 'mainwp_connection_failed', $message, array( 'status' => 503 ) );
+            }
+            if ( strpos( $code, 'credentials' ) !== false || strpos( $code, 'invalid' ) !== false ) {
+                return new \WP_Error( 'mainwp_invalid_credentials', $message, array( 'status' => 401 ) );
+            }
+
+            // Generic error.
+            return $result;
+        }
+
+        // Get the newly added site.
+        $site_id = isset( $result['site_id'] ) ? (int) $result['site_id'] : 0;
+        if ( empty( $site_id ) ) {
+            return new \WP_Error(
+                'mainwp_site_add_failed',
+                __( 'Failed to add site.', 'mainwp' ),
+                array( 'status' => 500 )
+            );
+        }
+
+        $site = MainWP_DB::instance()->get_website_by_id( $site_id );
+        if ( empty( $site ) ) {
+            return new \WP_Error(
+                'mainwp_site_not_found',
+                __( 'Site added but could not retrieve site data.', 'mainwp' ),
+                array( 'status' => 500 )
+            );
+        }
+
+        // Assign tags if provided.
+        if ( ! empty( $input['tag_ids'] ) && is_array( $input['tag_ids'] ) ) {
+            MainWP_DB::instance()->update_website_values( $site_id, array( 'tags' => implode( ',', array_map( 'intval', $input['tag_ids'] ) ) ) );
+        }
+
+        // Assign client if provided.
+        if ( ! empty( $input['client_id'] ) ) {
+            MainWP_DB::instance()->update_website_values( $site_id, array( 'client_id' => (int) $input['client_id'] ) );
+        }
+
+        // Re-fetch site to get updated data.
+        $site = MainWP_DB::instance()->get_website_by_id( $site_id );
+
+        return MainWP_Abilities_Util::format_site_for_output( $site, true );
+    }
+
+    /**
+     * Register mainwp/update-site-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_update_site(): void {
+        wp_register_ability(
+            'mainwp/update-site-v1',
+            array(
+                'label'               => __( 'Update MainWP Site', 'mainwp' ),
+                'description'         => __( 'Update settings for a MainWP child site.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_update_site_input_schema(),
+                'output_schema'       => self::get_site_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_update_site' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get input schema for update-site-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_update_site_input_schema(): array {
+        return array(
+            'type'       => 'object',
+            'required'   => array( 'site_id_or_domain' ),
+            'properties' => array(
+                'site_id_or_domain'  => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID or domain', 'mainwp' ),
+                ),
+                'name'               => array(
+                    'type'        => 'string',
+                    'description' => __( 'New site name', 'mainwp' ),
+                ),
+                'url'                => array(
+                    'type'        => 'string',
+                    'description' => __( 'New site URL', 'mainwp' ),
+                ),
+                'admin_username'     => array(
+                    'type'        => 'string',
+                    'description' => __( 'New admin username', 'mainwp' ),
+                ),
+                'verify_certificate' => array(
+                    'type'        => 'integer',
+                    'description' => __( 'SSL verification (0=off, 1=on, 2=global)', 'mainwp' ),
+                    'enum'        => array( 0, 1, 2 ),
+                ),
+                'ssl_version'        => array(
+                    'type'        => 'integer',
+                    'description' => __( 'SSL version', 'mainwp' ),
+                ),
+                'http_user'          => array(
+                    'type'        => 'string',
+                    'description' => __( 'HTTP auth username', 'mainwp' ),
+                ),
+                'http_pass'          => array(
+                    'type'        => 'string',
+                    'description' => __( 'HTTP auth password', 'mainwp' ),
+                ),
+                'tag_ids'            => array(
+                    'type'        => 'array',
+                    'description' => __( 'Tag IDs to assign', 'mainwp' ),
+                    'items'       => array(
+                        'type' => 'integer',
+                    ),
+                ),
+                'client_id'          => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Client ID to assign', 'mainwp' ),
+                ),
+                'suspended'          => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Suspended status (0 or 1)', 'mainwp' ),
+                    'enum'        => array( 0, 1 ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Execute update-site-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Site data or error.
+     */
+    public static function execute_update_site( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        $update_data = array();
+
+        if ( isset( $input['name'] ) ) {
+            $update_data['name'] = sanitize_text_field( $input['name'] );
+        }
+        if ( isset( $input['url'] ) ) {
+            $update_data['url'] = sanitize_text_field( $input['url'] );
+        }
+        if ( isset( $input['admin_username'] ) ) {
+            $update_data['adminname'] = sanitize_text_field( $input['admin_username'] );
+        }
+        if ( isset( $input['verify_certificate'] ) ) {
+            $update_data['verify_certificate'] = (int) $input['verify_certificate'];
+        }
+        if ( isset( $input['ssl_version'] ) ) {
+            $update_data['ssl_version'] = (int) $input['ssl_version'];
+        }
+        if ( isset( $input['http_user'] ) ) {
+            $update_data['http_user'] = sanitize_text_field( $input['http_user'] );
+        }
+        if ( isset( $input['http_pass'] ) ) {
+            $update_data['http_pass'] = $input['http_pass'];
+        }
+        if ( isset( $input['suspended'] ) ) {
+            $update_data['suspended'] = (int) $input['suspended'];
+        }
+
+        if ( ! empty( $update_data ) ) {
+            MainWP_DB::instance()->update_website_values( $site->id, $update_data );
+        }
+
+        if ( isset( $input['tag_ids'] ) && is_array( $input['tag_ids'] ) ) {
+            MainWP_DB::instance()->update_website_values( $site->id, array( 'tags' => implode( ',', array_map( 'intval', $input['tag_ids'] ) ) ) );
+        }
+
+        if ( isset( $input['client_id'] ) ) {
+            MainWP_DB::instance()->update_website_values( $site->id, array( 'client_id' => (int) $input['client_id'] ) );
+        }
+
+        $site = MainWP_DB::instance()->get_website_by_id( $site->id );
+
+        return MainWP_Abilities_Util::format_site_for_output( $site, true );
+    }
+
+    /**
+     * Register mainwp/delete-site-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_delete_site(): void {
+        wp_register_ability(
+            'mainwp/delete-site-v1',
+            array(
+                'label'               => __( 'Delete MainWP Site', 'mainwp' ),
+                'description'         => __( 'Delete a MainWP child site. Requires confirmation. Supports dry-run mode.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_delete_site_input_schema(),
+                'output_schema'       => self::get_delete_site_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_delete_site' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => true,
+                        'idempotent'   => false,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get input schema for delete-site-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_delete_site_input_schema(): array {
+        return array(
+            'type'       => 'object',
+            'required'   => array( 'site_id_or_domain' ),
+            'properties' => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID or domain', 'mainwp' ),
+                ),
+                'confirm'           => array(
+                    'type'        => 'boolean',
+                    'description' => __( 'Must be true to execute deletion', 'mainwp' ),
+                    'default'     => false,
+                ),
+                'dry_run'           => array(
+                    'type'        => 'boolean',
+                    'description' => __( 'Preview mode - shows what would be deleted without executing', 'mainwp' ),
+                    'default'     => false,
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Get output schema for delete-site-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_delete_site_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'dry_run'      => array(
+                    'type'        => 'boolean',
+                    'description' => __( 'Whether this was a dry-run preview', 'mainwp' ),
+                ),
+                'would_affect' => array(
+                    'type'        => 'object',
+                    'description' => __( 'Site that would be deleted (dry-run only)', 'mainwp' ),
+                ),
+                'warnings'     => array(
+                    'type'        => 'array',
+                    'description' => __( 'Warnings about deletion impact (dry-run only)', 'mainwp' ),
+                    'items'       => array( 'type' => 'string' ),
+                ),
+                'deleted'      => array(
+                    'type'        => 'boolean',
+                    'description' => __( 'Whether deletion was successful', 'mainwp' ),
+                ),
+                'site'         => array(
+                    'type'        => 'object',
+                    'description' => __( 'Deleted site information', 'mainwp' ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Execute delete-site-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_delete_site( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $dry_run = ! empty( $input['dry_run'] );
+        $confirm = ! empty( $input['confirm'] );
+
+        if ( $dry_run && $confirm ) {
+            return new \WP_Error(
+                'mainwp_invalid_input',
+                __( 'Cannot specify both dry_run and confirm.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        if ( $dry_run ) {
+            $warnings = array(
+                __( 'This action is irreversible. The site record will be permanently deleted from the MainWP Dashboard.', 'mainwp' ),
+                __( 'All sync data, site options, and historical information stored in the dashboard database will be removed.', 'mainwp' ),
+                __( 'Group/tag associations for this site will be deleted.', 'mainwp' ),
+                __( 'The MainWP Child plugin on the remote site will NOT be removed - only the dashboard connection will be deleted.', 'mainwp' ),
+            );
+
+            return array(
+                'dry_run'      => true,
+                'would_affect' => array(
+                    'id'   => (int) $site->id,
+                    'url'  => $site->url,
+                    'name' => $site->name,
+                ),
+                'warnings'     => $warnings,
+            );
+        }
+
+        if ( ! $confirm ) {
+            return new \WP_Error(
+                'mainwp_confirmation_required',
+                __( 'Deletion requires confirm parameter to be true.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        $site_info = array(
+            'id'   => (int) $site->id,
+            'url'  => $site->url,
+            'name' => $site->name,
+        );
+
+        $result = MainWP_DB::instance()->remove_website( $site->id );
+
+        if ( false === $result ) {
+            return new \WP_Error(
+                'mainwp_deletion_failed',
+                __( 'Failed to delete site.', 'mainwp' ),
+                array( 'status' => 500 )
+            );
+        }
+
+        return array(
+            'dry_run'      => false,
+            'deleted'      => true,
+            'site'         => $site_info,
+            'would_affect' => array(),
+            'warnings'     => array(),
+        );
+    }
+
+    /**
+     * Register mainwp/reconnect-site-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_reconnect_site(): void {
+        wp_register_ability(
+            'mainwp/reconnect-site-v1',
+            array(
+                'label'               => __( 'Reconnect MainWP Site', 'mainwp' ),
+                'description'         => __( 'Reconnect a disconnected MainWP child site.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_single_site_input_schema(),
+                'output_schema'       => self::get_reconnect_site_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_reconnect_site' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get input schema for single-site operations.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_single_site_input_schema(): array {
+        return array(
+            'type'       => 'object',
+            'required'   => array( 'site_id_or_domain' ),
+            'properties' => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID or domain', 'mainwp' ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Get output schema for reconnect-site-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_reconnect_site_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'reconnected' => array(
+                    'type'        => 'boolean',
+                    'description' => __( 'Whether reconnection was successful', 'mainwp' ),
+                ),
+                'site'        => array(
+                    'type'        => 'object',
+                    'description' => __( 'Site information with status', 'mainwp' ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Execute reconnect-site-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_reconnect_site( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        $result = \MainWP_Manage_Sites_Handler::reconnect_site( $site->id );
+
+        if ( is_wp_error( $result ) ) {
+            return new \WP_Error(
+                'mainwp_reconnect_failed',
+                $result->get_error_message(),
+                array( 'status' => 503 )
+            );
+        }
+
+        $site = MainWP_DB::instance()->get_website_by_id( $site->id );
+
+        return array(
+            'reconnected' => true,
+            'site'        => MainWP_Abilities_Util::format_site_for_output( $site, true ),
+        );
+    }
+
+    /**
+     * Register mainwp/disconnect-site-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_disconnect_site(): void {
+        wp_register_ability(
+            'mainwp/disconnect-site-v1',
+            array(
+                'label'               => __( 'Disconnect MainWP Site', 'mainwp' ),
+                'description'         => __( 'Disconnect a MainWP child site.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_single_site_input_schema(),
+                'output_schema'       => self::get_disconnect_site_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_disconnect_site' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get output schema for disconnect-site-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_disconnect_site_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'disconnected' => array(
+                    'type'        => 'boolean',
+                    'description' => __( 'Whether disconnection was successful', 'mainwp' ),
+                ),
+                'site'         => array(
+                    'type'        => 'object',
+                    'description' => __( 'Site information', 'mainwp' ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Execute disconnect-site-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_disconnect_site( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        MainWP_DB::instance()->update_website_sync_values( $site->id, array( 'sync_errors' => __( 'Manually disconnected', 'mainwp' ) ) );
+
+        $site = MainWP_DB::instance()->get_website_by_id( $site->id );
+
+        return array(
+            'disconnected' => true,
+            'site'         => MainWP_Abilities_Util::format_site_for_output( $site, true ),
+        );
+    }
+
+    /**
+     * Register mainwp/suspend-site-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_suspend_site(): void {
+        wp_register_ability(
+            'mainwp/suspend-site-v1',
+            array(
+                'label'               => __( 'Suspend MainWP Site', 'mainwp' ),
+                'description'         => __( 'Suspend a MainWP child site.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_single_site_input_schema(),
+                'output_schema'       => self::get_suspend_site_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_suspend_site' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get output schema for suspend-site-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_suspend_site_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'suspended' => array(
+                    'type'        => 'boolean',
+                    'description' => __( 'Whether suspension was successful', 'mainwp' ),
+                ),
+                'site'      => array(
+                    'type'        => 'object',
+                    'description' => __( 'Site information with updated suspended status', 'mainwp' ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Execute suspend-site-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_suspend_site( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        MainWP_DB::instance()->update_website_values( $site->id, array( 'suspended' => 1 ) );
+
+        do_action( 'mainwp_site_suspended', $site, 1 );
+
+        $site = MainWP_DB::instance()->get_website_by_id( $site->id );
+
+        return array(
+            'suspended' => true,
+            'site'      => MainWP_Abilities_Util::format_site_for_output( $site, true ),
+        );
+    }
+
+    /**
+     * Register mainwp/unsuspend-site-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_unsuspend_site(): void {
+        wp_register_ability(
+            'mainwp/unsuspend-site-v1',
+            array(
+                'label'               => __( 'Unsuspend MainWP Site', 'mainwp' ),
+                'description'         => __( 'Unsuspend a MainWP child site.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_single_site_input_schema(),
+                'output_schema'       => self::get_unsuspend_site_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_unsuspend_site' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get output schema for unsuspend-site-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_unsuspend_site_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'unsuspended' => array(
+                    'type'        => 'boolean',
+                    'description' => __( 'Whether unsuspension was successful', 'mainwp' ),
+                ),
+                'site'        => array(
+                    'type'        => 'object',
+                    'description' => __( 'Site information with updated suspended status', 'mainwp' ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Execute unsuspend-site-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_unsuspend_site( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        MainWP_DB::instance()->update_website_values( $site->id, array( 'suspended' => 0 ) );
+
+        do_action( 'mainwp_site_suspended', $site, 0 );
+
+        $site = MainWP_DB::instance()->get_website_by_id( $site->id );
+
+        return array(
+            'unsuspended' => true,
+            'site'         => MainWP_Abilities_Util::format_site_for_output( $site, true ),
+        );
+    }
+
+    /**
+     * Register mainwp/check-site-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_check_site(): void {
+        wp_register_ability(
+            'mainwp/check-site-v1',
+            array(
+                'label'               => __( 'Check MainWP Site', 'mainwp' ),
+                'description'         => __( 'Check connectivity status of a MainWP child site.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_single_site_input_schema(),
+                'output_schema'       => self::get_check_site_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_check_site' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_rest_api_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get output schema for check-site-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_check_site_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'site_id'       => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Site ID', 'mainwp' ),
+                ),
+                'response_time' => array(
+                    'type'        => 'number',
+                    'description' => __( 'Response time in seconds', 'mainwp' ),
+                ),
+                'checked'       => array(
+                    'type'        => 'boolean',
+                    'description' => __( 'Whether check was completed', 'mainwp' ),
+                ),
+                'site'          => array(
+                    'type'        => 'object',
+                    'description' => __( 'Site information', 'mainwp' ),
+                ),
+                'status'        => array(
+                    'type'        => 'object',
+                    'description' => __( 'Connectivity status details', 'mainwp' ),
+                    'properties'  => array(
+                        'online'        => array( 'type' => 'boolean' ),
+                        'http_code'     => array( 'type' => 'integer' ),
+                        'response_time' => array( 'type' => 'number' ),
+                    ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Execute check-site-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_check_site( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        $start_time = microtime( true );
+        $result     = \MainWP_Monitoring_Handler::handle_check_website( $site->id );
+        $end_time   = microtime( true );
+
+        if ( is_wp_error( $result ) ) {
+            return new \WP_Error(
+                'mainwp_check_failed',
+                $result->get_error_message(),
+                array( 'status' => 503 )
+            );
+        }
+
+        $online        = ! empty( $result['online'] );
+        $http_code     = isset( $result['http_code'] ) ? (int) $result['http_code'] : 0;
+        $response_time = round( $end_time - $start_time, 2 );
+
+        return array(
+            'site_id'       => (int) $site->id,
+            'response_time' => $response_time,
+            'checked'       => true,
+            'site'          => array(
+                'id'   => (int) $site->id,
+                'url'  => $site->url,
+                'name' => $site->name,
+            ),
+            'status'        => array(
+                'online'        => $online,
+                'http_code'     => $http_code,
+                'response_time' => $response_time,
+            ),
+        );
+    }
+
+    // =========================================================================
+    // Plugin Management Abilities (4)
+    // =========================================================================
+
+    /**
+     * Register mainwp/activate-site-plugins-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_activate_site_plugins(): void {
+        wp_register_ability(
+            'mainwp/activate-site-plugins-v1',
+            array(
+                'label'               => __( 'Activate Site Plugins', 'mainwp' ),
+                'description'         => __( 'Activate plugins on a MainWP child site.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_activate_site_plugins_input_schema(),
+                'output_schema'       => self::get_activate_plugins_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_activate_site_plugins' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get input schema for activate-site-plugins-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_activate_site_plugins_input_schema(): array {
+        return array(
+            'type'       => 'object',
+            'required'   => array( 'site_id_or_domain', 'plugins' ),
+            'properties' => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID or domain', 'mainwp' ),
+                ),
+                'plugins'           => array(
+                    'type'        => 'array',
+                    'description' => __( 'Plugin slugs to activate (e.g., akismet/akismet.php)', 'mainwp' ),
+                    'items'       => array( 'type' => 'string' ),
+                    'minItems'    => 1,
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Get output schema for activate-site-plugins-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_activate_plugins_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'activated' => array(
+                    'type'        => 'array',
+                    'description' => __( 'Successfully activated plugins', 'mainwp' ),
+                    'items'       => array( 'type' => 'object' ),
+                ),
+                'errors'    => array(
+                    'type'        => 'array',
+                    'description' => __( 'Errors encountered', 'mainwp' ),
+                    'items'       => array(
+                        'type'       => 'object',
+                        'properties' => array(
+                            'slug'    => array( 'type' => 'string' ),
+                            'code'    => array( 'type' => 'string' ),
+                            'message' => array( 'type' => 'string' ),
+                        ),
+                    ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Get output schema for deactivate-site-plugins-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_deactivate_plugins_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'deactivated' => array(
+                    'type'        => 'array',
+                    'description' => __( 'Successfully deactivated plugins', 'mainwp' ),
+                    'items'       => array( 'type' => 'object' ),
+                ),
+                'errors'      => array(
+                    'type'        => 'array',
+                    'description' => __( 'Errors encountered', 'mainwp' ),
+                    'items'       => array(
+                        'type'       => 'object',
+                        'properties' => array(
+                            'slug'    => array( 'type' => 'string' ),
+                            'code'    => array( 'type' => 'string' ),
+                            'message' => array( 'type' => 'string' ),
+                        ),
+                    ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Execute activate-site-plugins-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_activate_site_plugins( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        // Check child version for remote plugin operations.
+        $version_check = MainWP_Abilities_Util::check_child_version( $site );
+        if ( is_wp_error( $version_check ) ) {
+            return $version_check;
+        }
+
+        $plugins = isset( $input['plugins'] ) && is_array( $input['plugins'] ) ? $input['plugins'] : array();
+        if ( empty( $plugins ) ) {
+            return new \WP_Error(
+                'mainwp_invalid_input',
+                __( 'No plugins specified.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        $activated = array();
+        $errors    = array();
+
+        foreach ( $plugins as $plugin_slug ) {
+            $result = \MainWP_Connect::fetch_url_authed(
+                $site,
+                'plugin_action',
+                array(
+                    'action' => 'activate',
+                    'plugin' => $plugin_slug,
+                )
+            );
+
+            if ( is_array( $result ) && isset( $result['success'] ) && $result['success'] ) {
+                $activated[] = MainWP_Abilities_Util::format_plugin_for_output(
+                    array(
+                        'slug' => $plugin_slug,
+                        'Name' => $plugin_slug,
+                    )
+                );
+            } else {
+                $message = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Activation failed', 'mainwp' );
+                $errors[] = array(
+                    'slug'    => $plugin_slug,
+                    'code'    => 'mainwp_activation_failed',
+                    'message' => $message,
+                );
+            }
+        }
+
+        return array(
+            'activated' => $activated,
+            'errors'    => $errors,
+        );
+    }
+
+    /**
+     * Register mainwp/deactivate-site-plugins-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_deactivate_site_plugins(): void {
+        wp_register_ability(
+            'mainwp/deactivate-site-plugins-v1',
+            array(
+                'label'               => __( 'Deactivate Site Plugins', 'mainwp' ),
+                'description'         => __( 'Deactivate plugins on a MainWP child site.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_deactivate_site_plugins_input_schema(),
+                'output_schema'       => self::get_deactivate_plugins_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_deactivate_site_plugins' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get input schema for deactivate-site-plugins-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_deactivate_site_plugins_input_schema(): array {
+        return array(
+            'type'       => 'object',
+            'required'   => array( 'site_id_or_domain', 'plugins' ),
+            'properties' => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID or domain', 'mainwp' ),
+                ),
+                'plugins'           => array(
+                    'type'        => 'array',
+                    'description' => __( 'Plugin slugs to deactivate', 'mainwp' ),
+                    'items'       => array( 'type' => 'string' ),
+                    'minItems'    => 1,
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Execute deactivate-site-plugins-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_deactivate_site_plugins( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        // Check child version for remote plugin operations.
+        $version_check = MainWP_Abilities_Util::check_child_version( $site );
+        if ( is_wp_error( $version_check ) ) {
+            return $version_check;
+        }
+
+        $plugins = isset( $input['plugins'] ) && is_array( $input['plugins'] ) ? $input['plugins'] : array();
+        if ( empty( $plugins ) ) {
+            return new \WP_Error(
+                'mainwp_invalid_input',
+                __( 'No plugins specified.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        $deactivated = array();
+        $errors      = array();
+
+        foreach ( $plugins as $plugin_slug ) {
+            $result = \MainWP_Connect::fetch_url_authed(
+                $site,
+                'plugin_action',
+                array(
+                    'action' => 'deactivate',
+                    'plugin' => $plugin_slug,
+                )
+            );
+
+            if ( is_array( $result ) && isset( $result['success'] ) && $result['success'] ) {
+                $deactivated[] = MainWP_Abilities_Util::format_plugin_for_output(
+                    array(
+                        'slug' => $plugin_slug,
+                        'Name' => $plugin_slug,
+                    )
+                );
+            } else {
+                $message = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Deactivation failed', 'mainwp' );
+                $errors[] = array(
+                    'slug'    => $plugin_slug,
+                    'code'    => 'mainwp_deactivation_failed',
+                    'message' => $message,
+                );
+            }
+        }
+
+        return array(
+            'deactivated' => $deactivated,
+            'errors'      => $errors,
+        );
+    }
+
+    /**
+     * Register mainwp/delete-site-plugins-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_delete_site_plugins(): void {
+        wp_register_ability(
+            'mainwp/delete-site-plugins-v1',
+            array(
+                'label'               => __( 'Delete Site Plugins', 'mainwp' ),
+                'description'         => __( 'Delete plugins from a MainWP child site. Requires confirmation. Supports dry-run mode.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_delete_site_plugins_input_schema(),
+                'output_schema'       => self::get_delete_plugins_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_delete_site_plugins' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => true,
+                        'idempotent'   => false,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get input schema for delete-site-plugins-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_delete_site_plugins_input_schema(): array {
+        return array(
+            'type'       => 'object',
+            'required'   => array( 'site_id_or_domain', 'plugins' ),
+            'properties' => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID or domain', 'mainwp' ),
+                ),
+                'plugins'           => array(
+                    'type'        => 'array',
+                    'description' => __( 'Plugin slugs to delete', 'mainwp' ),
+                    'items'       => array( 'type' => 'string' ),
+                    'minItems'    => 1,
+                ),
+                'confirm'           => array(
+                    'type'        => 'boolean',
+                    'description' => __( 'Must be true to execute deletion', 'mainwp' ),
+                    'default'     => false,
+                ),
+                'dry_run'           => array(
+                    'type'        => 'boolean',
+                    'description' => __( 'Preview mode', 'mainwp' ),
+                    'default'     => false,
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Get output schema for delete-site-plugins-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_delete_plugins_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'dry_run'      => array( 'type' => 'boolean' ),
+                'would_affect' => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'object' ),
+                ),
+                'count'        => array( 'type' => 'integer' ),
+                'warnings'     => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'string' ),
+                ),
+                'deleted'      => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'object' ),
+                ),
+                'errors'       => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'object' ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Execute delete-site-plugins-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_delete_site_plugins( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $dry_run = ! empty( $input['dry_run'] );
+        $confirm = ! empty( $input['confirm'] );
+
+        if ( $dry_run && $confirm ) {
+            return new \WP_Error(
+                'mainwp_invalid_input',
+                __( 'Cannot specify both dry_run and confirm.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        // Check child version for remote plugin operations.
+        $version_check = MainWP_Abilities_Util::check_child_version( $site );
+        if ( is_wp_error( $version_check ) ) {
+            return $version_check;
+        }
+
+        $plugins = isset( $input['plugins'] ) && is_array( $input['plugins'] ) ? $input['plugins'] : array();
+        if ( empty( $plugins ) ) {
+            return new \WP_Error(
+                'mainwp_invalid_input',
+                __( 'No plugins specified.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        if ( $dry_run ) {
+            $would_affect = array();
+            $warnings     = array();
+
+            // Get installed plugins from site data to check active status.
+            $installed_plugins = ! empty( $site->plugins ) ? json_decode( $site->plugins, true ) : array();
+            if ( ! is_array( $installed_plugins ) ) {
+                $installed_plugins = array();
+            }
+
+            // Build lookup of active plugins by slug.
+            $active_plugins = array();
+            foreach ( $installed_plugins as $key => $plugin_data ) {
+                $slug = is_string( $key ) && ! empty( $key ) ? $key : ( $plugin_data['slug'] ?? '' );
+                if ( ! empty( $slug ) && ! empty( $plugin_data['active'] ) ) {
+                    $active_plugins[ $slug ] = true;
+                }
+            }
+
+            foreach ( $plugins as $plugin_slug ) {
+                $would_affect[] = MainWP_Abilities_Util::format_plugin_for_output(
+                    array(
+                        'slug' => $plugin_slug,
+                        'Name' => $plugin_slug,
+                    )
+                );
+
+                // Add warning for active plugins.
+                if ( isset( $active_plugins[ $plugin_slug ] ) ) {
+                    $warnings[] = sprintf(
+                        /* translators: %s: plugin slug */
+                        __( 'Plugin %s is currently active.', 'mainwp' ),
+                        $plugin_slug
+                    );
+                }
+            }
+
+            return array(
+                'dry_run'      => true,
+                'would_affect' => $would_affect,
+                'count'        => count( $would_affect ),
+                'warnings'     => $warnings,
+            );
+        }
+
+        if ( ! $confirm ) {
+            return new \WP_Error(
+                'mainwp_confirmation_required',
+                __( 'Deletion requires confirm parameter to be true.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        $deleted = array();
+        $errors  = array();
+
+        foreach ( $plugins as $plugin_slug ) {
+            $result = \MainWP_Connect::fetch_url_authed(
+                $site,
+                'plugin_action',
+                array(
+                    'action' => 'delete',
+                    'plugin' => $plugin_slug,
+                )
+            );
+
+            if ( is_wp_error( $result ) ) {
+                $errors[] = array(
+                    'slug'    => $plugin_slug,
+                    'code'    => 'mainwp_' . $result->get_error_code(),
+                    'message' => $result->get_error_message(),
+                );
+            } elseif ( is_array( $result ) && isset( $result['success'] ) && $result['success'] ) {
+                $deleted[] = MainWP_Abilities_Util::format_plugin_for_output(
+                    array(
+                        'slug' => $plugin_slug,
+                        'Name' => $plugin_slug,
+                    )
+                );
+            } else {
+                $message = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Deletion failed', 'mainwp' );
+                $errors[] = array(
+                    'slug'    => $plugin_slug,
+                    'code'    => 'mainwp_deletion_failed',
+                    'message' => $message,
+                );
+            }
+        }
+
+        return array(
+            'deleted' => $deleted,
+            'errors'  => $errors,
+        );
+    }
+
+    /**
+     * Register mainwp/get-abandoned-plugins-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_get_abandoned_plugins(): void {
+        wp_register_ability(
+            'mainwp/get-abandoned-plugins-v1',
+            array(
+                'label'               => __( 'Get Abandoned Plugins', 'mainwp' ),
+                'description'         => __( 'Get list of abandoned plugins on a child site. Returns plugins detected during last sync. Data freshness depends on sync frequency.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_single_site_input_schema(),
+                'output_schema'       => self::get_abandoned_plugins_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_get_abandoned_plugins' ),
+                'permission_callback' => MainWP_Abilities_Util::make_site_permission_callback( 'site_id_or_domain' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get output schema for get-abandoned-plugins-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_abandoned_plugins_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'plugins' => array(
+                    'type'  => 'array',
+                    'items' => array(
+                        'type'       => 'object',
+                        'properties' => array(
+                            'slug'              => array( 'type' => 'string' ),
+                            'name'              => array( 'type' => 'string' ),
+                            'version'           => array( 'type' => 'string' ),
+                            'last_updated'      => array( 'type' => 'string' ),
+                            'days_since_update' => array( 'type' => 'integer' ),
+                        ),
+                    ),
+                ),
+                'total'   => array( 'type' => 'integer' ),
+            ),
+        );
+    }
+
+    /**
+     * Execute get-abandoned-plugins-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_get_abandoned_plugins( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        $abandoned_data = MainWP_DB::instance()->get_website_option( $site, 'plugins_outdate_info' );
+        $abandoned      = ! empty( $abandoned_data ) ? json_decode( $abandoned_data, true ) : array();
+
+        if ( ! is_array( $abandoned ) ) {
+            $abandoned = array();
+        }
+
+        $plugins = array();
+        foreach ( $abandoned as $slug => $info ) {
+            $plugins[] = array(
+                'slug'              => $slug,
+                'name'              => isset( $info['Name'] ) ? $info['Name'] : $slug,
+                'version'           => isset( $info['Version'] ) ? $info['Version'] : '',
+                'last_updated'      => isset( $info['last_updated'] ) ? $info['last_updated'] : '',
+                'days_since_update' => isset( $info['outdate_timestamp'] ) ? (int) ( ( time() - $info['outdate_timestamp'] ) / DAY_IN_SECONDS ) : 0,
+            );
+        }
+
+        return array(
+            'plugins' => $plugins,
+            'total'   => count( $plugins ),
+        );
+    }
+
+    // =========================================================================
+    // Theme Management Abilities (3)
+    // =========================================================================
+
+    /**
+     * Register mainwp/activate-site-theme-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_activate_site_theme(): void {
+        wp_register_ability(
+            'mainwp/activate-site-theme-v1',
+            array(
+                'label'               => __( 'Activate Site Theme', 'mainwp' ),
+                'description'         => __( 'Activate a theme on a MainWP child site.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_activate_site_theme_input_schema(),
+                'output_schema'       => self::get_activate_theme_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_activate_site_theme' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get input schema for activate-site-theme-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_activate_site_theme_input_schema(): array {
+        return array(
+            'type'       => 'object',
+            'required'   => array( 'site_id_or_domain', 'theme' ),
+            'properties' => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID or domain', 'mainwp' ),
+                ),
+                'theme'             => array(
+                    'type'        => 'string',
+                    'description' => __( 'Theme slug to activate', 'mainwp' ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Get output schema for activate-theme-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_activate_theme_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'activated' => array( 'type' => 'boolean' ),
+                'theme'     => array( 'type' => 'object' ),
+            ),
+        );
+    }
+
+    /**
+     * Execute activate-site-theme-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_activate_site_theme( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        // Check child version for remote theme operations.
+        $version_check = MainWP_Abilities_Util::check_child_version( $site );
+        if ( is_wp_error( $version_check ) ) {
+            return $version_check;
+        }
+
+        $theme_slug = isset( $input['theme'] ) ? sanitize_text_field( $input['theme'] ) : '';
+        if ( empty( $theme_slug ) ) {
+            return new \WP_Error(
+                'mainwp_invalid_input',
+                __( 'Theme slug is required.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        $result = \MainWP_Connect::fetch_url_authed(
+            $site,
+            'theme_action',
+            array(
+                'action' => 'activate',
+                'theme'  => $theme_slug,
+            )
+        );
+
+        if ( ! is_array( $result ) || empty( $result['success'] ) ) {
+            $message = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Activation failed', 'mainwp' );
+            return new \WP_Error( 'mainwp_activation_failed', $message, array( 'status' => 500 ) );
+        }
+
+        return array(
+            'activated' => true,
+            'theme'     => MainWP_Abilities_Util::format_theme_for_output(
+                array(
+                    'slug' => $theme_slug,
+                    'Name' => $theme_slug,
+                )
+            ),
+        );
+    }
+
+    /**
+     * Register mainwp/delete-site-themes-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_delete_site_themes(): void {
+        wp_register_ability(
+            'mainwp/delete-site-themes-v1',
+            array(
+                'label'               => __( 'Delete Site Themes', 'mainwp' ),
+                'description'         => __( 'Delete themes from a MainWP child site. Requires confirmation. Supports dry-run mode.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_delete_site_themes_input_schema(),
+                'output_schema'       => self::get_delete_themes_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_delete_site_themes' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => true,
+                        'idempotent'   => false,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get input schema for delete-site-themes-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_delete_site_themes_input_schema(): array {
+        return array(
+            'type'       => 'object',
+            'required'   => array( 'site_id_or_domain', 'themes' ),
+            'properties' => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID or domain', 'mainwp' ),
+                ),
+                'themes'            => array(
+                    'type'        => 'array',
+                    'description' => __( 'Theme slugs to delete', 'mainwp' ),
+                    'items'       => array( 'type' => 'string' ),
+                    'minItems'    => 1,
+                ),
+                'confirm'           => array(
+                    'type'        => 'boolean',
+                    'description' => __( 'Must be true to execute deletion', 'mainwp' ),
+                    'default'     => false,
+                ),
+                'dry_run'           => array(
+                    'type'        => 'boolean',
+                    'description' => __( 'Preview mode', 'mainwp' ),
+                    'default'     => false,
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Get output schema for delete-site-themes-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_delete_themes_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'dry_run'      => array( 'type' => 'boolean' ),
+                'would_affect' => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'object' ),
+                ),
+                'count'        => array( 'type' => 'integer' ),
+                'warnings'     => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'string' ),
+                ),
+                'deleted'      => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'object' ),
+                ),
+                'errors'       => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'object' ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Execute delete-site-themes-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_delete_site_themes( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $dry_run = ! empty( $input['dry_run'] );
+        $confirm = ! empty( $input['confirm'] );
+
+        if ( $dry_run && $confirm ) {
+            return new \WP_Error(
+                'mainwp_invalid_input',
+                __( 'Cannot specify both dry_run and confirm.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        // Check child version for remote theme operations.
+        $version_check = MainWP_Abilities_Util::check_child_version( $site );
+        if ( is_wp_error( $version_check ) ) {
+            return $version_check;
+        }
+
+        $themes = isset( $input['themes'] ) && is_array( $input['themes'] ) ? $input['themes'] : array();
+        if ( empty( $themes ) ) {
+            return new \WP_Error(
+                'mainwp_invalid_input',
+                __( 'No themes specified.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        if ( $dry_run ) {
+            $would_affect = array();
+            $warnings     = array();
+
+            // Get installed themes from site data to check active status.
+            $installed_themes = ! empty( $site->themes ) ? json_decode( $site->themes, true ) : array();
+            if ( ! is_array( $installed_themes ) ) {
+                $installed_themes = array();
+            }
+
+            // Find the active theme slug.
+            $active_theme_slug = '';
+            foreach ( $installed_themes as $key => $theme_data ) {
+                $slug = is_string( $key ) && ! empty( $key ) ? $key : ( $theme_data['slug'] ?? '' );
+                if ( ! empty( $slug ) && ! empty( $theme_data['active'] ) ) {
+                    $active_theme_slug = $slug;
+                    break;
+                }
+            }
+
+            foreach ( $themes as $theme_slug ) {
+                $would_affect[] = MainWP_Abilities_Util::format_theme_for_output(
+                    array(
+                        'slug' => $theme_slug,
+                        'Name' => $theme_slug,
+                    )
+                );
+
+                // Add warning for active theme.
+                if ( $theme_slug === $active_theme_slug ) {
+                    $warnings[] = sprintf(
+                        /* translators: %s: theme slug */
+                        __( 'Theme %s is the currently active theme.', 'mainwp' ),
+                        $theme_slug
+                    );
+                }
+            }
+
+            return array(
+                'dry_run'      => true,
+                'would_affect' => $would_affect,
+                'count'        => count( $would_affect ),
+                'warnings'     => $warnings,
+            );
+        }
+
+        if ( ! $confirm ) {
+            return new \WP_Error(
+                'mainwp_confirmation_required',
+                __( 'Deletion requires confirm parameter to be true.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        $deleted = array();
+        $errors  = array();
+
+        foreach ( $themes as $theme_slug ) {
+            $result = \MainWP_Connect::fetch_url_authed(
+                $site,
+                'theme_action',
+                array(
+                    'action' => 'delete',
+                    'theme'  => $theme_slug,
+                )
+            );
+
+            if ( is_wp_error( $result ) ) {
+                $errors[] = array(
+                    'slug'    => $theme_slug,
+                    'code'    => 'mainwp_' . $result->get_error_code(),
+                    'message' => $result->get_error_message(),
+                );
+            } elseif ( is_array( $result ) && isset( $result['success'] ) && $result['success'] ) {
+                $deleted[] = MainWP_Abilities_Util::format_theme_for_output(
+                    array(
+                        'slug' => $theme_slug,
+                        'Name' => $theme_slug,
+                    )
+                );
+            } else {
+                $message = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Deletion failed', 'mainwp' );
+                $errors[] = array(
+                    'slug'    => $theme_slug,
+                    'code'    => 'mainwp_deletion_failed',
+                    'message' => $message,
+                );
+            }
+        }
+
+        return array(
+            'deleted' => $deleted,
+            'errors'  => $errors,
+        );
+    }
+
+    /**
+     * Register mainwp/get-abandoned-themes-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_get_abandoned_themes(): void {
+        wp_register_ability(
+            'mainwp/get-abandoned-themes-v1',
+            array(
+                'label'               => __( 'Get Abandoned Themes', 'mainwp' ),
+                'description'         => __( 'Get list of abandoned themes on a child site. Returns themes detected during last sync. Data freshness depends on sync frequency.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_single_site_input_schema(),
+                'output_schema'       => self::get_abandoned_themes_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_get_abandoned_themes' ),
+                'permission_callback' => MainWP_Abilities_Util::make_site_permission_callback( 'site_id_or_domain' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get output schema for get-abandoned-themes-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_abandoned_themes_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'themes' => array(
+                    'type'  => 'array',
+                    'items' => array(
+                        'type'       => 'object',
+                        'properties' => array(
+                            'slug'              => array( 'type' => 'string' ),
+                            'name'              => array( 'type' => 'string' ),
+                            'version'           => array( 'type' => 'string' ),
+                            'last_updated'      => array( 'type' => 'string' ),
+                            'days_since_update' => array( 'type' => 'integer' ),
+                        ),
+                    ),
+                ),
+                'total'  => array( 'type' => 'integer' ),
+            ),
+        );
+    }
+
+    /**
+     * Execute get-abandoned-themes-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_get_abandoned_themes( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        $abandoned_data = MainWP_DB::instance()->get_website_option( $site, 'themes_outdate_info' );
+        $abandoned      = ! empty( $abandoned_data ) ? json_decode( $abandoned_data, true ) : array();
+
+        if ( ! is_array( $abandoned ) ) {
+            $abandoned = array();
+        }
+
+        $themes = array();
+        foreach ( $abandoned as $slug => $info ) {
+            $themes[] = array(
+                'slug'              => $slug,
+                'name'              => isset( $info['Name'] ) ? $info['Name'] : $slug,
+                'version'           => isset( $info['Version'] ) ? $info['Version'] : '',
+                'last_updated'      => isset( $info['last_updated'] ) ? $info['last_updated'] : '',
+                'days_since_update' => isset( $info['outdate_timestamp'] ) ? (int) ( ( time() - $info['outdate_timestamp'] ) / DAY_IN_SECONDS ) : 0,
+            );
+        }
+
+        return array(
+            'themes' => $themes,
+            'total'  => count( $themes ),
+        );
+    }
+
+    // =========================================================================
+    // Security & Monitoring Abilities (2)
+    // =========================================================================
+
+    /**
+     * Register mainwp/get-site-security-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_get_site_security(): void {
+        wp_register_ability(
+            'mainwp/get-site-security-v1',
+            array(
+                'label'               => __( 'Get Site Security', 'mainwp' ),
+                'description'         => __( 'Get security status for a MainWP child site.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_single_site_input_schema(),
+                'output_schema'       => self::get_site_security_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_get_site_security' ),
+                'permission_callback' => MainWP_Abilities_Util::make_site_permission_callback( 'site_id_or_domain' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get output schema for get-site-security-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_site_security_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'site_id'         => array( 'type' => 'integer' ),
+                'security_issues' => array( 'type' => 'object' ),
+                'total_issues'    => array( 'type' => 'integer' ),
+            ),
+        );
+    }
+
+    /**
+     * Execute get-site-security-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_get_site_security( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        $security_data   = MainWP_DB::instance()->get_website_option( $site, 'security_stats' );
+        $security_issues = ! empty( $security_data ) ? json_decode( $security_data, true ) : array();
+
+        if ( ! is_array( $security_issues ) ) {
+            $security_issues = array();
+        }
+
+        $total_issues = 0;
+        foreach ( $security_issues as $key => $value ) {
+            if ( 'N' === $value || '0' === $value || 0 === $value ) {
+                ++$total_issues;
+            }
+        }
+
+        return array(
+            'site_id'         => (int) $site->id,
+            'security_issues' => $security_issues,
+            'total_issues'    => $total_issues,
+        );
+    }
+
+    /**
+     * Register mainwp/get-site-changes-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_get_site_changes(): void {
+        wp_register_ability(
+            'mainwp/get-site-changes-v1',
+            array(
+                'label'               => __( 'Get Site Changes', 'mainwp' ),
+                'description'         => __( 'Get non-MainWP changes detected on a child site. Requires Logs module.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_site_changes_input_schema(),
+                'output_schema'       => self::get_site_changes_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_get_site_changes' ),
+                'permission_callback' => MainWP_Abilities_Util::make_site_permission_callback( 'site_id_or_domain' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get input schema for get-site-changes-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_site_changes_input_schema(): array {
+        return array(
+            'type'       => 'object',
+            'required'   => array( 'site_id_or_domain' ),
+            'properties' => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID or domain', 'mainwp' ),
+                ),
+                'page'              => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Page number', 'mainwp' ),
+                    'default'     => 1,
+                    'minimum'     => 1,
+                ),
+                'per_page'          => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Items per page', 'mainwp' ),
+                    'default'     => 20,
+                    'minimum'     => 1,
+                    'maximum'     => 100,
+                ),
+                'type'              => array(
+                    'type'        => 'string',
+                    'description' => __( 'Filter by change type', 'mainwp' ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Get output schema for get-site-changes-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_site_changes_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'items'    => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'object' ),
+                ),
+                'page'     => array( 'type' => 'integer' ),
+                'per_page' => array( 'type' => 'integer' ),
+                'total'    => array( 'type' => 'integer' ),
+            ),
+        );
+    }
+
+    /**
+     * Execute get-site-changes-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_get_site_changes( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input(
+            $input,
+            array(
+                'page'     => 1,
+                'per_page' => 20,
+            )
+        );
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        if ( ! class_exists( 'MainWP\Dashboard\Module\Log\Log_Manager' ) ) {
+            return new \WP_Error(
+                'mainwp_module_not_available',
+                __( 'Logs module is not active.', 'mainwp' ),
+                array( 'status' => 501 )
+            );
+        }
+
+        $page     = max( 1, (int) $input['page'] );
+        $per_page = max( 1, min( 100, (int) $input['per_page'] ) );
+        $start    = ( $page - 1 ) * $per_page;
+
+        // Build query arguments for Log_Query.
+        $query_args = array(
+            'wpid'             => (int) $site->id,
+            'sources_conds'    => 'wp-admin-only', // Only non-MainWP changes.
+            'start'            => $start,
+            'records_per_page' => $per_page,
+            'order'            => 'DESC',
+            'orderby'          => 'created',
+            'check_access'     => false, // Already checked above.
+            'optimize'         => true,
+        );
+
+        // Optional type filter (maps to context).
+        if ( ! empty( $input['type'] ) ) {
+            $query_args['contexts'] = sanitize_text_field( $input['type'] );
+        }
+
+        $log_query = new \MainWP\Dashboard\Module\Log\Log_Query();
+        $records   = $log_query->query( $query_args );
+        $total     = $log_query->found_records;
+
+        // Format records for output.
+        $items = array();
+        if ( is_array( $records ) ) {
+            foreach ( $records as $record ) {
+                $items[] = array(
+                    'id'        => isset( $record->log_id ) ? (int) $record->log_id : 0,
+                    'type'      => isset( $record->context ) ? $record->context : '',
+                    'action'    => isset( $record->action ) ? $record->action : '',
+                    'item'      => isset( $record->item ) ? $record->item : '',
+                    'user_id'   => isset( $record->user_id ) ? (int) $record->user_id : 0,
+                    'user'      => isset( $record->user_login ) ? $record->user_login : '',
+                    'timestamp' => isset( $record->created ) ? gmdate( 'c', (int) ( $record->created / 1000000 ) ) : '',
+                );
+            }
+        }
+
+        return array(
+            'items'    => $items,
+            'page'     => $page,
+            'per_page' => $per_page,
+            'total'    => (int) $total,
+        );
+    }
+
+    // =========================================================================
+    // Related Data Abilities (4)
+    // =========================================================================
+
+    /**
+     * Register mainwp/get-site-client-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_get_site_client(): void {
+        wp_register_ability(
+            'mainwp/get-site-client-v1',
+            array(
+                'label'               => __( 'Get Site Client', 'mainwp' ),
+                'description'         => __( 'Get client assigned to a MainWP child site.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_single_site_input_schema(),
+                'output_schema'       => self::get_site_client_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_get_site_client' ),
+                'permission_callback' => MainWP_Abilities_Util::make_site_permission_callback( 'site_id_or_domain' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get output schema for get-site-client-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_site_client_output_schema(): array {
+        return array(
+            'type'                 => array( 'object', 'null' ),
+            'description'          => __( 'Client object or null if no client assigned', 'mainwp' ),
+            'additionalProperties' => true,
+        );
+    }
+
+    /**
+     * Execute get-site-client-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|null|\WP_Error Client data, null, or error.
+     */
+    public static function execute_get_site_client( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        $client_id = isset( $site->client_id ) ? (int) $site->client_id : 0;
+
+        if ( empty( $client_id ) ) {
+            return null;
+        }
+
+        $client = MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $client_id );
+
+        if ( empty( $client ) ) {
+            return null;
+        }
+
+        return MainWP_Abilities_Util::format_client_for_output( $client );
+    }
+
+    /**
+     * Register mainwp/get-site-costs-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_get_site_costs(): void {
+        if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker' ) ) {
+            return;
+        }
+
+        wp_register_ability(
+            'mainwp/get-site-costs-v1',
+            array(
+                'label'               => __( 'Get Site Costs', 'mainwp' ),
+                'description'         => __( 'Get costs associated with a MainWP child site. Requires Cost Tracker module to be active.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_single_site_input_schema(),
+                'output_schema'       => self::get_site_costs_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_get_site_costs' ),
+                'permission_callback' => MainWP_Abilities_Util::make_site_permission_callback( 'site_id_or_domain' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get output schema for get-site-costs-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_site_costs_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'site_id' => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Site ID', 'mainwp' ),
+                ),
+                'costs'   => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'object' ),
+                ),
+                'total'   => array( 'type' => 'integer' ),
+            ),
+        );
+    }
+
+    /**
+     * Execute get-site-costs-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_get_site_costs( $input ) {
+        // Defensive check: module may have become unavailable after registration.
+        if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker' ) ) {
+            return new \WP_Error(
+                'mainwp_module_not_available',
+                __( 'Cost Tracker module is not active.', 'mainwp' ),
+                array( 'status' => 501 )
+            );
+        }
+
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        $costs_data = \MainWP\Dashboard\Module\CostTracker\Cost_Tracker_DB::get_instance()->get_all_cost_trackers_by_sites( array( $site->id ) );
+
+        $costs = array();
+        if ( is_array( $costs_data ) ) {
+            foreach ( $costs_data as $cost ) {
+                $costs[] = MainWP_Abilities_Util::format_cost_for_output( $cost );
+            }
+        }
+
+        return array(
+            'site_id' => (int) $site->id,
+            'costs'   => $costs,
+            'total'   => count( $costs ),
+        );
+    }
+
+    /**
+     * Register mainwp/count-sites-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_count_sites(): void {
+        wp_register_ability(
+            'mainwp/count-sites-v1',
+            array(
+                'label'               => __( 'Count MainWP Sites', 'mainwp' ),
+                'description'         => __( 'Count total MainWP child sites with optional filtering.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_count_sites_input_schema(),
+                'output_schema'       => self::get_count_sites_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_count_sites' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_rest_api_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get input schema for count-sites-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_count_sites_input_schema(): array {
+        return array(
+            'type'       => array( 'object', 'null' ),
+            'properties' => array(
+                'status'    => array(
+                    'type'        => 'string',
+                    'description' => __( 'Filter by status', 'mainwp' ),
+                    'enum'        => array( 'connected', 'disconnected', 'suspended' ),
+                ),
+                'tag_ids'   => array(
+                    'type'        => 'array',
+                    'description' => __( 'Filter by tag IDs', 'mainwp' ),
+                    'items'       => array( 'type' => 'integer' ),
+                ),
+                'client_id' => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Filter by client ID', 'mainwp' ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Get output schema for count-sites-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_count_sites_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'total' => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Total count of sites', 'mainwp' ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Execute count-sites-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array Result.
+     */
+    public static function execute_count_sites( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $filters = array();
+
+        if ( ! empty( $input['status'] ) ) {
+            $filters['status'] = $input['status'];
+        }
+
+        if ( ! empty( $input['tag_ids'] ) && is_array( $input['tag_ids'] ) ) {
+            $filters['tags'] = $input['tag_ids'];
+        }
+
+        if ( ! empty( $input['client_id'] ) ) {
+            $filters['client_id'] = (int) $input['client_id'];
+        }
+
+        $total = MainWP_DB::instance()->get_websites_count_for_current_user( $filters );
+
+        return array(
+            'total' => (int) $total,
+        );
+    }
+
+    /**
+     * Register mainwp/get-sites-basic-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_get_sites_basic(): void {
+        wp_register_ability(
+            'mainwp/get-sites-basic-v1',
+            array(
+                'label'               => __( 'Get Sites Basic', 'mainwp' ),
+                'description'         => __( 'Get basic site information (ID, URL, name only) with pagination.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_sites_basic_input_schema(),
+                'output_schema'       => self::get_sites_basic_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_get_sites_basic' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_rest_api_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get input schema for get-sites-basic-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_sites_basic_input_schema(): array {
+        return array(
+            'type'       => array( 'object', 'null' ),
+            'properties' => array(
+                'page'      => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Page number', 'mainwp' ),
+                    'default'     => 1,
+                    'minimum'     => 1,
+                ),
+                'per_page'  => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Items per page', 'mainwp' ),
+                    'default'     => 20,
+                    'minimum'     => 1,
+                    'maximum'     => 100,
+                ),
+                'status'    => array(
+                    'type' => 'string',
+                    'enum' => array( 'connected', 'disconnected', 'suspended' ),
+                ),
+                'tag_ids'   => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'integer' ),
+                ),
+                'client_id' => array( 'type' => 'integer' ),
+            ),
+        );
+    }
+
+    /**
+     * Get output schema for get-sites-basic-v1.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_sites_basic_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'items'    => array(
+                    'type'  => 'array',
+                    'items' => array(
+                        'type'       => 'object',
+                        'properties' => array(
+                            'id'   => array( 'type' => 'integer' ),
+                            'url'  => array( 'type' => 'string' ),
+                            'name' => array( 'type' => 'string' ),
+                        ),
+                    ),
+                ),
+                'page'     => array( 'type' => 'integer' ),
+                'per_page' => array( 'type' => 'integer' ),
+                'total'    => array( 'type' => 'integer' ),
+            ),
+        );
+    }
+
+    /**
+     * Execute get-sites-basic-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array Result.
+     */
+    public static function execute_get_sites_basic( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input(
+            $input,
+            array(
+                'page'     => 1,
+                'per_page' => 20,
+            )
+        );
+
+        $page     = max( 1, (int) $input['page'] );
+        $per_page = max( 1, min( 100, (int) $input['per_page'] ) );
+
+        $filters = array(
+            'offset'     => ( $page - 1 ) * $per_page,
+            'number'     => $per_page,
+            'selectgroup' => 'id,url,name',
+        );
+
+        if ( ! empty( $input['status'] ) ) {
+            $filters['status'] = $input['status'];
+        }
+
+        if ( ! empty( $input['tag_ids'] ) && is_array( $input['tag_ids'] ) ) {
+            $filters['tags'] = $input['tag_ids'];
+        }
+
+        if ( ! empty( $input['client_id'] ) ) {
+            $filters['client_id'] = (int) $input['client_id'];
+        }
+
+        $sites = MainWP_DB::instance()->get_websites_for_current_user( $filters );
+        $total = MainWP_DB::instance()->get_websites_count_for_current_user( $filters );
+
+        $items = array();
+        foreach ( $sites as $site ) {
+            $items[] = array(
+                'id'   => (int) $site->id,
+                'url'  => $site->url,
+                'name' => $site->name,
+            );
+        }
+
+        return array(
+            'items'    => $items,
+            'page'     => $page,
+            'per_page' => $per_page,
+            'total'    => (int) $total,
+        );
+    }
+
+    // =========================================================================
+    // Batch Operations Abilities (4)
+    // =========================================================================
+
+    /**
+     * Register mainwp/reconnect-sites-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_reconnect_sites(): void {
+        wp_register_ability(
+            'mainwp/reconnect-sites-v1',
+            array(
+                'label'               => __( 'Reconnect MainWP Sites', 'mainwp' ),
+                'description'         => __( 'Reconnect multiple MainWP child sites. Operations with >50 sites are automatically queued.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_batch_sites_input_schema(),
+                'output_schema'       => self::get_batch_operation_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_reconnect_sites' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => 'Operations with >50 sites are queued and return job_id.',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Get input schema for batch site operations.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_batch_sites_input_schema(): array {
+        return array(
+            'type'       => 'object',
+            'required'   => array( 'site_ids_or_domains' ),
+            'properties' => array(
+                'site_ids_or_domains' => array(
+                    'type'        => 'array',
+                    'description' => __( 'Site IDs or domains', 'mainwp' ),
+                    'items'       => array(
+                        'type' => array( 'integer', 'string' ),
+                    ),
+                    'minItems'    => 1,
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Get output schema for batch operations.
+     *
+     * @return array JSON Schema.
+     */
+    private static function get_batch_operation_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'queued'      => array( 'type' => 'boolean' ),
+                'job_id'      => array( 'type' => 'string' ),
+                'total'       => array( 'type' => 'integer' ),
+                'reconnected' => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'object' ),
+                ),
+                'disconnected' => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'object' ),
+                ),
+                'checked' => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'object' ),
+                ),
+                'suspended' => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'object' ),
+                ),
+                'errors' => array(
+                    'type'  => 'array',
+                    'items' => array( 'type' => 'object' ),
+                ),
+                'total_reconnected' => array( 'type' => 'integer' ),
+                'total_disconnected' => array( 'type' => 'integer' ),
+                'total_checked' => array( 'type' => 'integer' ),
+                'total_suspended' => array( 'type' => 'integer' ),
+                'total_errors' => array( 'type' => 'integer' ),
+            ),
+        );
+    }
+
+    /**
+     * Execute reconnect-sites-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_reconnect_sites( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $identifiers = isset( $input['site_ids_or_domains'] ) && is_array( $input['site_ids_or_domains'] ) ? $input['site_ids_or_domains'] : array();
+
+        if ( empty( $identifiers ) ) {
+            return new \WP_Error(
+                'mainwp_invalid_input',
+                __( 'No sites specified.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        // Resolve sites and capture any resolution errors.
+        $resolved = MainWP_Abilities_Util::resolve_sites( $identifiers );
+        $sites    = $resolved['sites'];
+        $errors   = $resolved['errors']; // Pre-populate with resolution errors.
+
+        if ( empty( $sites ) ) {
+            return new \WP_Error(
+                'mainwp_site_not_found',
+                __( 'No valid sites found.', 'mainwp' ),
+                array( 'status' => 404 )
+            );
+        }
+
+        $threshold = apply_filters( 'mainwp_abilities_batch_threshold', 50 );
+
+        if ( count( $sites ) > $threshold ) {
+            $job_id = MainWP_Abilities_Util::queue_batch_operation( 'reconnect', $sites );
+            if ( is_wp_error( $job_id ) ) {
+                return $job_id;
+            }
+            return array(
+                'queued' => true,
+                'job_id' => $job_id,
+                'total'  => count( $sites ),
+                'errors' => $errors, // Include resolution errors in queued response.
+            );
+        }
+
+        $reconnected = array();
+
+        foreach ( $sites as $site ) {
+            $result = \MainWP_Manage_Sites_Handler::reconnect_site( $site->id );
+
+            if ( is_wp_error( $result ) ) {
+                $errors[] = array(
+                    'identifier' => $site->url,
+                    'code'       => 'mainwp_reconnect_failed',
+                    'message'    => $result->get_error_message(),
+                );
+            } else {
+                $reconnected[] = array(
+                    'id'   => (int) $site->id,
+                    'url'  => $site->url,
+                    'name' => $site->name,
+                );
+            }
+        }
+
+        return array(
+            'reconnected'       => $reconnected,
+            'errors'            => $errors,
+            'total_reconnected' => count( $reconnected ),
+            'total_errors'      => count( $errors ),
+        );
+    }
+
+    /**
+     * Register mainwp/disconnect-sites-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_disconnect_sites(): void {
+        wp_register_ability(
+            'mainwp/disconnect-sites-v1',
+            array(
+                'label'               => __( 'Disconnect MainWP Sites', 'mainwp' ),
+                'description'         => __( 'Disconnect multiple MainWP child sites. Operations with >50 sites are automatically queued.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_batch_sites_input_schema(),
+                'output_schema'       => self::get_batch_operation_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_disconnect_sites' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => 'Operations with >50 sites are queued and return job_id.',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Execute disconnect-sites-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_disconnect_sites( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $identifiers = isset( $input['site_ids_or_domains'] ) && is_array( $input['site_ids_or_domains'] ) ? $input['site_ids_or_domains'] : array();
+
+        if ( empty( $identifiers ) ) {
+            return new \WP_Error(
+                'mainwp_invalid_input',
+                __( 'No sites specified.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        // Resolve sites and capture any resolution errors.
+        $resolved = MainWP_Abilities_Util::resolve_sites( $identifiers );
+        $sites    = $resolved['sites'];
+        $errors   = $resolved['errors']; // Pre-populate with resolution errors.
+
+        if ( empty( $sites ) ) {
+            return new \WP_Error(
+                'mainwp_site_not_found',
+                __( 'No valid sites found.', 'mainwp' ),
+                array( 'status' => 404 )
+            );
+        }
+
+        $threshold = apply_filters( 'mainwp_abilities_batch_threshold', 50 );
+
+        if ( count( $sites ) > $threshold ) {
+            $job_id = MainWP_Abilities_Util::queue_batch_operation( 'disconnect', $sites );
+            if ( is_wp_error( $job_id ) ) {
+                return $job_id;
+            }
+            return array(
+                'queued' => true,
+                'job_id' => $job_id,
+                'total'  => count( $sites ),
+                'errors' => $errors, // Include resolution errors in queued response.
+            );
+        }
+
+        $disconnected = array();
+
+        foreach ( $sites as $site ) {
+            MainWP_DB::instance()->update_website_sync_values( $site->id, array( 'sync_errors' => __( 'Manually disconnected', 'mainwp' ) ) );
+
+            $disconnected[] = array(
+                'id'   => (int) $site->id,
+                'url'  => $site->url,
+                'name' => $site->name,
+            );
+        }
+
+        return array(
+            'disconnected'       => $disconnected,
+            'errors'             => $errors,
+            'total_disconnected' => count( $disconnected ),
+            'total_errors'       => count( $errors ),
+        );
+    }
+
+    /**
+     * Register mainwp/check-sites-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_check_sites(): void {
+        wp_register_ability(
+            'mainwp/check-sites-v1',
+            array(
+                'label'               => __( 'Check MainWP Sites', 'mainwp' ),
+                'description'         => __( 'Check connectivity status of multiple MainWP child sites. Operations with >50 sites are automatically queued.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_batch_sites_input_schema(),
+                'output_schema'       => self::get_batch_operation_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_check_sites' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_rest_api_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => 'Operations with >50 sites are queued and return job_id.',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Execute check-sites-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_check_sites( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $identifiers = isset( $input['site_ids_or_domains'] ) && is_array( $input['site_ids_or_domains'] ) ? $input['site_ids_or_domains'] : array();
+
+        if ( empty( $identifiers ) ) {
+            return new \WP_Error(
+                'mainwp_invalid_input',
+                __( 'No sites specified.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        // Resolve sites and capture any resolution errors.
+        $resolved = MainWP_Abilities_Util::resolve_sites( $identifiers );
+        $sites    = $resolved['sites'];
+        $errors   = $resolved['errors']; // Pre-populate with resolution errors.
+
+        if ( empty( $sites ) ) {
+            return new \WP_Error(
+                'mainwp_site_not_found',
+                __( 'No valid sites found.', 'mainwp' ),
+                array( 'status' => 404 )
+            );
+        }
+
+        $threshold = apply_filters( 'mainwp_abilities_batch_threshold', 50 );
+
+        if ( count( $sites ) > $threshold ) {
+            $job_id = MainWP_Abilities_Util::queue_batch_operation( 'check', $sites );
+            if ( is_wp_error( $job_id ) ) {
+                return $job_id;
+            }
+            return array(
+                'queued' => true,
+                'job_id' => $job_id,
+                'total'  => count( $sites ),
+                'errors' => $errors, // Include resolution errors in queued response.
+            );
+        }
+
+        $checked = array();
+
+        foreach ( $sites as $site ) {
+            $result = \MainWP_Monitoring_Handler::handle_check_website( $site->id );
+
+            if ( is_wp_error( $result ) ) {
+                $errors[] = array(
+                    'identifier' => $site->url,
+                    'code'       => 'mainwp_check_failed',
+                    'message'    => $result->get_error_message(),
+                );
+            } else {
+                $checked[] = array(
+                    'id'     => (int) $site->id,
+                    'url'    => $site->url,
+                    'name'   => $site->name,
+                    'status' => array(
+                        'online'    => ! empty( $result['online'] ),
+                        'http_code' => isset( $result['http_code'] ) ? (int) $result['http_code'] : 0,
+                    ),
+                );
+            }
+        }
+
+        return array(
+            'checked'       => $checked,
+            'errors'        => $errors,
+            'total_checked' => count( $checked ),
+            'total_errors'  => count( $errors ),
+        );
+    }
+
+    /**
+     * Register mainwp/suspend-sites-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_suspend_sites(): void {
+        wp_register_ability(
+            'mainwp/suspend-sites-v1',
+            array(
+                'label'               => __( 'Suspend MainWP Sites', 'mainwp' ),
+                'description'         => __( 'Suspend multiple MainWP child sites. Operations with >50 sites are automatically queued.', 'mainwp' ),
+                'category'            => 'mainwp-sites',
+                'input_schema'        => self::get_batch_sites_input_schema(),
+                'output_schema'       => self::get_batch_operation_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_suspend_sites' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => 'Operations with >50 sites are queued and return job_id.',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Execute suspend-sites-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_suspend_sites( $input ) {
+        $input = MainWP_Abilities_Util::normalize_input( $input );
+
+        $identifiers = isset( $input['site_ids_or_domains'] ) && is_array( $input['site_ids_or_domains'] ) ? $input['site_ids_or_domains'] : array();
+
+        if ( empty( $identifiers ) ) {
+            return new \WP_Error(
+                'mainwp_invalid_input',
+                __( 'No sites specified.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        // Resolve sites and capture any resolution errors.
+        $resolved = MainWP_Abilities_Util::resolve_sites( $identifiers );
+        $sites    = $resolved['sites'];
+        $errors   = $resolved['errors']; // Pre-populate with resolution errors.
+
+        if ( empty( $sites ) ) {
+            return new \WP_Error(
+                'mainwp_site_not_found',
+                __( 'No valid sites found.', 'mainwp' ),
+                array( 'status' => 404 )
+            );
+        }
+
+        $threshold = apply_filters( 'mainwp_abilities_batch_threshold', 50 );
+
+        if ( count( $sites ) > $threshold ) {
+            $job_id = MainWP_Abilities_Util::queue_batch_operation( 'suspend', $sites );
+            if ( is_wp_error( $job_id ) ) {
+                return $job_id;
+            }
+            return array(
+                'queued' => true,
+                'job_id' => $job_id,
+                'total'  => count( $sites ),
+                'errors' => $errors, // Include resolution errors in queued response.
+            );
+        }
+
+        $suspended = array();
+
+        foreach ( $sites as $site ) {
+            MainWP_DB::instance()->update_website_values( $site->id, array( 'suspended' => 1 ) );
+            do_action( 'mainwp_site_suspended', $site, 1 );
+
+            $suspended[] = array(
+                'id'        => (int) $site->id,
+                'url'       => $site->url,
+                'name'      => $site->name,
+                'suspended' => 1,
+            );
+        }
+
+        return array(
+            'suspended'       => $suspended,
+            'errors'          => $errors,
+            'total_suspended' => count( $suspended ),
+            'total_errors'    => count( $errors ),
         );
     }
 }

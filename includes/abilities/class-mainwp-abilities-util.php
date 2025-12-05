@@ -559,6 +559,21 @@ class MainWP_Abilities_Util {
     }
 
     /**
+     * Resolve multiple site identifiers for batch operations.
+     *
+     * Convenience method that returns only successfully resolved sites,
+     * silently skipping any that fail to resolve. Use resolve_sites() if
+     * you need both resolved sites and error details.
+     *
+     * @param array $site_ids_or_domains Array of site IDs or URLs/domains.
+     * @return array Array of site objects (successfully resolved only).
+     */
+    public static function resolve_sites_batch( array $site_ids_or_domains ): array {
+        $result = self::resolve_sites( $site_ids_or_domains );
+        return $result['sites'];
+    }
+
+    /**
      * Normalize a URL for site lookup.
      *
      * IMPORTANT: This normalization is for site resolution only.
@@ -588,6 +603,42 @@ class MainWP_Abilities_Util {
         $url = trailingslashit( $url );
 
         return $url;
+    }
+
+    /**
+     * Normalize a site URL for storage and duplicate detection.
+     *
+     * Unlike normalize_url() which strips protocols for lookup, this method
+     * preserves the URL scheme while normalizing for consistent storage:
+     * - Lowercases the host component (domain names are case-insensitive per RFC 4343)
+     * - Ensures trailing slash on the path
+     * - Preserves the scheme (http/https)
+     *
+     * Use this before storing site URLs or checking for duplicates to ensure
+     * URLs like "HTTPS://EXAMPLE.COM" and "https://example.com/" are treated
+     * as equivalent.
+     *
+     * @param string $url URL to normalize.
+     * @return string Normalized URL with lowercase host and trailing slash.
+     */
+    public static function normalize_site_url( string $url ): string {
+        $parsed = wp_parse_url( $url );
+
+        if ( empty( $parsed ) || empty( $parsed['host'] ) ) {
+            // Invalid URL, return as-is with trailing slash.
+            return trailingslashit( $url );
+        }
+
+        // Build normalized URL.
+        $scheme = isset( $parsed['scheme'] ) ? strtolower( $parsed['scheme'] ) : 'https';
+        $host   = strtolower( $parsed['host'] );
+        $port   = isset( $parsed['port'] ) ? ':' . $parsed['port'] : '';
+        $path   = isset( $parsed['path'] ) ? $parsed['path'] : '/';
+
+        // Ensure path has trailing slash (but not double slashes).
+        $path = trailingslashit( $path );
+
+        return $scheme . '://' . $host . $port . $path;
     }
 
     /**
@@ -895,6 +946,87 @@ class MainWP_Abilities_Util {
     }
 
     /**
+     * Queue a batch site operation for background processing.
+     *
+     * Used when >50 sites need to be processed for batch operations like
+     * reconnect, disconnect, check, or suspend. Stores job data in a transient
+     * and schedules a cron event for processing.
+     *
+     * @param string $operation_type Operation type: 'reconnect', 'disconnect', 'check', 'suspend'.
+     * @param array  $sites          Array of site objects to process.
+     * @return string|\WP_Error Job ID for status polling, or WP_Error on failure.
+     */
+    public static function queue_batch_operation( string $operation_type, array $sites ) {
+        // Validate operation type.
+        $allowed_operations = array( 'reconnect', 'disconnect', 'check', 'suspend' );
+        if ( ! in_array( $operation_type, $allowed_operations, true ) ) {
+            return new \WP_Error(
+                'mainwp_invalid_operation',
+                __( 'Invalid batch operation type.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        // Generate unique job ID.
+        $job_id = $operation_type . '_' . wp_generate_uuid4();
+
+        // Extract site IDs from site objects.
+        $site_ids = array_map(
+            function ( $site ) {
+                return (int) $site->id;
+            },
+            $sites
+        );
+
+        // Store job data in transient (expires in 24 hours).
+        // Status values: 'queued' -> 'processing' -> 'completed' | 'failed'.
+        $job_data = array(
+            'job_type'   => $operation_type,
+            'sites'      => $site_ids,
+            'status'     => 'queued',
+            'created'    => time(),
+            'started'    => null,
+            'completed'  => null,
+            'successful' => array(),  // Successfully processed sites.
+            'errors'     => array(),  // Failed operations array.
+            'progress'   => 0,        // 0-100 percentage.
+            'total'      => count( $site_ids ),
+            'processed'  => 0,        // Sites processed so far.
+        );
+
+        set_transient( 'mainwp_batch_job_' . $job_id, $job_data, DAY_IN_SECONDS );
+
+        // Verify transient was stored successfully.
+        $stored = get_transient( 'mainwp_batch_job_' . $job_id );
+        if ( empty( $stored ) || ! is_array( $stored ) ) {
+            return new \WP_Error(
+                'mainwp_queue_failed',
+                __( 'Failed to store batch job data. Please try again.', 'mainwp' ),
+                array( 'status' => 500 )
+            );
+        }
+
+        // Schedule cron event for processing.
+        // Only schedule if no matching event already exists.
+        if ( ! wp_next_scheduled( 'mainwp_process_batch_job', array( $job_id ) ) ) {
+            wp_schedule_single_event( time() + 60, 'mainwp_process_batch_job', array( $job_id ) );
+        }
+
+        return $job_id;
+    }
+
+    /**
+     * Get batch operation job status.
+     *
+     * @param string $job_id Job ID to check.
+     * @return array|null Job data array or null if not found.
+     */
+    public static function get_batch_operation_status( string $job_id ): ?array {
+        $job_data = get_transient( 'mainwp_batch_job_' . $job_id );
+        return is_array( $job_data ) ? $job_data : null;
+    }
+
+    /**
      * Normalize ability input to ensure it's always an array.
      *
      * Workaround for Abilities API REST controller bug where missing or empty
@@ -969,5 +1101,139 @@ class MainWP_Abilities_Util {
         }
 
         return $defaults;
+    }
+
+    /**
+     * Format plugin data for ability output.
+     *
+     * Standardizes plugin data structure for activate/deactivate/delete operations.
+     * Handles missing fields gracefully as plugins may not have all metadata.
+     *
+     * @param array|object $plugin Plugin data with keys: slug, Name/name, Version/version, active, update.
+     * @return array Standardized plugin structure: { slug, name, version, active, has_update, update_version }.
+     */
+    public static function format_plugin_for_output( $plugin ): array {
+        if ( is_object( $plugin ) ) {
+            $plugin = (array) $plugin;
+        }
+
+        if ( ! is_array( $plugin ) ) {
+            $plugin = array();
+        }
+
+        $slug = isset( $plugin['slug'] ) ? sanitize_text_field( $plugin['slug'] ) : '';
+
+        // Support both capitalized (Name) and lowercase (name) keys.
+        $name = '';
+        if ( isset( $plugin['Name'] ) ) {
+            $name = sanitize_text_field( $plugin['Name'] );
+        } elseif ( isset( $plugin['name'] ) ) {
+            $name = sanitize_text_field( $plugin['name'] );
+        } else {
+            $name = $slug;
+        }
+
+        // Support both capitalized (Version) and lowercase (version) keys.
+        $version = '';
+        if ( isset( $plugin['Version'] ) ) {
+            $version = sanitize_text_field( $plugin['Version'] );
+        } elseif ( isset( $plugin['version'] ) ) {
+            $version = sanitize_text_field( $plugin['version'] );
+        }
+
+        $active = isset( $plugin['active'] ) ? (bool) $plugin['active'] : false;
+
+        // Determine if update is available: either a non-empty array in 'update' key,
+        // or a root-level 'new_version' key indicates an update is available.
+        $has_update_array = isset( $plugin['update'] ) && is_array( $plugin['update'] ) && ! empty( $plugin['update'] );
+        $has_root_version = isset( $plugin['new_version'] );
+        $has_update       = $has_update_array || $has_root_version;
+
+        // Extract update_version from various possible structures.
+        // Guard nested access with is_array() to avoid warnings when 'update' is boolean/scalar.
+        $update_version = null;
+        if ( $has_update ) {
+            if ( $has_update_array && isset( $plugin['update']['new_version'] ) ) {
+                $update_version = sanitize_text_field( $plugin['update']['new_version'] );
+            } elseif ( $has_root_version ) {
+                $update_version = sanitize_text_field( $plugin['new_version'] );
+            }
+        }
+
+        return array(
+            'slug'           => $slug,
+            'name'           => $name,
+            'version'        => $version,
+            'active'         => $active,
+            'has_update'     => $has_update,
+            'update_version' => $update_version,
+        );
+    }
+
+    /**
+     * Format theme data for ability output.
+     *
+     * Standardizes theme data structure for activate/delete operations.
+     * Handles missing fields gracefully as themes may not have all metadata.
+     *
+     * @param array|object $theme Theme data with keys: slug, Name/name, Version/version, active, update.
+     * @return array Standardized theme structure: { slug, name, version, active, has_update, update_version }.
+     */
+    public static function format_theme_for_output( $theme ): array {
+        if ( is_object( $theme ) ) {
+            $theme = (array) $theme;
+        }
+
+        if ( ! is_array( $theme ) ) {
+            $theme = array();
+        }
+
+        $slug = isset( $theme['slug'] ) ? sanitize_text_field( $theme['slug'] ) : '';
+
+        // Support both capitalized (Name) and lowercase (name) keys.
+        $name = '';
+        if ( isset( $theme['Name'] ) ) {
+            $name = sanitize_text_field( $theme['Name'] );
+        } elseif ( isset( $theme['name'] ) ) {
+            $name = sanitize_text_field( $theme['name'] );
+        } else {
+            $name = $slug;
+        }
+
+        // Support both capitalized (Version) and lowercase (version) keys.
+        $version = '';
+        if ( isset( $theme['Version'] ) ) {
+            $version = sanitize_text_field( $theme['Version'] );
+        } elseif ( isset( $theme['version'] ) ) {
+            $version = sanitize_text_field( $theme['version'] );
+        }
+
+        $active = isset( $theme['active'] ) ? (bool) $theme['active'] : false;
+
+        // Determine if update is available: either a non-empty array in 'update' key,
+        // or a root-level 'new_version' key indicates an update is available.
+        $has_update_array = isset( $theme['update'] ) && is_array( $theme['update'] ) && ! empty( $theme['update'] );
+        $has_root_version = isset( $theme['new_version'] );
+        $has_update       = $has_update_array || $has_root_version;
+
+        // Extract update_version from various possible structures.
+        // Guard nested access with is_array() to avoid warnings when 'update' is boolean/scalar.
+        $update_version = null;
+        if ( $has_update ) {
+            if ( $has_update_array && isset( $theme['update']['new_version'] ) ) {
+                $update_version = sanitize_text_field( $theme['update']['new_version'] );
+            } elseif ( $has_root_version ) {
+                $update_version = sanitize_text_field( $theme['new_version'] );
+            }
+        }
+
+        return array(
+            'slug'           => $slug,
+            'name'           => $name,
+            'version'        => $version,
+            'active'         => $active,
+            'has_update'     => $has_update,
+            'update_version' => $update_version,
+        );
     }
 }

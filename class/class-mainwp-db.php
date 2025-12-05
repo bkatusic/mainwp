@@ -1701,6 +1701,82 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
     }
 
     /**
+     * Get count of child sites for the current user with filters.
+     *
+     * This method is optimized for the Abilities API to return site counts
+     * with filtering support for status, tags (groups), and client_id.
+     *
+     * @since 5.3
+     *
+     * @param array $params Filter parameters:
+     *                      - status (string): 'connected', 'disconnected', 'suspended'
+     *                      - tags (array): Array of tag/group IDs to filter by
+     *                      - client_id (int): Client ID to filter by.
+     *
+     * @return int Count of sites matching the filters.
+     */
+    public function get_websites_count_for_current_user( $params = array() ) {
+        if ( ! is_array( $params ) ) {
+            $params = array();
+        }
+
+        $status    = isset( $params['status'] ) ? $params['status'] : '';
+        $tags      = isset( $params['tags'] ) && is_array( $params['tags'] ) ? $params['tags'] : array();
+        $client_id = isset( $params['client_id'] ) ? intval( $params['client_id'] ) : 0;
+
+        $where = '';
+
+        // Multi-user support: filter by current user.
+        if ( MainWP_System::instance()->is_multi_user() ) {
+            global $current_user;
+            $where .= ' AND wp.userid = ' . intval( $current_user->ID ) . ' ';
+        }
+
+        // Access control for sites.
+        $where .= $this->get_sql_where_allow_access_sites( 'wp', 'no' );
+
+        // Status filtering: connected, disconnected, suspended.
+        if ( ! empty( $status ) ) {
+            switch ( $status ) {
+                case 'connected':
+                    $where .= ' AND wp_sync.sync_errors = "" AND wp.suspended = 0 ';
+                    break;
+                case 'disconnected':
+                    $where .= ' AND wp_sync.sync_errors <> "" ';
+                    break;
+                case 'suspended':
+                    $where .= ' AND wp.suspended = 1 ';
+                    break;
+            }
+        }
+
+        // Client ID filtering.
+        if ( ! empty( $client_id ) ) {
+            $where .= ' AND wp.client_id = ' . intval( $client_id ) . ' ';
+        }
+
+        // Tags (groups) filtering.
+        $join_group = '';
+        if ( ! empty( $tags ) ) {
+            $tags       = array_map( 'intval', $tags );
+            $tags       = array_filter( $tags, function ( $id ) {
+                return $id > 0;
+            } );
+            if ( ! empty( $tags ) ) {
+                $join_group = ' JOIN ' . $this->table_name( 'wp_group' ) . ' wpgroup ON wp.id = wpgroup.wpid ';
+                $where     .= ' AND wpgroup.groupid IN (' . implode( ',', $tags ) . ') ';
+            }
+        }
+
+        $qry = 'SELECT COUNT(DISTINCT wp.id) FROM ' . $this->table_name( 'wp' ) . ' wp ' .
+               'JOIN ' . $this->table_name( 'wp_sync' ) . ' wp_sync ON wp.id = wp_sync.wpid ' .
+               $join_group .
+               'WHERE 1 ' . $where;
+
+        return (int) $this->wpdb->get_var( $qry );
+    }
+
+    /**
      * Get the child sites the current user has searched for.
      *
      * @param array $params Query parameters.
