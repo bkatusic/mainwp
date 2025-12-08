@@ -1170,6 +1170,25 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             return MainWP_Demo_Handle::get_instance()->handle_action_demo( $website, $what );
         }
 
+        /**
+         * Filter to mock fetch_url_authed response before any HTTP/signing occurs.
+         *
+         * This filter fires early, before OpenSSL signing or HTTP requests, allowing
+         * tests to bypass child site communication entirely.
+         *
+         * @since 5.4
+         *
+         * @param mixed  $pre_result Return non-false to short-circuit and return this value.
+         * @param object $website    Website object being communicated with.
+         * @param string $what       Action being performed (e.g., 'plugin_action').
+         * @param array  $params     Request parameters.
+         * @return mixed Array to return early, false to proceed normally.
+         */
+        $pre_result = apply_filters( 'mainwp_fetch_url_authed_pre', false, $website, $what, $params );
+        if ( false !== $pre_result ) {
+            return $pre_result;
+        }
+
         if ( ! is_array( $params ) ) {
             $params = array();
         }

@@ -113,7 +113,7 @@ class MainWP_Abilities_Sites {
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false, // Uses POST to support optional input parameters.
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -142,7 +142,7 @@ class MainWP_Abilities_Sites {
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false, // Uses POST because site_id_or_domain is required (can't pass via GET query string).
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -200,7 +200,7 @@ class MainWP_Abilities_Sites {
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false, // Uses POST because site_id_or_domain is required (can't pass via GET query string).
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -229,7 +229,7 @@ class MainWP_Abilities_Sites {
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false, // Uses POST because site_id_or_domain is required (can't pass via GET query string).
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),

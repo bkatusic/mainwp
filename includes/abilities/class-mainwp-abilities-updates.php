@@ -105,7 +105,7 @@ class MainWP_Abilities_Updates {
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false, // Uses POST to support optional input parameters.
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -163,7 +163,7 @@ class MainWP_Abilities_Updates {
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false, // Uses POST to support optional input parameters.
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),

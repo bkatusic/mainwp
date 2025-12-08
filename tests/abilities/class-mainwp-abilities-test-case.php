@@ -116,6 +116,7 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 		remove_all_filters( 'mainwp_sync_site_result' );
 		remove_all_filters( 'mainwp_run_update_result' );
 		remove_all_filters( 'mainwp_check_site_access' );
+		remove_all_filters( 'mainwp_fetch_url_authed_pre' );
 
 		parent::tearDown();
 	}
@@ -387,6 +388,31 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 			},
 			10,
 			3
+		);
+	}
+
+	/**
+	 * Mock a child site communication response to bypass OpenSSL signing.
+	 *
+	 * This method uses the mainwp_fetch_url_authed_pre filter to return
+	 * a mock response before any HTTP communication or signing occurs.
+	 * Useful for tests that would otherwise fail due to invalid test keys.
+	 *
+	 * @param int   $site_id  Site ID to mock responses for.
+	 * @param array $response Response data to return from the mock.
+	 * @return void
+	 */
+	protected function mock_child_site_response( int $site_id, array $response ): void {
+		add_filter(
+			'mainwp_fetch_url_authed_pre',
+			function ( $result, $website, $what, $params ) use ( $site_id, $response ) {
+				if ( (int) $website->id === $site_id ) {
+					return $response;
+				}
+				return $result;
+			},
+			10,
+			4
 		);
 	}
 
