@@ -67,6 +67,9 @@ class Test_Get_Client_Ability extends MainWP_Abilities_Test_Case {
 		$this->skip_if_no_abilities_api();
 		wp_set_current_user( 0 );
 
+		// Expect the "doing it wrong" notice from WP_Ability::execute.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
 		$result = $this->execute_ability( 'mainwp/get-client-v1', [
 			'client_id_or_email' => 1,
 		] );
@@ -83,6 +86,9 @@ class Test_Get_Client_Ability extends MainWP_Abilities_Test_Case {
 	public function test_get_client_requires_manage_options() {
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_subscriber();
+
+		// Expect the "doing it wrong" notice from WP_Ability::execute.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
 		$result = $this->execute_ability( 'mainwp/get-client-v1', [
 			'client_id_or_email' => 1,
@@ -170,29 +176,29 @@ class Test_Get_Client_Ability extends MainWP_Abilities_Test_Case {
 	}
 
 	/**
-	 * Test that email lookup returns first match.
+	 * Test that email lookup returns the correct client and fields.
+	 *
+	 * Note: The database enforces unique emails so we test
+	 * that email lookup returns the correct single match.
 	 *
 	 * @return void
 	 */
-	public function test_get_client_email_returns_first_match() {
+	public function test_get_client_by_email_returns_full_result() {
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_admin();
 
-		$client1_id = $this->create_test_client( [
-			'name'         => 'First Client',
-			'client_email' => 'test-duplicate@example.com',
-		] );
-
-		$client2_id = $this->create_test_client( [
-			'name'         => 'Second Client',
-			'client_email' => 'test-duplicate@example.com',
+		$email     = 'unique-' . wp_generate_uuid4() . '@example.com';
+		$client_id = $this->create_test_client( [
+			'name'         => 'Email Test Client',
+			'client_email' => $email,
 		] );
 
 		$result = $this->execute_ability( 'mainwp/get-client-v1', [
-			'client_id_or_email' => 'test-duplicate@example.com',
+			'client_id_or_email' => $email,
 		] );
 
 		$this->assertNotWPError( $result );
-		$this->assertEquals( $client1_id, $result['id'] );
+		$this->assertEquals( $client_id, $result['id'] );
+		$this->assertEquals( $email, $result['email'] );
 	}
 }

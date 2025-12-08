@@ -1314,7 +1314,7 @@ class MainWP_Abilities_Sites {
         }
 
         // Add site.
-        $result = \MainWP_Manage_Sites_Handler::add_site( $site_data );
+        $result = MainWP_Manage_Sites_Handler::add_site( $site_data );
 
         if ( is_wp_error( $result ) ) {
             // Map MainWP error codes to ability error codes.
@@ -1782,7 +1782,7 @@ class MainWP_Abilities_Sites {
             return $access_check;
         }
 
-        $result = \MainWP_Manage_Sites_Handler::reconnect_site( $site->id );
+        $result = MainWP_Manage_Sites_Handler::reconnect_site( $site->id );
 
         if ( is_wp_error( $result ) ) {
             return new \WP_Error(
@@ -2128,7 +2128,7 @@ class MainWP_Abilities_Sites {
         }
 
         $start_time = microtime( true );
-        $result     = \MainWP_Monitoring_Handler::handle_check_website( $site->id );
+        $result     = MainWP_Monitoring_Handler::handle_check_website( $site->id );
         $end_time   = microtime( true );
 
         if ( is_wp_error( $result ) ) {
@@ -2315,7 +2315,7 @@ class MainWP_Abilities_Sites {
         $errors    = array();
 
         foreach ( $plugins as $plugin_slug ) {
-            $result = \MainWP_Connect::fetch_url_authed(
+            $result = MainWP_Connect::fetch_url_authed(
                 $site,
                 'plugin_action',
                 array(
@@ -2438,7 +2438,7 @@ class MainWP_Abilities_Sites {
         $errors      = array();
 
         foreach ( $plugins as $plugin_slug ) {
-            $result = \MainWP_Connect::fetch_url_authed(
+            $result = MainWP_Connect::fetch_url_authed(
                 $site,
                 'plugin_action',
                 array(
@@ -2666,7 +2666,7 @@ class MainWP_Abilities_Sites {
         $errors  = array();
 
         foreach ( $plugins as $plugin_slug ) {
-            $result = \MainWP_Connect::fetch_url_authed(
+            $result = MainWP_Connect::fetch_url_authed(
                 $site,
                 'plugin_action',
                 array(
@@ -2907,7 +2907,7 @@ class MainWP_Abilities_Sites {
             );
         }
 
-        $result = \MainWP_Connect::fetch_url_authed(
+        $result = MainWP_Connect::fetch_url_authed(
             $site,
             'theme_action',
             array(
@@ -3129,7 +3129,7 @@ class MainWP_Abilities_Sites {
         $errors  = array();
 
         foreach ( $themes as $theme_slug ) {
-            $result = \MainWP_Connect::fetch_url_authed(
+            $result = MainWP_Connect::fetch_url_authed(
                 $site,
                 'theme_action',
                 array(
@@ -4096,7 +4096,7 @@ class MainWP_Abilities_Sites {
         $reconnected = array();
 
         foreach ( $sites as $site ) {
-            $result = \MainWP_Manage_Sites_Handler::reconnect_site( $site->id );
+            $result = MainWP_Manage_Sites_Handler::reconnect_site( $site->id );
 
             if ( is_wp_error( $result ) ) {
                 $errors[] = array(
@@ -4296,7 +4296,7 @@ class MainWP_Abilities_Sites {
         $checked = array();
 
         foreach ( $sites as $site ) {
-            $result = \MainWP_Monitoring_Handler::handle_check_website( $site->id );
+            $result = MainWP_Monitoring_Handler::handle_check_website( $site->id );
 
             if ( is_wp_error( $result ) ) {
                 $errors[] = array(

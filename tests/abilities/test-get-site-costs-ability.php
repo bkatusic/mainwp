@@ -80,6 +80,9 @@ class Test_GetSiteCosts_Ability extends MainWP_Abilities_Test_Case {
 
         wp_set_current_user( 0 );
 
+		// Expect the "doing it wrong" notice from WP_Ability::execute.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
         $result = $this->execute_ability( 'mainwp/get-site-costs-v1', [] );
 
         $this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );

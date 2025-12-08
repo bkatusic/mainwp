@@ -805,7 +805,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
 
                 $where .= ' AND wc.client_id IN (' . $clientWhere . ') ';
             }
-            $custom_field = $params['custom_fields'] ? true : false;
+            $custom_field = isset( $params['custom_fields'] ) && $params['custom_fields'] ? true : false;
 
             $with_tags     = isset( $params['with_tags'] ) && $params['with_tags'] ? true : false;
             $with_contacts = isset( $params['with_contacts'] ) && $params['with_contacts'] ? true : false;

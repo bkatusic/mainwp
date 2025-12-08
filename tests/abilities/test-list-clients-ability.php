@@ -61,6 +61,9 @@ class Test_List_Clients_Ability extends MainWP_Abilities_Test_Case {
 		$this->skip_if_no_abilities_api();
 		wp_set_current_user( 0 );
 
+		// Expect the "doing it wrong" notice from WP_Ability::execute.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
 		$result = $this->execute_ability( 'mainwp/list-clients-v1', [] );
 
 		$this->assertWPError( $result );
@@ -75,6 +78,9 @@ class Test_List_Clients_Ability extends MainWP_Abilities_Test_Case {
 	public function test_list_clients_requires_manage_options() {
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_subscriber();
+
+		// Expect the "doing it wrong" notice from WP_Ability::execute.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
 		$result = $this->execute_ability( 'mainwp/list-clients-v1', [] );
 
@@ -253,7 +259,7 @@ class Test_List_Clients_Ability extends MainWP_Abilities_Test_Case {
 		$this->set_current_user_as_admin();
 
 		global $wpdb;
-		$wpdb->query( "DELETE FROM {$wpdb->prefix}mainwp_clients" );
+		$wpdb->query( "DELETE FROM {$wpdb->prefix}mainwp_wp_clients" );
 
 		$result = $this->execute_ability( 'mainwp/list-clients-v1', [] );
 

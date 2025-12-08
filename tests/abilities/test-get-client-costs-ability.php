@@ -76,6 +76,9 @@ class Test_Get_Client_Costs_Ability extends MainWP_Abilities_Test_Case {
 
 		wp_set_current_user( 0 );
 
+		// Expect the "doing it wrong" notice from WP_Ability::execute.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
 		$result = $this->execute_ability( 'mainwp/get-client-costs-v1', [
 			'client_id_or_email' => 1,
 		] );
@@ -97,6 +100,9 @@ class Test_Get_Client_Costs_Ability extends MainWP_Abilities_Test_Case {
 		}
 
 		$this->set_current_user_as_subscriber();
+
+		// Expect the "doing it wrong" notice from WP_Ability::execute.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
 		$result = $this->execute_ability( 'mainwp/get-client-costs-v1', [
 			'client_id_or_email' => 1,

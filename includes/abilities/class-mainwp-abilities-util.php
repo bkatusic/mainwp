@@ -368,7 +368,7 @@ class MainWP_Abilities_Util {
         // Non-numeric → treat as email.
         // Use exact match on email with deterministic ordering.
         global $wpdb;
-        $table  = $wpdb->prefix . 'mainwp_clients';
+        $table  = $wpdb->prefix . 'mainwp_wp_clients';
         $client = $wpdb->get_row(
             $wpdb->prepare(
                 "SELECT * FROM {$table} WHERE client_email = %s ORDER BY client_id ASC LIMIT 1",

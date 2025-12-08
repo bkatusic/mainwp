@@ -70,7 +70,12 @@ class Test_DeleteSite_Ability extends MainWP_Abilities_Test_Case {
 
         wp_set_current_user( 0 );
 
-        $result = $this->execute_ability( 'mainwp/delete-site-v1', [] );
+		// Expect the "doing it wrong" notice from WP_Ability::execute.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+        $result = $this->execute_ability( 'mainwp/delete-site-v1', [
+            'site_id_or_domain' => 1,
+        ] );
 
         $this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
         $this->assertEquals(
@@ -88,10 +93,13 @@ class Test_DeleteSite_Ability extends MainWP_Abilities_Test_Case {
     public function test_delete_site_requires_manage_options() {
         $this->skip_if_no_abilities_api();
 
-        $subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
-        wp_set_current_user( $subscriber_id );
+        $this->set_current_user_as_subscriber();
 
-        $result = $this->execute_ability( 'mainwp/delete-site-v1', [] );
+        $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+        $result = $this->execute_ability( 'mainwp/delete-site-v1', [
+            'site_id_or_domain' => 1,
+        ] );
 
         $this->assertWPError( $result, 'Subscriber should be denied.' );
         $this->assertEquals(

@@ -1024,7 +1024,7 @@ class MainWP_Abilities_Tags {
         }
 
         $offset = ( $page - 1 ) * $per_page;
-        $sites  = MainWP_DB::instance()->get_websites_by_group_id( $tag_id, false, '', $offset, $per_page );
+        $sites  = MainWP_DB::instance()->get_websites_by_group_id( $tag_id, false, 'wp.url', $offset, $per_page );
 
         if ( ! is_array( $sites ) ) {
             return new \WP_Error(

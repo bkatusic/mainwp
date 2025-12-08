@@ -263,6 +263,20 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Set the current user to a subscriber (no manage_options capability).
+	 *
+	 * Use this to test that abilities properly deny low-privilege users.
+	 *
+	 * @return int User ID.
+	 */
+	protected function set_current_user_as_subscriber(): int {
+		$user_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
+		wp_set_current_user( $user_id );
+
+		return $user_id;
+	}
+
+	/**
 	 * Create a REST API key for testing.
 	 *
 	 * Creates an API key in the mainwp_api_keys table and returns the

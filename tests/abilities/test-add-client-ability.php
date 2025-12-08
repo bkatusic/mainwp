@@ -59,6 +59,9 @@ class Test_Add_Client_Ability extends MainWP_Abilities_Test_Case {
 		$this->skip_if_no_abilities_api();
 		wp_set_current_user( 0 );
 
+		// Expect the "doing it wrong" notice from WP_Ability::execute.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
 		$result = $this->execute_ability( 'mainwp/add-client-v1', [
 			'name' => 'Test Client',
 		] );
@@ -75,6 +78,9 @@ class Test_Add_Client_Ability extends MainWP_Abilities_Test_Case {
 	public function test_add_client_requires_manage_options() {
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_subscriber();
+
+		// Expect the "doing it wrong" notice from WP_Ability::execute.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
 		$result = $this->execute_ability( 'mainwp/add-client-v1', [
 			'name' => 'Test Client',

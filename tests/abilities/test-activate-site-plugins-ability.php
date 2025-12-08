@@ -65,7 +65,14 @@ class Test_ActivateSitePlugins_Ability extends MainWP_Abilities_Test_Case {
 
         wp_set_current_user( 0 );
 
-        $result = $this->execute_ability( 'mainwp/activate-site-plugins-v1', [] );
+        // Expect the "doing it wrong" notice from WP_Ability::execute.
+        $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+        // Pass valid input so schema validation passes before permission check.
+        $result = $this->execute_ability( 'mainwp/activate-site-plugins-v1', [
+            'site_id_or_domain' => 1,
+            'plugins'           => [ 'hello-dolly/hello.php' ],
+        ] );
 
         $this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
         $this->assertEquals(
@@ -86,7 +93,14 @@ class Test_ActivateSitePlugins_Ability extends MainWP_Abilities_Test_Case {
         $subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
         wp_set_current_user( $subscriber_id );
 
-        $result = $this->execute_ability( 'mainwp/activate-site-plugins-v1', [] );
+        // Expect the "doing it wrong" notice from WP_Ability::execute.
+        $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+        // Pass valid input so schema validation passes before permission check.
+        $result = $this->execute_ability( 'mainwp/activate-site-plugins-v1', [
+            'site_id_or_domain' => 1,
+            'plugins'           => [ 'hello-dolly/hello.php' ],
+        ] );
 
         $this->assertWPError( $result, 'Subscriber should be denied.' );
         $this->assertEquals(

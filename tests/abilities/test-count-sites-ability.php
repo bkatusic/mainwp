@@ -61,6 +61,9 @@ class Test_CountSites_Ability extends MainWP_Abilities_Test_Case {
 
         wp_set_current_user( 0 );
 
+		// Expect the "doing it wrong" notice from WP_Ability::execute.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
         $result = $this->execute_ability( 'mainwp/count-sites-v1', [] );
 
         $this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
@@ -79,8 +82,9 @@ class Test_CountSites_Ability extends MainWP_Abilities_Test_Case {
     public function test_count_sites_requires_manage_options() {
         $this->skip_if_no_abilities_api();
 
-        $subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
-        wp_set_current_user( $subscriber_id );
+        $this->set_current_user_as_subscriber();
+
+        $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
         $result = $this->execute_ability( 'mainwp/count-sites-v1', [] );
 
