@@ -32,6 +32,13 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 	protected $created_update_job_ids = [];
 
 	/**
+	 * Track created batch job IDs for cleanup.
+	 *
+	 * @var array
+	 */
+	protected $created_batch_job_ids = [];
+
+	/**
 	 * Whether abilities have been initialized for tests.
 	 *
 	 * @var bool
@@ -49,6 +56,7 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 		// Reset job ID tracking.
 		$this->created_sync_job_ids   = [];
 		$this->created_update_job_ids = [];
+		$this->created_batch_job_ids  = [];
 
 		// Ensure abilities are registered (only once across all tests).
 		if ( ! self::$abilities_initialized && function_exists( 'wp_get_ability' ) ) {
@@ -97,6 +105,11 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 		foreach ( $this->created_update_job_ids as $job_id ) {
 			delete_transient( 'mainwp_update_job_' . $job_id );
 			wp_unschedule_hook( 'mainwp_process_update_job', [ $job_id ] );
+		}
+
+		foreach ( $this->created_batch_job_ids as $job_id ) {
+			delete_transient( 'mainwp_batch_job_' . $job_id );
+			wp_unschedule_hook( 'mainwp_process_batch_job', [ $job_id ] );
 		}
 
 		// Remove any mock filters.
@@ -431,6 +444,16 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 	 */
 	protected function track_update_job( string $job_id ): void {
 		$this->created_update_job_ids[] = $job_id;
+	}
+
+	/**
+	 * Track a batch job ID for cleanup in tearDown.
+	 *
+	 * @param string $job_id Batch job ID.
+	 * @return void
+	 */
+	protected function track_batch_job( string $job_id ): void {
+		$this->created_batch_job_ids[] = $job_id;
 	}
 
 	// =========================================================================

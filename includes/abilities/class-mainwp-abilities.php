@@ -114,6 +114,15 @@ class MainWP_Abilities {
                 'description' => __( 'Abilities for managing MainWP tags for organizing sites and clients.', 'mainwp' ),
             )
         );
+
+        // Batch category.
+        wp_register_ability_category(
+            'mainwp-batch',
+            array(
+                'label'       => __( 'MainWP Batch Operations', 'mainwp' ),
+                'description' => __( 'Abilities for monitoring queued batch operations including sync, update, and site management tasks.', 'mainwp' ),
+            )
+        );
     }
 
     /**
@@ -134,7 +143,10 @@ class MainWP_Abilities {
         // Tag abilities.
         MainWP_Abilities_Tags::register();
 
+        // Batch abilities.
+        MainWP_Abilities_Batch::register();
+
         // NOTE: Extensions register their own abilities in their own codebases.
-        // Total core abilities: 27 (5 sites + 4 updates + 11 clients + 7 tags)
+        // Total core abilities: 62 (30 sites + 13 updates + 11 clients + 7 tags + 1 batch)
     }
 }
