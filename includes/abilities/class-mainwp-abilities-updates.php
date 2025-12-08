@@ -1791,8 +1791,9 @@ class MainWP_Abilities_Updates {
         // Check per-site ACLs and filter to allowed sites.
         $access_check = MainWP_Abilities_Util::check_batch_site_access( $site_ids_or_domains, $input );
 
-        // Queue if > BATCH_THRESHOLD sites.
-        if ( count( $access_check['allowed'] ) > self::BATCH_THRESHOLD ) {
+        $threshold = apply_filters( 'mainwp_abilities_batch_threshold', self::BATCH_THRESHOLD );
+
+        if ( count( $access_check['allowed'] ) > $threshold ) {
             $job_id = MainWP_Abilities_Util::queue_batch_updates(
                 $access_check['allowed'],
                 array(
@@ -2922,7 +2923,9 @@ class MainWP_Abilities_Updates {
             );
         }
 
-        if ( count( $sites ) > self::BATCH_THRESHOLD ) {
+        $threshold = apply_filters( 'mainwp_abilities_batch_threshold', self::BATCH_THRESHOLD );
+
+        if ( count( $sites ) > $threshold ) {
             $job_id = MainWP_Abilities_Util::queue_batch_updates(
                 $sites,
                 array(
