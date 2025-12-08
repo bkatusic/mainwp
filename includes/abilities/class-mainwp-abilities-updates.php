@@ -16,11 +16,20 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Registers and implements update-related abilities for the MainWP Dashboard.
  *
- * This class provides 4 abilities:
+ * This class provides 13 abilities:
  * - mainwp/list-updates-v1: List available updates across sites
  * - mainwp/run-updates-v1: Execute updates (core, plugins, themes, translations)
  * - mainwp/list-ignored-updates-v1: List ignored updates
  * - mainwp/set-ignored-updates-v1: Manage ignored updates
+ * - mainwp/get-site-updates-v1: Get available updates for a single site
+ * - mainwp/update-site-core-v1: Update WordPress core for a single site
+ * - mainwp/update-site-plugins-v1: Update plugins for a single site
+ * - mainwp/update-site-themes-v1: Update themes for a single site
+ * - mainwp/update-site-translations-v1: Update translations for a single site
+ * - mainwp/ignore-site-core-v1: Manage core update ignore status for a single site
+ * - mainwp/ignore-site-plugins-v1: Manage plugin ignore status for a single site
+ * - mainwp/ignore-site-themes-v1: Manage theme ignore status for a single site
+ * - mainwp/update-all-v1: Execute all available updates across all or selected sites
  *
  * ## Input Handling for GET Requests
  *
@@ -61,6 +70,15 @@ class MainWP_Abilities_Updates {
         self::register_run_updates();
         self::register_list_ignored_updates();
         self::register_set_ignored_updates();
+        self::register_get_site_updates();
+        self::register_update_site_core();
+        self::register_update_site_plugins();
+        self::register_update_site_themes();
+        self::register_update_site_translations();
+        self::register_ignore_site_core();
+        self::register_ignore_site_plugins();
+        self::register_ignore_site_themes();
+        self::register_update_all();
     }
 
     // =========================================================================
@@ -177,6 +195,267 @@ class MainWP_Abilities_Updates {
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Register mainwp/get-site-updates-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_get_site_updates(): void {
+        wp_register_ability(
+            'mainwp/get-site-updates-v1',
+            array(
+                'label'               => __( 'Get Site Updates', 'mainwp' ),
+                'description'         => __( 'Get available updates for a single site with optional filtering by update type.', 'mainwp' ),
+                'category'            => 'mainwp-updates',
+                'input_schema'        => self::get_get_site_updates_input_schema(),
+                'output_schema'       => self::get_get_site_updates_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_get_site_updates' ),
+                'permission_callback' => MainWP_Abilities_Util::make_site_permission_callback( 'site_id_or_domain' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => '',
+                        'readonly'     => true,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Register mainwp/update-site-core-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_update_site_core(): void {
+        wp_register_ability(
+            'mainwp/update-site-core-v1',
+            array(
+                'label'               => __( 'Update Site Core', 'mainwp' ),
+                'description'         => __( 'Update WordPress core for a single site.', 'mainwp' ),
+                'category'            => 'mainwp-updates',
+                'input_schema'        => self::get_update_site_core_input_schema(),
+                'output_schema'       => self::get_update_site_core_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_update_site_core' ),
+                'permission_callback' => MainWP_Abilities_Util::make_site_permission_callback( 'site_id_or_domain' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => 'Updates WordPress core to the latest available version. Requires sufficient MainWP Child version on the target site.',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => false,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Register mainwp/update-site-plugins-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_update_site_plugins(): void {
+        wp_register_ability(
+            'mainwp/update-site-plugins-v1',
+            array(
+                'label'               => __( 'Update Site Plugins', 'mainwp' ),
+                'description'         => __( 'Update plugins for a single site. Optionally specify slugs to update only specific plugins.', 'mainwp' ),
+                'category'            => 'mainwp-updates',
+                'input_schema'        => self::get_update_site_plugins_input_schema(),
+                'output_schema'       => self::get_update_site_plugins_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_update_site_plugins' ),
+                'permission_callback' => MainWP_Abilities_Util::make_site_permission_callback( 'site_id_or_domain' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => 'Updates all available plugins or specific plugins by slug. Empty slugs array updates all available plugins.',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => false,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Register mainwp/update-site-themes-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_update_site_themes(): void {
+        wp_register_ability(
+            'mainwp/update-site-themes-v1',
+            array(
+                'label'               => __( 'Update Site Themes', 'mainwp' ),
+                'description'         => __( 'Update themes for a single site. Optionally specify slugs to update only specific themes.', 'mainwp' ),
+                'category'            => 'mainwp-updates',
+                'input_schema'        => self::get_update_site_themes_input_schema(),
+                'output_schema'       => self::get_update_site_themes_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_update_site_themes' ),
+                'permission_callback' => MainWP_Abilities_Util::make_site_permission_callback( 'site_id_or_domain' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => 'Updates all available themes or specific themes by slug. Empty slugs array updates all available themes.',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => false,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Register mainwp/update-site-translations-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_update_site_translations(): void {
+        wp_register_ability(
+            'mainwp/update-site-translations-v1',
+            array(
+                'label'               => __( 'Update Site Translations', 'mainwp' ),
+                'description'         => __( 'Update translations for a single site. Optionally specify slugs to update only specific translations.', 'mainwp' ),
+                'category'            => 'mainwp-updates',
+                'input_schema'        => self::get_update_site_translations_input_schema(),
+                'output_schema'       => self::get_update_site_translations_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_update_site_translations' ),
+                'permission_callback' => MainWP_Abilities_Util::make_site_permission_callback( 'site_id_or_domain' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => 'Updates all available translations or specific translations by slug. Empty slugs array updates all available translations.',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => false,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Register mainwp/ignore-site-core-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_ignore_site_core(): void {
+        wp_register_ability(
+            'mainwp/ignore-site-core-v1',
+            array(
+                'label'               => __( 'Ignore Site Core', 'mainwp' ),
+                'description'         => __( 'Add or remove WordPress core from the ignored updates list for a single site.', 'mainwp' ),
+                'category'            => 'mainwp-updates',
+                'input_schema'        => self::get_ignore_site_core_input_schema(),
+                'output_schema'       => self::get_ignore_site_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_ignore_site_core' ),
+                'permission_callback' => MainWP_Abilities_Util::make_site_permission_callback( 'site_id_or_domain' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => 'Manages core update ignore status. Use action=add to ignore core updates, action=remove to unignore.',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Register mainwp/ignore-site-plugins-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_ignore_site_plugins(): void {
+        wp_register_ability(
+            'mainwp/ignore-site-plugins-v1',
+            array(
+                'label'               => __( 'Ignore Site Plugins', 'mainwp' ),
+                'description'         => __( 'Add or remove plugins from the ignored updates list for a single site.', 'mainwp' ),
+                'category'            => 'mainwp-updates',
+                'input_schema'        => self::get_ignore_site_plugins_input_schema(),
+                'output_schema'       => self::get_ignore_site_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_ignore_site_plugins' ),
+                'permission_callback' => MainWP_Abilities_Util::make_site_permission_callback( 'site_id_or_domain' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => 'Manages plugin ignore status. Provide slugs array of plugins to ignore/unignore.',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Register mainwp/ignore-site-themes-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_ignore_site_themes(): void {
+        wp_register_ability(
+            'mainwp/ignore-site-themes-v1',
+            array(
+                'label'               => __( 'Ignore Site Themes', 'mainwp' ),
+                'description'         => __( 'Add or remove themes from the ignored updates list for a single site.', 'mainwp' ),
+                'category'            => 'mainwp-updates',
+                'input_schema'        => self::get_ignore_site_themes_input_schema(),
+                'output_schema'       => self::get_ignore_site_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_ignore_site_themes' ),
+                'permission_callback' => MainWP_Abilities_Util::make_site_permission_callback( 'site_id_or_domain' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => 'Manages theme ignore status. Provide slugs array of themes to ignore/unignore.',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => true,
+                    ),
+                ),
+            )
+        );
+    }
+
+    /**
+     * Register mainwp/update-all-v1 ability.
+     *
+     * @return void
+     */
+    private static function register_update_all(): void {
+        wp_register_ability(
+            'mainwp/update-all-v1',
+            array(
+                'label'               => __( 'Update All', 'mainwp' ),
+                'description'         => __( 'Execute all available updates across all or selected sites. Operations with >50 sites are automatically queued for background processing.', 'mainwp' ),
+                'category'            => 'mainwp-updates',
+                'input_schema'        => self::get_update_all_input_schema(),
+                'output_schema'       => self::get_update_all_output_schema(),
+                'execute_callback'    => array( self::class, 'execute_update_all' ),
+                'permission_callback' => array( MainWP_Abilities_Util::class, 'check_manage_sites_permission' ),
+                'meta'                => array(
+                    'show_in_rest' => true,
+                    'annotations'  => array(
+                        'instructions' => 'Applies all available updates (core, plugins, themes, translations) to specified sites or all sites. Operations with >50 sites are automatically queued and return a job_id for status polling.',
+                        'readonly'     => false,
+                        'destructive'  => false,
+                        'idempotent'   => false,
                     ),
                 ),
             )
@@ -647,6 +926,693 @@ class MainWP_Abilities_Updates {
                 ),
             ),
             'required'   => array( 'success', 'action', 'site_id', 'type', 'slug' ),
+        );
+    }
+
+    /**
+     * Get input schema for get-site-updates-v1.
+     *
+     * @return array
+     */
+    public static function get_get_site_updates_input_schema(): array {
+        return array(
+            'type'                 => 'object',
+            'properties'           => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID (numeric) or domain.', 'mainwp' ),
+                ),
+                'types'             => array(
+                    'type'        => 'array',
+                    'items'       => array(
+                        'type' => 'string',
+                        'enum' => array( 'core', 'plugins', 'themes', 'translations' ),
+                    ),
+                    'default'     => array( 'core', 'plugins', 'themes', 'translations' ),
+                    'description' => __( 'Update types to retrieve.', 'mainwp' ),
+                ),
+            ),
+            'required'             => array( 'site_id_or_domain' ),
+            'additionalProperties' => false,
+        );
+    }
+
+    /**
+     * Get output schema for get-site-updates-v1.
+     *
+     * @return array
+     */
+    public static function get_get_site_updates_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'site_id'        => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Site ID.', 'mainwp' ),
+                ),
+                'site_url'       => array(
+                    'type'        => 'string',
+                    'format'      => 'uri',
+                    'description' => __( 'Site URL.', 'mainwp' ),
+                ),
+                'site_name'      => array(
+                    'type'        => 'string',
+                    'description' => __( 'Site name.', 'mainwp' ),
+                ),
+                'updates'        => array(
+                    'type'        => 'array',
+                    'description' => __( 'Available updates.', 'mainwp' ),
+                    'items'       => array(
+                        'type'       => 'object',
+                        'properties' => array(
+                            'type'            => array(
+                                'type' => 'string',
+                                'enum' => array( 'core', 'plugin', 'theme', 'translation' ),
+                            ),
+                            'slug'            => array( 'type' => 'string' ),
+                            'name'            => array( 'type' => 'string' ),
+                            'current_version' => array( 'type' => 'string' ),
+                            'new_version'     => array( 'type' => 'string' ),
+                        ),
+                    ),
+                ),
+                'rollback_items' => array(
+                    'type'        => 'object',
+                    'description' => __( 'Available rollback versions.', 'mainwp' ),
+                    'properties'  => array(
+                        'plugins' => array(
+                            'type'  => 'array',
+                            'items' => array( 'type' => 'object' ),
+                        ),
+                        'themes'  => array(
+                            'type'  => 'array',
+                            'items' => array( 'type' => 'object' ),
+                        ),
+                    ),
+                ),
+                'summary'        => array(
+                    'type'        => 'object',
+                    'description' => __( 'Update count summary.', 'mainwp' ),
+                    'properties'  => array(
+                        'core'         => array( 'type' => 'integer' ),
+                        'plugins'      => array( 'type' => 'integer' ),
+                        'themes'       => array( 'type' => 'integer' ),
+                        'translations' => array( 'type' => 'integer' ),
+                        'total'        => array( 'type' => 'integer' ),
+                    ),
+                ),
+            ),
+            'required'   => array( 'site_id', 'site_url', 'site_name', 'updates', 'rollback_items', 'summary' ),
+        );
+    }
+
+    /**
+     * Get input schema for update-site-core-v1.
+     *
+     * @return array
+     */
+    public static function get_update_site_core_input_schema(): array {
+        return array(
+            'type'                 => 'object',
+            'properties'           => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID (numeric) or domain.', 'mainwp' ),
+                ),
+            ),
+            'required'             => array( 'site_id_or_domain' ),
+            'additionalProperties' => false,
+        );
+    }
+
+    /**
+     * Get output schema for update-site-core-v1.
+     *
+     * @return array
+     */
+    public static function get_update_site_core_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'updated' => array(
+                    'type'       => 'object',
+                    'properties' => array(
+                        'site_id'     => array( 'type' => 'integer' ),
+                        'site_url'    => array(
+                            'type'   => 'string',
+                            'format' => 'uri',
+                        ),
+                        'site_name'   => array( 'type' => 'string' ),
+                        'type'        => array(
+                            'type'  => 'string',
+                            'const' => 'core',
+                        ),
+                        'slug'        => array( 'type' => 'string' ),
+                        'name'        => array( 'type' => 'string' ),
+                        'old_version' => array( 'type' => 'string' ),
+                        'new_version' => array( 'type' => 'string' ),
+                    ),
+                    'required'   => array( 'site_id', 'site_url', 'site_name', 'type', 'slug', 'name', 'old_version', 'new_version' ),
+                ),
+            ),
+            'required'   => array( 'updated' ),
+        );
+    }
+
+    /**
+     * Get input schema for update-site-plugins-v1.
+     *
+     * @return array
+     */
+    public static function get_update_site_plugins_input_schema(): array {
+        return array(
+            'type'                 => 'object',
+            'properties'           => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID (numeric) or domain.', 'mainwp' ),
+                ),
+                'slugs'             => array(
+                    'type'        => 'array',
+                    'items'       => array( 'type' => 'string' ),
+                    'default'     => array(),
+                    'description' => __( 'Specific plugin slugs to update. Empty = all available.', 'mainwp' ),
+                ),
+            ),
+            'required'             => array( 'site_id_or_domain' ),
+            'additionalProperties' => false,
+        );
+    }
+
+    /**
+     * Get output schema for update-site-plugins-v1.
+     *
+     * @return array
+     */
+    public static function get_update_site_plugins_output_schema(): array {
+        $update_item_schema = array(
+            'type'       => 'object',
+            'properties' => array(
+                'site_id'     => array( 'type' => 'integer' ),
+                'site_url'    => array(
+                    'type'   => 'string',
+                    'format' => 'uri',
+                ),
+                'site_name'   => array( 'type' => 'string' ),
+                'type'        => array(
+                    'type'  => 'string',
+                    'const' => 'plugin',
+                ),
+                'slug'        => array( 'type' => 'string' ),
+                'name'        => array( 'type' => 'string' ),
+                'old_version' => array( 'type' => 'string' ),
+                'new_version' => array( 'type' => 'string' ),
+            ),
+            'required'   => array( 'site_id', 'site_url', 'site_name', 'type', 'slug', 'name', 'old_version', 'new_version' ),
+        );
+
+        $error_item_schema = array(
+            'type'       => 'object',
+            'properties' => array(
+                'site_id'   => array( 'type' => 'integer' ),
+                'site_url'  => array(
+                    'type'   => 'string',
+                    'format' => 'uri',
+                ),
+                'site_name' => array( 'type' => 'string' ),
+                'type'      => array(
+                    'type'  => 'string',
+                    'const' => 'plugin',
+                ),
+                'slug'      => array( 'type' => 'string' ),
+                'code'      => array( 'type' => 'string' ),
+                'message'   => array( 'type' => 'string' ),
+            ),
+            'required'   => array( 'site_id', 'site_url', 'site_name', 'type', 'slug', 'code', 'message' ),
+        );
+
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'updated' => array(
+                    'type'  => 'array',
+                    'items' => $update_item_schema,
+                ),
+                'errors'  => array(
+                    'type'  => 'array',
+                    'items' => $error_item_schema,
+                ),
+                'summary' => array(
+                    'type'       => 'object',
+                    'properties' => array(
+                        'total_updated' => array( 'type' => 'integer' ),
+                        'total_errors'  => array( 'type' => 'integer' ),
+                    ),
+                    'required'   => array( 'total_updated', 'total_errors' ),
+                ),
+            ),
+            'required'   => array( 'updated', 'errors', 'summary' ),
+        );
+    }
+
+    /**
+     * Get input schema for update-site-themes-v1.
+     *
+     * @return array
+     */
+    public static function get_update_site_themes_input_schema(): array {
+        return array(
+            'type'                 => 'object',
+            'properties'           => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID (numeric) or domain.', 'mainwp' ),
+                ),
+                'slugs'             => array(
+                    'type'        => 'array',
+                    'items'       => array( 'type' => 'string' ),
+                    'default'     => array(),
+                    'description' => __( 'Specific theme slugs to update. Empty = all available.', 'mainwp' ),
+                ),
+            ),
+            'required'             => array( 'site_id_or_domain' ),
+            'additionalProperties' => false,
+        );
+    }
+
+    /**
+     * Get output schema for update-site-themes-v1.
+     *
+     * @return array
+     */
+    public static function get_update_site_themes_output_schema(): array {
+        $update_item_schema = array(
+            'type'       => 'object',
+            'properties' => array(
+                'site_id'     => array( 'type' => 'integer' ),
+                'site_url'    => array(
+                    'type'   => 'string',
+                    'format' => 'uri',
+                ),
+                'site_name'   => array( 'type' => 'string' ),
+                'type'        => array(
+                    'type'  => 'string',
+                    'const' => 'theme',
+                ),
+                'slug'        => array( 'type' => 'string' ),
+                'name'        => array( 'type' => 'string' ),
+                'old_version' => array( 'type' => 'string' ),
+                'new_version' => array( 'type' => 'string' ),
+            ),
+            'required'   => array( 'site_id', 'site_url', 'site_name', 'type', 'slug', 'name', 'old_version', 'new_version' ),
+        );
+
+        $error_item_schema = array(
+            'type'       => 'object',
+            'properties' => array(
+                'site_id'   => array( 'type' => 'integer' ),
+                'site_url'  => array(
+                    'type'   => 'string',
+                    'format' => 'uri',
+                ),
+                'site_name' => array( 'type' => 'string' ),
+                'type'      => array(
+                    'type'  => 'string',
+                    'const' => 'theme',
+                ),
+                'slug'      => array( 'type' => 'string' ),
+                'code'      => array( 'type' => 'string' ),
+                'message'   => array( 'type' => 'string' ),
+            ),
+            'required'   => array( 'site_id', 'site_url', 'site_name', 'type', 'slug', 'code', 'message' ),
+        );
+
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'updated' => array(
+                    'type'  => 'array',
+                    'items' => $update_item_schema,
+                ),
+                'errors'  => array(
+                    'type'  => 'array',
+                    'items' => $error_item_schema,
+                ),
+                'summary' => array(
+                    'type'       => 'object',
+                    'properties' => array(
+                        'total_updated' => array( 'type' => 'integer' ),
+                        'total_errors'  => array( 'type' => 'integer' ),
+                    ),
+                    'required'   => array( 'total_updated', 'total_errors' ),
+                ),
+            ),
+            'required'   => array( 'updated', 'errors', 'summary' ),
+        );
+    }
+
+    /**
+     * Get input schema for update-site-translations-v1.
+     *
+     * @return array
+     */
+    public static function get_update_site_translations_input_schema(): array {
+        return array(
+            'type'                 => 'object',
+            'properties'           => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID (numeric) or domain.', 'mainwp' ),
+                ),
+                'slugs'             => array(
+                    'type'        => 'array',
+                    'items'       => array( 'type' => 'string' ),
+                    'default'     => array(),
+                    'description' => __( 'Specific translation slugs to update. Empty = all available.', 'mainwp' ),
+                ),
+            ),
+            'required'             => array( 'site_id_or_domain' ),
+            'additionalProperties' => false,
+        );
+    }
+
+    /**
+     * Get output schema for update-site-translations-v1.
+     *
+     * @return array
+     */
+    public static function get_update_site_translations_output_schema(): array {
+        $update_item_schema = array(
+            'type'       => 'object',
+            'properties' => array(
+                'site_id'     => array( 'type' => 'integer' ),
+                'site_url'    => array(
+                    'type'   => 'string',
+                    'format' => 'uri',
+                ),
+                'site_name'   => array( 'type' => 'string' ),
+                'type'        => array(
+                    'type'  => 'string',
+                    'const' => 'translation',
+                ),
+                'slug'        => array( 'type' => 'string' ),
+                'name'        => array( 'type' => 'string' ),
+                'old_version' => array( 'type' => 'string' ),
+                'new_version' => array( 'type' => 'string' ),
+            ),
+            'required'   => array( 'site_id', 'site_url', 'site_name', 'type', 'slug', 'name', 'old_version', 'new_version' ),
+        );
+
+        $error_item_schema = array(
+            'type'       => 'object',
+            'properties' => array(
+                'site_id'   => array( 'type' => 'integer' ),
+                'site_url'  => array(
+                    'type'   => 'string',
+                    'format' => 'uri',
+                ),
+                'site_name' => array( 'type' => 'string' ),
+                'type'      => array(
+                    'type'  => 'string',
+                    'const' => 'translation',
+                ),
+                'slug'      => array( 'type' => 'string' ),
+                'code'      => array( 'type' => 'string' ),
+                'message'   => array( 'type' => 'string' ),
+            ),
+            'required'   => array( 'site_id', 'site_url', 'site_name', 'type', 'slug', 'code', 'message' ),
+        );
+
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'updated' => array(
+                    'type'  => 'array',
+                    'items' => $update_item_schema,
+                ),
+                'errors'  => array(
+                    'type'  => 'array',
+                    'items' => $error_item_schema,
+                ),
+                'summary' => array(
+                    'type'       => 'object',
+                    'properties' => array(
+                        'total_updated' => array( 'type' => 'integer' ),
+                        'total_errors'  => array( 'type' => 'integer' ),
+                    ),
+                    'required'   => array( 'total_updated', 'total_errors' ),
+                ),
+            ),
+            'required'   => array( 'updated', 'errors', 'summary' ),
+        );
+    }
+
+    /**
+     * Get input schema for ignore-site-core-v1.
+     *
+     * @return array
+     */
+    public static function get_ignore_site_core_input_schema(): array {
+        return array(
+            'type'                 => 'object',
+            'properties'           => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID (numeric) or domain.', 'mainwp' ),
+                ),
+                'action'            => array(
+                    'type'        => 'string',
+                    'enum'        => array( 'add', 'remove' ),
+                    'default'     => 'add',
+                    'description' => __( 'Add to or remove from ignored list.', 'mainwp' ),
+                ),
+            ),
+            'required'             => array( 'site_id_or_domain' ),
+            'additionalProperties' => false,
+        );
+    }
+
+    /**
+     * Get input schema for ignore-site-plugins-v1.
+     *
+     * @return array
+     */
+    public static function get_ignore_site_plugins_input_schema(): array {
+        return array(
+            'type'                 => 'object',
+            'properties'           => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID (numeric) or domain.', 'mainwp' ),
+                ),
+                'slugs'             => array(
+                    'type'        => 'array',
+                    'items'       => array( 'type' => 'string' ),
+                    'description' => __( 'Plugin slugs to ignore.', 'mainwp' ),
+                ),
+                'action'            => array(
+                    'type'        => 'string',
+                    'enum'        => array( 'add', 'remove' ),
+                    'default'     => 'add',
+                    'description' => __( 'Add to or remove from ignored list.', 'mainwp' ),
+                ),
+            ),
+            'required'             => array( 'site_id_or_domain', 'slugs' ),
+            'additionalProperties' => false,
+        );
+    }
+
+    /**
+     * Get input schema for ignore-site-themes-v1.
+     *
+     * @return array
+     */
+    public static function get_ignore_site_themes_input_schema(): array {
+        return array(
+            'type'                 => 'object',
+            'properties'           => array(
+                'site_id_or_domain' => array(
+                    'type'        => array( 'integer', 'string' ),
+                    'description' => __( 'Site ID (numeric) or domain.', 'mainwp' ),
+                ),
+                'slugs'             => array(
+                    'type'        => 'array',
+                    'items'       => array( 'type' => 'string' ),
+                    'description' => __( 'Theme slugs to ignore.', 'mainwp' ),
+                ),
+                'action'            => array(
+                    'type'        => 'string',
+                    'enum'        => array( 'add', 'remove' ),
+                    'default'     => 'add',
+                    'description' => __( 'Add to or remove from ignored list.', 'mainwp' ),
+                ),
+            ),
+            'required'             => array( 'site_id_or_domain', 'slugs' ),
+            'additionalProperties' => false,
+        );
+    }
+
+    /**
+     * Get output schema for ignore-site-* abilities (shared).
+     *
+     * @return array
+     */
+    public static function get_ignore_site_output_schema(): array {
+        return array(
+            'type'       => 'object',
+            'properties' => array(
+                'success'       => array(
+                    'type'        => 'boolean',
+                    'description' => __( 'Whether the action was successful.', 'mainwp' ),
+                ),
+                'message'       => array(
+                    'type'        => 'string',
+                    'description' => __( 'Success or error message.', 'mainwp' ),
+                ),
+                'ignored_count' => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Number of items affected.', 'mainwp' ),
+                ),
+            ),
+            'required'   => array( 'success', 'message', 'ignored_count' ),
+        );
+    }
+
+    /**
+     * Get input schema for update-all-v1.
+     *
+     * @return array
+     */
+    public static function get_update_all_input_schema(): array {
+        return array(
+            'type'                 => array( 'object', 'null' ),
+            'properties'           => array(
+                'site_ids_or_domains' => array(
+                    'type'        => 'array',
+                    'items'       => array(
+                        'type' => array( 'integer', 'string' ),
+                    ),
+                    'default'     => array(),
+                    'description' => __( 'Sites to update. Empty array means all sites.', 'mainwp' ),
+                ),
+                'types'               => array(
+                    'type'        => 'array',
+                    'items'       => array(
+                        'type' => 'string',
+                        'enum' => array( 'core', 'plugins', 'themes', 'translations' ),
+                    ),
+                    'default'     => array( 'core', 'plugins', 'themes', 'translations' ),
+                    'description' => __( 'Update types to execute.', 'mainwp' ),
+                ),
+            ),
+            'additionalProperties' => false,
+        );
+    }
+
+    /**
+     * Get output schema for update-all-v1.
+     *
+     * @return array
+     */
+    public static function get_update_all_output_schema(): array {
+        $error_item_schema = array(
+            'type'       => 'object',
+            'properties' => array(
+                'site_id'   => array( 'type' => 'integer' ),
+                'site_url'  => array(
+                    'type'   => 'string',
+                    'format' => 'uri',
+                ),
+                'site_name' => array( 'type' => 'string' ),
+                'type'      => array(
+                    'type'        => 'string',
+                    'description' => __( 'Update type or "site" for site-level errors.', 'mainwp' ),
+                ),
+                'slug'      => array( 'type' => 'string' ),
+                'code'      => array(
+                    'type'        => 'string',
+                    'description' => __( 'Error code.', 'mainwp' ),
+                ),
+                'message'   => array( 'type' => 'string' ),
+            ),
+            'required'   => array( 'site_id', 'site_url', 'type', 'slug', 'code', 'message' ),
+        );
+
+        $errors_schema = array(
+            'type'        => 'array',
+            'description' => __( 'Failed updates or site-level errors.', 'mainwp' ),
+            'items'       => $error_item_schema,
+        );
+
+        return array(
+            'type'        => 'object',
+            'description' => __( 'Response varies by operation mode. Immediate mode (≤50 sites) returns updated/errors/summary. Queued mode (>50 sites) returns queued/job_id/status_url/updates_queued/errors.', 'mainwp' ),
+            'oneOf'       => array(
+                array(
+                    'type'        => 'object',
+                    'description' => __( 'Immediate execution response for operations with ≤50 sites.', 'mainwp' ),
+                    'properties'  => array(
+                        'updated' => array(
+                            'type'        => 'array',
+                            'description' => __( 'Successfully updated items.', 'mainwp' ),
+                            'items'       => array(
+                                'type'       => 'object',
+                                'properties' => array(
+                                    'site_id'     => array( 'type' => 'integer' ),
+                                    'site_url'    => array(
+                                        'type'   => 'string',
+                                        'format' => 'uri',
+                                    ),
+                                    'site_name'   => array( 'type' => 'string' ),
+                                    'type'        => array( 'type' => 'string' ),
+                                    'slug'        => array( 'type' => 'string' ),
+                                    'name'        => array( 'type' => 'string' ),
+                                    'old_version' => array( 'type' => 'string' ),
+                                    'new_version' => array( 'type' => 'string' ),
+                                ),
+                                'required'   => array( 'site_id', 'site_url', 'site_name', 'type', 'slug', 'name', 'old_version', 'new_version' ),
+                            ),
+                        ),
+                        'errors'  => $errors_schema,
+                        'summary' => array(
+                            'type'       => 'object',
+                            'properties' => array(
+                                'total_updated' => array( 'type' => 'integer' ),
+                                'total_errors'  => array( 'type' => 'integer' ),
+                                'sites_updated' => array( 'type' => 'integer' ),
+                            ),
+                            'required'   => array( 'total_updated', 'total_errors', 'sites_updated' ),
+                        ),
+                    ),
+                    'required'    => array( 'updated', 'errors', 'summary' ),
+                ),
+                array(
+                    'type'        => 'object',
+                    'description' => __( 'Queued execution response for operations with >50 sites.', 'mainwp' ),
+                    'properties'  => array(
+                        'queued'         => array(
+                            'type'        => 'boolean',
+                            'description' => __( 'Always true for queued responses.', 'mainwp' ),
+                            'const'       => true,
+                        ),
+                        'job_id'         => array(
+                            'type'        => 'string',
+                            'description' => __( 'Background job ID for status polling.', 'mainwp' ),
+                        ),
+                        'status_url'     => array(
+                            'type'        => 'string',
+                            'format'      => 'uri',
+                            'description' => __( 'URL to poll for job status.', 'mainwp' ),
+                        ),
+                        'updates_queued' => array(
+                            'type'        => 'integer',
+                            'description' => __( 'Number of update operations queued.', 'mainwp' ),
+                        ),
+                        'errors'         => $errors_schema,
+                    ),
+                    'required'    => array( 'queued', 'job_id', 'status_url', 'updates_queued', 'errors' ),
+                ),
+            ),
         );
     }
 
@@ -1309,9 +2275,853 @@ class MainWP_Abilities_Updates {
         );
     }
 
+    /**
+     * Execute callback for mainwp/get-site-updates-v1.
+     *
+     * @param array $input Validated input from Abilities API.
+     * @return array|\WP_Error
+     */
+    public static function execute_get_site_updates( array $input ) {
+        $site_id_or_domain = $input['site_id_or_domain'];
+        $types             = $input['types'] ?? array( 'core', 'plugins', 'themes', 'translations' );
+
+        $site = MainWP_Abilities_Util::resolve_site( $site_id_or_domain );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site, $input );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        $user_extension         = MainWP_DB_Common::instance()->get_user_extension_by_user_id();
+        $global_ignored_plugins = array();
+        $global_ignored_themes  = array();
+        $global_ignored_core    = array();
+
+        if ( is_object( $user_extension ) ) {
+            $global_ignored_plugins = ! empty( $user_extension->ignored_plugins ) ? json_decode( $user_extension->ignored_plugins, true ) : array();
+            $global_ignored_themes  = ! empty( $user_extension->ignored_themes ) ? json_decode( $user_extension->ignored_themes, true ) : array();
+            $global_ignored_core    = ! empty( $user_extension->ignored_wp_upgrades ) ? json_decode( $user_extension->ignored_wp_upgrades, true ) : array();
+        }
+
+        if ( ! is_array( $global_ignored_plugins ) ) {
+            $global_ignored_plugins = array();
+        }
+        if ( ! is_array( $global_ignored_themes ) ) {
+            $global_ignored_themes = array();
+        }
+        if ( ! is_array( $global_ignored_core ) ) {
+            $global_ignored_core = array();
+        }
+
+        $updates = self::get_site_updates( $site, $types, $global_ignored_plugins, $global_ignored_themes, $global_ignored_core );
+
+        $rollback_data = array(
+            'plugins' => array(),
+            'themes'  => array(),
+        );
+
+        if ( class_exists( '\MainWP\Dashboard\MainWP_Updates_Helper' ) ) {
+            $rollback_items = MainWP_Updates_Helper::instance()->get_roll_items_updates_of_site( $site );
+            if ( is_array( $rollback_items ) ) {
+                // Merge returned data into defaults to ensure plugins/themes keys always exist.
+                $rollback_data = array_merge( $rollback_data, $rollback_items );
+            }
+        }
+
+        $summary = array(
+            'core'         => 0,
+            'plugins'      => 0,
+            'themes'       => 0,
+            'translations' => 0,
+            'total'        => count( $updates ),
+        );
+
+        foreach ( $updates as $update ) {
+            if ( 'core' === $update['type'] ) {
+                ++$summary['core'];
+            } elseif ( 'plugin' === $update['type'] ) {
+                ++$summary['plugins'];
+            } elseif ( 'theme' === $update['type'] ) {
+                ++$summary['themes'];
+            } elseif ( 'translation' === $update['type'] ) {
+                ++$summary['translations'];
+            }
+        }
+
+        return array(
+            'site_id'        => (int) $site->id,
+            'site_url'       => $site->url,
+            'site_name'      => $site->name,
+            'updates'        => $updates,
+            'rollback_items' => $rollback_data,
+            'summary'        => $summary,
+        );
+    }
+
+    /**
+     * Execute callback for mainwp/update-site-core-v1.
+     *
+     * @param array $input Validated input from Abilities API.
+     * @return array|\WP_Error
+     */
+    public static function execute_update_site_core( array $input ) {
+        $site_id_or_domain = $input['site_id_or_domain'];
+
+        $site = MainWP_Abilities_Util::resolve_site( $site_id_or_domain );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site, $input );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        if ( isset( $site->offline_check_result ) && -1 === (int) $site->offline_check_result ) {
+            return new \WP_Error(
+                'mainwp_site_offline',
+                __( 'Site is known to be offline.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        $child_version_check = MainWP_Abilities_Util::check_child_version( $site, '4.0' );
+        if ( is_wp_error( $child_version_check ) ) {
+            return $child_version_check;
+        }
+
+        $wp_upgrades = MainWP_DB::instance()->get_website_option( $site, 'wp_upgrades' );
+        $wp_upgrades = ! empty( $wp_upgrades ) ? json_decode( $wp_upgrades, true ) : array();
+
+        if ( empty( $wp_upgrades ) || ! isset( $wp_upgrades['current'] ) || ! isset( $wp_upgrades['new'] ) ) {
+            return new \WP_Error(
+                'mainwp_no_updates',
+                __( 'No core updates available for this site.', 'mainwp' ),
+                array( 'status' => 404 )
+            );
+        }
+
+        $update_info = array(
+            'current_version' => $wp_upgrades['current'],
+            'new_version'     => $wp_upgrades['new'],
+        );
+
+        $result = self::execute_core_update( $site, $update_info );
+
+        if ( is_wp_error( $result ) ) {
+            return $result;
+        }
+
+        return array(
+            'updated' => $result,
+        );
+    }
+
+    /**
+     * Execute callback for mainwp/update-site-plugins-v1.
+     *
+     * @param array $input Validated input from Abilities API.
+     * @return array|\WP_Error
+     */
+    public static function execute_update_site_plugins( array $input ) {
+        $site_id_or_domain = $input['site_id_or_domain'];
+        $slugs             = $input['slugs'] ?? array();
+
+        $site = MainWP_Abilities_Util::resolve_site( $site_id_or_domain );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site, $input );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        if ( isset( $site->offline_check_result ) && -1 === (int) $site->offline_check_result ) {
+            return new \WP_Error(
+                'mainwp_site_offline',
+                __( 'Site is known to be offline.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        $child_version_check = MainWP_Abilities_Util::check_child_version( $site, '4.0' );
+        if ( is_wp_error( $child_version_check ) ) {
+            return $child_version_check;
+        }
+
+        $user_extension         = MainWP_DB_Common::instance()->get_user_extension_by_user_id();
+        $global_ignored_plugins = array();
+        if ( is_object( $user_extension ) ) {
+            $global_ignored_plugins = ! empty( $user_extension->ignored_plugins ) ? json_decode( $user_extension->ignored_plugins, true ) : array();
+        }
+        if ( ! is_array( $global_ignored_plugins ) ) {
+            $global_ignored_plugins = array();
+        }
+
+        $site_ignored_plugins = ! empty( $site->ignored_plugins ) ? json_decode( $site->ignored_plugins, true ) : array();
+        if ( ! is_array( $site_ignored_plugins ) ) {
+            $site_ignored_plugins = array();
+        }
+
+        $plugin_upgrades = ! empty( $site->plugin_upgrades ) ? json_decode( $site->plugin_upgrades, true ) : array();
+        if ( ! is_array( $plugin_upgrades ) || empty( $plugin_upgrades ) ) {
+            return array(
+                'updated' => array(),
+                'errors'  => array(),
+                'summary' => array(
+                    'total_updated' => 0,
+                    'total_errors'  => 0,
+                ),
+            );
+        }
+
+        if ( ! empty( $site_ignored_plugins ) ) {
+            $plugin_upgrades = MainWP_Common_Functions::instance()->get_not_ignored_updates_themesplugins( $plugin_upgrades, $site_ignored_plugins );
+        }
+        if ( ! empty( $global_ignored_plugins ) ) {
+            $plugin_upgrades = MainWP_Common_Functions::instance()->get_not_ignored_updates_themesplugins( $plugin_upgrades, $global_ignored_plugins );
+        }
+
+        if ( ! empty( $slugs ) ) {
+            $plugin_upgrades = array_filter(
+                $plugin_upgrades,
+                function ( $slug ) use ( $slugs ) {
+                    return in_array( $slug, $slugs, true );
+                },
+                ARRAY_FILTER_USE_KEY
+            );
+        }
+
+        if ( empty( $plugin_upgrades ) ) {
+            return array(
+                'updated' => array(),
+                'errors'  => array(),
+                'summary' => array(
+                    'total_updated' => 0,
+                    'total_errors'  => 0,
+                ),
+            );
+        }
+
+        $updates = array();
+        foreach ( $plugin_upgrades as $slug => $plugin ) {
+            $updates[] = array(
+                'slug'            => $slug,
+                'name'            => isset( $plugin['Name'] ) ? $plugin['Name'] : $slug,
+                'current_version' => isset( $plugin['Version'] ) ? $plugin['Version'] : '',
+                'new_version'     => isset( $plugin['update']['new_version'] ) ? $plugin['update']['new_version'] : ( isset( $plugin['new_version'] ) ? $plugin['new_version'] : '' ),
+            );
+        }
+
+        $result = self::execute_plugin_updates( $site, $updates );
+
+        return array(
+            'updated' => $result['updated'],
+            'errors'  => $result['errors'],
+            'summary' => array(
+                'total_updated' => count( $result['updated'] ),
+                'total_errors'  => count( $result['errors'] ),
+            ),
+        );
+    }
+
+    /**
+     * Execute callback for mainwp/update-site-themes-v1.
+     *
+     * @param array $input Validated input from Abilities API.
+     * @return array|\WP_Error
+     */
+    public static function execute_update_site_themes( array $input ) {
+        $site_id_or_domain = $input['site_id_or_domain'];
+        $slugs             = $input['slugs'] ?? array();
+
+        $site = MainWP_Abilities_Util::resolve_site( $site_id_or_domain );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site, $input );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        if ( isset( $site->offline_check_result ) && -1 === (int) $site->offline_check_result ) {
+            return new \WP_Error(
+                'mainwp_site_offline',
+                __( 'Site is known to be offline.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        $child_version_check = MainWP_Abilities_Util::check_child_version( $site, '4.0' );
+        if ( is_wp_error( $child_version_check ) ) {
+            return $child_version_check;
+        }
+
+        $user_extension        = MainWP_DB_Common::instance()->get_user_extension_by_user_id();
+        $global_ignored_themes = array();
+        if ( is_object( $user_extension ) ) {
+            $global_ignored_themes = ! empty( $user_extension->ignored_themes ) ? json_decode( $user_extension->ignored_themes, true ) : array();
+        }
+        if ( ! is_array( $global_ignored_themes ) ) {
+            $global_ignored_themes = array();
+        }
+
+        $site_ignored_themes = ! empty( $site->ignored_themes ) ? json_decode( $site->ignored_themes, true ) : array();
+        if ( ! is_array( $site_ignored_themes ) ) {
+            $site_ignored_themes = array();
+        }
+
+        $theme_upgrades = ! empty( $site->theme_upgrades ) ? json_decode( $site->theme_upgrades, true ) : array();
+        if ( ! is_array( $theme_upgrades ) || empty( $theme_upgrades ) ) {
+            return array(
+                'updated' => array(),
+                'errors'  => array(),
+                'summary' => array(
+                    'total_updated' => 0,
+                    'total_errors'  => 0,
+                ),
+            );
+        }
+
+        if ( ! empty( $site_ignored_themes ) ) {
+            $theme_upgrades = MainWP_Common_Functions::instance()->get_not_ignored_updates_themesplugins( $theme_upgrades, $site_ignored_themes );
+        }
+        if ( ! empty( $global_ignored_themes ) ) {
+            $theme_upgrades = MainWP_Common_Functions::instance()->get_not_ignored_updates_themesplugins( $theme_upgrades, $global_ignored_themes );
+        }
+
+        if ( ! empty( $slugs ) ) {
+            $theme_upgrades = array_filter(
+                $theme_upgrades,
+                function ( $slug ) use ( $slugs ) {
+                    return in_array( $slug, $slugs, true );
+                },
+                ARRAY_FILTER_USE_KEY
+            );
+        }
+
+        if ( empty( $theme_upgrades ) ) {
+            return array(
+                'updated' => array(),
+                'errors'  => array(),
+                'summary' => array(
+                    'total_updated' => 0,
+                    'total_errors'  => 0,
+                ),
+            );
+        }
+
+        $updates = array();
+        foreach ( $theme_upgrades as $slug => $theme ) {
+            $updates[] = array(
+                'slug'            => $slug,
+                'name'            => isset( $theme['Name'] ) ? $theme['Name'] : $slug,
+                'current_version' => isset( $theme['Version'] ) ? $theme['Version'] : '',
+                'new_version'     => isset( $theme['update']['new_version'] ) ? $theme['update']['new_version'] : ( isset( $theme['new_version'] ) ? $theme['new_version'] : '' ),
+            );
+        }
+
+        $result = self::execute_theme_updates( $site, $updates );
+
+        return array(
+            'updated' => $result['updated'],
+            'errors'  => $result['errors'],
+            'summary' => array(
+                'total_updated' => count( $result['updated'] ),
+                'total_errors'  => count( $result['errors'] ),
+            ),
+        );
+    }
+
+    /**
+     * Execute callback for mainwp/update-site-translations-v1.
+     *
+     * @param array $input Validated input from Abilities API.
+     * @return array|\WP_Error
+     */
+    public static function execute_update_site_translations( array $input ) {
+        $site_id_or_domain = $input['site_id_or_domain'];
+        $slugs             = $input['slugs'] ?? array();
+
+        $site = MainWP_Abilities_Util::resolve_site( $site_id_or_domain );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site, $input );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        if ( isset( $site->offline_check_result ) && -1 === (int) $site->offline_check_result ) {
+            return new \WP_Error(
+                'mainwp_site_offline',
+                __( 'Site is known to be offline.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        $child_version_check = MainWP_Abilities_Util::check_child_version( $site, '4.0' );
+        if ( is_wp_error( $child_version_check ) ) {
+            return $child_version_check;
+        }
+
+        $translation_upgrades = ! empty( $site->translation_upgrades ) ? json_decode( $site->translation_upgrades, true ) : array();
+        if ( ! is_array( $translation_upgrades ) || empty( $translation_upgrades ) ) {
+            return array(
+                'updated' => array(),
+                'errors'  => array(),
+                'summary' => array(
+                    'total_updated' => 0,
+                    'total_errors'  => 0,
+                ),
+            );
+        }
+
+        if ( ! empty( $slugs ) ) {
+            $translation_upgrades = array_filter(
+                $translation_upgrades,
+                function ( $translation ) use ( $slugs ) {
+                    return isset( $translation['slug'] ) && in_array( $translation['slug'], $slugs, true );
+                }
+            );
+        }
+
+        if ( empty( $translation_upgrades ) ) {
+            return array(
+                'updated' => array(),
+                'errors'  => array(),
+                'summary' => array(
+                    'total_updated' => 0,
+                    'total_errors'  => 0,
+                ),
+            );
+        }
+
+        $updates = array();
+        foreach ( $translation_upgrades as $translation ) {
+            $updates[] = array(
+                'slug'            => isset( $translation['slug'] ) ? $translation['slug'] : '',
+                'name'            => isset( $translation['name'] ) ? $translation['name'] : ( isset( $translation['slug'] ) ? $translation['slug'] : '' ),
+                'current_version' => isset( $translation['version'] ) ? $translation['version'] : '',
+                'new_version'     => isset( $translation['new_version'] ) ? $translation['new_version'] : '',
+            );
+        }
+
+        $result = self::execute_translation_updates( $site, $updates );
+
+        return array(
+            'updated' => $result['updated'],
+            'errors'  => $result['errors'],
+            'summary' => array(
+                'total_updated' => count( $result['updated'] ),
+                'total_errors'  => count( $result['errors'] ),
+            ),
+        );
+    }
+
+    /**
+     * Execute callback for mainwp/ignore-site-core-v1.
+     *
+     * @param array $input Validated input from Abilities API.
+     * @return array|\WP_Error
+     */
+    public static function execute_ignore_site_core( array $input ) {
+        $site_id_or_domain = $input['site_id_or_domain'];
+        $action            = $input['action'] ?? 'add';
+
+        $site = MainWP_Abilities_Util::resolve_site( $site_id_or_domain );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site, $input );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        if ( 'add' === $action ) {
+            $result  = self::add_to_ignored_list( $site, 'core', 'wordpress' );
+            $message = __( 'Core updates ignored for this site.', 'mainwp' );
+        } else {
+            $result  = self::remove_from_ignored_list( $site, 'core', 'wordpress' );
+            $message = __( 'Core updates unignored for this site.', 'mainwp' );
+        }
+
+        if ( is_wp_error( $result ) ) {
+            return $result;
+        }
+
+        return array(
+            'success'       => true,
+            'message'       => $message,
+            'ignored_count' => 1,
+        );
+    }
+
+    /**
+     * Execute callback for mainwp/ignore-site-plugins-v1.
+     *
+     * @param array $input Validated input from Abilities API.
+     * @return array|\WP_Error
+     */
+    public static function execute_ignore_site_plugins( array $input ) {
+        $site_id_or_domain = $input['site_id_or_domain'];
+        $slugs             = $input['slugs'];
+        $action            = $input['action'] ?? 'add';
+
+        $site = MainWP_Abilities_Util::resolve_site( $site_id_or_domain );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site, $input );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        $count = 0;
+        foreach ( $slugs as $slug ) {
+            if ( 'add' === $action ) {
+                $result = self::add_to_ignored_list( $site, 'plugin', $slug );
+            } else {
+                $result = self::remove_from_ignored_list( $site, 'plugin', $slug );
+            }
+
+            if ( ! is_wp_error( $result ) ) {
+                ++$count;
+            }
+        }
+
+        if ( 'add' === $action ) {
+            if ( $count > 0 ) {
+                $message = sprintf(
+                    /* translators: %d: Number of plugins */
+                    _n( '%d plugin ignored.', '%d plugins ignored.', $count, 'mainwp' ),
+                    $count
+                );
+            } else {
+                $message = __( 'No plugins were ignored.', 'mainwp' );
+            }
+        } else {
+            if ( $count > 0 ) {
+                $message = sprintf(
+                    /* translators: %d: Number of plugins */
+                    _n( '%d plugin unignored.', '%d plugins unignored.', $count, 'mainwp' ),
+                    $count
+                );
+            } else {
+                $message = __( 'No plugins were unignored.', 'mainwp' );
+            }
+        }
+
+        return array(
+            'success'       => $count > 0,
+            'message'       => $message,
+            'ignored_count' => $count,
+        );
+    }
+
+    /**
+     * Execute callback for mainwp/ignore-site-themes-v1.
+     *
+     * @param array $input Validated input from Abilities API.
+     * @return array|\WP_Error
+     */
+    public static function execute_ignore_site_themes( array $input ) {
+        $site_id_or_domain = $input['site_id_or_domain'];
+        $slugs             = $input['slugs'];
+        $action            = $input['action'] ?? 'add';
+
+        $site = MainWP_Abilities_Util::resolve_site( $site_id_or_domain );
+        if ( is_wp_error( $site ) ) {
+            return $site;
+        }
+
+        $access_check = MainWP_Abilities_Util::check_site_access( $site, $input );
+        if ( is_wp_error( $access_check ) ) {
+            return $access_check;
+        }
+
+        $count = 0;
+        foreach ( $slugs as $slug ) {
+            if ( 'add' === $action ) {
+                $result = self::add_to_ignored_list( $site, 'theme', $slug );
+            } else {
+                $result = self::remove_from_ignored_list( $site, 'theme', $slug );
+            }
+
+            if ( ! is_wp_error( $result ) ) {
+                ++$count;
+            }
+        }
+
+        if ( 'add' === $action ) {
+            if ( $count > 0 ) {
+                $message = sprintf(
+                    /* translators: %d: Number of themes */
+                    _n( '%d theme ignored.', '%d themes ignored.', $count, 'mainwp' ),
+                    $count
+                );
+            } else {
+                $message = __( 'No themes were ignored.', 'mainwp' );
+            }
+        } else {
+            if ( $count > 0 ) {
+                $message = sprintf(
+                    /* translators: %d: Number of themes */
+                    _n( '%d theme unignored.', '%d themes unignored.', $count, 'mainwp' ),
+                    $count
+                );
+            } else {
+                $message = __( 'No themes were unignored.', 'mainwp' );
+            }
+        }
+
+        return array(
+            'success'       => $count > 0,
+            'message'       => $message,
+            'ignored_count' => $count,
+        );
+    }
+
+    /**
+     * Execute callback for mainwp/update-all-v1.
+     *
+     * @param array|null $input Validated input from Abilities API.
+     * @return array|\WP_Error
+     */
+    public static function execute_update_all( $input ) { // phpcs:ignore -- NOSONAR - complex method.
+        $input               = is_array( $input ) ? $input : array();
+        $site_ids_or_domains = $input['site_ids_or_domains'] ?? array();
+        $types               = $input['types'] ?? array( 'core', 'plugins', 'themes', 'translations' );
+
+        $resolution_result = self::get_sites_for_updates( $site_ids_or_domains );
+        if ( is_wp_error( $resolution_result ) ) {
+            return $resolution_result;
+        }
+
+        $sites             = $resolution_result['sites'];
+        $resolution_errors = $resolution_result['errors'];
+
+        if ( empty( $sites ) ) {
+            $normalized_errors = self::normalize_resolution_errors( $resolution_errors );
+            return array(
+                'updated' => array(),
+                'errors'  => $normalized_errors,
+                'summary' => array(
+                    'total_updated' => 0,
+                    'total_errors'  => count( $normalized_errors ),
+                    'sites_updated' => 0,
+                ),
+            );
+        }
+
+        if ( count( $sites ) > self::BATCH_THRESHOLD ) {
+            $job_id = MainWP_Abilities_Util::queue_batch_updates(
+                $sites,
+                array(
+                    'types' => $types,
+                )
+            );
+
+            if ( is_wp_error( $job_id ) ) {
+                return $job_id;
+            }
+
+            return array(
+                'queued'         => true,
+                'job_id'         => $job_id,
+                'status_url'     => rest_url( "mainwp/v2/jobs/{$job_id}" ),
+                'updates_queued' => count( $sites ),
+                'errors'         => self::normalize_resolution_errors( $resolution_errors ),
+            );
+        }
+
+        $user_extension         = MainWP_DB_Common::instance()->get_user_extension_by_user_id();
+        $global_ignored_plugins = array();
+        $global_ignored_themes  = array();
+        $global_ignored_core    = array();
+
+        if ( is_object( $user_extension ) ) {
+            $global_ignored_plugins = ! empty( $user_extension->ignored_plugins ) ? json_decode( $user_extension->ignored_plugins, true ) : array();
+            $global_ignored_themes  = ! empty( $user_extension->ignored_themes ) ? json_decode( $user_extension->ignored_themes, true ) : array();
+            $global_ignored_core    = ! empty( $user_extension->ignored_wp_upgrades ) ? json_decode( $user_extension->ignored_wp_upgrades, true ) : array();
+        }
+
+        if ( ! is_array( $global_ignored_plugins ) ) {
+            $global_ignored_plugins = array();
+        }
+        if ( ! is_array( $global_ignored_themes ) ) {
+            $global_ignored_themes = array();
+        }
+        if ( ! is_array( $global_ignored_core ) ) {
+            $global_ignored_core = array();
+        }
+
+        $all_updated       = array();
+        $all_errors        = self::normalize_resolution_errors( $resolution_errors );
+        $sites_updated_set = array();
+
+        foreach ( $sites as $site ) {
+            // Check if site is known offline before attempting updates.
+            if ( isset( $site->offline_check_result ) && -1 === (int) $site->offline_check_result ) {
+                $all_errors[] = array(
+                    'site_id'   => (int) $site->id,
+                    'site_url'  => $site->url,
+                    'site_name' => $site->name,
+                    'type'      => 'site',
+                    'slug'      => '',
+                    'code'      => 'mainwp_site_offline',
+                    'message'   => __( 'Site is known to be offline.', 'mainwp' ),
+                );
+                continue;
+            }
+
+            $site_updates = self::get_site_updates( $site, $types, $global_ignored_plugins, $global_ignored_themes, $global_ignored_core );
+
+            if ( empty( $site_updates ) ) {
+                continue;
+            }
+
+            $child_version_check = MainWP_Abilities_Util::check_child_version( $site, '4.0' );
+            if ( is_wp_error( $child_version_check ) ) {
+                foreach ( $site_updates as $update ) {
+                    $all_errors[] = array(
+                        'site_id'   => (int) $site->id,
+                        'site_url'  => $site->url,
+                        'site_name' => $site->name,
+                        'type'      => $update['type'],
+                        'slug'      => $update['slug'],
+                        'code'      => $child_version_check->get_error_code(),
+                        'message'   => $child_version_check->get_error_message(),
+                    );
+                }
+                continue;
+            }
+
+            $core_updates        = array();
+            $plugin_updates      = array();
+            $theme_updates       = array();
+            $translation_updates = array();
+
+            foreach ( $site_updates as $update ) {
+                if ( 'core' === $update['type'] ) {
+                    $core_updates[] = $update;
+                } elseif ( 'plugin' === $update['type'] ) {
+                    $plugin_updates[] = $update;
+                } elseif ( 'theme' === $update['type'] ) {
+                    $theme_updates[] = $update;
+                } elseif ( 'translation' === $update['type'] ) {
+                    $translation_updates[] = $update;
+                }
+            }
+
+            if ( ! empty( $core_updates ) && in_array( 'core', $types, true ) ) {
+                $core_update = $core_updates[0];
+                $result      = self::execute_core_update( $site, $core_update );
+                if ( is_wp_error( $result ) ) {
+                    $all_errors[] = array(
+                        'site_id'   => (int) $site->id,
+                        'site_url'  => $site->url,
+                        'site_name' => $site->name,
+                        'type'      => 'core',
+                        'slug'      => 'wordpress',
+                        'code'      => $result->get_error_code(),
+                        'message'   => $result->get_error_message(),
+                    );
+                } else {
+                    $all_updated[]                        = $result;
+                    $sites_updated_set[ (int) $site->id ] = true;
+                }
+            }
+
+            if ( ! empty( $plugin_updates ) && in_array( 'plugins', $types, true ) ) {
+                $result = self::execute_plugin_updates( $site, $plugin_updates );
+                if ( ! empty( $result['updated'] ) ) {
+                    $all_updated                          = array_merge( $all_updated, $result['updated'] );
+                    $sites_updated_set[ (int) $site->id ] = true;
+                }
+                if ( ! empty( $result['errors'] ) ) {
+                    $all_errors = array_merge( $all_errors, $result['errors'] );
+                }
+            }
+
+            if ( ! empty( $theme_updates ) && in_array( 'themes', $types, true ) ) {
+                $result = self::execute_theme_updates( $site, $theme_updates );
+                if ( ! empty( $result['updated'] ) ) {
+                    $all_updated                          = array_merge( $all_updated, $result['updated'] );
+                    $sites_updated_set[ (int) $site->id ] = true;
+                }
+                if ( ! empty( $result['errors'] ) ) {
+                    $all_errors = array_merge( $all_errors, $result['errors'] );
+                }
+            }
+
+            if ( ! empty( $translation_updates ) && in_array( 'translations', $types, true ) ) {
+                $result = self::execute_translation_updates( $site, $translation_updates );
+                if ( ! empty( $result['updated'] ) ) {
+                    $all_updated                          = array_merge( $all_updated, $result['updated'] );
+                    $sites_updated_set[ (int) $site->id ] = true;
+                }
+                if ( ! empty( $result['errors'] ) ) {
+                    $all_errors = array_merge( $all_errors, $result['errors'] );
+                }
+            }
+        }
+
+        return array(
+            'updated' => $all_updated,
+            'errors'  => $all_errors,
+            'summary' => array(
+                'total_updated' => count( $all_updated ),
+                'total_errors'  => count( $all_errors ),
+                'sites_updated' => count( $sites_updated_set ),
+            ),
+        );
+    }
+
     // =========================================================================
     // Helper Methods
     // =========================================================================
+
+    /**
+     * Normalize resolution errors to match the documented error schema.
+     *
+     * Converts errors from resolve_sites() format (identifier, code, message, status)
+     * to the update-all-v1 output schema format (site_id, site_url, site_name, type, slug, code, message).
+     *
+     * @param array $resolution_errors Raw resolution errors from resolve_sites().
+     * @return array Normalized errors matching the output schema.
+     */
+    private static function normalize_resolution_errors( array $resolution_errors ): array {
+        $normalized = array();
+
+        foreach ( $resolution_errors as $err ) {
+            // Convert identifier to site_url if it's a scalar (string or int).
+            $site_url = '';
+            if ( isset( $err['identifier'] ) && is_scalar( $err['identifier'] ) ) {
+                $site_url = (string) $err['identifier'];
+            }
+
+            $normalized[] = array(
+                'site_id'   => 0,
+                'site_url'  => $site_url,
+                'site_name' => '',
+                'type'      => 'site',
+                'slug'      => '',
+                'code'      => isset( $err['code'] ) ? $err['code'] : 'mainwp_unknown_error',
+                'message'   => isset( $err['message'] ) ? $err['message'] : __( 'Unknown error during site resolution.', 'mainwp' ),
+            );
+        }
+
+        return $normalized;
+    }
 
     /**
      * Get sites for update operations.

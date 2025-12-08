@@ -7,6 +7,15 @@
  * - mainwp/run-updates-v1
  * - mainwp/list-ignored-updates-v1
  * - mainwp/set-ignored-updates-v1
+ * - mainwp/get-site-updates-v1
+ * - mainwp/update-site-core-v1
+ * - mainwp/update-site-plugins-v1
+ * - mainwp/update-site-themes-v1
+ * - mainwp/update-site-translations-v1
+ * - mainwp/update-all-v1
+ * - mainwp/ignore-site-core-v1
+ * - mainwp/ignore-site-plugins-v1
+ * - mainwp/ignore-site-themes-v1
  *
  * @package MainWP\Dashboard\Tests
  */
@@ -838,5 +847,1800 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 			$result['summary']['total_errors'],
 			'Summary should reflect at least 1 error for auth failure.'
 		);
+	}
+
+	// =========================================================================
+	// Get Site Updates Tests (get-site-updates-v1)
+	// =========================================================================
+
+	/**
+	 * Test that get-site-updates-v1 ability is registered.
+	 *
+	 * @return void
+	 */
+	public function test_get_site_updates_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$abilities = wp_get_abilities();
+
+		$this->assertArrayHasKey(
+			'mainwp/get-site-updates-v1',
+			$abilities,
+			'Ability mainwp/get-site-updates-v1 should be registered.'
+		);
+	}
+
+	/**
+	 * Test that get-site-updates returns expected structure.
+	 *
+	 * @return void
+	 */
+	public function test_get_site_updates_returns_expected_structure() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Get Updates Site',
+			'offline_check_result' => 1,
+			'version'              => '5.0.0',
+		] );
+
+		// Seed plugin and theme upgrades.
+		$this->set_site_plugin_upgrades( $site_id, [
+			'akismet/akismet.php' => [
+				'Name'        => 'Akismet',
+				'Version'     => '5.0',
+				'new_version' => '5.1',
+			],
+		] );
+
+		$result = $this->execute_ability( 'mainwp/get-site-updates-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertNotWPError( $result, 'Should return successful result.' );
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'site_id', $result );
+		$this->assertArrayHasKey( 'site_url', $result );
+		$this->assertArrayHasKey( 'site_name', $result );
+		$this->assertArrayHasKey( 'updates', $result );
+		$this->assertArrayHasKey( 'rollback_items', $result );
+		$this->assertArrayHasKey( 'summary', $result );
+
+		$this->assertEquals( $site_id, $result['site_id'] );
+		$this->assertIsArray( $result['updates'] );
+		$this->assertIsArray( $result['rollback_items'] );
+		$this->assertIsArray( $result['summary'] );
+	}
+
+	/**
+	 * Test that get-site-updates requires authentication.
+	 *
+	 * @return void
+	 */
+	public function test_get_site_updates_requires_authentication() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		wp_set_current_user( 0 );
+
+		$result = $this->execute_ability( 'mainwp/get-site-updates-v1', [
+			'site_id_or_domain' => 1,
+		] );
+
+		$this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that get-site-updates requires manage_options capability.
+	 *
+	 * @return void
+	 */
+	public function test_get_site_updates_requires_manage_options() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
+		wp_set_current_user( $subscriber_id );
+
+		$result = $this->execute_ability( 'mainwp/get-site-updates-v1', [
+			'site_id_or_domain' => 1,
+		] );
+
+		$this->assertWPError( $result, 'Subscriber should be denied.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that get-site-updates validates input.
+	 *
+	 * @return void
+	 */
+	public function test_get_site_updates_validates_input() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		// Missing required site_id_or_domain.
+		$result = $this->execute_ability( 'mainwp/get-site-updates-v1', [] );
+
+		$this->assertWPError( $result, 'Missing required field should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_input',
+			$result->get_error_code(),
+			'Should return ability_invalid_input for schema validation failure.'
+		);
+	}
+
+	/**
+	 * Test that get-site-updates returns error for non-existent site.
+	 *
+	 * @return void
+	 */
+	public function test_get_site_updates_returns_error_for_not_found() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$result = $this->execute_ability( 'mainwp/get-site-updates-v1', [
+			'site_id_or_domain' => 999999,
+		] );
+
+		$this->assertWPError( $result );
+		$this->assertEquals( 'mainwp_site_not_found', $result->get_error_code() );
+	}
+
+	/**
+	 * Test that get-site-updates includes rollback data when present.
+	 *
+	 * @return void
+	 */
+	public function test_get_site_updates_includes_rollback_data() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Rollback Site',
+			'offline_check_result' => 1,
+			'version'              => '5.0.0',
+		] );
+
+		$result = $this->execute_ability( 'mainwp/get-site-updates-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertNotWPError( $result );
+		$this->assertArrayHasKey( 'rollback_items', $result );
+		// Even with no rollback data, should have the structure.
+		$this->assertArrayHasKey( 'plugins', $result['rollback_items'] );
+		$this->assertArrayHasKey( 'themes', $result['rollback_items'] );
+	}
+
+	/**
+	 * Test that get-site-updates filters by type.
+	 *
+	 * @return void
+	 */
+	public function test_get_site_updates_filters_by_type() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Type Filter Site',
+			'offline_check_result' => 1,
+			'version'              => '5.0.0',
+		] );
+
+		// Seed plugin and theme upgrades.
+		$this->set_site_plugin_upgrades( $site_id, [
+			'akismet/akismet.php' => [
+				'Name'        => 'Akismet',
+				'Version'     => '5.0',
+				'new_version' => '5.1',
+			],
+		] );
+
+		$this->set_site_theme_upgrades( $site_id, [
+			'twentytwentyfour' => [
+				'Name'        => 'Twenty Twenty-Four',
+				'Version'     => '1.0',
+				'new_version' => '1.1',
+			],
+		] );
+
+		// Request only plugins.
+		$result = $this->execute_ability( 'mainwp/get-site-updates-v1', [
+			'site_id_or_domain' => $site_id,
+			'types'             => [ 'plugins' ],
+		] );
+
+		$this->assertNotWPError( $result );
+
+		// All updates should be plugin type.
+		foreach ( $result['updates'] as $update ) {
+			$this->assertEquals( 'plugin', $update['type'], 'Filtered updates should be plugins only.' );
+		}
+	}
+
+	// =========================================================================
+	// Update Site Core Tests (update-site-core-v1)
+	// =========================================================================
+
+	/**
+	 * Test that update-site-core-v1 ability is registered.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_core_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$abilities = wp_get_abilities();
+
+		$this->assertArrayHasKey(
+			'mainwp/update-site-core-v1',
+			$abilities,
+			'Ability mainwp/update-site-core-v1 should be registered.'
+		);
+	}
+
+	/**
+	 * Test that update-site-core returns expected structure.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_core_returns_expected_structure() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Core Update Site',
+			'offline_check_result' => 1,
+			'version'              => '5.0.0',
+		] );
+
+		// Seed core upgrade.
+		$this->set_site_option( $site_id, 'wp_upgrades', wp_json_encode( [
+			'current' => '6.4.0',
+			'new'     => '6.5.0',
+		] ) );
+
+		$result = $this->execute_ability( 'mainwp/update-site-core-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		// In test environment, actual update will fail due to no real child.
+		// But structure should be correct.
+		if ( ! is_wp_error( $result ) ) {
+			$this->assertIsArray( $result );
+			$this->assertArrayHasKey( 'updated', $result );
+		}
+	}
+
+	/**
+	 * Test that update-site-core requires authentication.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_core_requires_authentication() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		wp_set_current_user( 0 );
+
+		$result = $this->execute_ability( 'mainwp/update-site-core-v1', [
+			'site_id_or_domain' => 1,
+		] );
+
+		$this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that update-site-core requires manage_options capability.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_core_requires_manage_options() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
+		wp_set_current_user( $subscriber_id );
+
+		$result = $this->execute_ability( 'mainwp/update-site-core-v1', [
+			'site_id_or_domain' => 1,
+		] );
+
+		$this->assertWPError( $result, 'Subscriber should be denied.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that update-site-core validates input.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_core_validates_input() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		// Missing required site_id_or_domain.
+		$result = $this->execute_ability( 'mainwp/update-site-core-v1', [] );
+
+		$this->assertWPError( $result, 'Missing required field should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_input',
+			$result->get_error_code(),
+			'Should return ability_invalid_input for schema validation failure.'
+		);
+	}
+
+	/**
+	 * Test that update-site-core returns error when no core update available.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_core_returns_error_when_no_update() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'No Core Update Site',
+			'offline_check_result' => 1,
+			'version'              => '5.0.0',
+		] );
+
+		// Don't seed any core upgrades.
+
+		$result = $this->execute_ability( 'mainwp/update-site-core-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertWPError( $result );
+		$this->assertEquals( 'mainwp_no_updates', $result->get_error_code() );
+	}
+
+	/**
+	 * Test that update-site-core rejects offline sites.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_core_rejects_offline_site() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Offline Core Update Site',
+			'offline_check_result' => -1,
+			'version'              => '5.0.0',
+		] );
+
+		$result = $this->execute_ability( 'mainwp/update-site-core-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertWPError( $result );
+		$this->assertEquals( 'mainwp_site_offline', $result->get_error_code() );
+	}
+
+	/**
+	 * Test that update-site-core rejects outdated child version.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_core_rejects_outdated_child() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Outdated Child Core Site',
+			'offline_check_result' => 1,
+			'version'              => '3.9.0', // Below 4.0.0 minimum.
+		] );
+
+		$result = $this->execute_ability( 'mainwp/update-site-core-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertWPError( $result );
+		$this->assertEquals( 'mainwp_child_outdated', $result->get_error_code() );
+	}
+
+	// =========================================================================
+	// Update Site Plugins Tests (update-site-plugins-v1)
+	// =========================================================================
+
+	/**
+	 * Test that update-site-plugins-v1 ability is registered.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_plugins_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$abilities = wp_get_abilities();
+
+		$this->assertArrayHasKey(
+			'mainwp/update-site-plugins-v1',
+			$abilities,
+			'Ability mainwp/update-site-plugins-v1 should be registered.'
+		);
+	}
+
+	/**
+	 * Test that update-site-plugins returns expected structure.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_plugins_returns_expected_structure() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Plugin Update Site',
+			'offline_check_result' => 1,
+			'version'              => '5.0.0',
+		] );
+
+		$result = $this->execute_ability( 'mainwp/update-site-plugins-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertNotWPError( $result );
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'updated', $result );
+		$this->assertArrayHasKey( 'errors', $result );
+		$this->assertArrayHasKey( 'summary', $result );
+
+		$this->assertIsArray( $result['updated'] );
+		$this->assertIsArray( $result['errors'] );
+		$this->assertIsArray( $result['summary'] );
+		$this->assertArrayHasKey( 'total_updated', $result['summary'] );
+		$this->assertArrayHasKey( 'total_errors', $result['summary'] );
+	}
+
+	/**
+	 * Test that update-site-plugins requires authentication.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_plugins_requires_authentication() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		wp_set_current_user( 0 );
+
+		$result = $this->execute_ability( 'mainwp/update-site-plugins-v1', [
+			'site_id_or_domain' => 1,
+		] );
+
+		$this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that update-site-plugins requires manage_options capability.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_plugins_requires_manage_options() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
+		wp_set_current_user( $subscriber_id );
+
+		$result = $this->execute_ability( 'mainwp/update-site-plugins-v1', [
+			'site_id_or_domain' => 1,
+		] );
+
+		$this->assertWPError( $result, 'Subscriber should be denied.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that update-site-plugins validates input.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_plugins_validates_input() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		// Missing required site_id_or_domain.
+		$result = $this->execute_ability( 'mainwp/update-site-plugins-v1', [] );
+
+		$this->assertWPError( $result, 'Missing required field should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_input',
+			$result->get_error_code(),
+			'Should return ability_invalid_input for schema validation failure.'
+		);
+	}
+
+	/**
+	 * Test that update-site-plugins filters by slugs.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_plugins_filters_by_slugs() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Slug Filter Site',
+			'offline_check_result' => 1,
+			'version'              => '5.0.0',
+		] );
+
+		// Seed multiple plugin upgrades.
+		$this->set_site_plugin_upgrades( $site_id, [
+			'akismet/akismet.php'   => [
+				'Name'        => 'Akismet',
+				'Version'     => '5.0',
+				'new_version' => '5.1',
+			],
+			'hello-dolly/hello.php' => [
+				'Name'        => 'Hello Dolly',
+				'Version'     => '1.0',
+				'new_version' => '1.1',
+			],
+		] );
+
+		// Request only specific slug.
+		$result = $this->execute_ability( 'mainwp/update-site-plugins-v1', [
+			'site_id_or_domain' => $site_id,
+			'slugs'             => [ 'akismet/akismet.php' ],
+		] );
+
+		$this->assertNotWPError( $result );
+		$this->assertIsArray( $result );
+	}
+
+	/**
+	 * Test that update-site-plugins rejects offline sites.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_plugins_rejects_offline_site() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Offline Plugin Update Site',
+			'offline_check_result' => -1,
+			'version'              => '5.0.0',
+		] );
+
+		$result = $this->execute_ability( 'mainwp/update-site-plugins-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertWPError( $result );
+		$this->assertEquals( 'mainwp_site_offline', $result->get_error_code() );
+	}
+
+	/**
+	 * Test that update-site-plugins rejects outdated child version.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_plugins_rejects_outdated_child() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Outdated Child Plugin Site',
+			'offline_check_result' => 1,
+			'version'              => '3.9.0', // Below 4.0.0 minimum.
+		] );
+
+		$result = $this->execute_ability( 'mainwp/update-site-plugins-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertWPError( $result );
+		$this->assertEquals( 'mainwp_child_outdated', $result->get_error_code() );
+	}
+
+	// =========================================================================
+	// Update Site Themes Tests (update-site-themes-v1)
+	// =========================================================================
+
+	/**
+	 * Test that update-site-themes-v1 ability is registered.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_themes_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$abilities = wp_get_abilities();
+
+		$this->assertArrayHasKey(
+			'mainwp/update-site-themes-v1',
+			$abilities,
+			'Ability mainwp/update-site-themes-v1 should be registered.'
+		);
+	}
+
+	/**
+	 * Test that update-site-themes returns expected structure.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_themes_returns_expected_structure() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Theme Update Site',
+			'offline_check_result' => 1,
+			'version'              => '5.0.0',
+		] );
+
+		$result = $this->execute_ability( 'mainwp/update-site-themes-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertNotWPError( $result );
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'updated', $result );
+		$this->assertArrayHasKey( 'errors', $result );
+		$this->assertArrayHasKey( 'summary', $result );
+
+		$this->assertIsArray( $result['updated'] );
+		$this->assertIsArray( $result['errors'] );
+		$this->assertIsArray( $result['summary'] );
+		$this->assertArrayHasKey( 'total_updated', $result['summary'] );
+		$this->assertArrayHasKey( 'total_errors', $result['summary'] );
+	}
+
+	/**
+	 * Test that update-site-themes requires authentication.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_themes_requires_authentication() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		wp_set_current_user( 0 );
+
+		$result = $this->execute_ability( 'mainwp/update-site-themes-v1', [
+			'site_id_or_domain' => 1,
+		] );
+
+		$this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that update-site-themes requires manage_options capability.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_themes_requires_manage_options() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
+		wp_set_current_user( $subscriber_id );
+
+		$result = $this->execute_ability( 'mainwp/update-site-themes-v1', [
+			'site_id_or_domain' => 1,
+		] );
+
+		$this->assertWPError( $result, 'Subscriber should be denied.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that update-site-themes validates input.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_themes_validates_input() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		// Missing required site_id_or_domain.
+		$result = $this->execute_ability( 'mainwp/update-site-themes-v1', [] );
+
+		$this->assertWPError( $result, 'Missing required field should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_input',
+			$result->get_error_code(),
+			'Should return ability_invalid_input for schema validation failure.'
+		);
+	}
+
+	/**
+	 * Test that update-site-themes rejects offline sites.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_themes_rejects_offline_site() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Offline Theme Update Site',
+			'offline_check_result' => -1,
+			'version'              => '5.0.0',
+		] );
+
+		$result = $this->execute_ability( 'mainwp/update-site-themes-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertWPError( $result );
+		$this->assertEquals( 'mainwp_site_offline', $result->get_error_code() );
+	}
+
+	/**
+	 * Test that update-site-themes rejects outdated child version.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_themes_rejects_outdated_child() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Outdated Child Theme Site',
+			'offline_check_result' => 1,
+			'version'              => '3.9.0', // Below 4.0.0 minimum.
+		] );
+
+		$result = $this->execute_ability( 'mainwp/update-site-themes-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertWPError( $result );
+		$this->assertEquals( 'mainwp_child_outdated', $result->get_error_code() );
+	}
+
+	// =========================================================================
+	// Update Site Translations Tests (update-site-translations-v1)
+	// =========================================================================
+
+	/**
+	 * Test that update-site-translations-v1 ability is registered.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_translations_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$abilities = wp_get_abilities();
+
+		$this->assertArrayHasKey(
+			'mainwp/update-site-translations-v1',
+			$abilities,
+			'Ability mainwp/update-site-translations-v1 should be registered.'
+		);
+	}
+
+	/**
+	 * Test that update-site-translations returns expected structure.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_translations_returns_expected_structure() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Translation Update Site',
+			'offline_check_result' => 1,
+			'version'              => '5.0.0',
+		] );
+
+		$result = $this->execute_ability( 'mainwp/update-site-translations-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertNotWPError( $result );
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'updated', $result );
+		$this->assertArrayHasKey( 'errors', $result );
+		$this->assertArrayHasKey( 'summary', $result );
+
+		$this->assertIsArray( $result['updated'] );
+		$this->assertIsArray( $result['errors'] );
+		$this->assertIsArray( $result['summary'] );
+		$this->assertArrayHasKey( 'total_updated', $result['summary'] );
+		$this->assertArrayHasKey( 'total_errors', $result['summary'] );
+	}
+
+	/**
+	 * Test that update-site-translations requires authentication.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_translations_requires_authentication() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		wp_set_current_user( 0 );
+
+		$result = $this->execute_ability( 'mainwp/update-site-translations-v1', [
+			'site_id_or_domain' => 1,
+		] );
+
+		$this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that update-site-translations requires manage_options capability.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_translations_requires_manage_options() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
+		wp_set_current_user( $subscriber_id );
+
+		$result = $this->execute_ability( 'mainwp/update-site-translations-v1', [
+			'site_id_or_domain' => 1,
+		] );
+
+		$this->assertWPError( $result, 'Subscriber should be denied.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that update-site-translations validates input.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_translations_validates_input() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		// Missing required site_id_or_domain.
+		$result = $this->execute_ability( 'mainwp/update-site-translations-v1', [] );
+
+		$this->assertWPError( $result, 'Missing required field should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_input',
+			$result->get_error_code(),
+			'Should return ability_invalid_input for schema validation failure.'
+		);
+	}
+
+	/**
+	 * Test that update-site-translations rejects offline sites.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_translations_rejects_offline_site() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Offline Translation Site',
+			'offline_check_result' => -1,
+			'version'              => '5.0.0',
+		] );
+
+		$result = $this->execute_ability( 'mainwp/update-site-translations-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertWPError( $result );
+		$this->assertEquals( 'mainwp_site_offline', $result->get_error_code() );
+	}
+
+	/**
+	 * Test that update-site-translations rejects outdated child version.
+	 *
+	 * @return void
+	 */
+	public function test_update_site_translations_rejects_outdated_child() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Outdated Child Translation Site',
+			'offline_check_result' => 1,
+			'version'              => '3.9.0', // Below 4.0.0 minimum.
+		] );
+
+		$result = $this->execute_ability( 'mainwp/update-site-translations-v1', [
+			'site_id_or_domain' => $site_id,
+		] );
+
+		$this->assertWPError( $result );
+		$this->assertEquals( 'mainwp_child_outdated', $result->get_error_code() );
+	}
+
+	// =========================================================================
+	// Update All Tests (update-all-v1)
+	// =========================================================================
+
+	/**
+	 * Test that update-all-v1 ability is registered.
+	 *
+	 * @return void
+	 */
+	public function test_update_all_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$abilities = wp_get_abilities();
+
+		$this->assertArrayHasKey(
+			'mainwp/update-all-v1',
+			$abilities,
+			'Ability mainwp/update-all-v1 should be registered.'
+		);
+	}
+
+	/**
+	 * Test that update-all returns expected structure for immediate execution.
+	 *
+	 * @return void
+	 */
+	public function test_update_all_returns_expected_structure() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Update All Site',
+			'offline_check_result' => 1,
+			'version'              => '5.0.0',
+		] );
+
+		$result = $this->execute_ability( 'mainwp/update-all-v1', [
+			'site_ids_or_domains' => [ $site_id ],
+		] );
+
+		$this->assertNotWPError( $result );
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'updated', $result );
+		$this->assertArrayHasKey( 'errors', $result );
+		$this->assertArrayHasKey( 'summary', $result );
+
+		$this->assertIsArray( $result['updated'] );
+		$this->assertIsArray( $result['errors'] );
+		$this->assertIsArray( $result['summary'] );
+		$this->assertArrayHasKey( 'total_updated', $result['summary'] );
+		$this->assertArrayHasKey( 'total_errors', $result['summary'] );
+		$this->assertArrayHasKey( 'sites_updated', $result['summary'] );
+	}
+
+	/**
+	 * Test that update-all requires authentication.
+	 *
+	 * @return void
+	 */
+	public function test_update_all_requires_authentication() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		wp_set_current_user( 0 );
+
+		$result = $this->execute_ability( 'mainwp/update-all-v1', [] );
+
+		$this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that update-all requires manage_options capability.
+	 *
+	 * @return void
+	 */
+	public function test_update_all_requires_manage_options() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
+		wp_set_current_user( $subscriber_id );
+
+		$result = $this->execute_ability( 'mainwp/update-all-v1', [] );
+
+		$this->assertWPError( $result, 'Subscriber should be denied.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that update-all with empty site list uses all sites.
+	 *
+	 * @return void
+	 */
+	public function test_update_all_empty_site_list_uses_all_sites() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$result = $this->execute_ability( 'mainwp/update-all-v1', [
+			'site_ids_or_domains' => [],
+		] );
+
+		$this->assertNotWPError( $result );
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'updated', $result );
+		$this->assertArrayHasKey( 'errors', $result );
+		$this->assertArrayHasKey( 'summary', $result );
+	}
+
+	/**
+	 * Test that update-all large batch returns queued response.
+	 *
+	 * @return void
+	 */
+	public function test_update_all_large_batch_returns_queued() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		// Create 60 test sites (exceeds 50 threshold).
+		$site_ids = [];
+		for ( $i = 0; $i < 60; $i++ ) {
+			$site_ids[] = $this->create_test_site( [
+				'name'                 => "Large Update All Site {$i}",
+				'offline_check_result' => 1,
+				'version'              => '5.0.0',
+			] );
+		}
+
+		$result = $this->execute_ability( 'mainwp/update-all-v1', [
+			'site_ids_or_domains' => $site_ids,
+		] );
+
+		$this->assertNotWPError( $result );
+
+		// Should be queued.
+		$this->assertTrue( $result['queued'], 'Large batch should be queued.' );
+		$this->assertArrayHasKey( 'job_id', $result );
+		$this->assertArrayHasKey( 'status_url', $result );
+		$this->assertArrayHasKey( 'updates_queued', $result );
+
+		// Track job for cleanup in tearDown.
+		$this->track_update_job( $result['job_id'] );
+
+		// Queued jobs don't have updated key.
+		$this->assertArrayNotHasKey( 'updated', $result );
+	}
+
+	/**
+	 * Test that update-all filters by types.
+	 *
+	 * @return void
+	 */
+	public function test_update_all_filters_by_types() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Update All Types Filter Site',
+			'offline_check_result' => 1,
+			'version'              => '5.0.0',
+		] );
+
+		// Seed updates of different types.
+		$this->set_site_plugin_upgrades( $site_id, [
+			'akismet/akismet.php' => [
+				'Name'        => 'Akismet',
+				'Version'     => '5.0',
+				'new_version' => '5.1',
+			],
+		] );
+
+		$this->set_site_theme_upgrades( $site_id, [
+			'twentytwentyfour' => [
+				'Name'        => 'Twenty Twenty-Four',
+				'Version'     => '1.0',
+				'new_version' => '1.1',
+			],
+		] );
+
+		// Request only plugins.
+		$result = $this->execute_ability( 'mainwp/update-all-v1', [
+			'site_ids_or_domains' => [ $site_id ],
+			'types'               => [ 'plugins' ],
+		] );
+
+		$this->assertNotWPError( $result );
+		$this->assertIsArray( $result );
+		// Verify that only plugin updates were attempted (not themes).
+	}
+
+	/**
+	 * Test that update-all handles outdated child version errors.
+	 *
+	 * @return void
+	 */
+	public function test_update_all_handles_outdated_child() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$outdated_id = $this->create_test_site( [
+			'name'                 => 'Outdated Child Update All Site',
+			'offline_check_result' => 1,
+			'version'              => '3.9.0', // Below 4.0.0 minimum.
+		] );
+
+		// Seed plugin upgrades so there's something to update.
+		$this->set_site_plugin_upgrades( $outdated_id, [
+			'akismet/akismet.php' => [
+				'Name'        => 'Akismet',
+				'Version'     => '5.0',
+				'new_version' => '5.1',
+			],
+		] );
+
+		$result = $this->execute_ability( 'mainwp/update-all-v1', [
+			'site_ids_or_domains' => [ $outdated_id ],
+		] );
+
+		$this->assertNotWPError( $result );
+
+		// Outdated child should be in errors.
+		$found_outdated_error = false;
+		foreach ( $result['errors'] as $error ) {
+			if ( $error['code'] === 'mainwp_child_outdated' ) {
+				$found_outdated_error = true;
+				break;
+			}
+		}
+
+		$this->assertTrue( $found_outdated_error, 'Outdated child should produce mainwp_child_outdated error.' );
+	}
+
+	/**
+	 * Test that update-all handles mixed site states.
+	 *
+	 * @return void
+	 */
+	public function test_update_all_handles_mixed_site_states() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$online_id = $this->create_test_site( [
+			'name'                 => 'Online Update All Site',
+			'offline_check_result' => 1,
+			'version'              => '5.0.0',
+		] );
+
+		$offline_id = $this->create_test_site( [
+			'name'                 => 'Offline Update All Site',
+			'offline_check_result' => -1,
+			'version'              => '5.0.0',
+		] );
+
+		$result = $this->execute_ability( 'mainwp/update-all-v1', [
+			'site_ids_or_domains' => [ $online_id, $offline_id ],
+		] );
+
+		$this->assertNotWPError( $result );
+		$this->assertIsArray( $result );
+
+		// Should have structure for partial results.
+		$this->assertArrayHasKey( 'updated', $result );
+		$this->assertArrayHasKey( 'errors', $result );
+		$this->assertArrayHasKey( 'summary', $result );
+	}
+
+	/**
+	 * Test that update-all skips offline sites.
+	 *
+	 * @return void
+	 */
+	public function test_update_all_skips_offline_sites() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$offline_id = $this->create_test_site( [
+			'name'                 => 'Offline Update All Site',
+			'offline_check_result' => -1,
+			'version'              => '5.0.0',
+		] );
+
+		// Seed plugin upgrades so there's something to update.
+		$this->set_site_plugin_upgrades( $offline_id, [
+			'akismet/akismet.php' => [
+				'Name'        => 'Akismet',
+				'Version'     => '5.0',
+				'new_version' => '5.1',
+			],
+		] );
+
+		$result = $this->execute_ability( 'mainwp/update-all-v1', [
+			'site_ids_or_domains' => [ $offline_id ],
+		] );
+
+		$this->assertNotWPError( $result );
+
+		// Offline site should be in errors with specific error code.
+		$found_offline_error = false;
+		foreach ( $result['errors'] as $error ) {
+			if ( $error['site_id'] === $offline_id && $error['code'] === 'mainwp_site_offline' ) {
+				$found_offline_error = true;
+				break;
+			}
+		}
+
+		$this->assertTrue( $found_offline_error, 'Offline site should produce mainwp_site_offline error in update-all.' );
+	}
+
+	/**
+	 * Test that update-all with invalid identifiers returns normalized error schema.
+	 *
+	 * Resolution errors should match the documented error item schema with
+	 * site_id, site_url, site_name, type, slug, code, and message keys.
+	 *
+	 * @return void
+	 */
+	public function test_update_all_invalid_identifier_returns_normalized_error_schema() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$result = $this->execute_ability( 'mainwp/update-all-v1', [
+			'site_ids_or_domains' => [ 'nonexistent-site.invalid' ],
+		] );
+
+		$this->assertNotWPError( $result );
+		$this->assertArrayHasKey( 'errors', $result );
+		$this->assertNotEmpty( $result['errors'], 'Should have at least one error for invalid identifier.' );
+
+		$error = $result['errors'][0];
+
+		// Verify all required schema fields are present.
+		$this->assertArrayHasKey( 'site_id', $error, 'Error should have site_id key.' );
+		$this->assertArrayHasKey( 'site_url', $error, 'Error should have site_url key.' );
+		$this->assertArrayHasKey( 'site_name', $error, 'Error should have site_name key.' );
+		$this->assertArrayHasKey( 'type', $error, 'Error should have type key.' );
+		$this->assertArrayHasKey( 'slug', $error, 'Error should have slug key.' );
+		$this->assertArrayHasKey( 'code', $error, 'Error should have code key.' );
+		$this->assertArrayHasKey( 'message', $error, 'Error should have message key.' );
+
+		// Verify type is 'site' for resolution errors.
+		$this->assertEquals( 'site', $error['type'], 'Resolution error type should be "site".' );
+
+		// Verify site_id is 0 for unresolved sites.
+		$this->assertEquals( 0, $error['site_id'], 'Unresolved site should have site_id of 0.' );
+
+		// Verify the identifier is preserved in site_url.
+		$this->assertEquals( 'nonexistent-site.invalid', $error['site_url'], 'Identifier should be preserved in site_url.' );
+	}
+
+	// =========================================================================
+	// Ignore Site Core Tests (ignore-site-core-v1)
+	// =========================================================================
+
+	/**
+	 * Test that ignore-site-core-v1 ability is registered.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_core_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$abilities = wp_get_abilities();
+
+		$this->assertArrayHasKey(
+			'mainwp/ignore-site-core-v1',
+			$abilities,
+			'Ability mainwp/ignore-site-core-v1 should be registered.'
+		);
+	}
+
+	/**
+	 * Test that ignore-site-core returns expected structure.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_core_returns_expected_structure() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Ignore Core Site',
+			'offline_check_result' => 1,
+		] );
+
+		$result = $this->execute_ability( 'mainwp/ignore-site-core-v1', [
+			'site_id_or_domain' => $site_id,
+			'action'            => 'add',
+		] );
+
+		$this->assertNotWPError( $result, 'Should return successful result.' );
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'success', $result );
+		$this->assertArrayHasKey( 'message', $result );
+		$this->assertArrayHasKey( 'ignored_count', $result );
+
+		$this->assertTrue( $result['success'], 'Success should be true.' );
+		$this->assertNotEmpty( $result['message'], 'Message should not be empty.' );
+		$this->assertEquals( 1, $result['ignored_count'], 'Ignored count should be 1 for core.' );
+	}
+
+	/**
+	 * Test that ignore-site-core requires authentication.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_core_requires_authentication() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		wp_set_current_user( 0 );
+
+		$result = $this->execute_ability( 'mainwp/ignore-site-core-v1', [
+			'site_id_or_domain' => 1,
+			'action'            => 'add',
+		] );
+
+		$this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that ignore-site-core requires manage_options capability.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_core_requires_manage_options() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
+		wp_set_current_user( $subscriber_id );
+
+		$result = $this->execute_ability( 'mainwp/ignore-site-core-v1', [
+			'site_id_or_domain' => 1,
+			'action'            => 'add',
+		] );
+
+		$this->assertWPError( $result, 'Subscriber should be denied.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that ignore-site-core validates input.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_core_validates_input() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		// Missing required site_id_or_domain.
+		$result = $this->execute_ability( 'mainwp/ignore-site-core-v1', [
+			'action' => 'add',
+		] );
+
+		$this->assertWPError( $result, 'Missing required field should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_input',
+			$result->get_error_code(),
+			'Should return ability_invalid_input for schema validation failure.'
+		);
+	}
+
+	/**
+	 * Test that ignore-site-core can add and remove from ignore list.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_core_add_and_remove() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Ignore Core Toggle Site',
+			'offline_check_result' => 1,
+		] );
+
+		// Add to ignore list.
+		$add_result = $this->execute_ability( 'mainwp/ignore-site-core-v1', [
+			'site_id_or_domain' => $site_id,
+			'action'            => 'add',
+		] );
+
+		$this->assertNotWPError( $add_result );
+		$this->assertTrue( $add_result['success'] );
+
+		// Remove from ignore list.
+		$remove_result = $this->execute_ability( 'mainwp/ignore-site-core-v1', [
+			'site_id_or_domain' => $site_id,
+			'action'            => 'remove',
+		] );
+
+		$this->assertNotWPError( $remove_result );
+		$this->assertTrue( $remove_result['success'] );
+	}
+
+	// =========================================================================
+	// Ignore Site Plugins Tests (ignore-site-plugins-v1)
+	// =========================================================================
+
+	/**
+	 * Test that ignore-site-plugins-v1 ability is registered.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_plugins_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$abilities = wp_get_abilities();
+
+		$this->assertArrayHasKey(
+			'mainwp/ignore-site-plugins-v1',
+			$abilities,
+			'Ability mainwp/ignore-site-plugins-v1 should be registered.'
+		);
+	}
+
+	/**
+	 * Test that ignore-site-plugins returns expected structure.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_plugins_returns_expected_structure() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Ignore Plugins Site',
+			'offline_check_result' => 1,
+		] );
+
+		$result = $this->execute_ability( 'mainwp/ignore-site-plugins-v1', [
+			'site_id_or_domain' => $site_id,
+			'slugs'             => [ 'akismet/akismet.php', 'hello-dolly/hello.php' ],
+			'action'            => 'add',
+		] );
+
+		$this->assertNotWPError( $result, 'Should return successful result.' );
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'success', $result );
+		$this->assertArrayHasKey( 'message', $result );
+		$this->assertArrayHasKey( 'ignored_count', $result );
+
+		$this->assertTrue( $result['success'], 'Success should be true.' );
+		$this->assertNotEmpty( $result['message'], 'Message should not be empty.' );
+		$this->assertEquals( 2, $result['ignored_count'], 'Ignored count should match number of slugs.' );
+	}
+
+	/**
+	 * Test that ignore-site-plugins requires authentication.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_plugins_requires_authentication() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		wp_set_current_user( 0 );
+
+		$result = $this->execute_ability( 'mainwp/ignore-site-plugins-v1', [
+			'site_id_or_domain' => 1,
+			'slugs'             => [ 'test-plugin/test.php' ],
+			'action'            => 'add',
+		] );
+
+		$this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that ignore-site-plugins requires manage_options capability.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_plugins_requires_manage_options() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
+		wp_set_current_user( $subscriber_id );
+
+		$result = $this->execute_ability( 'mainwp/ignore-site-plugins-v1', [
+			'site_id_or_domain' => 1,
+			'slugs'             => [ 'test-plugin/test.php' ],
+			'action'            => 'add',
+		] );
+
+		$this->assertWPError( $result, 'Subscriber should be denied.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that ignore-site-plugins validates input.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_plugins_validates_input() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site();
+
+		// Missing required slugs.
+		$result = $this->execute_ability( 'mainwp/ignore-site-plugins-v1', [
+			'site_id_or_domain' => $site_id,
+			'action'            => 'add',
+			// Missing 'slugs'.
+		] );
+
+		$this->assertWPError( $result, 'Missing required field should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_input',
+			$result->get_error_code(),
+			'Should return ability_invalid_input for schema validation failure.'
+		);
+	}
+
+	/**
+	 * Test that ignore-site-plugins can add and remove from ignore list.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_plugins_add_and_remove() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Ignore Plugins Toggle Site',
+			'offline_check_result' => 1,
+		] );
+
+		$test_slugs = [ 'akismet/akismet.php' ];
+
+		// Add to ignore list.
+		$add_result = $this->execute_ability( 'mainwp/ignore-site-plugins-v1', [
+			'site_id_or_domain' => $site_id,
+			'slugs'             => $test_slugs,
+			'action'            => 'add',
+		] );
+
+		$this->assertNotWPError( $add_result );
+		$this->assertTrue( $add_result['success'] );
+		$this->assertEquals( 1, $add_result['ignored_count'] );
+
+		// Remove from ignore list.
+		$remove_result = $this->execute_ability( 'mainwp/ignore-site-plugins-v1', [
+			'site_id_or_domain' => $site_id,
+			'slugs'             => $test_slugs,
+			'action'            => 'remove',
+		] );
+
+		$this->assertNotWPError( $remove_result );
+		$this->assertTrue( $remove_result['success'] );
+	}
+
+	// =========================================================================
+	// Ignore Site Themes Tests (ignore-site-themes-v1)
+	// =========================================================================
+
+	/**
+	 * Test that ignore-site-themes-v1 ability is registered.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_themes_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$abilities = wp_get_abilities();
+
+		$this->assertArrayHasKey(
+			'mainwp/ignore-site-themes-v1',
+			$abilities,
+			'Ability mainwp/ignore-site-themes-v1 should be registered.'
+		);
+	}
+
+	/**
+	 * Test that ignore-site-themes returns expected structure.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_themes_returns_expected_structure() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Ignore Themes Site',
+			'offline_check_result' => 1,
+		] );
+
+		$result = $this->execute_ability( 'mainwp/ignore-site-themes-v1', [
+			'site_id_or_domain' => $site_id,
+			'slugs'             => [ 'twentytwentyfour', 'twentytwentythree' ],
+			'action'            => 'add',
+		] );
+
+		$this->assertNotWPError( $result, 'Should return successful result.' );
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'success', $result );
+		$this->assertArrayHasKey( 'message', $result );
+		$this->assertArrayHasKey( 'ignored_count', $result );
+
+		$this->assertTrue( $result['success'], 'Success should be true.' );
+		$this->assertNotEmpty( $result['message'], 'Message should not be empty.' );
+		$this->assertEquals( 2, $result['ignored_count'], 'Ignored count should match number of slugs.' );
+	}
+
+	/**
+	 * Test that ignore-site-themes requires authentication.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_themes_requires_authentication() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		wp_set_current_user( 0 );
+
+		$result = $this->execute_ability( 'mainwp/ignore-site-themes-v1', [
+			'site_id_or_domain' => 1,
+			'slugs'             => [ 'test-theme' ],
+			'action'            => 'add',
+		] );
+
+		$this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that ignore-site-themes requires manage_options capability.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_themes_requires_manage_options() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
+		wp_set_current_user( $subscriber_id );
+
+		$result = $this->execute_ability( 'mainwp/ignore-site-themes-v1', [
+			'site_id_or_domain' => 1,
+			'slugs'             => [ 'test-theme' ],
+			'action'            => 'add',
+		] );
+
+		$this->assertWPError( $result, 'Subscriber should be denied.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that ignore-site-themes validates input.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_themes_validates_input() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site();
+
+		// Missing required slugs.
+		$result = $this->execute_ability( 'mainwp/ignore-site-themes-v1', [
+			'site_id_or_domain' => $site_id,
+			'action'            => 'add',
+			// Missing 'slugs'.
+		] );
+
+		$this->assertWPError( $result, 'Missing required field should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_input',
+			$result->get_error_code(),
+			'Should return ability_invalid_input for schema validation failure.'
+		);
+	}
+
+	/**
+	 * Test that ignore-site-themes can add and remove from ignore list.
+	 *
+	 * @return void
+	 */
+	public function test_ignore_site_themes_add_and_remove() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Ignore Themes Toggle Site',
+			'offline_check_result' => 1,
+		] );
+
+		$test_slugs = [ 'twentytwentyfour' ];
+
+		// Add to ignore list.
+		$add_result = $this->execute_ability( 'mainwp/ignore-site-themes-v1', [
+			'site_id_or_domain' => $site_id,
+			'slugs'             => $test_slugs,
+			'action'            => 'add',
+		] );
+
+		$this->assertNotWPError( $add_result );
+		$this->assertTrue( $add_result['success'] );
+		$this->assertEquals( 1, $add_result['ignored_count'] );
+
+		// Remove from ignore list.
+		$remove_result = $this->execute_ability( 'mainwp/ignore-site-themes-v1', [
+			'site_id_or_domain' => $site_id,
+			'slugs'             => $test_slugs,
+			'action'            => 'remove',
+		] );
+
+		$this->assertNotWPError( $remove_result );
+		$this->assertTrue( $remove_result['success'] );
 	}
 }

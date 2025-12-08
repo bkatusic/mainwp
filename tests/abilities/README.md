@@ -5,7 +5,7 @@ Comprehensive test coverage for the MainWP Abilities API integration (Phase 4 of
 ## Prerequisites
 
 - WordPress test harness installed via `bin/install-wp-tests.sh`
-- Abilities API plugin installed and activated (or mock functions available)
+- WordPress version with Abilities API support (or mock functions available)
 - PHPUnit configured with `WP_TESTS_DIR` environment variable
 
 ## Running Tests

@@ -23,7 +23,7 @@ class MainWP_List_Tags_Ability_Test extends MainWP_Abilities_Test_Case {
 	public function test_ability_is_registered() {
 		$this->skip_if_no_abilities_api();
 
-		$abilities = wp_abilities()->get_abilities();
+		$abilities = wp_get_abilities();
 
 		$this->assertArrayHasKey(
 			'mainwp/list-tags-v1',

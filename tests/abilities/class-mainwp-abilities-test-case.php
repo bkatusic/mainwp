@@ -52,7 +52,7 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 
 		// Ensure abilities are registered (only once across all tests).
 		if ( ! self::$abilities_initialized && function_exists( 'wp_get_ability' ) ) {
-			// Check if abilities are already registered by the plugin.
+			// Check if abilities are already registered.
 			$test_ability = wp_get_ability( 'mainwp/list-sites-v1' );
 			if ( ! $test_ability ) {
 				// Abilities not yet registered, initialize them.
@@ -369,7 +369,7 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 	 * @return void
 	 */
 	protected function skip_if_no_abilities_api(): void {
-		if ( ! function_exists( 'wp_get_ability' ) || ! function_exists( 'wp_abilities' ) ) {
+		if ( ! function_exists( 'wp_get_ability' ) ) {
 			$this->markTestSkipped( 'Abilities API not available.' );
 		}
 	}
@@ -571,6 +571,29 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 		$wpdb->update(
 			$wpdb->prefix . 'mainwp_wp',
 			[ 'ignored_themes' => wp_json_encode( $ignored ) ],
+			[ 'id' => $site_id ],
+			[ '%s' ],
+			[ '%d' ]
+		);
+	}
+
+	/**
+	 * Set translation upgrades data for a test site.
+	 *
+	 * Seeds the 'translation_upgrades' column in mainwp_wp table.
+	 * This is the list of available translation updates.
+	 *
+	 * @param int   $site_id  Site ID.
+	 * @param array $upgrades Array of translation upgrade data. Each should have:
+	 *                        'slug', 'language', 'version', 'new_version', etc.
+	 * @return void
+	 */
+	protected function set_site_translation_upgrades( int $site_id, array $upgrades ): void {
+		global $wpdb;
+
+		$wpdb->update(
+			$wpdb->prefix . 'mainwp_wp',
+			[ 'translation_upgrades' => wp_json_encode( $upgrades ) ],
 			[ 'id' => $site_id ],
 			[ '%s' ],
 			[ '%d' ]
