@@ -1299,11 +1299,11 @@ class MainWP_Abilities_Sites {
 
         // Prepare site data.
         $site_data = array(
-            'url'                => $url,
-            'name'               => $name,
-            'admin'              => $admin_username,
-            'verify_certificate' => isset( $input['verify_certificate'] ) ? (int) $input['verify_certificate'] : 1,
-            'ssl_version'        => isset( $input['ssl_version'] ) ? (int) $input['ssl_version'] : 0,
+            'url'         => $url,
+            'name'        => $name,
+            'admin'       => $admin_username,
+            'ssl_verify'  => isset( $input['verify_certificate'] ) ? (int) $input['verify_certificate'] : 1,
+            'ssl_version' => isset( $input['ssl_version'] ) ? (int) $input['ssl_version'] : 0,
         );
 
         if ( ! empty( $input['http_user'] ) ) {
@@ -1313,27 +1313,26 @@ class MainWP_Abilities_Sites {
             $site_data['http_pass'] = $input['http_pass'];
         }
 
-        // Add site.
-        $result = MainWP_Manage_Sites_Handler::add_site( $site_data );
+        // Add site using REST API method (not AJAX handler which calls die()).
+        $result = MainWP_Manage_Sites_Handler::rest_api_add_site( $site_data );
 
-        if ( is_wp_error( $result ) ) {
-            // Map MainWP error codes to ability error codes.
-            $code    = $result->get_error_code();
-            $message = $result->get_error_message();
+        // Handle error response from rest_api_add_site.
+        if ( ! empty( $result['error'] ) ) {
+            $message = $result['error'];
 
-            if ( strpos( $code, 'connection' ) !== false ) {
+            if ( strpos( $message, 'connection' ) !== false || strpos( $message, 'connect' ) !== false ) {
                 return new \WP_Error( 'mainwp_connection_failed', $message, array( 'status' => 503 ) );
             }
-            if ( strpos( $code, 'credentials' ) !== false || strpos( $code, 'invalid' ) !== false ) {
+            if ( strpos( $message, 'credentials' ) !== false || strpos( $message, 'invalid' ) !== false ) {
                 return new \WP_Error( 'mainwp_invalid_credentials', $message, array( 'status' => 401 ) );
             }
 
             // Generic error.
-            return $result;
+            return new \WP_Error( 'mainwp_site_add_failed', $message, array( 'status' => 500 ) );
         }
 
         // Get the newly added site.
-        $site_id = isset( $result['site_id'] ) ? (int) $result['site_id'] : 0;
+        $site_id = isset( $result['siteid'] ) ? (int) $result['siteid'] : 0;
         if ( empty( $site_id ) ) {
             return new \WP_Error(
                 'mainwp_site_add_failed',
