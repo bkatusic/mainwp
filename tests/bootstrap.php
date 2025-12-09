@@ -26,8 +26,8 @@ require_once $_tests_dir . '/includes/functions.php';
  * Disable log module during tests.
  *
  * The log module tries to create archive tables from `wp_logs` during plugins_loaded,
- * but this table doesn't exist in a fresh test database. Since Abilities tests don't
- * test logging functionality, we disable the module via constant before loading the plugin.
+ * but this fires BEFORE _mainwp_install_tables() runs, so the base table doesn't exist.
+ * Enabling the module would require modifying the module to handle test environments.
  */
 define( 'MAINWP_MODULE_LOG_ENABLED', false );
 

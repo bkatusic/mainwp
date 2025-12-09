@@ -51,7 +51,7 @@ class MainWP_Abilities_Clients {
         self::register_count_client_sites();
 
         // Feature-gated: Only register if Cost Tracker module is available.
-        if ( class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker' ) ) {
+        if ( class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Manager' ) ) {
             self::register_get_client_costs();
         }
 
@@ -593,7 +593,7 @@ class MainWP_Abilities_Clients {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Destructive operation requires confirm: true',
+                        'instructions' => 'Destructive operation requires confirm: true. Only call when user explicitly requests deletion.',
                         'readonly'     => false,
                         'destructive'  => true,
                         'idempotent'   => false,
@@ -1008,7 +1008,7 @@ class MainWP_Abilities_Clients {
      * @return array|\WP_Error Result array or error.
      */
     public static function execute_get_client_costs( array $input ) {
-        if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker' ) ) {
+        if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Manager' ) ) {
             return new \WP_Error(
                 'mainwp_module_not_available',
                 __( 'Cost Tracker module is not available.', 'mainwp' ),

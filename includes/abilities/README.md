@@ -479,7 +479,7 @@ Check module availability before registration:
 
 ```php
 private static function register_get_client_costs(): void {
-    if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker' ) ) {
+    if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Manager' ) ) {
         return;
     }
 
@@ -492,7 +492,7 @@ private static function register_get_client_costs(): void {
 If module is deactivated after registration, execute callback returns error:
 
 ```php
-if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker' ) ) {
+if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Manager' ) ) {
     return new WP_Error(
         'mainwp_module_not_available',
         __( 'Cost Tracker module is not active.', 'mainwp' ),

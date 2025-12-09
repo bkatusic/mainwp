@@ -170,7 +170,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Operations with >50 sites are queued and return job_id.',
+                        'instructions' => 'Pass site_ids_or_domains with specific IDs, or empty array for all applicable sites. Operations with >50 sites are automatically queued for background processing.',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => true,
@@ -1540,7 +1540,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => '',
+                        'instructions' => 'Destructive operation - requires confirm:true or dry_run:true. Only call when user explicitly requests deletion.',
                         'readonly'     => false,
                         'destructive'  => true,
                         'idempotent'   => false,
@@ -2497,7 +2497,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => '',
+                        'instructions' => 'Destructive operation - requires confirm:true or dry_run:true. Only call when user explicitly requests deletion. Permanently removes plugins from the child site.',
                         'readonly'     => false,
                         'destructive'  => true,
                         'idempotent'   => false,
@@ -2964,7 +2964,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => '',
+                        'instructions' => 'Destructive operation - requires confirm:true or dry_run:true. Only call when user explicitly requests deletion. Permanently removes themes from the child site.',
                         'readonly'     => false,
                         'destructive'  => true,
                         'idempotent'   => false,
@@ -3298,7 +3298,7 @@ class MainWP_Abilities_Sites {
             'mainwp/get-site-security-v1',
             array(
                 'label'               => __( 'Get Site Security', 'mainwp' ),
-                'description'         => __( 'Get security status for a MainWP child site.', 'mainwp' ),
+                'description'         => __( 'Get security status for a MainWP child site including vulnerability counts, security issues, and issue categories detected during last sync.', 'mainwp' ),
                 'category'            => 'mainwp-sites',
                 'input_schema'        => self::get_single_site_input_schema(),
                 'output_schema'       => self::get_site_security_output_schema(),
@@ -3307,7 +3307,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => '',
+                        'instructions' => 'Returns security data from last sync. Does NOT perform real-time scanning. Requires Security module on child site for full data.',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => true,
@@ -3392,7 +3392,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => '',
+                        'instructions' => 'Detects changes made outside MainWP (direct edits, other plugins). Requires Logs module enabled. Results paginated (default 20, max 100). Use date_from/date_to to filter by time range.',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => true,
@@ -3625,7 +3625,7 @@ class MainWP_Abilities_Sites {
      * @return void
      */
     private static function register_get_site_costs(): void {
-        if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker' ) ) {
+        if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Manager' ) ) {
             return;
         }
 
@@ -3682,7 +3682,7 @@ class MainWP_Abilities_Sites {
      */
     public static function execute_get_site_costs( $input ) {
         // Defensive check: module may have become unavailable after registration.
-        if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker' ) ) {
+        if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Manager' ) ) {
             return new \WP_Error(
                 'mainwp_module_not_available',
                 __( 'Cost Tracker module is not active.', 'mainwp' ),
@@ -3831,7 +3831,7 @@ class MainWP_Abilities_Sites {
             'mainwp/get-sites-basic-v1',
             array(
                 'label'               => __( 'Get Sites Basic', 'mainwp' ),
-                'description'         => __( 'Get basic site information (ID, URL, name only) with pagination.', 'mainwp' ),
+                'description'         => __( 'Get basic site info (id, url, name only) for fast bulk retrieval. Use list_sites_v1 for full details with filtering, or get_site_v1 for complete single-site information.', 'mainwp' ),
                 'category'            => 'mainwp-sites',
                 'input_schema'        => self::get_sites_basic_input_schema(),
                 'output_schema'       => self::get_sites_basic_output_schema(),
@@ -3991,7 +3991,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Operations with >50 sites are queued and return job_id.',
+                        'instructions' => 'Pass site_ids_or_domains with specific IDs, or empty array for all applicable sites. Operations with >50 sites are automatically queued for background processing.',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => true,
@@ -4168,7 +4168,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Operations with >50 sites are queued and return job_id.',
+                        'instructions' => 'Pass site_ids_or_domains with specific IDs, or empty array for all applicable sites. Operations with >50 sites are automatically queued for background processing.',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => true,
@@ -4264,7 +4264,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Operations with >50 sites are queued and return job_id.',
+                        'instructions' => 'Pass site_ids_or_domains with specific IDs, or empty array for all applicable sites. Operations with >50 sites are automatically queued for background processing.',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => true,
@@ -4372,7 +4372,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Operations with >50 sites are queued and return job_id.',
+                        'instructions' => 'Pass site_ids_or_domains with specific IDs, or empty array for all applicable sites. Operations with >50 sites are automatically queued for background processing.',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => true,

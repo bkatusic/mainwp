@@ -1099,6 +1099,10 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 	/**
 	 * Test that update-site-core returns expected structure.
 	 *
+	 * In the unit test environment without a real child site, the ability
+	 * returns a WP_Error because it cannot connect. This test validates
+	 * the error handling path; happy-path testing requires integration tests.
+	 *
 	 * @return void
 	 */
 	public function test_update_site_core_returns_expected_structure() {
@@ -1121,12 +1125,9 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 			'site_id_or_domain' => $site_id,
 		] );
 
-		// In test environment, actual update will fail due to no real child.
-		// But structure should be correct.
-		if ( ! is_wp_error( $result ) ) {
-			$this->assertIsArray( $result );
-			$this->assertArrayHasKey( 'updated', $result );
-		}
+		// In test environment without real child site, expect graceful error.
+		// Happy-path testing requires integration tests with actual child site.
+		$this->assertWPError( $result, 'Expected WP_Error in test environment without child site connectivity.' );
 	}
 
 	/**

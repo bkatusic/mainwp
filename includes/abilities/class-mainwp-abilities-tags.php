@@ -181,7 +181,7 @@ class MainWP_Abilities_Tags {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Destructive operation - requires confirm:true or dry_run:true',
+                        'instructions' => 'Destructive operation - requires confirm:true or dry_run:true. Only call when user explicitly requests deletion.',
                         'readonly'     => false,
                         'destructive'  => true,
                         'idempotent'   => true,

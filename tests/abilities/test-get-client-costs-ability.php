@@ -24,7 +24,7 @@ class Test_Get_Client_Costs_Ability extends MainWP_Abilities_Test_Case {
 	public function test_ability_is_registered() {
 		$this->skip_if_no_abilities_api();
 
-		if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker' ) ) {
+		if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Manager' ) ) {
 			$this->markTestSkipped( 'Cost Tracker module not available' );
 		}
 
@@ -40,7 +40,7 @@ class Test_Get_Client_Costs_Ability extends MainWP_Abilities_Test_Case {
 	public function test_get_client_costs_returns_expected_structure() {
 		$this->skip_if_no_abilities_api();
 
-		if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker' ) ) {
+		if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Manager' ) ) {
 			$this->markTestSkipped( 'Cost Tracker module not available' );
 		}
 
@@ -70,7 +70,7 @@ class Test_Get_Client_Costs_Ability extends MainWP_Abilities_Test_Case {
 	public function test_get_client_costs_requires_authentication() {
 		$this->skip_if_no_abilities_api();
 
-		if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker' ) ) {
+		if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Manager' ) ) {
 			$this->markTestSkipped( 'Cost Tracker module not available' );
 		}
 
@@ -95,7 +95,7 @@ class Test_Get_Client_Costs_Ability extends MainWP_Abilities_Test_Case {
 	public function test_get_client_costs_requires_manage_options() {
 		$this->skip_if_no_abilities_api();
 
-		if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker' ) ) {
+		if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Manager' ) ) {
 			$this->markTestSkipped( 'Cost Tracker module not available' );
 		}
 
@@ -120,7 +120,7 @@ class Test_Get_Client_Costs_Ability extends MainWP_Abilities_Test_Case {
 	public function test_get_client_costs_validates_input() {
 		$this->skip_if_no_abilities_api();
 
-		if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker' ) ) {
+		if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Manager' ) ) {
 			$this->markTestSkipped( 'Cost Tracker module not available' );
 		}
 
@@ -140,7 +140,7 @@ class Test_Get_Client_Costs_Ability extends MainWP_Abilities_Test_Case {
 	public function test_get_client_costs_returns_empty_for_no_costs() {
 		$this->skip_if_no_abilities_api();
 
-		if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker' ) ) {
+		if ( ! class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Manager' ) ) {
 			$this->markTestSkipped( 'Cost Tracker module not available' );
 		}
 
@@ -167,7 +167,7 @@ class Test_Get_Client_Costs_Ability extends MainWP_Abilities_Test_Case {
 	public function test_get_client_costs_not_registered_without_module() {
 		$this->skip_if_no_abilities_api();
 
-		if ( class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker' ) ) {
+		if ( class_exists( 'MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Manager' ) ) {
 			$this->markTestSkipped( 'Cost Tracker module is available, cannot test absence' );
 		}
 

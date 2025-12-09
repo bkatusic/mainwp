@@ -26,7 +26,7 @@ class Test_GetSiteCosts_Ability extends MainWP_Abilities_Test_Case {
      * @return void
      */
     private function skip_if_no_cost_tracker() {
-        if ( ! class_exists( 'MainWP\\Dashboard\\Module\\CostTracker\\Cost_Tracker' ) ) {
+        if ( ! class_exists( 'MainWP\\Dashboard\\Module\\CostTracker\\Cost_Tracker_Manager' ) ) {
             $this->markTestSkipped( 'Cost Tracker module not active; get-site-costs ability not registered.' );
         }
     }
@@ -80,10 +80,13 @@ class Test_GetSiteCosts_Ability extends MainWP_Abilities_Test_Case {
 
         wp_set_current_user( 0 );
 
-		// Expect the "doing it wrong" notice from WP_Ability::execute.
-		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+        // Expect the "doing it wrong" notice from WP_Ability::execute.
+        $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
-        $result = $this->execute_ability( 'mainwp/get-site-costs-v1', [] );
+        // Pass valid input structure to test permissions (not input validation).
+        $result = $this->execute_ability( 'mainwp/get-site-costs-v1', [
+            'site_id_or_domain' => 1,
+        ] );
 
         $this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
         $this->assertEquals(
@@ -102,10 +105,15 @@ class Test_GetSiteCosts_Ability extends MainWP_Abilities_Test_Case {
         $this->skip_if_no_abilities_api();
         $this->skip_if_no_cost_tracker();
 
-        $subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
-        wp_set_current_user( $subscriber_id );
+        $this->set_current_user_as_subscriber();
 
-        $result = $this->execute_ability( 'mainwp/get-site-costs-v1', [] );
+        // Expect the "doing it wrong" notice from WP_Ability::execute.
+        $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+        // Pass valid input structure to test permissions (not input validation).
+        $result = $this->execute_ability( 'mainwp/get-site-costs-v1', [
+            'site_id_or_domain' => 1,
+        ] );
 
         $this->assertWPError( $result, 'Subscriber should be denied.' );
         $this->assertEquals(
@@ -125,7 +133,8 @@ class Test_GetSiteCosts_Ability extends MainWP_Abilities_Test_Case {
         $this->skip_if_no_cost_tracker();
         $this->set_current_user_as_admin();
 
-        $site_id = $this->create_test_site();
+        // Passing empty string triggers "No site found" which uses _doing_it_wrong.
+        $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
         $result = $this->execute_ability( 'mainwp/get-site-costs-v1', [
             'site_id_or_domain' => '',

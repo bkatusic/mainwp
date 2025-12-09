@@ -249,7 +249,7 @@ class MainWP_Abilities_Updates {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Updates WordPress core to the latest available version. Requires sufficient MainWP Child version on the target site.',
+                        'instructions' => 'Updates WordPress core on a single site. For batch operations across multiple sites, use run_updates_v1 with types=[\'core\'].',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => false,
@@ -278,7 +278,7 @@ class MainWP_Abilities_Updates {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Updates all available plugins or specific plugins by slug. Empty slugs array updates all available plugins.',
+                        'instructions' => 'Updates plugins on a single site. For batch operations across multiple sites, use run_updates_v1 with types=[\'plugins\'].',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => false,
@@ -307,7 +307,7 @@ class MainWP_Abilities_Updates {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Updates all available themes or specific themes by slug. Empty slugs array updates all available themes.',
+                        'instructions' => 'Updates themes on a single site. For batch operations across multiple sites, use run_updates_v1 with types=[\'themes\'].',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => false,
@@ -336,7 +336,7 @@ class MainWP_Abilities_Updates {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Updates all available translations or specific translations by slug. Empty slugs array updates all available translations.',
+                        'instructions' => 'Updates translations on a single site. For batch operations across multiple sites, use run_updates_v1 with types=[\'translations\'].',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => false,
@@ -443,7 +443,7 @@ class MainWP_Abilities_Updates {
             'mainwp/update-all-v1',
             array(
                 'label'               => __( 'Update All', 'mainwp' ),
-                'description'         => __( 'Execute all available updates across all or selected sites. Operations with >50 sites are automatically queued for background processing.', 'mainwp' ),
+                'description'         => __( 'Execute ALL available updates (core, plugins, themes, translations) across all sites or specified sites. WARNING: This is a broad operation. For targeted updates, use run_updates_v1 with specific types[] and site_ids_or_domains[]. Operations with >50 sites are queued.', 'mainwp' ),
                 'category'            => 'mainwp-updates',
                 'input_schema'        => self::get_update_all_input_schema(),
                 'output_schema'       => self::get_update_all_output_schema(),
