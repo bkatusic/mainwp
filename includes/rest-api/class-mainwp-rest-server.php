@@ -115,6 +115,8 @@ class MainWP_Rest_Server {
             'monitors'      => 'MainWP_Rest_Monitors_Controller',
             'rest_api_keys' => 'MainWP_Rest_API_Keys_Controller',
             'settings'      => 'MainWP_Rest_Settings_Controller',
+            'posts'         => 'MainWP_Rest_Posts_Controller',
+            'pages'         => 'MainWP_Rest_Pages_Controller',
         );
     }
 

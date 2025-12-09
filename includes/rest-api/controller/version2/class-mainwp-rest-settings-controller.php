@@ -3420,91 +3420,6 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
         return true;
     }
 
-    /**
-     * Make enum validator.
-     *
-     * @param array  $allowed Allowed values.
-     * @param string $type    Type to coerce to.
-     *
-     * @return callable
-     */
-    private function make_enum_validator( array $allowed, string $type = 'int' ) {
-        $allowed_norm = array_map( fn( $v ) => $this->coerce_type( $v, $type ), $allowed );
-
-        return function ( $value, $request, $param ) use ( $allowed_norm, $type ) {  // phpcs:ignore -- NOSONAR
-            if ( null === $value || '' === $value ) {
-                return true;
-            }
-
-            $value = $this->sanitize_field( $value );
-            $v     = $this->coerce_type( $value, $type );
-
-            if ( in_array( $v, $allowed_norm, true ) ) {
-                return true;
-            }
-
-            return new WP_Error(
-                "invalid_{$param}",
-                sprintf(
-                    /* translators: 1: field name, 2: allowed list */
-                    __( 'Invalid %1$s. Allowed values: %2$s.', 'mainwp' ),
-                    esc_html( $param ),
-                    esc_html( implode( ', ', $allowed_norm ) )
-                ),
-            );
-        };
-    }
-
-    /**
-     * Make enum sanitizer.
-     *
-     * @param array  $allowed Allowed values.
-     * @param string $type    Type to coerce to.
-     *
-     * @return callable
-     */
-    private function make_enum_sanitizer( array $allowed, string $type = 'int' ) {
-        $allowed_norm = array_map( fn( $v ) => $this->coerce_type( $v, $type ), $allowed );
-
-        return function ( $value, $request, $param ) use ( $allowed_norm, $type ) {  // phpcs:ignore -- NOSONAR
-            if ( null === $value || '' === $value ) {
-                return $value;
-            }
-            $value = $this->sanitize_field( $value );
-            $v     = $this->coerce_type( $value, $type );
-
-            if ( in_array( $v, $allowed_norm, true ) ) {
-                return $v;
-            }
-
-            return new WP_Error(
-                "invalid_{$param}",
-                sprintf(
-                    __( 'Invalid %1$s. Allowed values: %2$s.', 'mainwp' ),
-                    esc_html( $param ),
-                    esc_html( implode( ', ', $allowed_norm ) )
-                ),
-            );
-        };
-    }
-
-    /**
-     * Coerce value to type.
-     *
-     * @param mixed  $value Value to coerce.
-     * @param string $type  Type to coerce to.
-     *
-     * @return mixed
-     */
-    private static function coerce_type( $value, string $type ) {
-        switch ( $type ) {
-            case 'int':
-                return (int) $value;
-            case 'string':
-            default:
-                return (string) $value;
-        }
-    }
 
     /**
      * Get site by id or domain.
@@ -3649,20 +3564,6 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
      */
     protected function format_date( int $date, $format = 'F j, Y' ) {
         return gmdate( $format, (int) $date );
-    }
-
-    /**
-     * Sanitize field.
-     *
-     * @param mixed $value Value to sanitize.
-     *
-     * @return mixed
-     */
-    protected function sanitize_field( $value ) {
-        if ( null === $value || '' === $value ) {
-            return '';
-        }
-        return sanitize_text_field( wp_unslash( trim( $value ) ) );
     }
 
     /**
