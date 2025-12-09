@@ -1781,12 +1781,21 @@ class MainWP_Abilities_Sites {
             return $access_check;
         }
 
-        $result = MainWP_Manage_Sites_Handler::reconnect_site( $site->id );
-
-        if ( is_wp_error( $result ) ) {
+        // Use the View method directly (not AJAX handler which calls die()).
+        try {
+            $result = MainWP_Manage_Sites_View::m_reconnect_site( $site );
+        } catch ( \Exception $e ) {
             return new \WP_Error(
                 'mainwp_reconnect_failed',
-                $result->get_error_message(),
+                $e->getMessage(),
+                array( 'status' => 503 )
+            );
+        }
+
+        if ( ! $result ) {
+            return new \WP_Error(
+                'mainwp_reconnect_failed',
+                __( 'Site reconnection failed.', 'mainwp' ),
                 array( 'status' => 503 )
             );
         }
@@ -4095,13 +4104,23 @@ class MainWP_Abilities_Sites {
         $reconnected = array();
 
         foreach ( $sites as $site ) {
-            $result = MainWP_Manage_Sites_Handler::reconnect_site( $site->id );
-
-            if ( is_wp_error( $result ) ) {
+            // Use the View method directly (not AJAX handler which calls die()).
+            try {
+                $result = MainWP_Manage_Sites_View::m_reconnect_site( $site );
+            } catch ( \Exception $e ) {
                 $errors[] = array(
                     'identifier' => $site->url,
                     'code'       => 'mainwp_reconnect_failed',
-                    'message'    => $result->get_error_message(),
+                    'message'    => $e->getMessage(),
+                );
+                continue;
+            }
+
+            if ( ! $result ) {
+                $errors[] = array(
+                    'identifier' => $site->url,
+                    'code'       => 'mainwp_reconnect_failed',
+                    'message'    => __( 'Site reconnection failed.', 'mainwp' ),
                 );
             } else {
                 $reconnected[] = array(
