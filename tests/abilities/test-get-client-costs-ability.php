@@ -171,6 +171,9 @@ class Test_Get_Client_Costs_Ability extends MainWP_Abilities_Test_Case {
 			$this->markTestSkipped( 'Cost Tracker module is available, cannot test absence' );
 		}
 
+		// Expect the "doing it wrong" notice from WP_Abilities_Registry::get_registered when ability not found.
+		$this->setExpectedIncorrectUsage( 'WP_Abilities_Registry::get_registered' );
+
 		$ability = wp_get_ability( 'mainwp/get-client-costs-v1' );
 		$this->assertNull( $ability, 'Ability mainwp/get-client-costs-v1 should not be registered without Cost Tracker.' );
 	}

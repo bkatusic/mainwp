@@ -424,15 +424,20 @@ class MainWP_Abilities_Util {
     }
 
     /**
-     * Map a client object to the standard output format.
+     * Map a client object or array to the standard output format.
      *
-     * @param object $client Client object from database.
-     * @param array  $options Optional formatting options.
-     *                        - 'include_sites' (bool): Include associated sites count.
-     *                        - 'include_contacts' (bool): Include client contacts.
+     * @param object|array $client Client object or array from database.
+     * @param array        $options Optional formatting options.
+     *                              - 'include_sites' (bool): Include associated sites count.
+     *                              - 'include_contacts' (bool): Include client contacts.
      * @return array Formatted client data.
      */
     public static function format_client_for_output( $client, array $options = array() ): array {
+        // Convert array to object for consistent access.
+        if ( is_array( $client ) ) {
+            $client = (object) $client;
+        }
+
         $output = array(
             'id'               => (int) $client->client_id,
             'name'             => (string) $client->name,

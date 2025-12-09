@@ -49,8 +49,9 @@ class Test_DisconnectSite_Ability extends MainWP_Abilities_Test_Case {
 
         $this->assertNotWPError( $result, 'Should return successful result.' );
         $this->assertIsArray( $result );
-        $this->assertArrayHasKey('id', $result);
-        $this->assertArrayHasKey('status', $result);
+        $this->assertArrayHasKey( 'disconnected', $result );
+        $this->assertArrayHasKey( 'site', $result );
+        $this->assertTrue( $result['disconnected'], 'Site should be marked as disconnected.' );
     }
 
     /**

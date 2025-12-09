@@ -739,9 +739,15 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 	 * Create a test client in the MainWP database.
 	 *
 	 * @param array $args Optional. Client properties to override defaults.
+	 *                    Supports 'groups' as a convenience key to associate
+	 *                    the client with tags via a site relationship.
 	 * @return int Client ID.
 	 */
 	protected function create_test_client( array $args = [] ): int {
+		// Extract groups before passing to update_client (not a valid column).
+		$groups = $args['groups'] ?? [];
+		unset( $args['groups'] );
+
 		$defaults = [
 			'name'             => 'Test Client ' . wp_generate_uuid4(),
 			'client_email'     => 'test-' . wp_generate_uuid4() . '@example.com',
@@ -765,7 +771,44 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 
 		$client = MainWP_DB_Client::instance()->update_client( $data, true );
 
-		return (int) $client->client_id;
+		$client_id = (int) $client->client_id;
+
+		// If groups specified, create site relationship to associate client with tags.
+		// Clients are linked to tags indirectly through their associated sites.
+		if ( ! empty( $groups ) ) {
+			$site_id = $this->create_test_site(
+				[
+					'name'      => 'Site for ' . $data['name'],
+					'client_id' => $client_id,
+				]
+			);
+			foreach ( $groups as $group_id ) {
+				$this->assign_site_to_tag( $site_id, (int) $group_id );
+			}
+		}
+
+		return $client_id;
+	}
+
+	/**
+	 * Assign a site to a tag/group.
+	 *
+	 * Creates a record in the mainwp_wp_group junction table.
+	 *
+	 * @param int $site_id Site ID.
+	 * @param int $tag_id  Tag/Group ID.
+	 * @return void
+	 */
+	protected function assign_site_to_tag( int $site_id, int $tag_id ): void {
+		global $wpdb;
+		$wpdb->insert(
+			$wpdb->prefix . 'mainwp_wp_group',
+			[
+				'wpid'    => $site_id,
+				'groupid' => $tag_id,
+			],
+			[ '%d', '%d' ]
+		);
 	}
 
 	/**

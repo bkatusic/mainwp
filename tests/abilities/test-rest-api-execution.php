@@ -437,10 +437,9 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 	}
 
 	/**
-	 * Set JSON input for an ability request.
+	 * Set JSON input for an ability POST request.
 	 *
-	 * The Abilities API expects input as JSON in the request body,
-	 * not as form-encoded body params.
+	 * The Abilities API expects input as JSON in the request body for POST.
 	 *
 	 * @param WP_REST_Request $request The request object.
 	 * @param array           $input   The input data.
@@ -451,8 +450,21 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		$request->set_body( wp_json_encode( [ 'input' => $input ] ) );
 	}
 
+	/**
+	 * Set query param input for an ability GET request.
+	 *
+	 * The Abilities API expects input as a query param for GET requests.
+	 *
+	 * @param WP_REST_Request $request The request object.
+	 * @param array           $input   The input data.
+	 * @return void
+	 */
+	protected function set_ability_input_query_param( WP_REST_Request $request, array $input ): void {
+		$request->set_query_params( [ 'input' => $input ] );
+	}
+
 	// =========================================================================
-	// Abilities Tests (POST requests)
+	// Read-only Abilities Tests (GET requests)
 	// =========================================================================
 
 	/**
@@ -471,13 +483,14 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		$this->create_test_site( [ 'name' => 'List Sites Test 1' ] );
 		$this->create_test_site( [ 'name' => 'List Sites Test 2' ] );
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
+		// list-sites-v1 is readonly, so it requires GET method.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
 		$response = rest_do_request( $request );
 
 		$this->assertEquals(
 			200,
 			$response->get_status(),
-			'list-sites-v1 via POST should return 200 OK.'
+			'list-sites-v1 via GET should return 200 OK.'
 		);
 
 		$data = $response->get_data();
@@ -499,12 +512,8 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 	/**
 	 * Test get-site-v1 ability via GET with input via query params.
 	 *
-	 * Note: Read-only abilities must use GET per Abilities API spec. However,
-	 * WordPress REST API doesn't support passing complex JSON input via query
-	 * params. For read-only abilities with required input, use MainWP's REST
-	 * v2 endpoints instead which support POST.
-	 *
-	 * This test uses the internal request approach to simulate query params.
+	 * Note: Read-only abilities must use GET per Abilities API spec.
+	 * Input is passed as a query param for GET requests.
 	 *
 	 * @return void
 	 */
@@ -514,9 +523,9 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 
 		$site_id = $this->create_test_site( [ 'name' => 'Get Site Test' ] );
 
-		// Use GET and pass input via query_params (not body_params).
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/get-site-v1' ) );
-		$this->set_ability_input( $request, [ 'site_id_or_domain' => $site_id ] );
+		// get-site-v1 is readonly, so it requires GET method with query params.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/get-site-v1' ) );
+		$this->set_ability_input_query_param( $request, [ 'site_id_or_domain' => $site_id ] );
 
 		$response = rest_do_request( $request );
 
@@ -566,8 +575,9 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 			]
 		);
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/get-site-plugins-v1' ) );
-		$this->set_ability_input( $request, [ 'site_id_or_domain' => $site_id ] );
+		// get-site-plugins-v1 is readonly, so it requires GET method.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/get-site-plugins-v1' ) );
+		$this->set_ability_input_query_param( $request, [ 'site_id_or_domain' => $site_id ] );
 
 		$response = rest_do_request( $request );
 
@@ -614,8 +624,9 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 			]
 		);
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/get-site-themes-v1' ) );
-		$this->set_ability_input( $request, [ 'site_id_or_domain' => $site_id ] );
+		// get-site-themes-v1 is readonly, so it requires GET method.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/get-site-themes-v1' ) );
+		$this->set_ability_input_query_param( $request, [ 'site_id_or_domain' => $site_id ] );
 
 		$response = rest_do_request( $request );
 
@@ -657,7 +668,8 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 			]
 		);
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/list-updates-v1' ) );
+		// list-updates-v1 is readonly, so it requires GET method.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/list-updates-v1' ) );
 		$response = rest_do_request( $request );
 
 		$this->assertEquals(
@@ -697,7 +709,8 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 			]
 		);
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/list-ignored-updates-v1' ) );
+		// list-ignored-updates-v1 is readonly, so it requires GET method.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/list-ignored-updates-v1' ) );
 		$response = rest_do_request( $request );
 
 		$this->assertEquals(
@@ -919,10 +932,9 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 	// =========================================================================
 
 	/**
-	 * Test that MainWP abilities reject GET method.
+	 * Test that write abilities reject GET method.
 	 *
-	 * All MainWP abilities are configured with readonly: false, so they require POST.
-	 * Using GET should return 405 Method Not Allowed.
+	 * Write abilities (readonly: false) require POST. Using GET should return 405.
 	 *
 	 * @return void
 	 */
@@ -930,14 +942,14 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		$this->skip_if_no_abilities_api();
 		$this->authenticate_as_admin();
 
-		// list-sites-v1 has readonly: false, so GET should fail.
-		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
+		// sync-sites-v1 has readonly: false, so GET should fail.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/sync-sites-v1' ) );
 		$response = rest_do_request( $request );
 
 		$this->assertEquals(
 			405,
 			$response->get_status(),
-			'GET to MainWP ability (readonly: false) should return 405 Method Not Allowed.'
+			'GET to write ability (readonly: false) should return 405 Method Not Allowed.'
 		);
 
 		$data = $response->get_data();
@@ -950,9 +962,9 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 	}
 
 	/**
-	 * Test that MainWP abilities accept POST method.
+	 * Test that read-only abilities reject POST method.
 	 *
-	 * All MainWP abilities are configured with readonly: false, so POST should work.
+	 * Read-only abilities (readonly: true) require GET. Using POST should return 405.
 	 *
 	 * @return void
 	 */
@@ -960,19 +972,23 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		$this->skip_if_no_abilities_api();
 		$this->authenticate_as_admin();
 
-		// list-sites-v1 has readonly: false, POST should work.
+		// list-sites-v1 has readonly: true, so POST should fail with 405.
 		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
 		$response = rest_do_request( $request );
 
 		$this->assertEquals(
-			200,
+			405,
 			$response->get_status(),
-			'POST to MainWP ability should return 200 OK.'
+			'POST to read-only ability (readonly: true) should return 405 Method Not Allowed.'
 		);
 
 		$data = $response->get_data();
-		$this->assertIsArray( $data, 'Response should be an array.' );
-		$this->assertArrayHasKey( 'items', $data, 'Response should have items key.' );
+		$this->assertArrayHasKey( 'code', $data, 'Error response should have code key.' );
+		$this->assertEquals(
+			'rest_ability_invalid_method',
+			$data['code'],
+			'Error code should be rest_ability_invalid_method.'
+		);
 	}
 
 	// =========================================================================
@@ -990,7 +1006,8 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		// Set current user to 0 (unauthenticated).
 		wp_set_current_user( 0 );
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
+		// list-sites-v1 is readonly, so it requires GET method.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
 		$response = rest_do_request( $request );
 
 		// Should return 401 or 403 for unauthenticated request.
@@ -1013,7 +1030,8 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
 		wp_set_current_user( $subscriber_id );
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
+		// list-sites-v1 is readonly, so it requires GET method.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
 		$response = rest_do_request( $request );
 
 		$this->assertEquals(
@@ -1078,7 +1096,8 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		$this->skip_if_no_abilities_api();
 		$this->authenticate_as_admin();
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/get-site-v1' ) );
+		// get-site-v1 is readonly, so it requires GET method.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/get-site-v1' ) );
 		// No input provided - should fail validation.
 		$response = rest_do_request( $request );
 
@@ -1107,8 +1126,9 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		$this->skip_if_no_abilities_api();
 		$this->authenticate_as_admin();
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/get-site-v1' ) );
-		$this->set_ability_input( $request, [ 'site_id_or_domain' => 999999 ] );
+		// get-site-v1 is readonly, so it requires GET method with query params.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/get-site-v1' ) );
+		$this->set_ability_input_query_param( $request, [ 'site_id_or_domain' => 999999 ] );
 
 		$response = rest_do_request( $request );
 
@@ -1267,10 +1287,10 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		// Create a site to ensure we have data.
 		$this->create_test_site( [ 'name' => 'Empty Input Param Test' ] );
 
-		// list-sites-v1 with explicit empty input param.
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
-		$request->set_header( 'Content-Type', 'application/json' );
-		$request->set_body( wp_json_encode( [ 'input' => '' ] ) );
+		// list-sites-v1 is readonly, so it requires GET method.
+		// Testing empty input query param.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
+		$request->set_query_params( [ 'input' => '' ] );
 
 		$response = rest_do_request( $request );
 
@@ -1303,7 +1323,8 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 
 		$site_id = $this->create_test_site( [ 'name' => 'Schema Test Site' ] );
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
+		// list-sites-v1 is readonly, so it requires GET method.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
 		$response = rest_do_request( $request );
 
 		$this->assertEquals( 200, $response->get_status() );
@@ -1353,7 +1374,8 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 			]
 		);
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/list-updates-v1' ) );
+		// list-updates-v1 is readonly, so it requires GET method.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/list-updates-v1' ) );
 		$response = rest_do_request( $request );
 
 		$this->assertEquals( 200, $response->get_status() );
@@ -1445,8 +1467,9 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 			'version' => '6.4.0',
 		] );
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/get-site-v1' ) );
-		$this->set_ability_input( $request, [ 'site_id_or_domain' => $site_id ] );
+		// get-site-v1 is readonly, so it requires GET method with query params.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/get-site-v1' ) );
+		$this->set_ability_input_query_param( $request, [ 'site_id_or_domain' => $site_id ] );
 
 		$response = rest_do_request( $request );
 
@@ -1499,8 +1522,9 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 			]
 		);
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/get-site-plugins-v1' ) );
-		$this->set_ability_input( $request, [ 'site_id_or_domain' => $site_id ] );
+		// get-site-plugins-v1 is readonly, so it requires GET method with query params.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/get-site-plugins-v1' ) );
+		$this->set_ability_input_query_param( $request, [ 'site_id_or_domain' => $site_id ] );
 
 		$response = rest_do_request( $request );
 
@@ -1560,8 +1584,9 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 			]
 		);
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/get-site-themes-v1' ) );
-		$this->set_ability_input( $request, [ 'site_id_or_domain' => $site_id ] );
+		// get-site-themes-v1 is readonly, so it requires GET method with query params.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/get-site-themes-v1' ) );
+		$this->set_ability_input_query_param( $request, [ 'site_id_or_domain' => $site_id ] );
 
 		$response = rest_do_request( $request );
 
@@ -1649,7 +1674,8 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 			]
 		);
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/list-ignored-updates-v1' ) );
+		// list-ignored-updates-v1 is readonly, so it requires GET method.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/list-ignored-updates-v1' ) );
 		$response = rest_do_request( $request );
 
 		$this->assertEquals( 200, $response->get_status(), 'list-ignored-updates-v1 should return 200 OK.' );
@@ -1742,7 +1768,8 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		$this->skip_if_no_abilities_api();
 		$this->authenticate_as_admin();
 
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
+		// list-sites-v1 is readonly, so it requires GET method.
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
 		$response = rest_do_request( $request );
 
 		$data = $response->get_data();
@@ -1777,8 +1804,8 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		] );
 
 		// Use GET with query params (read-only ability).
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/get-site-v1' ) );
-		$this->set_ability_input( $request, [ 'site_id_or_domain' => 'test-domain-lookup.example.com' ] );
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/get-site-v1' ) );
+		$this->set_ability_input_query_param( $request, [ 'site_id_or_domain' => 'test-domain-lookup.example.com' ] );
 
 		$response = rest_do_request( $request );
 
@@ -1825,9 +1852,9 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 			'sync_errors' => '',
 		] );
 
-		// Filter for connected only.
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
-		$this->set_ability_input( $request, [ 'status' => 'connected' ] );
+		// Filter for connected only (GET with query params for readonly ability).
+		$request = new WP_REST_Request( 'GET', $this->ability_run_url( 'mainwp/list-sites-v1' ) );
+		$this->set_ability_input_query_param( $request, [ 'status' => 'connected' ] );
 
 		$response = rest_do_request( $request );
 

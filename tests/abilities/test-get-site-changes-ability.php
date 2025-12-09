@@ -121,6 +121,9 @@ class Test_GetSiteChanges_Ability extends MainWP_Abilities_Test_Case {
         $this->skip_if_no_abilities_api();
         $this->set_current_user_as_admin();
 
+        // Expect the doing_it_wrong notice when input validation fails.
+        $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
         $site_id = $this->create_test_site();
 
         $result = $this->execute_ability( 'mainwp/get-site-changes-v1', [

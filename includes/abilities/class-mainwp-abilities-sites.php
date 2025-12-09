@@ -2796,11 +2796,16 @@ class MainWP_Abilities_Sites {
 
         $plugins = array();
         foreach ( $abandoned as $slug => $info ) {
+            // Convert timestamp to ISO 8601 date string if numeric.
+            $last_updated = isset( $info['last_updated'] ) ? $info['last_updated'] : '';
+            if ( is_numeric( $last_updated ) ) {
+                $last_updated = gmdate( 'c', (int) $last_updated );
+            }
             $plugins[] = array(
                 'slug'              => $slug,
                 'name'              => isset( $info['Name'] ) ? $info['Name'] : $slug,
                 'version'           => isset( $info['Version'] ) ? $info['Version'] : '',
-                'last_updated'      => isset( $info['last_updated'] ) ? $info['last_updated'] : '',
+                'last_updated'      => (string) $last_updated,
                 'days_since_update' => isset( $info['outdate_timestamp'] ) ? (int) ( ( time() - $info['outdate_timestamp'] ) / DAY_IN_SECONDS ) : 0,
             );
         }
@@ -3259,11 +3264,16 @@ class MainWP_Abilities_Sites {
 
         $themes = array();
         foreach ( $abandoned as $slug => $info ) {
+            // Convert timestamp to ISO 8601 date string if numeric.
+            $last_updated = isset( $info['last_updated'] ) ? $info['last_updated'] : '';
+            if ( is_numeric( $last_updated ) ) {
+                $last_updated = gmdate( 'c', (int) $last_updated );
+            }
             $themes[] = array(
                 'slug'              => $slug,
                 'name'              => isset( $info['Name'] ) ? $info['Name'] : $slug,
                 'version'           => isset( $info['Version'] ) ? $info['Version'] : '',
-                'last_updated'      => isset( $info['last_updated'] ) ? $info['last_updated'] : '',
+                'last_updated'      => (string) $last_updated,
                 'days_since_update' => isset( $info['outdate_timestamp'] ) ? (int) ( ( time() - $info['outdate_timestamp'] ) / DAY_IN_SECONDS ) : 0,
             );
         }

@@ -568,7 +568,11 @@ class MainWP_Abilities_Tags {
     }
 
     /**
-     * Get output schema for delete-tag-v1.
+     * Get output schema for delete-tag.
+     *
+     * Uses required arrays to ensure oneOf branches are mutually exclusive:
+     * - Deletion response requires 'deleted' and 'tag'
+     * - Dry-run response requires 'dry_run' and 'would_affect'
      *
      * @return array
      */
@@ -578,6 +582,7 @@ class MainWP_Abilities_Tags {
                 array(
                     'type'        => 'object',
                     'description' => __( 'Successful deletion response.', 'mainwp' ),
+                    'required'    => array( 'deleted', 'tag' ),
                     'properties'  => array(
                         'deleted' => array(
                             'type'        => 'boolean',
@@ -599,6 +604,7 @@ class MainWP_Abilities_Tags {
                 array(
                     'type'        => 'object',
                     'description' => __( 'Dry run response.', 'mainwp' ),
+                    'required'    => array( 'dry_run', 'would_affect' ),
                     'properties'  => array(
                         'dry_run'      => array(
                             'type'        => 'boolean',

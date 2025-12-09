@@ -111,6 +111,9 @@ class Test_GetSiteSecurity_Ability extends MainWP_Abilities_Test_Case {
         $this->skip_if_no_abilities_api();
         $this->set_current_user_as_admin();
 
+        // Expect the doing_it_wrong notice when site doesn't exist.
+        $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
         $site_id = $this->create_test_site();
 
         $result = $this->execute_ability( 'mainwp/get-site-security-v1', [

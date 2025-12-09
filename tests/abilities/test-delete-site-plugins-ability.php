@@ -43,6 +43,13 @@ class Test_DeleteSitePlugins_Ability extends MainWP_Abilities_Test_Case {
             'url'  => 'https://test-delete-site-plugins.example.com/',
         ] );
 
+        // Mock child site response to bypass OpenSSL signing with test keys.
+        $this->mock_child_site_response( $site_id, [
+            'plugin' => [
+                'hello-dolly/hello.php' => true,
+            ],
+        ] );
+
         $result = $this->execute_ability( 'mainwp/delete-site-plugins-v1', [
             'site_id_or_domain' => $site_id,
             'plugins'           => ['hello-dolly/hello.php'],

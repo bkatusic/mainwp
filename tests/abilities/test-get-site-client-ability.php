@@ -38,9 +38,16 @@ class Test_GetSiteClient_Ability extends MainWP_Abilities_Test_Case {
         $this->skip_if_no_abilities_api();
         $this->set_current_user_as_admin();
 
+        // Create a client first.
+        $client_id = $this->create_test_client( [
+            'name' => 'Test Client for Site',
+        ] );
+
+        // Create a site with the client assigned.
         $site_id = $this->create_test_site( [
-            'name' => 'Test Site',
-            'url'  => 'https://test-get-site-client.example.com/',
+            'name'      => 'Test Site',
+            'url'       => 'https://test-get-site-client.example.com/',
+            'client_id' => $client_id,
         ] );
 
         $result = $this->execute_ability( 'mainwp/get-site-client-v1', [
@@ -49,7 +56,8 @@ class Test_GetSiteClient_Ability extends MainWP_Abilities_Test_Case {
 
         $this->assertNotWPError( $result, 'Should return successful result.' );
         $this->assertIsArray( $result );
-        $this->assertIsArray($result);
+        $this->assertArrayHasKey( 'id', $result );
+        $this->assertEquals( $client_id, $result['id'] );
     }
 
     /**
@@ -109,6 +117,9 @@ class Test_GetSiteClient_Ability extends MainWP_Abilities_Test_Case {
     public function test_get_site_client_validates_input() {
         $this->skip_if_no_abilities_api();
         $this->set_current_user_as_admin();
+
+        // Expect the doing_it_wrong notice when site doesn't exist.
+        $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
         $site_id = $this->create_test_site();
 

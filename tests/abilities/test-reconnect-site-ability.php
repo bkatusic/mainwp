@@ -43,14 +43,26 @@ class Test_ReconnectSite_Ability extends MainWP_Abilities_Test_Case {
             'url'  => 'https://test-reconnect-site.example.com/',
         ] );
 
+        // Mock child site response to bypass OpenSSL signing with test keys.
+        $this->mock_child_site_response( $site_id, [
+            'siteurl'     => 'https://test-reconnect-site.example.com/',
+            'pubkey'      => 'mocked-pubkey',
+            'uniqueId'    => 'mocked-unique-id',
+            'admin'       => 'admin',
+            'nossl'       => 0,
+            'version'     => '5.0.0',
+            'success'     => 1,
+        ] );
+
         $result = $this->execute_ability( 'mainwp/reconnect-site-v1', [
             'site_id_or_domain' => $site_id,
         ] );
 
         $this->assertNotWPError( $result, 'Should return successful result.' );
         $this->assertIsArray( $result );
-        $this->assertArrayHasKey('id', $result);
-        $this->assertArrayHasKey('status', $result);
+        $this->assertArrayHasKey( 'reconnected', $result );
+        $this->assertArrayHasKey( 'site', $result );
+        $this->assertTrue( $result['reconnected'], 'Site should be marked as reconnected.' );
     }
 
     /**

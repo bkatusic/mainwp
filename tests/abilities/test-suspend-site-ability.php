@@ -49,8 +49,9 @@ class Test_SuspendSite_Ability extends MainWP_Abilities_Test_Case {
 
         $this->assertNotWPError( $result, 'Should return successful result.' );
         $this->assertIsArray( $result );
-        $this->assertArrayHasKey('id', $result);
-        $this->assertArrayHasKey('suspended', $result);
+        $this->assertArrayHasKey( 'suspended', $result );
+        $this->assertArrayHasKey( 'site', $result );
+        $this->assertTrue( $result['suspended'], 'Site should be marked as suspended.' );
     }
 
     /**

@@ -112,6 +112,9 @@ class Test_GetAbandonedThemes_Ability extends MainWP_Abilities_Test_Case {
         $this->skip_if_no_abilities_api();
         $this->set_current_user_as_admin();
 
+        // Expect the doing_it_wrong notice when site doesn't exist.
+        $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
         $site_id = $this->create_test_site();
 
         $result = $this->execute_ability( 'mainwp/get-abandoned-themes-v1', [
@@ -181,7 +184,8 @@ class Test_GetAbandonedThemes_Ability extends MainWP_Abilities_Test_Case {
         $this->assertNotNull( $old_theme, 'Should contain old-theme entry.' );
         $this->assertEquals( 'Old Theme', $old_theme['name'], 'Theme name should match seeded data.' );
         $this->assertEquals( '1.2.3', $old_theme['version'], 'Theme version should match seeded data.' );
-        $this->assertEquals( $outdate_timestamp, $old_theme['last_updated'], 'Theme last_updated should match seeded data.' );
+        // Timestamps are converted to ISO 8601 format by the ability.
+        $this->assertEquals( gmdate( 'c', $outdate_timestamp ), $old_theme['last_updated'], 'Theme last_updated should match seeded data as ISO date.' );
         $this->assertArrayHasKey( 'days_since_update', $old_theme, 'Should have days_since_update field.' );
         $this->assertGreaterThanOrEqual( 400, $old_theme['days_since_update'], 'days_since_update should be at least 400.' );
 

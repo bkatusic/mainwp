@@ -43,6 +43,13 @@ class Test_DeleteSiteThemes_Ability extends MainWP_Abilities_Test_Case {
             'url'  => 'https://test-delete-site-themes.example.com/',
         ] );
 
+        // Mock child site response to bypass OpenSSL signing with test keys.
+        $this->mock_child_site_response( $site_id, [
+            'theme' => [
+                'twentytwenty' => true,
+            ],
+        ] );
+
         $result = $this->execute_ability( 'mainwp/delete-site-themes-v1', [
             'site_id_or_domain' => $site_id,
             'themes'            => ['twentytwenty'],

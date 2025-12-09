@@ -173,8 +173,8 @@ class MainWP_Abilities_Clients {
         );
 
         $args = array(
-            'number' => $input['per_page'],
-            'offset' => ( $input['page'] - 1 ) * $input['per_page'],
+            'page'     => $input['page'],
+            'per_page' => $input['per_page'],
         );
 
         if ( 'active' === $input['status'] ) {
@@ -629,14 +629,22 @@ class MainWP_Abilities_Clients {
     /**
      * Get output schema for delete-client.
      *
+     * Uses required arrays to ensure oneOf branches are mutually exclusive:
+     * - Deletion response requires 'id' and 'name' (client properties)
+     * - Dry-run response requires 'dry_run' and 'would_affect'
+     *
      * @return array Output schema definition.
      */
     private static function get_delete_client_output_schema(): array {
+        $client_schema             = self::get_client_object_schema();
+        $client_schema['required'] = array( 'id', 'name' );
+
         return array(
             'oneOf' => array(
-                self::get_client_object_schema(),
+                $client_schema,
                 array(
                     'type'       => 'object',
+                    'required'   => array( 'dry_run', 'would_affect' ),
                     'properties' => array(
                         'dry_run'      => array( 'type' => 'boolean' ),
                         'would_affect' => array(
