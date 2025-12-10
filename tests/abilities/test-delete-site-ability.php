@@ -118,8 +118,6 @@ class Test_DeleteSite_Ability extends MainWP_Abilities_Test_Case {
         $this->skip_if_no_abilities_api();
         $this->set_current_user_as_admin();
 
-        $site_id = $this->create_test_site();
-
         $result = $this->execute_ability( 'mainwp/delete-site-v1', [
             'site_id_or_domain' => '', // Empty required field
         ] );
@@ -196,7 +194,6 @@ class Test_DeleteSite_Ability extends MainWP_Abilities_Test_Case {
             'confirm'           => true,
         ];
         $input['dry_run'] = true;
-        $input['confirm'] = true;
 
         $result = $this->execute_ability( 'mainwp/delete-site-v1', $input );
 

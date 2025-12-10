@@ -65,8 +65,7 @@ class Test_GetSiteCosts_Ability extends MainWP_Abilities_Test_Case {
 
         $this->assertNotWPError( $result, 'Should return successful result.' );
         $this->assertIsArray( $result );
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('site_id', $result);
+        $this->assertArrayHasKey( 'site_id', $result );
     }
 
     /**

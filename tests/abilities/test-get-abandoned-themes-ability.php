@@ -115,8 +115,6 @@ class Test_GetAbandonedThemes_Ability extends MainWP_Abilities_Test_Case {
         // Expect the doing_it_wrong notice when site doesn't exist.
         $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
-        $site_id = $this->create_test_site();
-
         $result = $this->execute_ability( 'mainwp/get-abandoned-themes-v1', [
             'site_id_or_domain' => 999999,
         ] );

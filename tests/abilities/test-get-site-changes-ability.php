@@ -124,8 +124,6 @@ class Test_GetSiteChanges_Ability extends MainWP_Abilities_Test_Case {
         // Expect the doing_it_wrong notice when input validation fails.
         $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
-        $site_id = $this->create_test_site();
-
         $result = $this->execute_ability( 'mainwp/get-site-changes-v1', [
             'site_id_or_domain' => '',
         ] );

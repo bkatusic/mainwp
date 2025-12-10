@@ -807,6 +807,10 @@ class MainWP_Abilities_Tags {
     public static function execute_add_tag( $input ) {
         $name  = sanitize_text_field( $input['name'] );
         $color = isset( $input['color'] ) ? sanitize_hex_color( $input['color'] ) : null;
+        // sanitize_hex_color() returns empty string for invalid input; normalize to null.
+        if ( '' === $color ) {
+            $color = null;
+        }
 
         $existing = MainWP_DB_Common::instance()->get_group_by_name( $name );
         if ( ! empty( $existing ) ) {
@@ -899,7 +903,11 @@ class MainWP_Abilities_Tags {
         }
 
         if ( isset( $input['color'] ) ) {
-            $params['color'] = sanitize_hex_color( $input['color'] );
+            $sanitized_color = sanitize_hex_color( $input['color'] );
+            if ( ! empty( $sanitized_color ) ) {
+                $params['color'] = $sanitized_color;
+            }
+            // If sanitized_color is empty, do not set $params['color'] to preserve existing color.
         }
 
         $updated_tag = MainWP_DB_Common::instance()->add_tag( $params );

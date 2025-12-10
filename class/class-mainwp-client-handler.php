@@ -405,8 +405,8 @@ class MainWP_Client_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                 }
 
                 return array(
-                    'success'  => true,
-                    'clientid' => $client_id,
+                    'success'   => true,
+                    'client_id' => $client_id,
                 );
 
             } else {

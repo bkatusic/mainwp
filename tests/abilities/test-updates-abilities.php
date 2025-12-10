@@ -400,6 +400,11 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 		// Either sites are updated (mocking worked) or errored (real connection failed).
 		$has_results = ( $result['summary']['total_updated'] > 0 ) || ( $result['summary']['total_errors'] > 0 );
 		$this->assertTrue( $has_results, 'Should have at least some update results or errors.' );
+
+		// If errors occurred, verify they have valid error codes.
+		if ( $result['summary']['total_errors'] > 0 ) {
+			$this->assertTrue( $found_error, 'Expected at least one recognized error code when errors occurred.' );
+		}
 	}
 
 	// =========================================================================
