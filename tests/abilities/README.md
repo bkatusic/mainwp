@@ -240,3 +240,67 @@ When adding new tests:
 3. Use `skip_if_no_abilities_api()` at the start of each test
 4. Clean up test data in `tearDown()`
 5. Follow WordPress coding standards (4-space indentation)
+6. **Always clean up filters/actions** - use try/finally (see below)
+
+### Cleaning Up Filters and Global State
+
+When tests add filters, actions, or modify global state, **always ensure cleanup happens** even if assertions fail. Use `try/finally` blocks to guarantee cleanup:
+
+```php
+public function test_behavior_with_modified_threshold() {
+    $this->skip_if_no_abilities_api();
+    $this->set_current_user_as_admin();
+
+    // Add filter to modify behavior for this test.
+    add_filter( 'mainwp_abilities_batch_threshold', array( $this, 'filter_lower_batch_threshold' ) );
+
+    try {
+        // Test code with assertions.
+        $result = $this->execute_ability( 'mainwp/check-sites-v1', [
+            'site_ids_or_domains' => $site_ids,
+        ] );
+
+        $this->assertNotWPError( $result );
+        $this->assertTrue( $result['queued'] );
+        // ... more assertions ...
+
+    } finally {
+        // Always remove filter to prevent test pollution.
+        remove_filter( 'mainwp_abilities_batch_threshold', array( $this, 'filter_lower_batch_threshold' ) );
+    }
+}
+```
+
+#### Why This Matters
+
+- **Test isolation**: Filters left registered leak into subsequent tests, causing unpredictable failures
+- **Assertion failures don't skip cleanup**: Without try/finally, a failed assertion stops execution before `remove_filter()` runs
+- **Debugging nightmare**: Filter pollution causes tests to pass/fail depending on execution order
+
+#### Common Pitfalls
+
+| Pitfall | Problem | Solution |
+|---------|---------|----------|
+| Filter cleanup after assertions | Failed assertion skips cleanup | Wrap in try/finally |
+| Cleanup only in `tearDown()` | Works, but harder to trace which test added what | Prefer local try/finally for test-specific filters |
+| Forgetting `remove_action()` | Actions persist and fire unexpectedly | Match every `add_action()` with `remove_action()` |
+| Global variable changes | State leaks between tests | Reset in finally block or tearDown() |
+
+#### Alternative: tearDown() Cleanup
+
+For filters used across multiple tests in a class, use `tearDown()`:
+
+```php
+protected function tearDown(): void {
+    // Remove any filters this test class might have added.
+    remove_filter( 'mainwp_abilities_batch_threshold', array( $this, 'filter_lower_batch_threshold' ) );
+    remove_filter( 'mainwp_some_other_filter', array( $this, 'filter_some_behavior' ) );
+
+    parent::tearDown();
+}
+```
+
+**Prefer try/finally** for single-test filters because:
+- Cleanup is visually paired with the `add_filter()` call
+- Easier to review and maintain
+- Self-documenting: reader sees the full lifecycle in one place
