@@ -368,13 +368,15 @@ class MainWP_Abilities_Util {
         // Non-numeric → treat as email.
         // Use exact match on email with deterministic ordering.
         global $wpdb;
-        $table  = $wpdb->prefix . 'mainwp_wp_clients';
+        $table = $wpdb->prefix . 'mainwp_wp_clients';
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Direct query needed for client lookup by email. Table name from $wpdb->prefix is safe.
         $client = $wpdb->get_row(
             $wpdb->prepare(
                 "SELECT * FROM {$table} WHERE client_email = %s ORDER BY client_id ASC LIMIT 1",
                 $client_id_or_email
             )
         );
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         if ( $client ) {
             return $client;
@@ -439,30 +441,30 @@ class MainWP_Abilities_Util {
         }
 
         $output = array(
-            'id'               => (int) $client->client_id,
-            'name'             => (string) $client->name,
-            'email'            => isset( $client->client_email ) ? (string) $client->client_email : '',
-            'phone'            => isset( $client->client_phone ) ? (string) $client->client_phone : '',
-            'address_1'        => isset( $client->address_1 ) ? (string) $client->address_1 : '',
-            'address_2'        => isset( $client->address_2 ) ? (string) $client->address_2 : '',
-            'city'             => isset( $client->city ) ? (string) $client->city : '',
-            'state'            => isset( $client->state ) ? (string) $client->state : '',
-            'zip'              => isset( $client->zip ) ? (string) $client->zip : '',
-            'country'          => isset( $client->country ) ? (string) $client->country : '',
-            'note'             => isset( $client->note ) ? (string) $client->note : '',
-            'suspended'        => isset( $client->suspended ) ? (int) $client->suspended : 0,
-            'created'          => isset( $client->created ) && $client->created > 0
+            'id'        => (int) $client->client_id,
+            'name'      => (string) $client->name,
+            'email'     => isset( $client->client_email ) ? (string) $client->client_email : '',
+            'phone'     => isset( $client->client_phone ) ? (string) $client->client_phone : '',
+            'address_1' => isset( $client->address_1 ) ? (string) $client->address_1 : '',
+            'address_2' => isset( $client->address_2 ) ? (string) $client->address_2 : '',
+            'city'      => isset( $client->city ) ? (string) $client->city : '',
+            'state'     => isset( $client->state ) ? (string) $client->state : '',
+            'zip'       => isset( $client->zip ) ? (string) $client->zip : '',
+            'country'   => isset( $client->country ) ? (string) $client->country : '',
+            'note'      => isset( $client->note ) ? (string) $client->note : '',
+            'suspended' => isset( $client->suspended ) ? (int) $client->suspended : 0,
+            'created'   => isset( $client->created ) && $client->created > 0
                 ? gmdate( 'c', (int) $client->created )
                 : null,
-            'facebook'         => isset( $client->client_facebook ) ? (string) $client->client_facebook : '',
-            'twitter'          => isset( $client->client_twitter ) ? (string) $client->client_twitter : '',
-            'instagram'        => isset( $client->client_instagram ) ? (string) $client->client_instagram : '',
-            'linkedin'         => isset( $client->client_linkedin ) ? (string) $client->client_linkedin : '',
+            'facebook'  => isset( $client->client_facebook ) ? (string) $client->client_facebook : '',
+            'twitter'   => isset( $client->client_twitter ) ? (string) $client->client_twitter : '',
+            'instagram' => isset( $client->client_instagram ) ? (string) $client->client_instagram : '',
+            'linkedin'  => isset( $client->client_linkedin ) ? (string) $client->client_linkedin : '',
         );
 
         // Include sites count if requested.
         if ( ! empty( $options['include_sites'] ) ) {
-            $sites                  = MainWP_DB_Client::instance()->get_websites_by_client_ids( $client->client_id );
+            $sites                 = MainWP_DB_Client::instance()->get_websites_by_client_ids( $client->client_id );
             $output['sites_count'] = is_array( $sites ) ? count( $sites ) : 0;
         }
 

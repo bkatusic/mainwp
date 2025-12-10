@@ -147,6 +147,6 @@ class MainWP_Abilities {
         MainWP_Abilities_Batch::register();
 
         // NOTE: Extensions register their own abilities in their own codebases.
-        // Total core abilities: 62 (30 sites + 13 updates + 11 clients + 7 tags + 1 batch)
+        // Total core abilities: 62 (30 sites + 13 updates + 11 clients + 7 tags + 1 batch).
     }
 }

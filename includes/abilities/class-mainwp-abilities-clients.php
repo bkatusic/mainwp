@@ -97,33 +97,33 @@ class MainWP_Abilities_Clients {
         return array(
             'type'       => array( 'object', 'null' ),
             'properties' => array(
-                'page'       => array(
+                'page'     => array(
                     'type'    => 'integer',
                     'minimum' => 1,
                     'maximum' => 10000,
                     'default' => 1,
                 ),
-                'per_page'   => array(
+                'per_page' => array(
                     'type'    => 'integer',
                     'minimum' => 1,
                     'maximum' => 100,
                     'default' => 20,
                 ),
-                'status'     => array(
+                'status'   => array(
                     'type'    => 'string',
                     'enum'    => array( 'any', 'active', 'suspended' ),
                     'default' => 'any',
                 ),
-                'search'     => array(
+                'search'   => array(
                     'type'    => 'string',
                     'default' => '',
                 ),
-                'include'    => array(
+                'include'  => array(
                     'type'    => 'array',
                     'items'   => array( 'type' => 'integer' ),
                     'default' => array(),
                 ),
-                'exclude'    => array(
+                'exclude'  => array(
                     'type'    => 'array',
                     'items'   => array( 'type' => 'integer' ),
                     'default' => array(),
@@ -392,24 +392,24 @@ class MainWP_Abilities_Clients {
         return array(
             'type'       => 'object',
             'properties' => array(
-                'name'              => array( 'type' => 'string' ),
-                'client_email'      => array( 'type' => 'string' ),
-                'client_phone'      => array( 'type' => 'string' ),
-                'address_1'         => array( 'type' => 'string' ),
-                'address_2'         => array( 'type' => 'string' ),
-                'city'              => array( 'type' => 'string' ),
-                'state'             => array( 'type' => 'string' ),
-                'zip'               => array( 'type' => 'string' ),
-                'country'           => array( 'type' => 'string' ),
-                'note'              => array( 'type' => 'string' ),
-                'selected_sites'    => array(
+                'name'             => array( 'type' => 'string' ),
+                'client_email'     => array( 'type' => 'string' ),
+                'client_phone'     => array( 'type' => 'string' ),
+                'address_1'        => array( 'type' => 'string' ),
+                'address_2'        => array( 'type' => 'string' ),
+                'city'             => array( 'type' => 'string' ),
+                'state'            => array( 'type' => 'string' ),
+                'zip'              => array( 'type' => 'string' ),
+                'country'          => array( 'type' => 'string' ),
+                'note'             => array( 'type' => 'string' ),
+                'selected_sites'   => array(
                     'type'  => 'array',
                     'items' => array( 'type' => 'integer' ),
                 ),
-                'client_facebook'   => array( 'type' => 'string' ),
-                'client_twitter'    => array( 'type' => 'string' ),
-                'client_instagram'  => array( 'type' => 'string' ),
-                'client_linkedin'   => array( 'type' => 'string' ),
+                'client_facebook'  => array( 'type' => 'string' ),
+                'client_twitter'   => array( 'type' => 'string' ),
+                'client_instagram' => array( 'type' => 'string' ),
+                'client_linkedin'  => array( 'type' => 'string' ),
             ),
             'required'   => array( 'name' ),
         );
@@ -542,8 +542,8 @@ class MainWP_Abilities_Clients {
             return $client;
         }
 
-        $data                = $input;
-        $data['client_id']   = $client->client_id;
+        $data              = $input;
+        $data['client_id'] = $client->client_id;
 
         unset( $data['client_id_or_email'] );
 
@@ -695,7 +695,7 @@ class MainWP_Abilities_Clients {
         }
 
         if ( $input['dry_run'] ) {
-            $sites = MainWP_DB_Client::instance()->get_websites_by_client_ids( $client->client_id );
+            $sites       = MainWP_DB_Client::instance()->get_websites_by_client_ids( $client->client_id );
             $sites_count = is_array( $sites ) ? count( $sites ) : 0;
 
             $warnings = array();

@@ -850,8 +850,7 @@ class MainWP_REST_Integration_Test extends \WP_Test_REST_TestCase {
 			$data = $response->get_data();
 			$this->assertIsArray( $data );
 		} else {
-			// If specific endpoint doesn't exist, test passes.
-			$this->assertTrue( true );
+			$this->markTestSkipped( 'Route /mainwp/v2/sites/{id} not registered.' );
 		}
 	}
 

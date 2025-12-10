@@ -2799,26 +2799,22 @@ class MainWP_Abilities_Updates {
             }
         }
 
-        if ( 'add' === $action ) {
-            if ( $count > 0 ) {
-                $message = sprintf(
-                    /* translators: %d: Number of plugins */
-                    _n( '%d plugin ignored.', '%d plugins ignored.', $count, 'mainwp' ),
-                    $count
-                );
-            } else {
-                $message = __( 'No plugins were ignored.', 'mainwp' );
-            }
+        if ( 'add' === $action && $count > 0 ) {
+            $message = sprintf(
+                /* translators: %d: Number of plugins */
+                _n( '%d plugin ignored.', '%d plugins ignored.', $count, 'mainwp' ),
+                $count
+            );
+        } elseif ( 'add' === $action ) {
+            $message = __( 'No plugins were ignored.', 'mainwp' );
+        } elseif ( $count > 0 ) {
+            $message = sprintf(
+                /* translators: %d: Number of plugins */
+                _n( '%d plugin unignored.', '%d plugins unignored.', $count, 'mainwp' ),
+                $count
+            );
         } else {
-            if ( $count > 0 ) {
-                $message = sprintf(
-                    /* translators: %d: Number of plugins */
-                    _n( '%d plugin unignored.', '%d plugins unignored.', $count, 'mainwp' ),
-                    $count
-                );
-            } else {
-                $message = __( 'No plugins were unignored.', 'mainwp' );
-            }
+            $message = __( 'No plugins were unignored.', 'mainwp' );
         }
 
         return array(
@@ -2862,26 +2858,22 @@ class MainWP_Abilities_Updates {
             }
         }
 
-        if ( 'add' === $action ) {
-            if ( $count > 0 ) {
-                $message = sprintf(
-                    /* translators: %d: Number of themes */
-                    _n( '%d theme ignored.', '%d themes ignored.', $count, 'mainwp' ),
-                    $count
-                );
-            } else {
-                $message = __( 'No themes were ignored.', 'mainwp' );
-            }
+        if ( 'add' === $action && $count > 0 ) {
+            $message = sprintf(
+                /* translators: %d: Number of themes */
+                _n( '%d theme ignored.', '%d themes ignored.', $count, 'mainwp' ),
+                $count
+            );
+        } elseif ( 'add' === $action ) {
+            $message = __( 'No themes were ignored.', 'mainwp' );
+        } elseif ( $count > 0 ) {
+            $message = sprintf(
+                /* translators: %d: Number of themes */
+                _n( '%d theme unignored.', '%d themes unignored.', $count, 'mainwp' ),
+                $count
+            );
         } else {
-            if ( $count > 0 ) {
-                $message = sprintf(
-                    /* translators: %d: Number of themes */
-                    _n( '%d theme unignored.', '%d themes unignored.', $count, 'mainwp' ),
-                    $count
-                );
-            } else {
-                $message = __( 'No themes were unignored.', 'mainwp' );
-            }
+            $message = __( 'No themes were unignored.', 'mainwp' );
         }
 
         return array(

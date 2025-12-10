@@ -1002,8 +1002,8 @@ class MainWP_Abilities_Sites {
         $plugins = array();
         foreach ( $plugins_data as $key => $plugin ) {
             // Support both formats:
-            // - Associative array: slug is the key (e.g., 'akismet/akismet.php' => [...])
-            // - Indexed array: slug is inside the plugin data (e.g., 0 => ['slug' => 'akismet/akismet.php', ...])
+            // - Associative array: slug is the key (e.g., 'akismet/akismet.php' => [...]).
+            // - Indexed array: slug is inside the plugin data (e.g., 0 => ['slug' => 'akismet/akismet.php', ...]).
             $slug = is_string( $key ) && ! empty( $key ) ? $key : ( $plugin['slug'] ?? '' );
 
             // Skip plugins with invalid slugs.
@@ -1111,8 +1111,8 @@ class MainWP_Abilities_Sites {
         $themes = array();
         foreach ( $themes_data as $key => $theme ) {
             // Support both formats:
-            // - Associative array: slug is the key (e.g., 'twentytwentyfour' => [...])
-            // - Indexed array: slug is inside the theme data (e.g., 0 => ['slug' => 'twentytwentyfour', ...])
+            // - Associative array: slug is the key (e.g., 'twentytwentyfour' => [...]).
+            // - Indexed array: slug is inside the theme data (e.g., 0 => ['slug' => 'twentytwentyfour', ...]).
             $slug = is_string( $key ) && ! empty( $key ) ? $key : ( $theme['slug'] ?? '' );
 
             // Skip themes with invalid slugs.
@@ -2045,7 +2045,7 @@ class MainWP_Abilities_Sites {
 
         return array(
             'unsuspended' => true,
-            'site'         => MainWP_Abilities_Util::format_site_for_output( $site, true ),
+            'site'        => MainWP_Abilities_Util::format_site_for_output( $site, true ),
         );
     }
 
@@ -2340,7 +2340,7 @@ class MainWP_Abilities_Sites {
                     )
                 );
             } else {
-                $message = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Activation failed', 'mainwp' );
+                $message  = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Activation failed', 'mainwp' );
                 $errors[] = array(
                     'slug'    => $plugin_slug,
                     'code'    => 'mainwp_activation_failed',
@@ -2463,7 +2463,7 @@ class MainWP_Abilities_Sites {
                     )
                 );
             } else {
-                $message = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Deactivation failed', 'mainwp' );
+                $message  = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Deactivation failed', 'mainwp' );
                 $errors[] = array(
                     'slug'    => $plugin_slug,
                     'code'    => 'mainwp_deactivation_failed',
@@ -2697,7 +2697,7 @@ class MainWP_Abilities_Sites {
                     )
                 );
             } else {
-                $message = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Deletion failed', 'mainwp' );
+                $message  = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Deletion failed', 'mainwp' );
                 $errors[] = array(
                     'slug'    => $plugin_slug,
                     'code'    => 'mainwp_deletion_failed',
@@ -3165,7 +3165,7 @@ class MainWP_Abilities_Sites {
                     )
                 );
             } else {
-                $message = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Deletion failed', 'mainwp' );
+                $message  = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Deletion failed', 'mainwp' );
                 $errors[] = array(
                     'slug'    => $theme_slug,
                     'code'    => 'mainwp_deletion_failed',
@@ -3931,8 +3931,8 @@ class MainWP_Abilities_Sites {
         $per_page = max( 1, min( 100, (int) $input['per_page'] ) );
 
         $filters = array(
-            'offset'     => ( $page - 1 ) * $per_page,
-            'number'     => $per_page,
+            'offset'      => ( $page - 1 ) * $per_page,
+            'number'      => $per_page,
             'selectgroup' => 'id,url,name',
         );
 
@@ -4032,34 +4032,34 @@ class MainWP_Abilities_Sites {
         return array(
             'type'       => 'object',
             'properties' => array(
-                'queued'      => array( 'type' => 'boolean' ),
-                'job_id'      => array( 'type' => 'string' ),
-                'total'       => array( 'type' => 'integer' ),
-                'reconnected' => array(
+                'queued'             => array( 'type' => 'boolean' ),
+                'job_id'             => array( 'type' => 'string' ),
+                'total'              => array( 'type' => 'integer' ),
+                'reconnected'        => array(
                     'type'  => 'array',
                     'items' => array( 'type' => 'object' ),
                 ),
-                'disconnected' => array(
+                'disconnected'       => array(
                     'type'  => 'array',
                     'items' => array( 'type' => 'object' ),
                 ),
-                'checked' => array(
+                'checked'            => array(
                     'type'  => 'array',
                     'items' => array( 'type' => 'object' ),
                 ),
-                'suspended' => array(
+                'suspended'          => array(
                     'type'  => 'array',
                     'items' => array( 'type' => 'object' ),
                 ),
-                'errors' => array(
+                'errors'             => array(
                     'type'  => 'array',
                     'items' => array( 'type' => 'object' ),
                 ),
-                'total_reconnected' => array( 'type' => 'integer' ),
+                'total_reconnected'  => array( 'type' => 'integer' ),
                 'total_disconnected' => array( 'type' => 'integer' ),
-                'total_checked' => array( 'type' => 'integer' ),
-                'total_suspended' => array( 'type' => 'integer' ),
-                'total_errors' => array( 'type' => 'integer' ),
+                'total_checked'      => array( 'type' => 'integer' ),
+                'total_suspended'    => array( 'type' => 'integer' ),
+                'total_errors'       => array( 'type' => 'integer' ),
             ),
         );
     }
