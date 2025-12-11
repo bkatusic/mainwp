@@ -272,10 +272,10 @@ class MainWP_Abilities_Clients {
     /**
      * Execute count-clients ability.
      *
-     * @param array $input Validated input parameters.
+     * @param array $input Validated input parameters (unused but required by ability signature).
      * @return array|\WP_Error Result array or error.
      */
-    public static function execute_count_clients( array $input ) {
+    public static function execute_count_clients( array $input ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required by ability signature.
         $total = MainWP_DB_Client::instance()->get_wp_clients( array( 'count_only' => true ) );
 
         return array(

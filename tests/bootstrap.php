@@ -32,6 +32,15 @@ require_once $_tests_dir . '/includes/functions.php';
 define( 'MAINWP_MODULE_LOG_ENABLED', false );
 
 /**
+ * Enable testing mode to allow test hooks.
+ *
+ * This enables the mainwp_fetch_url_authed_pre filter which allows tests to mock
+ * child site communication. This constant is only defined in test environments
+ * for security - see class-mainwp-connect.php for details.
+ */
+define( 'MAINWP_TESTING_MODE', true );
+
+/**
  * Enable REST API v2 for tests BEFORE plugin loads.
  *
  * The mainwp_rest_api_v2_enabled filter defaults to false in production

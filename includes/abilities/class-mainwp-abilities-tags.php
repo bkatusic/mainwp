@@ -652,7 +652,29 @@ class MainWP_Abilities_Tags {
                     'type'        => 'array',
                     'description' => __( 'List of sites.', 'mainwp' ),
                     'items'       => array(
-                        'type' => 'object',
+                        'type'       => 'object',
+                        'properties' => array(
+                            'id'        => array(
+                                'type'        => 'integer',
+                                'description' => __( 'Site ID.', 'mainwp' ),
+                            ),
+                            'url'       => array(
+                                'type'        => 'string',
+                                'description' => __( 'Site URL.', 'mainwp' ),
+                            ),
+                            'name'      => array(
+                                'type'        => 'string',
+                                'description' => __( 'Site name.', 'mainwp' ),
+                            ),
+                            'status'    => array(
+                                'type'        => 'string',
+                                'description' => __( 'Connection status.', 'mainwp' ),
+                            ),
+                            'client_id' => array(
+                                'type'        => array( 'integer', 'null' ),
+                                'description' => __( 'Assigned client ID.', 'mainwp' ),
+                            ),
+                        ),
                     ),
                 ),
                 'page'     => array(
@@ -684,7 +706,25 @@ class MainWP_Abilities_Tags {
                     'type'        => 'array',
                     'description' => __( 'List of clients.', 'mainwp' ),
                     'items'       => array(
-                        'type' => 'object',
+                        'type'       => 'object',
+                        'properties' => array(
+                            'client_id' => array(
+                                'type'        => 'integer',
+                                'description' => __( 'Client ID.', 'mainwp' ),
+                            ),
+                            'name'      => array(
+                                'type'        => 'string',
+                                'description' => __( 'Client name.', 'mainwp' ),
+                            ),
+                            'email'     => array(
+                                'type'        => 'string',
+                                'description' => __( 'Client email address.', 'mainwp' ),
+                            ),
+                            'suspended' => array(
+                                'type'        => 'integer',
+                                'description' => __( 'Suspension status (0=active, 1=suspended).', 'mainwp' ),
+                            ),
+                        ),
                     ),
                 ),
                 'page'     => array(

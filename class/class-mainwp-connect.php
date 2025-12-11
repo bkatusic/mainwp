@@ -1176,6 +1176,9 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
          * This filter fires early, before OpenSSL signing or HTTP requests, allowing
          * tests to bypass child site communication entirely.
          *
+         * SECURITY: This filter only fires in test/debug environments to prevent
+         * malicious extensions from spoofing child site responses in production.
+         *
          * @since 5.4
          *
          * @param mixed  $pre_result Return non-false to short-circuit and return this value.
@@ -1184,9 +1187,11 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
          * @param array  $params     Request parameters.
          * @return mixed Array to return early, false to proceed normally.
          */
-        $pre_result = apply_filters( 'mainwp_fetch_url_authed_pre', false, $website, $what, $params );
-        if ( false !== $pre_result ) {
-            return $pre_result;
+        if ( defined( 'MAINWP_TESTING_MODE' ) && MAINWP_TESTING_MODE ) {
+            $pre_result = apply_filters( 'mainwp_fetch_url_authed_pre', false, $website, $what, $params );
+            if ( false !== $pre_result ) {
+                return $pre_result;
+            }
         }
 
         if ( ! is_array( $params ) ) {

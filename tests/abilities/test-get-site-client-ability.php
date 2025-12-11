@@ -56,8 +56,38 @@ class Test_GetSiteClient_Ability extends MainWP_Abilities_Test_Case {
 
         $this->assertNotWPError( $result, 'Should return successful result.' );
         $this->assertIsArray( $result );
-        $this->assertArrayHasKey( 'id', $result );
-        $this->assertEquals( $client_id, $result['id'] );
+        $this->assertArrayHasKey( 'client', $result, 'Result should have client key.' );
+        $this->assertArrayHasKey( 'message', $result, 'Result should have message key.' );
+        $this->assertNotNull( $result['client'], 'Client should not be null when assigned.' );
+        $this->assertArrayHasKey( 'id', $result['client'], 'Client should have id field.' );
+        $this->assertEquals( $client_id, $result['client']['id'], 'Client ID should match.' );
+    }
+
+    /**
+     * Test that site without client returns null client with message.
+     *
+     * @return void
+     */
+    public function test_get_site_client_returns_null_when_no_client() {
+        $this->skip_if_no_abilities_api();
+        $this->set_current_user_as_admin();
+
+        // Create a site without a client assigned.
+        $site_id = $this->create_test_site( [
+            'name' => 'Test Site No Client',
+            'url'  => 'https://test-no-client.example.com/',
+        ] );
+
+        $result = $this->execute_ability( 'mainwp/get-site-client-v1', [
+            'site_id_or_domain' => $site_id,
+        ] );
+
+        $this->assertNotWPError( $result, 'Should return successful result even without client.' );
+        $this->assertIsArray( $result );
+        $this->assertArrayHasKey( 'client', $result, 'Result should have client key.' );
+        $this->assertArrayHasKey( 'message', $result, 'Result should have message key.' );
+        $this->assertNull( $result['client'], 'Client should be null when not assigned.' );
+        $this->assertNotEmpty( $result['message'], 'Message should explain the null client.' );
     }
 
     /**

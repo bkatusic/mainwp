@@ -164,6 +164,7 @@ class MainWP_Abilities_Batch {
                                 'type' => 'string',
                             ),
                         ),
+                        'required'   => array( 'site_id', 'code', 'message' ),
                     ),
                 ),
             ),

@@ -3579,9 +3579,20 @@ class MainWP_Abilities_Sites {
      */
     private static function get_site_client_output_schema(): array {
         return array(
-            'type'                 => array( 'object', 'null' ),
-            'description'          => __( 'Client object or null if no client assigned', 'mainwp' ),
-            'additionalProperties' => true,
+            'type'        => 'object',
+            'description' => __( 'Client assignment result with client data or null.', 'mainwp' ),
+            'properties'  => array(
+                'client'  => array(
+                    'type'                 => array( 'object', 'null' ),
+                    'description'          => __( 'Client object or null if no client assigned.', 'mainwp' ),
+                    'additionalProperties' => true,
+                ),
+                'message' => array(
+                    'type'        => 'string',
+                    'description' => __( 'Status message explaining the result.', 'mainwp' ),
+                ),
+            ),
+            'required'    => array( 'client' ),
         );
     }
 
@@ -3589,7 +3600,7 @@ class MainWP_Abilities_Sites {
      * Execute get-site-client-v1 ability.
      *
      * @param array $input Input parameters.
-     * @return array|null|\WP_Error Client data, null, or error.
+     * @return array|\WP_Error Client result object or error.
      */
     public static function execute_get_site_client( $input ) {
         $input = MainWP_Abilities_Util::normalize_input( $input );
@@ -3607,16 +3618,25 @@ class MainWP_Abilities_Sites {
         $client_id = isset( $site->client_id ) ? (int) $site->client_id : 0;
 
         if ( empty( $client_id ) ) {
-            return null;
+            return array(
+                'client'  => null,
+                'message' => __( 'No client assigned to this site.', 'mainwp' ),
+            );
         }
 
         $client = MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $client_id );
 
         if ( empty( $client ) ) {
-            return null;
+            return array(
+                'client'  => null,
+                'message' => __( 'Assigned client not found in database.', 'mainwp' ),
+            );
         }
 
-        return MainWP_Abilities_Util::format_client_for_output( $client );
+        return array(
+            'client'  => MainWP_Abilities_Util::format_client_for_output( $client ),
+            'message' => __( 'Client found.', 'mainwp' ),
+        );
     }
 
     /**

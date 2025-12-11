@@ -1724,6 +1724,12 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
         $tags      = isset( $params['tags'] ) && is_array( $params['tags'] ) ? $params['tags'] : array();
         $client_id = isset( $params['client_id'] ) ? intval( $params['client_id'] ) : 0;
 
+        // Validate status value (defense-in-depth for direct callers outside Abilities API).
+        $valid_statuses = array( 'connected', 'disconnected', 'suspended', '' );
+        if ( ! in_array( $status, $valid_statuses, true ) ) {
+            $status = '';
+        }
+
         $where = '';
 
         // Multi-user support: filter by current user.
@@ -1758,10 +1764,13 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
         // Tags (groups) filtering.
         $join_group = '';
         if ( ! empty( $tags ) ) {
-            $tags       = array_map( 'intval', $tags );
-            $tags       = array_filter( $tags, function ( $id ) {
-                return $id > 0;
-            } );
+            $tags = array_map( 'intval', $tags );
+            $tags = array_filter(
+                $tags,
+                function ( $id ) {
+                    return $id > 0;
+                }
+            );
             if ( ! empty( $tags ) ) {
                 $join_group = ' JOIN ' . $this->table_name( 'wp_group' ) . ' wpgroup ON wp.id = wpgroup.wpid ';
                 $where     .= ' AND wpgroup.groupid IN (' . implode( ',', $tags ) . ') ';
@@ -1769,9 +1778,9 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
         }
 
         $qry = 'SELECT COUNT(DISTINCT wp.id) FROM ' . $this->table_name( 'wp' ) . ' wp ' .
-               'JOIN ' . $this->table_name( 'wp_sync' ) . ' wp_sync ON wp.id = wp_sync.wpid ' .
-               $join_group .
-               'WHERE 1 ' . $where;
+                'JOIN ' . $this->table_name( 'wp_sync' ) . ' wp_sync ON wp.id = wp_sync.wpid ' .
+                $join_group .
+                'WHERE 1 ' . $where;
 
         return (int) $this->wpdb->get_var( $qry );
     }
