@@ -1176,8 +1176,10 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
          * This filter fires early, before OpenSSL signing or HTTP requests, allowing
          * tests to bypass child site communication entirely.
          *
-         * SECURITY: This filter only fires in test/debug environments to prevent
-         * malicious extensions from spoofing child site responses in production.
+         * SECURITY: This filter ONLY fires when running in a PHPUnit test environment.
+         * The triple-check (MAINWP_TESTING_MODE + test harness constant) prevents
+         * malicious extensions from defining MAINWP_TESTING_MODE to spoof responses
+         * in production. Never define MAINWP_TESTING_MODE outside of test environments.
          *
          * @since 5.4
          *
@@ -1187,7 +1189,8 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
          * @param array  $params     Request parameters.
          * @return mixed Array to return early, false to proceed normally.
          */
-        if ( defined( 'MAINWP_TESTING_MODE' ) && MAINWP_TESTING_MODE ) {
+        $is_phpunit_env = defined( 'WP_TESTS_DOMAIN' ) || defined( 'PHPUNIT_COMPOSER_INSTALL' ) || ( defined( 'WP_TESTS_DIR' ) && WP_TESTS_DIR );
+        if ( defined( 'MAINWP_TESTING_MODE' ) && MAINWP_TESTING_MODE && $is_phpunit_env ) {
             $pre_result = apply_filters( 'mainwp_fetch_url_authed_pre', false, $website, $what, $params );
             if ( false !== $pre_result ) {
                 return $pre_result;
