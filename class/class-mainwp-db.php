@@ -1710,6 +1710,12 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
      * This method is optimized for the Abilities API to return site counts
      * with filtering support for status, tags (groups), and client_id.
      *
+     * IMPORTANT: This method is intended ONLY for Abilities API consumers.
+     * For legacy UI code paths (e.g., admin dashboard widgets, site count displays),
+     * use get_websites_count() instead. The two methods serve different purposes:
+     * - get_websites_count(): Simple total count for UI display (cached, no filters)
+     * - get_websites_count_for_current_user(): Filtered count for API pagination
+     *
      * @since 5.3
      *
      * @param array $params Filter parameters:

@@ -34,9 +34,21 @@ define( 'MAINWP_MODULE_LOG_ENABLED', false );
 /**
  * Enable testing mode to allow test hooks.
  *
- * This enables the mainwp_fetch_url_authed_pre filter which allows tests to mock
- * child site communication. This constant is only defined in test environments
- * for security - see class-mainwp-connect.php for details.
+ * SECURITY WARNING - TEST ENVIRONMENT ONLY:
+ * This constant enables the mainwp_fetch_url_authed_pre filter which allows tests
+ * to mock child site communication responses. This is essential for unit testing
+ * without real child sites, but would be a security vulnerability in production.
+ *
+ * This constant must ONLY be defined here in the PHPUnit bootstrap.
+ * NEVER define MAINWP_TESTING_MODE in:
+ * - Production code
+ * - wp-config.php
+ * - Plugin files
+ * - Any file loaded outside of tests
+ *
+ * Doing so would allow malicious code to spoof child site responses.
+ *
+ * @see class-mainwp-connect.php for the filter implementation with security guards.
  */
 define( 'MAINWP_TESTING_MODE', true );
 

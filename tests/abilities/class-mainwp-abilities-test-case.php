@@ -440,6 +440,11 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 	 * a mock response before any HTTP communication or signing occurs.
 	 * Useful for tests that would otherwise fail due to invalid test keys.
 	 *
+	 * IMPORTANT: This hook is TEST-ONLY. It only works because MAINWP_TESTING_MODE
+	 * is defined in tests/bootstrap.php. The filter is protected by security guards
+	 * in class-mainwp-connect.php that require PHPUnit environment constants.
+	 * Enabling this outside of tests would undermine the security of child communication.
+	 *
 	 * @param int   $site_id  Site ID to mock responses for.
 	 * @param array $response Response data to return from the mock.
 	 * @return void

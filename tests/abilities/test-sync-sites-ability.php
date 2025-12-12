@@ -442,17 +442,23 @@ class MainWP_Sync_Sites_Ability_Test extends MainWP_Abilities_Test_Case {
 	 * Verifies that sites with outdated child plugin versions are rejected
 	 * during sync with the appropriate error code and message structure.
 	 *
+	 * The minimum version is defined in MainWP_Abilities_Util::MIN_CHILD_VERSION_FOR_ABILITIES.
+	 * This test uses that constant to stay aligned when the version threshold changes.
+	 *
 	 * @return void
 	 */
 	public function test_sync_sites_child_version_check() {
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_admin();
 
-		// Create site with outdated child (below 4.0.0 minimum).
+		// Get the minimum version from the centralized constant.
+		$min_version = \MainWP\Dashboard\MainWP_Abilities_Util::MIN_CHILD_VERSION_FOR_ABILITIES;
+
+		// Create site with outdated child (below minimum version).
 		$outdated_id = $this->create_test_site( [
 			'name'                 => 'Outdated Child Site',
 			'offline_check_result' => 1,
-			'version'              => '3.9.0',
+			'version'              => '3.9.0', // Below MIN_CHILD_VERSION_FOR_ABILITIES.
 		] );
 
 		$result = $this->execute_ability( 'mainwp/sync-sites-v1', [
@@ -482,11 +488,11 @@ class MainWP_Sync_Sites_Ability_Test extends MainWP_Abilities_Test_Case {
 			'Outdated child site should appear in errors with mainwp_child_outdated code.'
 		);
 
-		// Verify error message mentions version requirement.
+		// Verify error message mentions the minimum required version from the constant.
 		$this->assertStringContainsString(
-			'4.0.0',
+			$min_version,
 			$error_message,
-			'Error message should mention the minimum required version.'
+			"Error message should mention the minimum required version ({$min_version})."
 		);
 
 		// Outdated site should NOT be in synced results.

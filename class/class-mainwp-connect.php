@@ -1176,10 +1176,17 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
          * This filter fires early, before OpenSSL signing or HTTP requests, allowing
          * tests to bypass child site communication entirely.
          *
-         * SECURITY: This filter ONLY fires when running in a PHPUnit test environment.
-         * The triple-check (MAINWP_TESTING_MODE + test harness constant) prevents
-         * malicious extensions from defining MAINWP_TESTING_MODE to spoof responses
-         * in production. Never define MAINWP_TESTING_MODE outside of test environments.
+         * SECURITY WARNING - TEST ONLY:
+         * This filter ONLY fires when ALL of the following conditions are met:
+         * 1. MAINWP_TESTING_MODE constant is defined and true
+         * 2. A PHPUnit test harness constant is present (WP_TESTS_DOMAIN, PHPUNIT_COMPOSER_INSTALL, or WP_TESTS_DIR)
+         *
+         * This triple-check prevents malicious code from defining MAINWP_TESTING_MODE
+         * in production to spoof child site responses.
+         *
+         * IMPORTANT: MAINWP_TESTING_MODE must ONLY be defined in the PHPUnit bootstrap
+         * file (tests/bootstrap.php). Defining it in production code, wp-config.php, or
+         * plugin files would create a security vulnerability allowing response spoofing.
          *
          * @since 5.4
          *

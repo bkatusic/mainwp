@@ -19,6 +19,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 class MainWP_Abilities_Util {
 
     /**
+     * Minimum child plugin version required for Abilities API operations.
+     *
+     * This constant centralizes the version requirement to ensure consistency
+     * across all ability executors and their corresponding tests.
+     *
+     * When bumping this version:
+     * 1. Update this constant
+     * 2. Update tests that verify the version check behavior
+     * 3. Consider backwards compatibility implications
+     *
+     * @since 5.4
+     * @var string
+     */
+    const MIN_CHILD_VERSION_FOR_ABILITIES = '4.0.0';
+
+    /**
      * Check if current request has REST API permission.
      *
      * Prioritizes REST API key authentication; falls back to session-based
@@ -185,10 +201,15 @@ class MainWP_Abilities_Util {
      * code if the child version is too low.
      *
      * @param object $site        Site object with version property.
-     * @param string $min_version Minimum required version (default: '4.0.0').
+     * @param string $min_version Minimum required version. Defaults to MIN_CHILD_VERSION_FOR_ABILITIES.
+     *                            Pass null or omit to use the class constant.
      * @return true|\WP_Error True if version OK, WP_Error if outdated.
      */
-    public static function check_child_version( $site, string $min_version = '4.0.0' ) {
+    public static function check_child_version( $site, ?string $min_version = null ) {
+        // Use class constant as default when null or not provided.
+        if ( null === $min_version ) {
+            $min_version = self::MIN_CHILD_VERSION_FOR_ABILITIES;
+        }
         // Validate site parameter.
         if ( ! is_object( $site ) || ! isset( $site->id ) ) {
             return new \WP_Error(

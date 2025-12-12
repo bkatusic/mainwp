@@ -241,14 +241,26 @@ class MainWP_Abilities_Batch {
             );
         }
 
-        $job_type  = isset( $job_data['job_type'] ) && ! empty( $job_data['job_type'] )
+        // Normalize job data fields with defensive fallbacks.
+        // This section tolerates partially populated transients to avoid misleading status
+        // for malformed or incomplete job data (e.g., from interrupted background processes).
+        $job_type = isset( $job_data['job_type'] ) && ! empty( $job_data['job_type'] )
             ? $job_data['job_type']
             : $job_type_from_prefix;
-        $status    = isset( $job_data['status'] ) ? $job_data['status'] : 'queued';
-        $progress  = isset( $job_data['progress'] ) ? (int) $job_data['progress'] : 0;
-        $processed = isset( $job_data['processed'] ) ? (int) $job_data['processed'] : 0;
-        $total     = isset( $job_data['total'] ) ? (int) $job_data['total'] : 0;
 
+        // Validate status against known values; default to 'queued' if invalid.
+        $valid_statuses = array( 'queued', 'processing', 'completed', 'failed' );
+        $status         = isset( $job_data['status'] ) && in_array( $job_data['status'], $valid_statuses, true )
+            ? $job_data['status']
+            : 'queued';
+
+        // Clamp progress to valid 0-100 range.
+        $progress  = isset( $job_data['progress'] ) ? max( 0, min( 100, (int) $job_data['progress'] ) ) : 0;
+        $processed = isset( $job_data['processed'] ) ? max( 0, (int) $job_data['processed'] ) : 0;
+        $total     = isset( $job_data['total'] ) ? max( 0, (int) $job_data['total'] ) : 0;
+
+        // Count successes from whichever key is populated (sync/update/operation).
+        // Only count if the key exists AND contains an array; fall back to zero otherwise.
         $succeeded = 0;
         if ( isset( $job_data['synced'] ) && is_array( $job_data['synced'] ) ) {
             $succeeded = count( $job_data['synced'] );
@@ -258,6 +270,7 @@ class MainWP_Abilities_Batch {
             $succeeded = count( $job_data['successful'] );
         }
 
+        // Treat non-array 'errors' as empty list to avoid type errors.
         $errors_array = isset( $job_data['errors'] ) && is_array( $job_data['errors'] ) ? $job_data['errors'] : array();
 
         $started_at   = null;
