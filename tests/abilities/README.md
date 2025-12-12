@@ -2,26 +2,64 @@
 
 Comprehensive test coverage for the MainWP Abilities API integration (Phase 4 of the integration plan).
 
+> **Note:** All commands should be run from the repository root directory.
+
+## Quick Start
+
+**⚠️ Source your environment file FIRST before running any tests:**
+
+```bash
+# Step 1: Source your environment file (path varies by setup)
+source /path/to/your/.env
+
+# Step 2: Run all Abilities tests
+WP_TESTS_DIR=/tmp/wordpress-tests-lib ./vendor/bin/phpunit --testsuite=Abilities
+
+# Or run a specific test file
+WP_TESTS_DIR=/tmp/wordpress-tests-lib ./vendor/bin/phpunit tests/abilities/test-list-sites-ability.php
+```
+
+> **Note:** Your `.env` file should provide database socket and credentials required by the test harness. Tests WILL FAIL without sourcing the environment first.
+
 ## Prerequisites
 
-- WordPress test harness installed via `bin/install-wp-tests.sh`
+- WordPress test harness installed to `/tmp/wordpress-tests-lib/`
 - WordPress version with Abilities API support (or mock functions available)
-- PHPUnit configured with `WP_TESTS_DIR` environment variable
+- Environment file with database credentials and socket path
+
+### One-Time Setup
+
+If you haven't installed the WordPress test harness yet:
+
+```bash
+# Source your environment file for database socket
+source /path/to/your/.env
+
+# Install test harness (creates test database)
+# Adjust DB credentials and socket variable name for your setup
+bin/install-wp-tests.sh mainwp_tests root root "localhost:$DB_SOCKET" latest
+```
 
 ## Running Tests
 
 ```bash
+# Always source your .env first!
+source /path/to/your/.env
+
 # Run all abilities tests
-WP_TESTS_DIR=/path/to/wordpress-tests-lib phpunit --bootstrap tests/bootstrap.php tests/abilities/
+WP_TESTS_DIR=/tmp/wordpress-tests-lib ./vendor/bin/phpunit --testsuite=Abilities
 
 # Run specific test file
-WP_TESTS_DIR=/path/to/wordpress-tests-lib phpunit --bootstrap tests/bootstrap.php tests/abilities/test-list-sites-ability.php
+WP_TESTS_DIR=/tmp/wordpress-tests-lib ./vendor/bin/phpunit tests/abilities/test-list-sites-ability.php
 
 # Run with verbose output
-WP_TESTS_DIR=/path/to/wordpress-tests-lib phpunit --bootstrap tests/bootstrap.php tests/abilities/ --verbose
+WP_TESTS_DIR=/tmp/wordpress-tests-lib ./vendor/bin/phpunit --testsuite=Abilities --verbose
+
+# Run tests matching a pattern
+WP_TESTS_DIR=/tmp/wordpress-tests-lib ./vendor/bin/phpunit --filter="test_list_sites"
 
 # Run with coverage (requires Xdebug)
-WP_TESTS_DIR=/path/to/wordpress-tests-lib phpunit --bootstrap tests/bootstrap.php --coverage-html coverage/ tests/abilities/
+WP_TESTS_DIR=/tmp/wordpress-tests-lib ./vendor/bin/phpunit --coverage-html coverage/ --testsuite=Abilities
 ```
 
 ## Test Files

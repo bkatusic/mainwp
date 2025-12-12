@@ -204,9 +204,19 @@ Consumers can migrate at their own pace during the maintenance window.
 
 ## Error Code Conventions
 
-### Standard Error Codes
+### Abilities API Error Codes
 
-All MainWP abilities use `mainwp_*` prefixed error codes:
+The WordPress Abilities API (not MainWP-specific) may return these error codes:
+
+| Code | HTTP Status | Usage |
+|------|-------------|-------|
+| `ability_invalid_input` | 400 | Input fails JSON Schema validation |
+| `ability_missing_input_schema` | 400 | Ability has no input schema but received input |
+| `ability_invalid_permissions` | 403 | Permission callback returned false |
+
+### MainWP Error Codes
+
+All MainWP-specific error codes use the `mainwp_*` prefix:
 
 | Code | HTTP Status | Usage |
 |------|-------------|-------|
@@ -216,14 +226,19 @@ All MainWP abilities use `mainwp_*` prefixed error codes:
 | `mainwp_job_not_found` | 404 | Batch job ID doesn't exist |
 | `mainwp_permission_denied` | 401/403 | User lacks authentication or manage_options capability |
 | `mainwp_access_denied` | 403 | User lacks permission to specific site (per-site ACL) |
-| `mainwp_invalid_input` | 400 | Schema validation failed |
+| `mainwp_invalid_input` | 400 | Application-level input validation failed (beyond schema) |
 | `mainwp_confirmation_required` | 400 | Destructive op missing confirm:true |
 | `mainwp_ambiguous_site` | 400 | Multiple sites match identifier |
 | `mainwp_already_exists` | 409 | Resource already exists |
 | `mainwp_sync_in_progress` | 409 | Site already being synced |
+| `mainwp_no_updates` | 400 | No updates available for requested operation |
 | `mainwp_module_not_available` | 501 | Required module not active |
 | `mainwp_site_offline` | 503 | Site unreachable |
 | `mainwp_operation_failed` | 500 | Generic operation failure |
+| `mainwp_internal_error` | 500 | Unexpected internal error |
+| `mainwp_client_creation_failed` | 500 | Failed to create client |
+| `mainwp_client_update_failed` | 500 | Failed to update client |
+| `mainwp_client_deletion_failed` | 500 | Failed to delete client |
 
 ### Error Response Format
 
@@ -459,6 +474,47 @@ return array(
 ```
 
 No `fail_fast` parameter—always continue processing.
+
+### Job Lifecycle and Retention
+
+Batch jobs follow this lifecycle:
+
+```
+┌─────────┐    ┌────────────┐    ┌───────────┐
+│ queued  │ ─► │ processing │ ─► │ completed │
+└─────────┘    └────────────┘    └─────┬─────┘
+                     │                 │
+                     ▼                 ▼
+               ┌──────────┐      (24hr expiry)
+               │  failed  │
+               └────┬─────┘
+                    │
+                    ▼
+              (24hr expiry)
+```
+
+**Job Storage:**
+- Jobs are stored as WordPress transients (`mainwp_sync_job_*`, `mainwp_update_job_*`, `mainwp_batch_job_*`)
+- Each transient has a **24-hour expiration** (`DAY_IN_SECONDS`)
+- After 24 hours, jobs auto-expire and become unavailable
+- Clients polling with `mainwp/get-batch-job-status-v1` will receive `mainwp_job_not_found` (404)
+
+**Cron Processing:**
+- Queued jobs schedule a single cron event (`mainwp_process_*_job`) to run in 60 seconds
+- Cron handlers update job status to `processing` when started
+- Upon completion, status changes to `completed` or `failed`
+- The transient persists for monitoring—cron does NOT delete it early
+
+**Cleanup Behavior:**
+- No manual cleanup required—WordPress transient system handles expiration
+- Jobs that complete successfully remain queryable for the full 24 hours
+- Failed jobs also remain queryable for debugging purposes
+- If WordPress cron doesn't fire, jobs remain `queued` until transient expires
+
+**Operational Notes:**
+- For stuck jobs, check WordPress cron health (`wp cron event list`)
+- To manually clear a job: `delete_transient( 'mainwp_sync_job_' . $job_id )`
+- Monitor job queue size via transient count if running many batch operations
 
 ## Feature Gating
 

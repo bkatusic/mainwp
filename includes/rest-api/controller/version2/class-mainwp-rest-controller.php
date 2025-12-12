@@ -10,6 +10,29 @@
  *
  * NOTE THAT ONLY CODE RELEVANT FOR MOST ENDPOINTS SHOULD BE INCLUDED INTO THIS CLASS.
  *
+ * ## Authentication Pattern
+ *
+ * All MainWP REST API v2 routes MUST be protected using the shared `get_rest_permissions_check()`
+ * method as their `permission_callback`. This method:
+ *
+ * 1. Calls `MainWP_REST_Authentication::is_valid_permissions()` to validate API key authentication
+ * 2. Returns `WP_Error` with 401 status if authentication fails or user is null
+ * 3. Returns `true` if the authenticated user has appropriate API key permissions
+ *
+ * Example route registration:
+ * ```php
+ * register_rest_route( $this->namespace, '/' . $this->rest_base, array(
+ *     array(
+ *         'methods'             => WP_REST_Server::READABLE,
+ *         'callback'            => array( $this, 'get_items' ),
+ *         'permission_callback' => array( $this, 'get_rest_permissions_check' ), // REQUIRED
+ *     ),
+ * ) );
+ * ```
+ *
+ * IMPORTANT: Do NOT use `__return_true` or skip `permission_callback` for protected endpoints.
+ * All endpoints intended for API key access must use `get_rest_permissions_check`.
+ *
  * @class   MainWP_REST_Controller
  * @package MainWP\Dashboard
  * @see     https://developer.wordpress.org/rest-api/extending-the-rest-api/controller-classes/

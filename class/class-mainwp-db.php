@@ -641,6 +641,10 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
      * @return int Child site count.
      *
      * @uses \MainWP\Dashboard\MainWP_System::is_multi_user()
+     *
+     * @see get_websites_count_for_current_user() For Abilities API with status/tags/client filters.
+     *      This method is intentionally simple for UI display purposes (total sites count).
+     *      The two methods serve different use cases and should not be consolidated.
      */
     public function get_websites_count( $userId = null, $all_access = false ) {
         static $total_sites;
@@ -694,7 +698,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
         $select_stats = ' ( SELECT COUNT(wp.id) as count_all ';
         if ( ! empty( $params['count_disconnected'] ) ) {
             $select_stats .= ',( SELECT COUNT(wp_disconnected.id) FROM ' . $this->table_name( 'wp' ) . ' wp_disconnected LEFT JOIN ' . $this->table_name( 'wp_sync' ) . ' as wp_sync ';
-            $select_stats .= ' ON wp_disconnected.id = wp_sync.wpid WHERE wp_sync.sync_errors != "" ) as count_disconnected  ';
+            $select_stats .= ' ON wp_disconnected.id = wp_sync.wpid WHERE wp_sync.sync_errors <> "" ) as count_disconnected  ';
         }
         if ( ! empty( $params['count_suspended'] ) ) {
             $select_stats .= ',( SELECT COUNT(wp_suspended.id) FROM ' . $this->table_name( 'wp' ) . ' wp_suspended WHERE wp_suspended.suspended = 1 ) as count_suspended ';
@@ -3618,11 +3622,27 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
     }
 
     /**
-     * Method log_system_query
+     * Log SQL queries for debugging via hook.
      *
-     * @param  array  $params params.
-     * @param  string $sql query.
-     * @param  mixed  $caller Instance of caller class.
+     * This method provides a structured way to log SQL queries for development/debugging.
+     * It does NOT use error_log() directly - instead, it fires the `mainwp_log_system_query`
+     * action hook, allowing external listeners (logging plugins, debug tools) to handle
+     * the log output appropriately.
+     *
+     * To enable query logging:
+     * 1. Set `$params['dev_log_query'] = 1` when calling database methods
+     * 2. Add a listener to the `mainwp_log_system_query` action hook
+     *
+     * Example listener:
+     * ```php
+     * add_action( 'mainwp_log_system_query', function( $params, $sql, $caller ) {
+     *     error_log( 'MainWP Query: ' . $sql );
+     * }, 10, 3 );
+     * ```
+     *
+     * @param array  $params Query parameters. Set 'dev_log_query' to enable logging.
+     * @param string $sql    The SQL query string.
+     * @param mixed  $caller Instance of caller class (optional).
      * @return void
      */
     public function log_system_query( $params, $sql, $caller = false ) {

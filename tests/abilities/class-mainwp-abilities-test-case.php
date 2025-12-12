@@ -2,7 +2,49 @@
 /**
  * MainWP Abilities Test Case Base Class
  *
+ * This is the base class for all MainWP Abilities API tests. It provides fixtures,
+ * cleanup helpers, and common testing utilities.
+ *
+ * ## Test Environment Setup
+ *
+ * All commands should be run from the repository root directory.
+ *
+ * Before running Abilities tests, you must:
+ *
+ * 1. **Install the WordPress test harness** (one-time setup):
+ *    ```bash
+ *    # Source your environment file (path varies by setup)
+ *    source /path/to/your/.env
+ *    bin/install-wp-tests.sh mainwp_tests root root "localhost:$DB_SOCKET" latest
+ *    ```
+ *
+ * 2. **Source environment variables** before each test session:
+ *    ```bash
+ *    source /path/to/your/.env
+ *    ```
+ *
+ * 3. **Run tests** with the WP_TESTS_DIR environment variable:
+ *    ```bash
+ *    WP_TESTS_DIR=/tmp/wordpress-tests-lib ./vendor/bin/phpunit --testsuite=Abilities
+ *    ```
+ *
+ * ## Quick Reference
+ *
+ * ```bash
+ * # Run all Abilities tests (from repo root)
+ * WP_TESTS_DIR=/tmp/wordpress-tests-lib ./vendor/bin/phpunit --testsuite=Abilities
+ *
+ * # Run a specific test file
+ * WP_TESTS_DIR=/tmp/wordpress-tests-lib ./vendor/bin/phpunit tests/abilities/test-list-sites-ability.php
+ *
+ * # Run tests matching a pattern
+ * WP_TESTS_DIR=/tmp/wordpress-tests-lib ./vendor/bin/phpunit --filter="test_list_sites"
+ * ```
+ *
+ * For full setup instructions, see CLAUDE.md in the project root.
+ *
  * @package MainWP\Dashboard\Tests
+ * @see CLAUDE.md for complete test setup documentation
  */
 
 namespace MainWP\Dashboard\Tests;
