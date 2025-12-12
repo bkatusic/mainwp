@@ -148,15 +148,8 @@ class Test_REST_Authentication_Isolation extends \WP_UnitTestCase {
 	 * Test that empty REQUEST_URI returns false.
 	 */
 	public function test_empty_request_uri_returns_false(): void {
-		$_SERVER['REQUEST_URI'] = '';
-		\MainWP_REST_Authentication::$instance = null;
-
-		$auth       = \MainWP_REST_Authentication::get_instance();
-		$reflection = new \ReflectionMethod( $auth, 'is_request_to_rest_api' );
-		$reflection->setAccessible( true );
-
 		$this->assertFalse(
-			$reflection->invoke( $auth ),
+			$this->is_mainwp_rest_request( '' ),
 			'Empty REQUEST_URI should return false'
 		);
 	}
