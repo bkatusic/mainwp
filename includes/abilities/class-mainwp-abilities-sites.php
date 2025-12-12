@@ -781,17 +781,13 @@ class MainWP_Abilities_Sites {
             $db_params['group_id'] = $input['tag_id'];
         }
 
-        // First get total count (without pagination) to know actual total.
-        // Use same filters but without pagination limits.
-        $count_params = array_merge(
-            $db_params,
-            array(
-                'paged'          => 1,
-                'items_per_page' => 99999, // Large number to get all matching sites.
-            )
+        // Get total count using efficient COUNT(*) query.
+        $count_filters = array(
+            'status'    => ( 'any' !== $status ) ? $status : '',
+            'tags'      => isset( $input['tag_id'] ) ? array( (int) $input['tag_id'] ) : array(),
+            'client_id' => isset( $input['client_id'] ) ? (int) $input['client_id'] : 0,
         );
-        $all_websites = $db->get_websites_for_current_user( $count_params );
-        $total        = is_array( $all_websites ) ? count( $all_websites ) : 0;
+        $total = $db->get_websites_count_for_current_user( $count_filters );
 
         // Now get the paginated subset.
         $websites = $db->get_websites_for_current_user( $db_params );
