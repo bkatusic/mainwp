@@ -805,41 +805,49 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		$this->skip_if_no_abilities_api();
 		$this->authenticate_as_admin();
 
-		// Create 60 sites to exceed BATCH_THRESHOLD of 50.
-		$site_ids = [];
-		for ( $i = 0; $i < 60; $i++ ) {
-			$site_ids[] = $this->create_test_site( [
-				'name'                 => "Batch Test Site {$i}",
-				'offline_check_result' => 1,
+		// Lower threshold to 5 for efficient testing.
+		$threshold_callback = function() { return 5; };
+		add_filter( 'mainwp_abilities_batch_threshold', $threshold_callback );
+
+		try {
+			// Create sites to exceed batch threshold (lowered to 5 for testing).
+			$site_ids = [];
+			for ( $i = 0; $i < 6; $i++ ) {
+				$site_ids[] = $this->create_test_site( [
+					'name'                 => "Batch Test Site {$i}",
+					'offline_check_result' => 1,
+				] );
+			}
+
+			$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/sync-sites-v1' ) );
+			$request->set_body_params( [
+				'input' => [
+					'site_ids_or_domains' => $site_ids,
+				],
 			] );
+
+			$response = rest_do_request( $request );
+
+			// Should return 200 or 202 for queued operations.
+			$this->assertContains(
+				$response->get_status(),
+				[ 200, 202 ],
+				'sync-sites-v1 above threshold should return 200 or 202 (queued).'
+			);
+
+			$data = $response->get_data();
+			$this->assertIsArray( $data, 'Response should be an array.' );
+
+			// Verify queued response fields.
+			$this->assertArrayHasKey( 'queued', $data, 'Response should have queued key.' );
+			$this->assertTrue( $data['queued'], 'queued should be true for sites above threshold.' );
+			$this->assertArrayHasKey( 'job_id', $data, 'Response should have job_id key.' );
+			$this->assertArrayHasKey( 'status_url', $data, 'Response should have status_url key.' );
+			$this->assertArrayHasKey( 'sites_queued', $data, 'Response should have sites_queued key.' );
+			$this->assertEquals( 6, $data['sites_queued'], 'sites_queued should be 6.' );
+		} finally {
+			remove_filter( 'mainwp_abilities_batch_threshold', $threshold_callback );
 		}
-
-		$request = new WP_REST_Request( 'POST', $this->ability_run_url( 'mainwp/sync-sites-v1' ) );
-		$request->set_body_params( [
-			'input' => [
-				'site_ids_or_domains' => $site_ids,
-			],
-		] );
-
-		$response = rest_do_request( $request );
-
-		// Should return 200 or 202 for queued operations.
-		$this->assertContains(
-			$response->get_status(),
-			[ 200, 202 ],
-			'sync-sites-v1 with >50 sites should return 200 or 202 (queued).'
-		);
-
-		$data = $response->get_data();
-		$this->assertIsArray( $data, 'Response should be an array.' );
-
-		// Verify queued response fields.
-		$this->assertArrayHasKey( 'queued', $data, 'Response should have queued key.' );
-		$this->assertTrue( $data['queued'], 'queued should be true for >50 sites.' );
-		$this->assertArrayHasKey( 'job_id', $data, 'Response should have job_id key.' );
-		$this->assertArrayHasKey( 'status_url', $data, 'Response should have status_url key.' );
-		$this->assertArrayHasKey( 'sites_queued', $data, 'Response should have sites_queued key.' );
-		$this->assertEquals( 60, $data['sites_queued'], 'sites_queued should be 60.' );
 	}
 
 	/**

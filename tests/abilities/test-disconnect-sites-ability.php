@@ -130,36 +130,41 @@ class Test_DisconnectSites_Ability extends MainWP_Abilities_Test_Case {
         $this->set_current_user_as_admin();
 
         // Lower threshold to 2 for testing.
-        add_filter( 'mainwp_abilities_batch_threshold', function() {
+        $threshold_callback = function() {
             return 2;
-        } );
+        };
+        add_filter( 'mainwp_abilities_batch_threshold', $threshold_callback );
 
-        // Create 3 sites to exceed threshold.
-        $site_ids = array();
-        for ( $i = 1; $i <= 3; $i++ ) {
-            $site_ids[] = $this->create_test_site( [
-                'name' => "Batch Test Site {$i}",
-                'url'  => "https://batch-disconnect-{$i}.example.com/",
+        try {
+            // Create 3 sites to exceed threshold.
+            $site_ids = array();
+            for ( $i = 1; $i <= 3; $i++ ) {
+                $site_ids[] = $this->create_test_site( [
+                    'name' => "Batch Test Site {$i}",
+                    'url'  => "https://batch-disconnect-{$i}.example.com/",
+                ] );
+            }
+
+            $result = $this->execute_ability( 'mainwp/disconnect-sites-v1', [
+                'site_ids_or_domains' => $site_ids,
             ] );
+
+            $this->assertNotWPError( $result, 'Batch operation should return successful result.' );
+            $this->assertIsArray( $result );
+            $this->assertArrayHasKey( 'queued', $result, 'Result should have queued key.' );
+            $this->assertTrue( $result['queued'], 'Large batch should be queued.' );
+            $this->assertArrayHasKey( 'job_id', $result, 'Result should have job_id.' );
+            $this->assertNotEmpty( $result['job_id'], 'Job ID should not be empty.' );
+            $this->assertArrayHasKey( 'total', $result, 'Result should have total.' );
+            $this->assertEquals( 3, $result['total'], 'Total should match site count.' );
+
+            // Verify transient was created.
+            $job_data = get_transient( 'mainwp_batch_job_' . $result['job_id'] );
+            $this->assertIsArray( $job_data, 'Job transient should exist.' );
+            $this->assertEquals( 'disconnect', $job_data['job_type'], 'Job type should be disconnect.' );
+            $this->assertEquals( 'queued', $job_data['status'], 'Job status should be queued.' );
+        } finally {
+            remove_filter( 'mainwp_abilities_batch_threshold', $threshold_callback );
         }
-
-        $result = $this->execute_ability( 'mainwp/disconnect-sites-v1', [
-            'site_ids_or_domains' => $site_ids,
-        ] );
-
-        $this->assertNotWPError( $result, 'Batch operation should return successful result.' );
-        $this->assertIsArray( $result );
-        $this->assertArrayHasKey( 'queued', $result, 'Result should have queued key.' );
-        $this->assertTrue( $result['queued'], 'Large batch should be queued.' );
-        $this->assertArrayHasKey( 'job_id', $result, 'Result should have job_id.' );
-        $this->assertNotEmpty( $result['job_id'], 'Job ID should not be empty.' );
-        $this->assertArrayHasKey( 'total', $result, 'Result should have total.' );
-        $this->assertEquals( 3, $result['total'], 'Total should match site count.' );
-
-        // Verify transient was created.
-        $job_data = get_transient( 'mainwp_batch_job_' . $result['job_id'] );
-        $this->assertIsArray( $job_data, 'Job transient should exist.' );
-        $this->assertEquals( 'disconnect', $job_data['job_type'], 'Job type should be disconnect.' );
-        $this->assertEquals( 'queued', $job_data['status'], 'Job status should be queued.' );
     }
 }

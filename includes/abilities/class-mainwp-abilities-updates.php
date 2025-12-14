@@ -54,7 +54,7 @@ class MainWP_Abilities_Updates {
      *
      * @var int
      */
-    const BATCH_THRESHOLD = 50;
+    const BATCH_THRESHOLD = 200;
 
     /**
      * Register all update abilities.
@@ -124,7 +124,7 @@ class MainWP_Abilities_Updates {
             'mainwp/run-updates-v1',
             array(
                 'label'               => __( 'Run Updates', 'mainwp' ),
-                'description'         => __( 'Execute updates on one or more MainWP child sites. Operations with >50 sites are automatically queued for background processing.', 'mainwp' ),
+                'description'         => __( 'Execute updates on one or more MainWP child sites. Operations with >200 sites are automatically queued for background processing.', 'mainwp' ),
                 'category'            => 'mainwp-updates',
                 'input_schema'        => self::get_run_updates_input_schema(),
                 'output_schema'       => self::get_run_updates_output_schema(),
@@ -133,7 +133,7 @@ class MainWP_Abilities_Updates {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Applies updates to child sites. Operations with >50 sites are automatically queued and return a job_id for status polling. Individual update failures do not fail the entire operation.',
+                        'instructions' => 'Applies updates to child sites. Operations with >200 sites are automatically queued and return a job_id for status polling. Individual update failures do not fail the entire operation.',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => false,
@@ -443,7 +443,7 @@ class MainWP_Abilities_Updates {
             'mainwp/update-all-v1',
             array(
                 'label'               => __( 'Update All', 'mainwp' ),
-                'description'         => __( 'Execute ALL available updates (core, plugins, themes, translations) across all sites or specified sites. WARNING: This is a broad operation. For targeted updates, use run_updates_v1 with specific types[] and site_ids_or_domains[]. Operations with >50 sites are queued.', 'mainwp' ),
+                'description'         => __( 'Execute ALL available updates (core, plugins, themes, translations) across all sites or specified sites. WARNING: This is a broad operation. For targeted updates, use run_updates_v1 with specific types[] and site_ids_or_domains[]. Operations with >200 sites are queued.', 'mainwp' ),
                 'category'            => 'mainwp-updates',
                 'input_schema'        => self::get_update_all_input_schema(),
                 'output_schema'       => self::get_update_all_output_schema(),
@@ -452,7 +452,7 @@ class MainWP_Abilities_Updates {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Applies all available updates (core, plugins, themes, translations) to specified sites or all sites. Operations with >50 sites are automatically queued and return a job_id for status polling.',
+                        'instructions' => 'Applies all available updates (core, plugins, themes, translations) to specified sites or all sites. Operations with >200 sites are automatically queued and return a job_id for status polling.',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => false,
@@ -709,8 +709,8 @@ class MainWP_Abilities_Updates {
      * Get output schema for run-updates-v1.
      *
      * Response has two modes:
-     * - Immediate mode (≤50 sites): Returns updated, errors, summary
-     * - Queued mode (>50 sites): Returns queued, job_id, status_url, updates_queued, errors
+     * - Immediate mode (≤200 sites): Returns updated, errors, summary
+     * - Queued mode (>200 sites): Returns queued, job_id, status_url, updates_queued, errors
      *
      * The errors array is present in BOTH modes - for immediate mode it contains update failures,
      * for queued mode it contains pre-queue failures (site resolution/access errors).
@@ -751,12 +751,12 @@ class MainWP_Abilities_Updates {
 
         return array(
             'type'        => 'object',
-            'description' => __( 'Response varies by operation mode. Immediate mode (≤50 sites) returns updated/errors/summary. Queued mode (>50 sites) returns queued/job_id/status_url/updates_queued/errors.', 'mainwp' ),
+            'description' => __( 'Response varies by operation mode. Immediate mode (≤200 sites) returns updated/errors/summary. Queued mode (>200 sites) returns queued/job_id/status_url/updates_queued/errors.', 'mainwp' ),
             'oneOf'       => array(
-                // Immediate execution response (≤50 sites).
+                // Immediate execution response (≤ threshold sites).
                 array(
                     'type'        => 'object',
-                    'description' => __( 'Immediate execution response for operations with ≤50 sites.', 'mainwp' ),
+                    'description' => __( 'Immediate execution response for operations with ≤200 sites.', 'mainwp' ),
                     'properties'  => array(
                         'updated' => array(
                             'type'        => 'array',
@@ -792,10 +792,10 @@ class MainWP_Abilities_Updates {
                     ),
                     'required'    => array( 'updated', 'errors', 'summary' ),
                 ),
-                // Queued execution response (>50 sites).
+                // Queued execution response (> threshold sites).
                 array(
                     'type'        => 'object',
-                    'description' => __( 'Queued execution response for operations with >50 sites.', 'mainwp' ),
+                    'description' => __( 'Queued execution response for operations with >200 sites.', 'mainwp' ),
                     'properties'  => array(
                         'queued'         => array(
                             'type'        => 'boolean',
@@ -1546,11 +1546,11 @@ class MainWP_Abilities_Updates {
 
         return array(
             'type'        => 'object',
-            'description' => __( 'Response varies by operation mode. Immediate mode (≤50 sites) returns updated/errors/summary. Queued mode (>50 sites) returns queued/job_id/status_url/updates_queued/errors.', 'mainwp' ),
+            'description' => __( 'Response varies by operation mode. Immediate mode (≤200 sites) returns updated/errors/summary. Queued mode (>200 sites) returns queued/job_id/status_url/updates_queued/errors.', 'mainwp' ),
             'oneOf'       => array(
                 array(
                     'type'        => 'object',
-                    'description' => __( 'Immediate execution response for operations with ≤50 sites.', 'mainwp' ),
+                    'description' => __( 'Immediate execution response for operations with ≤200 sites.', 'mainwp' ),
                     'properties'  => array(
                         'updated' => array(
                             'type'        => 'array',
@@ -1588,7 +1588,7 @@ class MainWP_Abilities_Updates {
                 ),
                 array(
                     'type'        => 'object',
-                    'description' => __( 'Queued execution response for operations with >50 sites.', 'mainwp' ),
+                    'description' => __( 'Queued execution response for operations with >200 sites.', 'mainwp' ),
                     'properties'  => array(
                         'queued'         => array(
                             'type'        => 'boolean',

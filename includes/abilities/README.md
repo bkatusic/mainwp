@@ -19,9 +19,10 @@ The MainWP Abilities API provides a standardized, schema-validated interface for
 
 ### Bootstrap Flow
 
-1. **Feature Detection** (`MainWP_Abilities::init()`)
-   - Check `function_exists('wp_register_ability')`
-   - Hook into `wp_abilities_api_categories_init` and `wp_abilities_api_init`
+1. **Initialization** (`MainWP_Abilities::init()`)
+   - Cron handlers initialize unconditionally via `MainWP_Abilities_Cron::instance()` to process any previously queued batch jobs (even if Abilities API is later disabled)
+   - Feature detection: if `wp_register_ability` does not exist, skip remaining initialization
+   - When Abilities API is available: hook into `wp_abilities_api_categories_init` and `wp_abilities_api_init`
 
 2. **Category Registration** (`MainWP_Abilities::register_categories()`)
    - Register 5 categories: mainwp-sites, mainwp-updates, mainwp-clients, mainwp-tags, mainwp-batch
@@ -314,7 +315,7 @@ Abilities processing multiple sites should test:
    - Assert both `synced` and `errors` arrays
 
 10. **`test_{ability}_queues_large_batches()`**
-    - Call with >50 sites
+    - Call with >200 sites
     - Assert `queued: true` and `job_id` returned
 
 ### Test Template
@@ -390,22 +391,26 @@ public static function format_example_for_output( $object, array $options = arra
 }
 ```
 
-## Batch Operation Semantics
+## Batch Processing
+
+### Overview
+
+Abilities that process multiple sites (sync, updates, reconnect, disconnect, check, suspend) automatically queue large operations to prevent timeouts and resource exhaustion. This section explains threshold behavior, job lifecycle, WordPress cron requirements, and operational considerations.
 
 ### Threshold Behavior
 
-Operations processing multiple sites follow this pattern:
+Operations follow this pattern based on site count:
 
-- **≤50 sites**: Execute synchronously, return results immediately
-- **>50 sites**: Queue via cron, return `job_id` for status polling
+| Site Count | Behavior | Response |
+|------------|----------|----------|
+| ≤200 sites | Execute synchronously | Immediate results with `synced` and `errors` arrays |
+| >200 sites | Queue for background processing | `{ "queued": true, "job_id": "sync_abc123", "total": 250 }` |
 
-### Threshold Override
-
-Filter available for custom thresholds:
+**Threshold Override:**
 
 ```php
 add_filter( 'mainwp_abilities_batch_threshold', function( $threshold ) {
-    return 100;
+    return 100; // Lower threshold for resource-constrained hosts
 } );
 ```
 
@@ -425,9 +430,14 @@ if ( count( $sites ) > $threshold ) {
 }
 ```
 
-### Job Status Tracking
+Jobs are stored as WordPress transients with 24-hour expiration:
+- `mainwp_sync_job_{job_id}` - Site sync operations
+- `mainwp_update_job_{job_id}` - Update operations
+- `mainwp_batch_job_{job_id}` - Generic batch operations (reconnect, disconnect, etc.)
 
-Use `mainwp/get-batch-job-status-v1` to poll job progress:
+### Job Status Polling
+
+Use `mainwp/get-batch-job-status-v1` to monitor progress:
 
 ```php
 $status = wp_execute_ability( 'mainwp/get-batch-job-status-v1', array(
@@ -435,31 +445,104 @@ $status = wp_execute_ability( 'mainwp/get-batch-job-status-v1', array(
 ) );
 ```
 
-Returns:
+**Response structure:**
+
 ```php
 array(
     'job_id'       => 'sync_abc123',
     'type'         => 'sync',
-    'status'       => 'processing',
-    'progress'     => 65,
-    'processed'    => 33,
-    'total'        => 50,
-    'succeeded'    => 30,
-    'failed'       => 3,
+    'status'       => 'processing',  // queued | processing | completed | failed
+    'progress'     => 65,             // Percentage (0-100)
+    'processed'    => 33,             // Sites processed so far
+    'total'        => 50,             // Total sites in batch
+    'succeeded'    => 30,             // Successfully processed
+    'failed'       => 3,              // Failed sites
     'started_at'   => '2025-12-03T10:00:00Z',
-    'completed_at' => null,
-    'errors'       => array(),
+    'completed_at' => null,           // null until completed/failed
+    'errors'       => array(          // Per-site errors
+        array(
+            'site_id' => 42,
+            'code'    => 'mainwp_site_offline',
+            'message' => 'Site is not reachable.',
+        ),
+    ),
 )
+```
+
+### Job Lifecycle and Retention
+
+```mermaid
+stateDiagram-v2
+    [*] --> queued: Operation queued
+    queued --> processing: Cron starts (60s delay)
+    processing --> completed: All sites processed
+    processing --> failed: Timeout or critical error
+    completed --> [*]: 24hr expiry
+    failed --> [*]: 24hr expiry
+
+    note right of queued
+        Transient created
+        Cron scheduled
+    end note
+
+    note right of processing
+        Chunks of 20 sites
+        30s reschedule between chunks
+        4hr timeout protection
+    end note
+
+    note right of completed
+        Results queryable for 24hrs
+        Auto-deleted by WordPress
+    end note
+```
+
+**Storage and Expiration:**
+- Jobs stored as WordPress transients with **24-hour TTL** (`DAY_IN_SECONDS`)
+- After 24 hours, jobs auto-expire and return `mainwp_job_not_found` (404)
+- No manual cleanup required—WordPress handles expiration
+- Completed/failed jobs remain queryable for full 24 hours for debugging
+
+**Cron Processing:**
+- Queued jobs schedule single cron event (`mainwp_process_sync_job`, `mainwp_process_update_job`, `mainwp_process_batch_job`)
+- Initial delay: 60 seconds after queuing
+- Chunk size: 20 sites per cron run (filterable via `mainwp_abilities_cron_chunk_size`)
+- Reschedule delay: 30 seconds between chunks
+- Timeout protection: Jobs fail after 4 hours
+
+### WordPress Cron Requirements
+
+⚠️ **Critical:** WordPress cron requires site traffic to fire events. For production environments with batch operations:
+
+**Recommended Setup:**
+```bash
+# Disable WordPress cron in wp-config.php
+define( 'DISABLE_WP_CRON', true );
+
+# Add real cron job (runs every minute)
+* * * * * cd /path/to/wordpress && wp cron event run --due-now > /dev/null 2>&1
+```
+
+**Without real cron:**
+- Jobs remain `queued` until site receives traffic
+- Processing may be delayed or never start on low-traffic sites
+- 24-hour expiration still applies—jobs can expire before processing
+
+**Check cron health:**
+```bash
+wp cron event list
+wp cron test
 ```
 
 ### Partial Failure Handling
 
-Batch operations continue processing all items even if some fail:
+Batch operations continue processing all items even if some fail (no `fail_fast` parameter):
 
 ```php
 return array(
     'synced' => array(
         array( 'id' => 1, 'url' => 'https://site1.com/', 'name' => 'Site 1' ),
+        array( 'id' => 3, 'url' => 'https://site3.com/', 'name' => 'Site 3' ),
     ),
     'errors' => array(
         array(
@@ -467,54 +550,69 @@ return array(
             'code'       => 'mainwp_site_offline',
             'message'    => 'Site is not reachable.',
         ),
+        array(
+            'identifier' => 'example.com',
+            'code'       => 'mainwp_sync_failed',
+            'message'    => 'Sync operation timed out.',
+        ),
     ),
-    'total_synced' => 4,
-    'total_errors' => 1,
+    'total_synced' => 2,
+    'total_errors' => 2,
 );
 ```
 
-No `fail_fast` parameter—always continue processing.
+### Operational Considerations
 
-### Job Lifecycle and Retention
+**Job Ephemerality:**
+- Batch jobs are **ephemeral** (24-hour lifespan)
+- Not suitable for long-term audit trails
+- May be lost during server restarts or cache flushes (transient storage)
+- For critical operations, implement external logging/monitoring
 
-Batch jobs follow this lifecycle:
+**Troubleshooting Stuck Jobs:**
 
+1. **Check cron health:**
+   ```bash
+   wp cron event list | grep mainwp_process
+   ```
+
+2. **Manually trigger stuck job:**
+   ```bash
+   wp cron event run mainwp_process_sync_job <job_id>
+   ```
+
+3. **Clear stuck job:**
+   ```php
+   delete_transient( 'mainwp_sync_job_abc123' );
+   ```
+
+4. **Monitor job queue size:**
+   ```php
+   global $wpdb;
+   $count = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE '_transient_mainwp_%_job_%'" );
+   ```
+
+**Performance Tuning:**
+
+Adjust chunk size for slow hosts:
+```php
+add_filter( 'mainwp_abilities_cron_chunk_size', function( $size ) {
+    return 10; // Process 10 sites per cron run instead of 20
+} );
 ```
-┌─────────┐    ┌────────────┐    ┌───────────┐
-│ queued  │ ─► │ processing │ ─► │ completed │
-└─────────┘    └────────────┘    └─────┬─────┘
-                     │                 │
-                     ▼                 ▼
-               ┌──────────┐      (24hr expiry)
-               │  failed  │
-               └────┬─────┘
-                    │
-                    ▼
-              (24hr expiry)
+
+**Debug Logging:**
+
+Disable verbose cron debug logging on high-volume sites:
+```php
+// Disable cron debug logging to reduce log noise on large estates
+add_filter( 'mainwp_abilities_cron_debug_logging', '__return_false' );
 ```
 
-**Job Storage:**
-- Jobs are stored as WordPress transients (`mainwp_sync_job_*`, `mainwp_update_job_*`, `mainwp_batch_job_*`)
-- Each transient has a **24-hour expiration** (`DAY_IN_SECONDS`)
-- After 24 hours, jobs auto-expire and become unavailable
-- Clients polling with `mainwp/get-batch-job-status-v1` will receive `mainwp_job_not_found` (404)
-
-**Cron Processing:**
-- Queued jobs schedule a single cron event (`mainwp_process_*_job`) to run in 60 seconds
-- Cron handlers update job status to `processing` when started
-- Upon completion, status changes to `completed` or `failed`
-- The transient persists for monitoring—cron does NOT delete it early
-
-**Cleanup Behavior:**
-- No manual cleanup required—WordPress transient system handles expiration
-- Jobs that complete successfully remain queryable for the full 24 hours
-- Failed jobs also remain queryable for debugging purposes
-- If WordPress cron doesn't fire, jobs remain `queued` until transient expires
-
-**Operational Notes:**
-- For stuck jobs, check WordPress cron health (`wp cron event list`)
-- To manually clear a job: `delete_transient( 'mainwp_sync_job_' . $job_id )`
-- Monitor job queue size via transient count if running many batch operations
+**Hosting Considerations:**
+- Shared hosting: Lower threshold (50-100 sites) to avoid resource limits
+- VPS/Dedicated: Default threshold (200 sites) usually safe
+- High-performance: Increase threshold (500+ sites) with real cron
 
 ## Feature Gating
 

@@ -161,7 +161,7 @@ class MainWP_Abilities_Sites {
             'mainwp/sync-sites-v1',
             array(
                 'label'               => __( 'Sync MainWP Sites', 'mainwp' ),
-                'description'         => __( 'Trigger synchronization for one or more child sites. Operations with >50 sites are automatically queued for background processing.', 'mainwp' ),
+                'description'         => __( 'Trigger synchronization for one or more child sites. Operations with >200 sites are automatically queued for background processing.', 'mainwp' ),
                 'category'            => 'mainwp-sites',
                 'input_schema'        => self::get_sync_sites_input_schema(),
                 'output_schema'       => self::get_sync_output_schema(),
@@ -170,7 +170,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Pass site_ids_or_domains with specific IDs, or empty array for all applicable sites. Operations with >50 sites are automatically queued for background processing.',
+                        'instructions' => 'Pass site_ids_or_domains with specific IDs, or empty array for all applicable sites. Operations with >200 sites are automatically queued for background processing.',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => true,
@@ -570,7 +570,7 @@ class MainWP_Abilities_Sites {
         return array(
             'type'       => 'object',
             'properties' => array(
-                // Immediate execution response (≤50 sites).
+                // Immediate execution response (≤ threshold sites).
                 'synced'       => array(
                     'type'        => 'array',
                     'description' => __( 'Sites successfully synced (immediate mode only).', 'mainwp' ),
@@ -613,7 +613,7 @@ class MainWP_Abilities_Sites {
                     'type'        => 'integer',
                     'description' => __( 'Number of sites that failed to sync.', 'mainwp' ),
                 ),
-                // Queued execution response (>50 sites).
+                // Queued execution response (> threshold sites).
                 'queued'       => array(
                     'type'        => 'boolean',
                     'description' => __( 'Whether the operation was queued for background processing.', 'mainwp' ),
@@ -865,8 +865,9 @@ class MainWP_Abilities_Sites {
         // Check per-site ACLs and filter to allowed sites.
         $access_check = MainWP_Abilities_Util::check_batch_site_access( $site_ids_or_domains, $input );
 
-        // Queue if > 50 sites.
-        if ( count( $access_check['allowed'] ) > 50 ) {
+        // Queue if > threshold sites.
+        $threshold = apply_filters( 'mainwp_abilities_batch_threshold', 200 );
+        if ( count( $access_check['allowed'] ) > $threshold ) {
             $job_id = MainWP_Abilities_Util::queue_batch_sync( $access_check['allowed'] );
 
             // Handle queue failure.
@@ -882,7 +883,7 @@ class MainWP_Abilities_Sites {
             );
         }
 
-        // Immediate execution for ≤ 50 sites.
+        // Immediate execution for ≤ threshold sites.
         $synced = array();
         $errors = $access_check['denied']; // Start with ACL-denied sites.
 
@@ -3998,7 +3999,7 @@ class MainWP_Abilities_Sites {
             'mainwp/reconnect-sites-v1',
             array(
                 'label'               => __( 'Reconnect MainWP Sites', 'mainwp' ),
-                'description'         => __( 'Reconnect multiple MainWP child sites. Operations with >50 sites are automatically queued.', 'mainwp' ),
+                'description'         => __( 'Reconnect multiple MainWP child sites. Operations with >200 sites are automatically queued.', 'mainwp' ),
                 'category'            => 'mainwp-sites',
                 'input_schema'        => self::get_batch_sites_input_schema(),
                 'output_schema'       => self::get_batch_operation_output_schema(),
@@ -4007,7 +4008,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Pass site_ids_or_domains with specific IDs, or empty array for all applicable sites. Operations with >50 sites are automatically queued for background processing.',
+                        'instructions' => 'Pass site_ids_or_domains with specific IDs, or empty array for all applicable sites. Operations with >200 sites are automatically queued for background processing.',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => true,
@@ -4112,7 +4113,7 @@ class MainWP_Abilities_Sites {
             );
         }
 
-        $threshold = apply_filters( 'mainwp_abilities_batch_threshold', 50 );
+        $threshold = apply_filters( 'mainwp_abilities_batch_threshold', 200 );
 
         if ( count( $sites ) > $threshold ) {
             $job_id = MainWP_Abilities_Util::queue_batch_operation( 'reconnect', $sites );
@@ -4175,7 +4176,7 @@ class MainWP_Abilities_Sites {
             'mainwp/disconnect-sites-v1',
             array(
                 'label'               => __( 'Disconnect MainWP Sites', 'mainwp' ),
-                'description'         => __( 'Disconnect multiple MainWP child sites. Operations with >50 sites are automatically queued.', 'mainwp' ),
+                'description'         => __( 'Disconnect multiple MainWP child sites. Operations with >200 sites are automatically queued.', 'mainwp' ),
                 'category'            => 'mainwp-sites',
                 'input_schema'        => self::get_batch_sites_input_schema(),
                 'output_schema'       => self::get_batch_operation_output_schema(),
@@ -4184,7 +4185,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Pass site_ids_or_domains with specific IDs, or empty array for all applicable sites. Operations with >50 sites are automatically queued for background processing.',
+                        'instructions' => 'Pass site_ids_or_domains with specific IDs, or empty array for all applicable sites. Operations with >200 sites are automatically queued for background processing.',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => true,
@@ -4226,7 +4227,7 @@ class MainWP_Abilities_Sites {
             );
         }
 
-        $threshold = apply_filters( 'mainwp_abilities_batch_threshold', 50 );
+        $threshold = apply_filters( 'mainwp_abilities_batch_threshold', 200 );
 
         if ( count( $sites ) > $threshold ) {
             $job_id = MainWP_Abilities_Util::queue_batch_operation( 'disconnect', $sites );
@@ -4271,7 +4272,7 @@ class MainWP_Abilities_Sites {
             'mainwp/check-sites-v1',
             array(
                 'label'               => __( 'Check MainWP Sites', 'mainwp' ),
-                'description'         => __( 'Check connectivity status of multiple MainWP child sites. Operations with >50 sites are automatically queued.', 'mainwp' ),
+                'description'         => __( 'Check connectivity status of multiple MainWP child sites. Operations with >200 sites are automatically queued.', 'mainwp' ),
                 'category'            => 'mainwp-sites',
                 'input_schema'        => self::get_batch_sites_input_schema(),
                 'output_schema'       => self::get_batch_operation_output_schema(),
@@ -4280,7 +4281,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Pass site_ids_or_domains with specific IDs, or empty array for all applicable sites. Operations with >50 sites are automatically queued for background processing.',
+                        'instructions' => 'Pass site_ids_or_domains with specific IDs, or empty array for all applicable sites. Operations with >200 sites are automatically queued for background processing.',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => true,
@@ -4322,7 +4323,7 @@ class MainWP_Abilities_Sites {
             );
         }
 
-        $threshold = apply_filters( 'mainwp_abilities_batch_threshold', 50 );
+        $threshold = apply_filters( 'mainwp_abilities_batch_threshold', 200 );
 
         if ( count( $sites ) > $threshold ) {
             $job_id = MainWP_Abilities_Util::queue_batch_operation( 'check', $sites );
@@ -4379,7 +4380,7 @@ class MainWP_Abilities_Sites {
             'mainwp/suspend-sites-v1',
             array(
                 'label'               => __( 'Suspend MainWP Sites', 'mainwp' ),
-                'description'         => __( 'Suspend multiple MainWP child sites. Operations with >50 sites are automatically queued.', 'mainwp' ),
+                'description'         => __( 'Suspend multiple MainWP child sites. Operations with >200 sites are automatically queued.', 'mainwp' ),
                 'category'            => 'mainwp-sites',
                 'input_schema'        => self::get_batch_sites_input_schema(),
                 'output_schema'       => self::get_batch_operation_output_schema(),
@@ -4388,7 +4389,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Pass site_ids_or_domains with specific IDs, or empty array for all applicable sites. Operations with >50 sites are automatically queued for background processing.',
+                        'instructions' => 'Pass site_ids_or_domains with specific IDs, or empty array for all applicable sites. Operations with >200 sites are automatically queued for background processing.',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => true,
@@ -4430,7 +4431,7 @@ class MainWP_Abilities_Sites {
             );
         }
 
-        $threshold = apply_filters( 'mainwp_abilities_batch_threshold', 50 );
+        $threshold = apply_filters( 'mainwp_abilities_batch_threshold', 200 );
 
         if ( count( $sites ) > $threshold ) {
             $job_id = MainWP_Abilities_Util::queue_batch_operation( 'suspend', $sites );

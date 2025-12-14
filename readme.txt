@@ -147,6 +147,17 @@ Yes, we have a quick FAQ with many more questions and answers [here](https://mai
 
 == Changelog ==
 
+= 5.4.1 - Feature Release - 12-14-2025 =
+
+* Added: Abilities API integration providing 62 standardized abilities for managing sites, updates, clients, and tags
+* Added: REST API v2 endpoints exposing Abilities API for programmatic access and MCP tool integration
+* Added: Batch processing system with automatic queuing for operations exceeding 200 sites
+* Added: Background cron handlers for reliable processing of large-scale sync, update, and site management operations
+* Added: Job status polling via `mainwp/get-batch-job-status-v1` ability for monitoring long-running batch operations
+* Added: Comprehensive test coverage for all abilities including authentication, permissions, and input validation
+* Dev: New `mainwp_abilities_batch_threshold` filter to customize batch operation threshold (default: 200 sites)
+* Dev: Abilities API categories: mainwp-sites (30 abilities), mainwp-updates (13 abilities), mainwp-clients (11 abilities), mainwp-tags (7 abilities), mainwp-batch (1 ability)
+
 = 5.4.0.23 - Maintenance Release - 10-7-2025 =
 
 * Fixed: Corrected the flag icon displayed for the Catalan (ca) locale. [(#839)](https://github.com/mainwp/mainwp/issues/839)

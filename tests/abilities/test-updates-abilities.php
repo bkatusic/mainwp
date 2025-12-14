@@ -69,6 +69,87 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 	}
 
 	/**
+	 * Test that list-updates-v1 ability is registered.
+	 *
+	 * @return void
+	 */
+	public function test_list_updates_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$abilities = wp_get_abilities();
+
+		$this->assertArrayHasKey(
+			'mainwp/list-updates-v1',
+			$abilities,
+			'Ability mainwp/list-updates-v1 should be registered.'
+		);
+	}
+
+	/**
+	 * Test that list-updates-v1 requires authentication.
+	 *
+	 * @return void
+	 */
+	public function test_list_updates_requires_authentication() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		wp_set_current_user( 0 );
+
+		$result = $this->execute_ability( 'mainwp/list-updates-v1', [] );
+
+		$this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that list-updates-v1 requires manage_options capability.
+	 *
+	 * @return void
+	 */
+	public function test_list_updates_requires_manage_options() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		$this->set_current_user_as_subscriber();
+
+		$result = $this->execute_ability( 'mainwp/list-updates-v1', [] );
+
+		$this->assertWPError( $result, 'Subscriber should be denied.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that list-updates-v1 validates input.
+	 *
+	 * @return void
+	 */
+	public function test_list_updates_validates_input() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		// Invalid types parameter (should be array, not string).
+		$result = $this->execute_ability( 'mainwp/list-updates-v1', [
+			'types' => 'invalid-string',
+		] );
+
+		$this->assertWPError( $result, 'Invalid input should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_input',
+			$result->get_error_code(),
+			'Should return ability_invalid_input for schema validation failure.'
+		);
+	}
+
+	/**
 	 * Test that list-updates filters by type.
 	 *
 	 * @return void
@@ -156,6 +237,23 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 	// =========================================================================
 	// Run Updates Tests
 	// =========================================================================
+
+	/**
+	 * Test that run-updates-v1 ability is registered.
+	 *
+	 * @return void
+	 */
+	public function test_run_updates_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$abilities = wp_get_abilities();
+
+		$this->assertArrayHasKey(
+			'mainwp/run-updates-v1',
+			$abilities,
+			'Ability mainwp/run-updates-v1 should be registered.'
+		);
+	}
 
 	/**
 	 * Test that run-updates executes plugin updates.
@@ -268,34 +366,42 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_admin();
 
-		// Create 60 test sites (exceeds 50 threshold).
-		$site_ids = [];
-		for ( $i = 0; $i < 60; $i++ ) {
-			$site_ids[] = $this->create_test_site( [
-				'name'                 => "Large Update Site {$i}",
-				'offline_check_result' => 1,
-				'version'              => '5.0.0',
+		// Lower threshold to 5 for efficient testing.
+		$threshold_callback = function() { return 5; };
+		add_filter( 'mainwp_abilities_batch_threshold', $threshold_callback );
+
+		try {
+			// Create 6 test sites (exceeds lowered threshold).
+			$site_ids = [];
+			for ( $i = 0; $i < 6; $i++ ) {
+				$site_ids[] = $this->create_test_site( [
+					'name'                 => "Large Update Site {$i}",
+					'offline_check_result' => 1,
+					'version'              => '5.0.0',
+				] );
+			}
+
+			$result = $this->execute_ability( 'mainwp/run-updates-v1', [
+				'site_ids_or_domains' => $site_ids,
+				'types'               => [ 'plugins' ],
 			] );
+
+			$this->assertNotWPError( $result );
+
+			// Should be queued.
+			$this->assertTrue( $result['queued'], 'Large batch should be queued.' );
+			$this->assertArrayHasKey( 'job_id', $result );
+			$this->assertArrayHasKey( 'status_url', $result );
+			$this->assertArrayHasKey( 'updates_queued', $result );
+
+			// Track job for cleanup in tearDown.
+			$this->track_update_job( $result['job_id'] );
+
+			// Queued jobs don't have updated key.
+			$this->assertArrayNotHasKey( 'updated', $result );
+		} finally {
+			remove_filter( 'mainwp_abilities_batch_threshold', $threshold_callback );
 		}
-
-		$result = $this->execute_ability( 'mainwp/run-updates-v1', [
-			'site_ids_or_domains' => $site_ids,
-			'types'               => [ 'plugins' ],
-		] );
-
-		$this->assertNotWPError( $result );
-
-		// Should be queued.
-		$this->assertTrue( $result['queued'], 'Large batch should be queued.' );
-		$this->assertArrayHasKey( 'job_id', $result );
-		$this->assertArrayHasKey( 'status_url', $result );
-		$this->assertArrayHasKey( 'updates_queued', $result );
-
-		// Track job for cleanup in tearDown.
-		$this->track_update_job( $result['job_id'] );
-
-		// Queued jobs don't have updated key.
-		$this->assertArrayNotHasKey( 'updated', $result );
 	}
 
 	/**
@@ -410,6 +516,104 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 	// =========================================================================
 	// Ignored Updates Tests
 	// =========================================================================
+
+	/**
+	 * Test that list-ignored-updates-v1 ability is registered.
+	 *
+	 * @return void
+	 */
+	public function test_list_ignored_updates_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$abilities = wp_get_abilities();
+
+		$this->assertArrayHasKey(
+			'mainwp/list-ignored-updates-v1',
+			$abilities,
+			'Ability mainwp/list-ignored-updates-v1 should be registered.'
+		);
+	}
+
+	/**
+	 * Test that list-ignored-updates-v1 requires authentication.
+	 *
+	 * @return void
+	 */
+	public function test_list_ignored_updates_requires_authentication() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		wp_set_current_user( 0 );
+
+		$result = $this->execute_ability( 'mainwp/list-ignored-updates-v1', [] );
+
+		$this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that list-ignored-updates-v1 requires manage_options capability.
+	 *
+	 * @return void
+	 */
+	public function test_list_ignored_updates_requires_manage_options() {
+		$this->skip_if_no_abilities_api();
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+		$this->set_current_user_as_subscriber();
+
+		$result = $this->execute_ability( 'mainwp/list-ignored-updates-v1', [] );
+
+		$this->assertWPError( $result, 'Subscriber should be denied.' );
+		$this->assertEquals(
+			'ability_invalid_permissions',
+			$result->get_error_code(),
+			'Should return ability_invalid_permissions error code.'
+		);
+	}
+
+	/**
+	 * Test that list-ignored-updates-v1 validates input.
+	 *
+	 * @return void
+	 */
+	public function test_list_ignored_updates_validates_input() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		// Invalid types parameter (should be array, not integer).
+		$result = $this->execute_ability( 'mainwp/list-ignored-updates-v1', [
+			'types' => 123,
+		] );
+
+		$this->assertWPError( $result, 'Invalid input should return WP_Error.' );
+		$this->assertEquals(
+			'ability_invalid_input',
+			$result->get_error_code(),
+			'Should return ability_invalid_input for schema validation failure.'
+		);
+	}
+
+	/**
+	 * Test that set-ignored-updates-v1 ability is registered.
+	 *
+	 * @return void
+	 */
+	public function test_set_ignored_updates_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$abilities = wp_get_abilities();
+
+		$this->assertArrayHasKey(
+			'mainwp/set-ignored-updates-v1',
+			$abilities,
+			'Ability mainwp/set-ignored-updates-v1 should be registered.'
+		);
+	}
 
 	/**
 	 * Test that list-ignored-updates returns list.
@@ -1936,33 +2140,41 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_admin();
 
-		// Create 60 test sites (exceeds 50 threshold).
-		$site_ids = [];
-		for ( $i = 0; $i < 60; $i++ ) {
-			$site_ids[] = $this->create_test_site( [
-				'name'                 => "Large Update All Site {$i}",
-				'offline_check_result' => 1,
-				'version'              => '5.0.0',
+		// Lower threshold to 5 for efficient testing.
+		$threshold_callback = function() { return 5; };
+		add_filter( 'mainwp_abilities_batch_threshold', $threshold_callback );
+
+		try {
+			// Create 6 test sites (exceeds lowered threshold).
+			$site_ids = [];
+			for ( $i = 0; $i < 6; $i++ ) {
+				$site_ids[] = $this->create_test_site( [
+					'name'                 => "Large Update All Site {$i}",
+					'offline_check_result' => 1,
+					'version'              => '5.0.0',
+				] );
+			}
+
+			$result = $this->execute_ability( 'mainwp/update-all-v1', [
+				'site_ids_or_domains' => $site_ids,
 			] );
+
+			$this->assertNotWPError( $result );
+
+			// Should be queued.
+			$this->assertTrue( $result['queued'], 'Large batch should be queued.' );
+			$this->assertArrayHasKey( 'job_id', $result );
+			$this->assertArrayHasKey( 'status_url', $result );
+			$this->assertArrayHasKey( 'updates_queued', $result );
+
+			// Track job for cleanup in tearDown.
+			$this->track_update_job( $result['job_id'] );
+
+			// Queued jobs don't have updated key.
+			$this->assertArrayNotHasKey( 'updated', $result );
+		} finally {
+			remove_filter( 'mainwp_abilities_batch_threshold', $threshold_callback );
 		}
-
-		$result = $this->execute_ability( 'mainwp/update-all-v1', [
-			'site_ids_or_domains' => $site_ids,
-		] );
-
-		$this->assertNotWPError( $result );
-
-		// Should be queued.
-		$this->assertTrue( $result['queued'], 'Large batch should be queued.' );
-		$this->assertArrayHasKey( 'job_id', $result );
-		$this->assertArrayHasKey( 'status_url', $result );
-		$this->assertArrayHasKey( 'updates_queued', $result );
-
-		// Track job for cleanup in tearDown.
-		$this->track_update_job( $result['job_id'] );
-
-		// Queued jobs don't have updated key.
-		$this->assertArrayNotHasKey( 'updated', $result );
 	}
 
 	/**

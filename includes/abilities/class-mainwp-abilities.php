@@ -22,10 +22,20 @@ class MainWP_Abilities {
     /**
      * Initialize the Abilities integration.
      *
+     * Cron handlers are always initialized to process any previously queued jobs,
+     * even if the Abilities API is later disabled. The cron handler constructor
+     * is side-effect free beyond hooking actions, so this is safe.
+     *
      * @return void
      */
     public static function init(): void {
-        // Feature gate: If Abilities API is not available, do nothing.
+        // Always initialize cron handlers for batch processing.
+        // This ensures previously queued jobs are processed even if Abilities API
+        // is disabled after jobs were created. The cron handler only hooks actions
+        // and is safe to call without the Abilities API.
+        MainWP_Abilities_Cron::instance();
+
+        // Feature gate: If Abilities API is not available, skip ability registration.
         if ( ! function_exists( 'wp_register_ability' ) ) {
             return;
         }

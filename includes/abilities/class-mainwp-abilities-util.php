@@ -819,7 +819,7 @@ class MainWP_Abilities_Util {
     /**
      * Queue a batch sync operation for background processing.
      *
-     * Used when >50 sites need to be synced to avoid request timeouts.
+     * Used when >200 sites need to be synced to avoid request timeouts.
      * Stores job data in a transient and schedules a cron event for processing.
      *
      * @param array $sites Array of site objects to sync.
@@ -888,7 +888,7 @@ class MainWP_Abilities_Util {
     /**
      * Queue a batch update operation for background processing.
      *
-     * Used when >50 sites need updates to avoid request timeouts.
+     * Used when >200 sites need updates to avoid request timeouts.
      * Stores job data in a transient and schedules a cron event for processing.
      *
      * @param array $sites         Array of site objects to update.
@@ -976,7 +976,7 @@ class MainWP_Abilities_Util {
     /**
      * Queue a batch site operation for background processing.
      *
-     * Used when >50 sites need to be processed for batch operations like
+     * Used when >200 sites need to be processed for batch operations like
      * reconnect, disconnect, check, or suspend. Stores job data in a transient
      * and schedules a cron event for processing.
      *
