@@ -1193,7 +1193,8 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
 
         if ( null !== $search_site ) {
             $search_site = trim( $search_site );
-            $where      .= ' AND (wp.name LIKE "%' . $search_site . '%" OR wp.url LIKE  "%' . $search_site . '%") ';
+            $like_search = '%' . $this->wpdb->esc_like( $search_site ) . '%';
+            $where      .= $this->wpdb->prepare( ' AND (wp.name LIKE %s OR wp.url LIKE %s) ', $like_search, $like_search );
         }
 
         if ( ! empty( $extraWhere ) ) {
@@ -1899,7 +1900,8 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
 
             // for searching.
             if ( null !== $search_site && '' !== $search_site ) {
-                $where .= ' AND (wp.name LIKE "%' . $search_site . '%" OR wp.url LIKE  "%' . $search_site . '%") ';
+                $like_search = '%' . $this->wpdb->esc_like( $search_site ) . '%';
+                $where      .= $this->wpdb->prepare( ' AND (wp.name LIKE %s OR wp.url LIKE %s) ', $like_search, $like_search );
             }
 
             if ( null !== $extraWhere ) {

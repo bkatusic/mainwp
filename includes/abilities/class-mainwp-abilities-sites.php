@@ -787,7 +787,7 @@ class MainWP_Abilities_Sites {
             'tags'      => isset( $input['tag_id'] ) ? array( (int) $input['tag_id'] ) : array(),
             'client_id' => isset( $input['client_id'] ) ? (int) $input['client_id'] : 0,
         );
-        $total = $db->get_websites_count_for_current_user( $count_filters );
+        $total         = $db->get_websites_count_for_current_user( $count_filters );
 
         // Now get the paginated subset.
         $websites = $db->get_websites_for_current_user( $db_params );

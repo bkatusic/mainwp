@@ -95,39 +95,39 @@ class MainWP_Abilities_Batch {
         return array(
             'type'       => 'object',
             'properties' => array(
-                'job_id'       => array(
+                'job_id'            => array(
                     'type' => 'string',
                 ),
-                'type'         => array(
+                'type'              => array(
                     'type' => 'string',
                     'enum' => array( 'sync', 'update', 'reconnect', 'disconnect', 'check', 'suspend' ),
                 ),
-                'status'       => array(
+                'status'            => array(
                     'type' => 'string',
                     'enum' => array( 'queued', 'processing', 'completed', 'failed' ),
                 ),
-                'progress'     => array(
+                'progress'          => array(
                     'type'    => 'integer',
                     'minimum' => 0,
                     'maximum' => 100,
                 ),
-                'processed'    => array(
+                'processed'         => array(
                     'type'        => 'integer',
                     'description' => __( 'Number of sites processed so far', 'mainwp' ),
                 ),
-                'total'        => array(
+                'total'             => array(
                     'type'        => 'integer',
                     'description' => __( 'Total number of sites to process', 'mainwp' ),
                 ),
-                'succeeded'    => array(
+                'succeeded'         => array(
                     'type'        => 'integer',
                     'description' => __( 'Number of successful operations', 'mainwp' ),
                 ),
-                'failed'       => array(
+                'failed'            => array(
                     'type'        => 'integer',
                     'description' => __( 'Number of failed operations', 'mainwp' ),
                 ),
-                'started_at'   => array(
+                'started_at'        => array(
                     'oneOf' => array(
                         array(
                             'type'   => 'string',
@@ -138,7 +138,7 @@ class MainWP_Abilities_Batch {
                         ),
                     ),
                 ),
-                'completed_at' => array(
+                'completed_at'      => array(
                     'oneOf' => array(
                         array(
                             'type'   => 'string',

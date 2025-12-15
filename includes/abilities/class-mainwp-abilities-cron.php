@@ -100,10 +100,10 @@ class MainWP_Abilities_Cron {
 
         // Timeout protection (4 hours max).
         if ( ! empty( $job['started'] ) && time() > $job['started'] + 4 * HOUR_IN_SECONDS ) {
-            $job['status']       = 'failed';
-            $job['completed']    = time();
+            $job['status']        = 'failed';
+            $job['completed']     = time();
             $job['job_timed_out'] = true;
-            $job['errors'][]     = array(
+            $job['errors'][]      = array(
                 'site_id' => 0,
                 'code'    => 'timeout',
                 'message' => __( 'Job timed out after 4 hours.', 'mainwp' ),
@@ -241,10 +241,10 @@ class MainWP_Abilities_Cron {
 
         // Timeout protection (4 hours max).
         if ( ! empty( $job['started'] ) && time() > $job['started'] + 4 * HOUR_IN_SECONDS ) {
-            $job['status']       = 'failed';
-            $job['completed']    = time();
+            $job['status']        = 'failed';
+            $job['completed']     = time();
             $job['job_timed_out'] = true;
-            $job['errors'][]     = array(
+            $job['errors'][]      = array(
                 'site_id' => 0,
                 'code'    => 'timeout',
                 'message' => __( 'Job timed out after 4 hours.', 'mainwp' ),
@@ -504,10 +504,10 @@ class MainWP_Abilities_Cron {
 
         // Timeout protection (4 hours max).
         if ( ! empty( $job['started'] ) && time() > $job['started'] + 4 * HOUR_IN_SECONDS ) {
-            $job['status']       = 'failed';
-            $job['completed']    = time();
+            $job['status']        = 'failed';
+            $job['completed']     = time();
             $job['job_timed_out'] = true;
-            $job['errors'][]     = array(
+            $job['errors'][]      = array(
                 'site_id' => 0,
                 'code'    => 'timeout',
                 'message' => __( 'Job timed out after 4 hours.', 'mainwp' ),
