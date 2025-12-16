@@ -2894,16 +2894,39 @@ class MainWP_Abilities_Updates {
         $site_ids_or_domains = $input['site_ids_or_domains'] ?? array();
         $types               = $input['types'] ?? array( 'core', 'plugins', 'themes', 'translations' );
 
-        $resolution_result = self::get_sites_for_updates( $site_ids_or_domains );
-        if ( is_wp_error( $resolution_result ) ) {
-            return $resolution_result;
+        // If empty, get all sites for current user.
+        if ( empty( $site_ids_or_domains ) ) {
+            $all_sites = MainWP_DB::instance()->get_websites_for_current_user( array( 'selectgroups' => false ) );
+
+            if ( is_wp_error( $all_sites ) ) {
+                return $all_sites;
+            }
+
+            $site_ids_or_domains = array_map(
+                function ( $s ) {
+                    return (int) $s->id;
+                },
+                $all_sites ? $all_sites : array()
+            );
         }
 
-        $sites             = $resolution_result['sites'];
-        $resolution_errors = $resolution_result['errors'];
+        // Check per-site ACLs and filter to allowed sites.
+        $access_check = MainWP_Abilities_Util::check_batch_site_access( $site_ids_or_domains, $input );
+
+        // Normalize ACL-denied errors to match the documented error item schema.
+        $acl_errors = array();
+        foreach ( $access_check['denied'] as $denied_entry ) {
+            $acl_errors[] = array(
+                'identifier' => $denied_entry['identifier'],
+                'code'       => $denied_entry['code'],
+                'message'    => $denied_entry['message'],
+            );
+        }
+
+        $sites = $access_check['allowed'];
 
         if ( empty( $sites ) ) {
-            $normalized_errors = self::normalize_resolution_errors( $resolution_errors );
+            $normalized_errors = self::normalize_resolution_errors( $acl_errors );
             return array(
                 'updated' => array(),
                 'errors'  => $normalized_errors,
@@ -2934,7 +2957,7 @@ class MainWP_Abilities_Updates {
                 'job_id'         => $job_id,
                 'status_url'     => rest_url( "mainwp/v2/jobs/{$job_id}" ),
                 'updates_queued' => count( $sites ),
-                'errors'         => self::normalize_resolution_errors( $resolution_errors ),
+                'errors'         => self::normalize_resolution_errors( $acl_errors ),
             );
         }
 
@@ -2960,7 +2983,7 @@ class MainWP_Abilities_Updates {
         }
 
         $all_updated       = array();
-        $all_errors        = self::normalize_resolution_errors( $resolution_errors );
+        $all_errors        = self::normalize_resolution_errors( $acl_errors );
         $sites_updated_set = array();
 
         foreach ( $sites as $site ) {
@@ -3116,37 +3139,6 @@ class MainWP_Abilities_Updates {
         }
 
         return $normalized;
-    }
-
-    /**
-     * Get sites for update operations.
-     *
-     * Returns both successfully resolved sites and any resolution errors.
-     *
-     * @param array $site_ids_or_domains Site identifiers.
-     * @return array|\WP_Error Array with 'sites' and 'errors' keys, or WP_Error on critical failure.
-     */
-    private static function get_sites_for_updates( array $site_ids_or_domains ) {
-        if ( empty( $site_ids_or_domains ) ) {
-            // Get all sites for current user.
-            $websites = MainWP_DB::instance()->get_websites_for_current_user(
-                array(
-                    'selectgroups' => false,
-                )
-            );
-
-            if ( is_wp_error( $websites ) ) {
-                return $websites;
-            }
-
-            return array(
-                'sites'  => $websites ? $websites : array(),
-                'errors' => array(),
-            );
-        }
-
-        // Resolve specific sites - returns array with 'sites' and 'errors' keys.
-        return MainWP_Abilities_Util::resolve_sites( $site_ids_or_domains );
     }
 
     /**
@@ -3731,7 +3723,10 @@ class MainWP_Abilities_Updates {
                 'ignored_versions' => array( 'all_versions' ),
             );
 
-            MainWP_DB::instance()->update_website_values( $site_id, array( 'ignored_plugins' => wp_json_encode( $ignored_plugins ) ) );
+            $encoded = wp_json_encode( $ignored_plugins );
+            MainWP_DB::instance()->update_website_values( $site_id, array( 'ignored_plugins' => $encoded ) );
+            // Keep in-memory site object in sync for multiple operations in one request.
+            $site->ignored_plugins = $encoded;
 
             /**
              * Action: mainwp_after_plugin_ignore
@@ -3765,7 +3760,10 @@ class MainWP_Abilities_Updates {
                 'ignored_versions' => array( 'all_versions' ),
             );
 
-            MainWP_DB::instance()->update_website_values( $site_id, array( 'ignored_themes' => wp_json_encode( $ignored_themes ) ) );
+            $encoded = wp_json_encode( $ignored_themes );
+            MainWP_DB::instance()->update_website_values( $site_id, array( 'ignored_themes' => $encoded ) );
+            // Keep in-memory site object in sync for multiple operations in one request.
+            $site->ignored_themes = $encoded;
 
             /**
              * Action: mainwp_after_theme_ignore
@@ -3834,7 +3832,10 @@ class MainWP_Abilities_Updates {
 
             unset( $ignored_plugins[ $slug ] );
 
-            MainWP_DB::instance()->update_website_values( $site_id, array( 'ignored_plugins' => wp_json_encode( $ignored_plugins ) ) );
+            $encoded = wp_json_encode( $ignored_plugins );
+            MainWP_DB::instance()->update_website_values( $site_id, array( 'ignored_plugins' => $encoded ) );
+            // Keep in-memory site object in sync for multiple operations in one request.
+            $site->ignored_plugins = $encoded;
 
             /**
              * Action: mainwp_after_plugin_unignore
@@ -3865,7 +3866,10 @@ class MainWP_Abilities_Updates {
 
             unset( $ignored_themes[ $slug ] );
 
-            MainWP_DB::instance()->update_website_values( $site_id, array( 'ignored_themes' => wp_json_encode( $ignored_themes ) ) );
+            $encoded = wp_json_encode( $ignored_themes );
+            MainWP_DB::instance()->update_website_values( $site_id, array( 'ignored_themes' => $encoded ) );
+            // Keep in-memory site object in sync for multiple operations in one request.
+            $site->ignored_themes = $encoded;
 
             /**
              * Action: mainwp_after_theme_unignore

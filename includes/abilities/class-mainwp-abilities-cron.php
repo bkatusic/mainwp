@@ -44,13 +44,31 @@ class MainWP_Abilities_Cron {
     /**
      * Constructor.
      *
+     * Private to enforce singleton pattern via instance().
      * Registers cron action handlers for batch processing.
      */
-    public function __construct() {
+    private function __construct() {
         // Register cron handlers for batch job processing.
         add_action( 'mainwp_process_sync_job', array( $this, 'process_sync_job' ) );
         add_action( 'mainwp_process_update_job', array( $this, 'process_update_job' ) );
         add_action( 'mainwp_process_batch_job', array( $this, 'process_batch_job' ) );
+    }
+
+    /**
+     * Prevent cloning of the singleton instance.
+     *
+     * @return void
+     */
+    private function __clone() {}
+
+    /**
+     * Prevent unserialization of the singleton instance.
+     *
+     * @return void
+     * @throws \Exception Always throws to prevent unserialization.
+     */
+    public function __wakeup() {
+        throw new \Exception( 'Cannot unserialize singleton.' );
     }
 
     /**
@@ -306,7 +324,74 @@ class MainWP_Abilities_Cron {
                     try {
                         switch ( $type ) {
                             case 'core':
-                                MainWP_Connect::fetch_url_authed( $website, 'upgrade' );
+                                /**
+                                 * Fires before WordPress core update action.
+                                 *
+                                 * @since 5.4
+                                 *
+                                 * @param object $website Site object.
+                                 */
+                                do_action( 'mainwp_before_core_update', $website );
+
+                                $information = MainWP_Connect::fetch_url_authed( $website, 'upgrade' );
+
+                                // Validate response - check for transport failure or API error.
+                                if ( false === $information ) {
+                                    $site_success  = false;
+                                    $site_errors[] = 'core: ' . __( 'Connection failed - no response from child site.', 'mainwp' );
+                                    $this->log_debug(
+                                        sprintf(
+                                            'Core upgrade failed for site %d: transport failure (false response)',
+                                            $website->id
+                                        )
+                                    );
+
+                                    /**
+                                     * Fires after WordPress core update action.
+                                     *
+                                     * @since 5.4
+                                     *
+                                     * @param array|false $information Response from child site (false on failure).
+                                     * @param object      $website     Site object.
+                                     */
+                                    do_action( 'mainwp_after_core_update', $information, $website );
+                                } elseif ( is_array( $information ) && isset( $information['error'] ) ) {
+                                    $site_success  = false;
+                                    $site_errors[] = 'core: ' . $information['error'];
+                                    $this->log_debug(
+                                        sprintf(
+                                            'Core upgrade failed for site %d: %s',
+                                            $website->id,
+                                            $information['error']
+                                        )
+                                    );
+
+                                    /** This action is documented above in this switch case. */
+                                    do_action( 'mainwp_after_core_update', $information, $website );
+                                } elseif ( ! is_array( $information ) ) {
+                                    $site_success  = false;
+                                    $site_errors[] = 'core: ' . __( 'Invalid response from child site.', 'mainwp' );
+                                    $this->log_debug(
+                                        sprintf(
+                                            'Core upgrade failed for site %d: invalid response type (%s), raw: %s',
+                                            $website->id,
+                                            gettype( $information ),
+                                            is_scalar( $information ) ? $information : wp_json_encode( $information )
+                                        )
+                                    );
+
+                                    /** This action is documented above in this switch case. */
+                                    do_action( 'mainwp_after_core_update', $information, $website );
+                                } else {
+                                    // Success - fire after-action and sync.
+                                    /** This action is documented above in this switch case. */
+                                    do_action( 'mainwp_after_core_update', $information, $website );
+
+                                    // Sync site data immediately if child returned sync info.
+                                    if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
+                                        MainWP_Sync::sync_information_array( $website, $information['sync'] );
+                                    }
+                                }
                                 break;
 
                             case 'plugins':
@@ -334,21 +419,83 @@ class MainWP_Abilities_Cron {
                                         )
                                     );
 
-                                    /**
-                                     * Fires after plugin/theme/translation update actions.
-                                     *
-                                     * @since 4.1
-                                     *
-                                     * @param array  $information Response from child site.
-                                     * @param string $type        Update type: 'plugin', 'theme', or 'translation'.
-                                     * @param string $list        Comma-separated list of slugs that were updated.
-                                     * @param object $website     Site object.
-                                     */
-                                    do_action( 'mainwp_after_plugin_theme_translation_update', $information, 'plugin', $slugs_list, $website );
+                                    // Validate response - check for transport failure or API error.
+                                    if ( false === $information ) {
+                                        $site_success  = false;
+                                        $site_errors[] = 'plugins: ' . __( 'Connection failed - no response from child site.', 'mainwp' );
+                                        $this->log_debug(
+                                            sprintf(
+                                                'Plugin upgrade failed for site %d (slugs: %s): transport failure (false response)',
+                                                $website->id,
+                                                $slugs_list
+                                            )
+                                        );
+                                    } elseif ( is_array( $information ) && isset( $information['error'] ) ) {
+                                        $site_success  = false;
+                                        $site_errors[] = 'plugins: ' . $information['error'];
+                                        $this->log_debug(
+                                            sprintf(
+                                                'Plugin upgrade failed for site %d (slugs: %s): %s',
+                                                $website->id,
+                                                $slugs_list,
+                                                $information['error']
+                                            )
+                                        );
+                                    } elseif ( ! is_array( $information ) ) {
+                                        $site_success  = false;
+                                        $site_errors[] = 'plugins: ' . __( 'Invalid response from child site.', 'mainwp' );
+                                        $this->log_debug(
+                                            sprintf(
+                                                'Plugin upgrade failed for site %d (slugs: %s): invalid response type (%s), raw: %s',
+                                                $website->id,
+                                                $slugs_list,
+                                                gettype( $information ),
+                                                is_scalar( $information ) ? $information : wp_json_encode( $information )
+                                            )
+                                        );
+                                    } elseif ( isset( $information['upgrades_error'] ) && ! empty( $information['upgrades_error'] ) ) {
+                                        // Partial failure - some plugins failed to update.
+                                        $error_msgs = array();
+                                        foreach ( $information['upgrades_error'] as $slug => $error_msg ) {
+                                            $error_msgs[] = $slug . ': ' . $error_msg;
+                                        }
+                                        $site_success  = false;
+                                        $site_errors[] = 'plugins: ' . implode( '; ', $error_msgs );
+                                        $this->log_debug(
+                                            sprintf(
+                                                'Plugin upgrade partial failure for site %d (slugs: %s): %s',
+                                                $website->id,
+                                                $slugs_list,
+                                                implode( '; ', $error_msgs )
+                                            )
+                                        );
 
-                                    // Sync site data immediately if child returned sync info.
-                                    if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-                                        MainWP_Sync::sync_information_array( $website, $information['sync'] );
+                                        // Still fire after-action and sync for partial success.
+                                        /**
+                                         * Fires after plugin/theme/translation update actions.
+                                         *
+                                         * @since 4.1
+                                         *
+                                         * @param array  $information Response from child site.
+                                         * @param string $type        Update type: 'plugin', 'theme', or 'translation'.
+                                         * @param string $list        Comma-separated list of slugs that were updated.
+                                         * @param object $website     Site object.
+                                         */
+                                        do_action( 'mainwp_after_plugin_theme_translation_update', $information, 'plugin', $slugs_list, $website );
+
+                                        // Sync site data immediately if child returned sync info.
+                                        if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
+                                            MainWP_Sync::sync_information_array( $website, $information['sync'] );
+                                        }
+                                    } else {
+                                        // Success - fire after-action and sync.
+                                        /** This action is documented above in this switch case. */
+                                        do_action( 'mainwp_after_plugin_theme_translation_update', $information, 'plugin', $slugs_list, $website );
+
+                                        // Sync site data immediately if child returned sync info.
+                                        if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
+                                            MainWP_Sync::sync_information_array( $website, $information['sync'] );
+                                        }
                                     }
                                 }
                                 break;
@@ -370,18 +517,128 @@ class MainWP_Abilities_Cron {
                                         )
                                     );
 
-                                    /** This action is documented in includes/abilities/class-mainwp-abilities-cron.php */
-                                    do_action( 'mainwp_after_plugin_theme_translation_update', $information, 'theme', $slugs_list, $website );
+                                    // Validate response - check for transport failure or API error.
+                                    if ( false === $information ) {
+                                        $site_success  = false;
+                                        $site_errors[] = 'themes: ' . __( 'Connection failed - no response from child site.', 'mainwp' );
+                                        $this->log_debug(
+                                            sprintf(
+                                                'Theme upgrade failed for site %d (slugs: %s): transport failure (false response)',
+                                                $website->id,
+                                                $slugs_list
+                                            )
+                                        );
+                                    } elseif ( is_array( $information ) && isset( $information['error'] ) ) {
+                                        $site_success  = false;
+                                        $site_errors[] = 'themes: ' . $information['error'];
+                                        $this->log_debug(
+                                            sprintf(
+                                                'Theme upgrade failed for site %d (slugs: %s): %s',
+                                                $website->id,
+                                                $slugs_list,
+                                                $information['error']
+                                            )
+                                        );
+                                    } elseif ( ! is_array( $information ) ) {
+                                        $site_success  = false;
+                                        $site_errors[] = 'themes: ' . __( 'Invalid response from child site.', 'mainwp' );
+                                        $this->log_debug(
+                                            sprintf(
+                                                'Theme upgrade failed for site %d (slugs: %s): invalid response type (%s), raw: %s',
+                                                $website->id,
+                                                $slugs_list,
+                                                gettype( $information ),
+                                                is_scalar( $information ) ? $information : wp_json_encode( $information )
+                                            )
+                                        );
+                                    } elseif ( isset( $information['upgrades_error'] ) && ! empty( $information['upgrades_error'] ) ) {
+                                        // Partial failure - some themes failed to update.
+                                        $error_msgs = array();
+                                        foreach ( $information['upgrades_error'] as $slug => $error_msg ) {
+                                            $error_msgs[] = $slug . ': ' . $error_msg;
+                                        }
+                                        $site_success  = false;
+                                        $site_errors[] = 'themes: ' . implode( '; ', $error_msgs );
+                                        $this->log_debug(
+                                            sprintf(
+                                                'Theme upgrade partial failure for site %d (slugs: %s): %s',
+                                                $website->id,
+                                                $slugs_list,
+                                                implode( '; ', $error_msgs )
+                                            )
+                                        );
 
-                                    // Sync site data immediately if child returned sync info.
-                                    if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-                                        MainWP_Sync::sync_information_array( $website, $information['sync'] );
+                                        // Still fire after-action and sync for partial success.
+                                        /** This action is documented in includes/abilities/class-mainwp-abilities-cron.php */
+                                        do_action( 'mainwp_after_plugin_theme_translation_update', $information, 'theme', $slugs_list, $website );
+
+                                        // Sync site data immediately if child returned sync info.
+                                        if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
+                                            MainWP_Sync::sync_information_array( $website, $information['sync'] );
+                                        }
+                                    } else {
+                                        // Success - fire after-action and sync.
+                                        /** This action is documented in includes/abilities/class-mainwp-abilities-cron.php */
+                                        do_action( 'mainwp_after_plugin_theme_translation_update', $information, 'theme', $slugs_list, $website );
+
+                                        // Sync site data immediately if child returned sync info.
+                                        if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
+                                            MainWP_Sync::sync_information_array( $website, $information['sync'] );
+                                        }
                                     }
                                 }
                                 break;
 
                             case 'translations':
-                                MainWP_Connect::fetch_url_authed( $website, 'upgradetranslation' );
+                                $information = MainWP_Connect::fetch_url_authed( $website, 'upgradetranslation' );
+
+                                // Validate response - check for transport failure or API error.
+                                if ( false === $information ) {
+                                    $site_success  = false;
+                                    $site_errors[] = 'translations: ' . __( 'Connection failed - no response from child site.', 'mainwp' );
+                                    $this->log_debug(
+                                        sprintf(
+                                            'Translation upgrade failed for site %d: transport failure (false response)',
+                                            $website->id
+                                        )
+                                    );
+                                } elseif ( is_array( $information ) && isset( $information['error'] ) ) {
+                                    $site_success  = false;
+                                    $site_errors[] = 'translations: ' . $information['error'];
+                                    $this->log_debug(
+                                        sprintf(
+                                            'Translation upgrade failed for site %d: %s',
+                                            $website->id,
+                                            $information['error']
+                                        )
+                                    );
+                                } elseif ( ! is_array( $information ) ) {
+                                    $site_success  = false;
+                                    $site_errors[] = 'translations: ' . __( 'Invalid response from child site.', 'mainwp' );
+                                    $this->log_debug(
+                                        sprintf(
+                                            'Translation upgrade failed for site %d: invalid response type (%s)',
+                                            $website->id,
+                                            gettype( $information )
+                                        )
+                                    );
+                                } elseif ( isset( $information['upgrades_error'] ) && ! empty( $information['upgrades_error'] ) ) {
+                                    // Partial failure - some translations failed to update.
+                                    $error_msgs = array();
+                                    foreach ( $information['upgrades_error'] as $slug => $error_msg ) {
+                                        $error_msgs[] = $slug . ': ' . $error_msg;
+                                    }
+                                    $site_success  = false;
+                                    $site_errors[] = 'translations: ' . implode( '; ', $error_msgs );
+                                    $this->log_debug(
+                                        sprintf(
+                                            'Translation upgrade partial failure for site %d: %s',
+                                            $website->id,
+                                            implode( '; ', $error_msgs )
+                                        )
+                                    );
+                                }
+                                // Note: Sync data is already handled by fetch_url_authed for upgrade operations.
                                 break;
                         }
                     } catch ( \Exception $e ) {
@@ -470,7 +727,7 @@ class MainWP_Abilities_Cron {
             $updates = array();
         }
 
-        foreach ( $updates as $slug => $info ) {
+        foreach ( array_keys( $updates ) as $slug ) {
             // If specific items provided, filter to only those.
             if ( ! empty( $specific_items ) && ! in_array( $slug, $specific_items, true ) ) {
                 continue;
@@ -579,12 +836,18 @@ class MainWP_Abilities_Cron {
                         break;
 
                     case 'disconnect':
-                        // Disconnect is a DB update, always succeeds.
-                        MainWP_DB::instance()->update_website_sync_values(
+                        $result = MainWP_DB::instance()->update_website_sync_values(
                             $website->id,
                             array( 'sync_errors' => __( 'Manually disconnected', 'mainwp' ) )
                         );
-                        $success = true;
+                        // wpdb->update() returns int|false: rows affected or false on error.
+                        $success = ( false !== $result );
+                        if ( ! $success ) {
+                            $error = __( 'Database update failed during disconnect.', 'mainwp' );
+                            $this->log_debug(
+                                sprintf( 'Disconnect failed for site %d: database update returned false', $website->id )
+                            );
+                        }
                         break;
 
                     case 'check':
@@ -597,19 +860,26 @@ class MainWP_Abilities_Cron {
                         break;
 
                     case 'suspend':
-                        // Suspend is a DB update, always succeeds.
-                        MainWP_DB::instance()->update_website_values(
+                        $result = MainWP_DB::instance()->update_website_values(
                             $website->id,
                             array( 'suspended' => 1 )
                         );
-                        /**
-                         * Fires when a site is suspended.
-                         *
-                         * @param object $website Site object.
-                         * @param int    $status  Suspension status (1 = suspended).
-                         */
-                        do_action( 'mainwp_site_suspended', $website, 1 );
-                        $success = true;
+                        // wpdb->update() returns int|false: rows affected or false on error.
+                        $success = ( false !== $result );
+                        if ( $success ) {
+                            /**
+                             * Fires when a site is suspended.
+                             *
+                             * @param object $website Site object.
+                             * @param int    $status  Suspension status (1 = suspended).
+                             */
+                            do_action( 'mainwp_site_suspended', $website, 1 );
+                        } else {
+                            $error = __( 'Database update failed during suspend.', 'mainwp' );
+                            $this->log_debug(
+                                sprintf( 'Suspend failed for site %d: database update returned false', $website->id )
+                            );
+                        }
                         break;
 
                     default:

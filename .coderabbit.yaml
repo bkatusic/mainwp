@@ -1,0 +1,193 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# CodeRabbit Configuration for MainWP Dashboard
+# Optimized for MainWP security patterns and conventions
+#
+language: "en-US"
+
+# Reviews configuration
+reviews:
+  profile: "assertive"  # Strict for security-sensitive codebase
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false  # Keep reviews professional
+  review_status: true
+  collapse_walkthrough: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT MERGE"
+      - "Draft"
+    base_branches:
+      - "main"
+      - "develop"
+
+  # Path-based filtering
+  path_filters:
+    # Exclude vendored/third-party code
+    - "!vendor/**"
+    - "!libs/**"
+    - "!assets/js/apexcharts/**"
+    - "!assets/js/gridstack/**"
+    - "!assets/js/dropzone/**"
+    # Exclude generated/build artifacts
+    - "!bin/**"
+    - "!.github/**"
+    # Include all PHP source code
+    - "class/**"
+    - "pages/**"
+    - "widgets/**"
+    - "includes/**"
+    - "modules/**"
+    - "cron/**"
+
+  # Path-specific review instructions
+  path_instructions:
+    # Security-critical: Admin handlers
+    - path: "class/class-mainwp-post-*-handler.php"
+      instructions: |
+        CRITICAL SECURITY REVIEW: These files handle POST/AJAX requests.
+
+        MUST verify ALL of these for every handler method:
+        1. Nonce verification: check_ajax_referer() or wp_verify_nonce()
+        2. Capability check: current_user_can('manage_options') or mainwp_current_user_have_right()
+        3. Input sanitization: sanitize_text_field(), absint(), esc_url_raw(), etc.
+        4. SQL prepared statements: $wpdb->prepare() for ALL queries
+        5. Output escaping in responses (if returning HTML)
+
+        Flag ANY missing security check as CRITICAL.
+
+        MainWP-specific patterns to ACCEPT (not false positives):
+        - Instance() singleton method naming is intentional MainWP convention
+        - 4-space indentation (configured in phpcs.xml)
+        - Code with // phpcs:ignore comments has been reviewed
+
+    # Security-critical: Database operations
+    - path: "class/class-mainwp-db*.php"
+      instructions: |
+        DATABASE SECURITY REVIEW:
+
+        1. ALL queries MUST use $wpdb->prepare() - no exceptions
+        2. Table names must use $wpdb->prefix, never hardcoded 'wp_'
+        3. IN clauses need proper placeholder counts: array_fill(0, count($ids), '%d')
+        4. NEVER concatenate user input into SQL, even if sanitized
+
+        Report unprepared queries as CRITICAL security issues.
+
+    # Security-critical: Child site communication
+    - path: "class/class-mainwp-connect*.php"
+      instructions: |
+        CHILD COMMUNICATION SECURITY:
+
+        1. All child site requests MUST use MainWP_Connect::fetch_url_authed()
+        2. NEVER use direct wp_remote_post/get to child sites
+        3. Verify response structure before processing
+        4. SSL/TLS handling must respect site configuration
+
+        Direct HTTP requests to child sites are CRITICAL vulnerabilities.
+
+    # REST API: Different auth model
+    - path: "includes/rest-api/**"
+      instructions: |
+        REST API REVIEW CONTEXT:
+
+        NOTE: REST API uses Bearer token authentication, NOT nonces.
+        - Do NOT flag missing wp_verify_nonce() in REST controllers
+        - DO verify permission_callback is set on all routes
+        - DO verify input sanitization still applies
+        - DO verify capability checks via permission_callback
+
+        Use MainWP_REST_Authentication for auth, not nonces.
+
+    # Abilities API: Similar to REST
+    - path: "includes/abilities/**"
+      instructions: |
+        ABILITIES API REVIEW CONTEXT:
+
+        Abilities use Bearer token auth via permission_callback.
+        - Do NOT flag missing nonce verification
+        - DO verify permission_callback is set: MainWP_Abilities_Util::check_rest_api_permission
+        - DO verify input sanitization for all parameters
+        - DO verify schema validation is comprehensive
+
+        Error codes should use: ability_invalid_permissions, ability_invalid_input, mainwp_*
+
+    # UI Pages: Output escaping focus
+    - path: "pages/page-mainwp-*.php"
+      instructions: |
+        UI PAGE REVIEW:
+
+        1. ALL displayed variables must use appropriate escaping:
+           - esc_html() for text content
+           - esc_attr() for HTML attributes
+           - esc_url() for URLs (NOT esc_html!)
+           - esc_js() for JavaScript strings
+        2. Use add_query_arg() for URL construction, not string concatenation
+        3. Translations with HTML should use __() not esc_html__()
+
+        Common mistake: Using esc_html() for URLs - should be esc_url().
+
+    # Widgets: Same as pages
+    - path: "widgets/widget-mainwp-*.php"
+      instructions: |
+        WIDGET REVIEW:
+
+        Same rules as UI pages:
+        1. Proper escaping for all output contexts
+        2. esc_url() for URLs, esc_attr() for attributes, esc_html() for text
+        3. add_query_arg() for URL construction
+
+        Check for mixed escaping contexts in complex HTML output.
+
+    # Cron jobs: Background processing
+    - path: "cron/**"
+      instructions: |
+        CRON JOB REVIEW:
+
+        1. No user session available - cannot use current_user_can()
+        2. Must validate all input from scheduled data
+        3. Error handling critical - failures should log, not crash
+        4. Database operations must use prepared statements
+        5. Long-running operations should check for timeouts
+
+    # Tests: Different standards
+    - path: "tests/**"
+      instructions: |
+        TEST CODE REVIEW:
+
+        1. Assertions must be meaningful - can actually fail
+        2. Test methods should start with test_
+        3. Security tests must verify both success AND failure paths
+        4. Mock data is acceptable in tests only
+
+        Do NOT apply production security rules to test fixtures.
+
+  # Tool integrations
+  tools:
+    # Enable AST-based security rules
+    ast-grep:
+      essential_rules: true
+
+    # PHP analysis tools (complement existing phpcs.xml)
+    phpstan:
+      enabled: true
+    phpcs:
+      enabled: true  # Uses existing phpcs.xml config
+    phpmd:
+      enabled: true
+
+    # Security scanning
+    gitleaks:
+      enabled: true  # Detect exposed credentials
+
+# Chat configuration
+chat:
+  auto_reply: true
+
+# Knowledge base (if available)
+knowledge_base:
+  learnings:
+    scope: auto

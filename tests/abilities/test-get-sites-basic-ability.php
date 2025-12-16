@@ -133,8 +133,6 @@ class Test_GetSitesBasic_Ability extends MainWP_Abilities_Test_Case {
         $this->skip_if_no_abilities_api();
         $this->set_current_user_as_admin();
 
-        $site_id = $this->create_test_site();
-
         $result = $this->execute_ability( 'mainwp/get-sites-basic-v1', [
             'per_page' => 9999, // Exceeds maximum
         ] );

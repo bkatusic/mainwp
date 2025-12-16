@@ -2570,12 +2570,28 @@ class MainWP_Abilities_Sites {
     }
 
     /**
-     * Execute delete-site-plugins-v1 ability.
+     * Generic helper to delete remote items (plugins or themes) from a child site.
      *
-     * @param array $input Input parameters.
+     * This method implements the shared logic for plugin and theme deletion:
+     * - Input validation (dry_run/confirm mutual exclusivity)
+     * - Site resolution and access checks
+     * - Dry-run mode with would_affect/warnings
+     * - Confirmed deletion with remote action calls
+     * - Consistent response shaping
+     *
+     * @param array $input   Raw input parameters.
+     * @param array $adapter Configuration for item type with keys:
+     *                       - 'input_key'       (string) Key in input array ('plugins' or 'themes').
+     *                       - 'site_property'   (string) Site object property ('plugins' or 'themes').
+     *                       - 'remote_action'   (string) MainWP Connect action ('plugin_action' or 'theme_action').
+     *                       - 'remote_param'    (string) Remote action param key ('plugin' or 'theme').
+     *                       - 'formatter'       (callable) Formatter function for output.
+     *                       - 'empty_error'     (string) Error message when no items specified.
+     *                       - 'active_warning'  (string) Warning message format for active items (%s = slug).
+     *                       - 'active_singular' (bool) True if only one item can be active (themes).
      * @return array|\WP_Error Result or error.
      */
-    public static function execute_delete_site_plugins( $input ) {
+    private static function execute_delete_remote_items( array $input, array $adapter ) {
         $input = MainWP_Abilities_Util::normalize_input( $input );
 
         $dry_run = ! empty( $input['dry_run'] );
@@ -2599,64 +2615,25 @@ class MainWP_Abilities_Sites {
             return $access_check;
         }
 
-        // Check child version for remote plugin operations.
         $version_check = MainWP_Abilities_Util::check_child_version( $site );
         if ( is_wp_error( $version_check ) ) {
             return $version_check;
         }
 
-        $plugins = isset( $input['plugins'] ) && is_array( $input['plugins'] ) ? $input['plugins'] : array();
-        if ( empty( $plugins ) ) {
+        $items = isset( $input[ $adapter['input_key'] ] ) && is_array( $input[ $adapter['input_key'] ] )
+            ? $input[ $adapter['input_key'] ]
+            : array();
+
+        if ( empty( $items ) ) {
             return new \WP_Error(
                 'mainwp_invalid_input',
-                __( 'No plugins specified.', 'mainwp' ),
+                $adapter['empty_error'],
                 array( 'status' => 400 )
             );
         }
 
         if ( $dry_run ) {
-            $would_affect = array();
-            $warnings     = array();
-
-            // Get installed plugins from site data to check active status.
-            $installed_plugins = ! empty( $site->plugins ) ? json_decode( $site->plugins, true ) : array();
-            if ( ! is_array( $installed_plugins ) ) {
-                $installed_plugins = array();
-            }
-
-            // Build lookup of active plugins by slug.
-            $active_plugins = array();
-            foreach ( $installed_plugins as $key => $plugin_data ) {
-                $slug = is_string( $key ) && ! empty( $key ) ? $key : ( $plugin_data['slug'] ?? '' );
-                if ( ! empty( $slug ) && ! empty( $plugin_data['active'] ) ) {
-                    $active_plugins[ $slug ] = true;
-                }
-            }
-
-            foreach ( $plugins as $plugin_slug ) {
-                $would_affect[] = MainWP_Abilities_Util::format_plugin_for_output(
-                    array(
-                        'slug' => $plugin_slug,
-                        'Name' => $plugin_slug,
-                    )
-                );
-
-                // Add warning for active plugins.
-                if ( isset( $active_plugins[ $plugin_slug ] ) ) {
-                    $warnings[] = sprintf(
-                        /* translators: %s: plugin slug */
-                        __( 'Plugin %s is currently active.', 'mainwp' ),
-                        $plugin_slug
-                    );
-                }
-            }
-
-            return array(
-                'dry_run'      => true,
-                'would_affect' => $would_affect,
-                'count'        => count( $would_affect ),
-                'warnings'     => $warnings,
-            );
+            return self::build_delete_dry_run_response( $site, $items, $adapter );
         }
 
         if ( ! $confirm ) {
@@ -2667,36 +2644,116 @@ class MainWP_Abilities_Sites {
             );
         }
 
+        return self::execute_delete_remote_calls( $site, $items, $adapter );
+    }
+
+    /**
+     * Build dry-run response for delete operations.
+     *
+     * @param object $site    Site object.
+     * @param array  $items   Items to delete.
+     * @param array  $adapter Item type adapter configuration.
+     * @return array Dry-run response.
+     */
+    private static function build_delete_dry_run_response( $site, array $items, array $adapter ): array {
+        $would_affect = array();
+        $warnings     = array();
+
+        // Get installed items from site data.
+        $site_property   = $adapter['site_property'];
+        $installed_items = ! empty( $site->$site_property ) ? json_decode( $site->$site_property, true ) : array();
+        if ( ! is_array( $installed_items ) ) {
+            $installed_items = array();
+        }
+
+        // Build lookup of active items.
+        $active_items       = array();
+        $active_singular    = ! empty( $adapter['active_singular'] );
+        $single_active_slug = '';
+
+        foreach ( $installed_items as $key => $item_data ) {
+            $slug = is_string( $key ) && ! empty( $key ) ? $key : ( $item_data['slug'] ?? '' );
+            if ( ! empty( $slug ) && ! empty( $item_data['active'] ) ) {
+                if ( $active_singular ) {
+                    $single_active_slug = $slug;
+                    break;
+                }
+                $active_items[ $slug ] = true;
+            }
+        }
+
+        $formatter = $adapter['formatter'];
+        foreach ( $items as $slug ) {
+            $would_affect[] = call_user_func(
+                $formatter,
+                array(
+                    'slug' => $slug,
+                    'Name' => $slug,
+                )
+            );
+
+            // Check if item is active and add warning.
+            $is_active = $active_singular
+                ? ( $slug === $single_active_slug )
+                : isset( $active_items[ $slug ] );
+
+            if ( $is_active ) {
+                $warnings[] = sprintf( $adapter['active_warning'], $slug );
+            }
+        }
+
+        return array(
+            'dry_run'      => true,
+            'would_affect' => $would_affect,
+            'count'        => count( $would_affect ),
+            'warnings'     => $warnings,
+        );
+    }
+
+    /**
+     * Execute remote delete calls for items.
+     *
+     * @param object $site    Site object.
+     * @param array  $items   Items to delete.
+     * @param array  $adapter Item type adapter configuration.
+     * @return array Response with deleted items and errors.
+     */
+    private static function execute_delete_remote_calls( $site, array $items, array $adapter ): array {
         $deleted = array();
         $errors  = array();
 
-        foreach ( $plugins as $plugin_slug ) {
+        $remote_action = $adapter['remote_action'];
+        $remote_param  = $adapter['remote_param'];
+        $formatter     = $adapter['formatter'];
+
+        foreach ( $items as $slug ) {
             $result = MainWP_Connect::fetch_url_authed(
                 $site,
-                'plugin_action',
+                $remote_action,
                 array(
-                    'action' => 'delete',
-                    'plugin' => $plugin_slug,
+                    'action'      => 'delete',
+                    $remote_param => $slug,
                 )
             );
 
             if ( is_wp_error( $result ) ) {
                 $errors[] = array(
-                    'slug'    => $plugin_slug,
+                    'slug'    => $slug,
                     'code'    => 'mainwp_' . $result->get_error_code(),
                     'message' => $result->get_error_message(),
                 );
             } elseif ( is_array( $result ) && isset( $result['success'] ) && $result['success'] ) {
-                $deleted[] = MainWP_Abilities_Util::format_plugin_for_output(
+                $deleted[] = call_user_func(
+                    $formatter,
                     array(
-                        'slug' => $plugin_slug,
-                        'Name' => $plugin_slug,
+                        'slug' => $slug,
+                        'Name' => $slug,
                     )
                 );
             } else {
                 $message  = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Deletion failed', 'mainwp' );
                 $errors[] = array(
-                    'slug'    => $plugin_slug,
+                    'slug'    => $slug,
                     'code'    => 'mainwp_deletion_failed',
                     'message' => $message,
                 );
@@ -2706,6 +2763,28 @@ class MainWP_Abilities_Sites {
         return array(
             'deleted' => $deleted,
             'errors'  => $errors,
+        );
+    }
+
+    /**
+     * Execute delete-site-plugins-v1 ability.
+     *
+     * @param array $input Input parameters.
+     * @return array|\WP_Error Result or error.
+     */
+    public static function execute_delete_site_plugins( $input ) {
+        return self::execute_delete_remote_items(
+            $input,
+            array(
+                'input_key'       => 'plugins',
+                'site_property'   => 'plugins',
+                'remote_action'   => 'plugin_action',
+                'remote_param'    => 'plugin',
+                'formatter'       => array( MainWP_Abilities_Util::class, 'format_plugin_for_output' ),
+                'empty_error'     => __( 'No plugins specified.', 'mainwp' ),
+                'active_warning'  => __( 'Plugin %s is currently active.', 'mainwp' ),
+                'active_singular' => false,
+            )
         );
     }
 
@@ -3043,137 +3122,18 @@ class MainWP_Abilities_Sites {
      * @return array|\WP_Error Result or error.
      */
     public static function execute_delete_site_themes( $input ) {
-        $input = MainWP_Abilities_Util::normalize_input( $input );
-
-        $dry_run = ! empty( $input['dry_run'] );
-        $confirm = ! empty( $input['confirm'] );
-
-        if ( $dry_run && $confirm ) {
-            return new \WP_Error(
-                'mainwp_invalid_input',
-                __( 'Cannot specify both dry_run and confirm.', 'mainwp' ),
-                array( 'status' => 400 )
-            );
-        }
-
-        $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
-        if ( is_wp_error( $site ) ) {
-            return $site;
-        }
-
-        $access_check = MainWP_Abilities_Util::check_site_access( $site );
-        if ( is_wp_error( $access_check ) ) {
-            return $access_check;
-        }
-
-        // Check child version for remote theme operations.
-        $version_check = MainWP_Abilities_Util::check_child_version( $site );
-        if ( is_wp_error( $version_check ) ) {
-            return $version_check;
-        }
-
-        $themes = isset( $input['themes'] ) && is_array( $input['themes'] ) ? $input['themes'] : array();
-        if ( empty( $themes ) ) {
-            return new \WP_Error(
-                'mainwp_invalid_input',
-                __( 'No themes specified.', 'mainwp' ),
-                array( 'status' => 400 )
-            );
-        }
-
-        if ( $dry_run ) {
-            $would_affect = array();
-            $warnings     = array();
-
-            // Get installed themes from site data to check active status.
-            $installed_themes = ! empty( $site->themes ) ? json_decode( $site->themes, true ) : array();
-            if ( ! is_array( $installed_themes ) ) {
-                $installed_themes = array();
-            }
-
-            // Find the active theme slug.
-            $active_theme_slug = '';
-            foreach ( $installed_themes as $key => $theme_data ) {
-                $slug = is_string( $key ) && ! empty( $key ) ? $key : ( $theme_data['slug'] ?? '' );
-                if ( ! empty( $slug ) && ! empty( $theme_data['active'] ) ) {
-                    $active_theme_slug = $slug;
-                    break;
-                }
-            }
-
-            foreach ( $themes as $theme_slug ) {
-                $would_affect[] = MainWP_Abilities_Util::format_theme_for_output(
-                    array(
-                        'slug' => $theme_slug,
-                        'Name' => $theme_slug,
-                    )
-                );
-
-                // Add warning for active theme.
-                if ( $theme_slug === $active_theme_slug ) {
-                    $warnings[] = sprintf(
-                        /* translators: %s: theme slug */
-                        __( 'Theme %s is the currently active theme.', 'mainwp' ),
-                        $theme_slug
-                    );
-                }
-            }
-
-            return array(
-                'dry_run'      => true,
-                'would_affect' => $would_affect,
-                'count'        => count( $would_affect ),
-                'warnings'     => $warnings,
-            );
-        }
-
-        if ( ! $confirm ) {
-            return new \WP_Error(
-                'mainwp_confirmation_required',
-                __( 'Deletion requires confirm parameter to be true.', 'mainwp' ),
-                array( 'status' => 400 )
-            );
-        }
-
-        $deleted = array();
-        $errors  = array();
-
-        foreach ( $themes as $theme_slug ) {
-            $result = MainWP_Connect::fetch_url_authed(
-                $site,
-                'theme_action',
-                array(
-                    'action' => 'delete',
-                    'theme'  => $theme_slug,
-                )
-            );
-
-            if ( is_wp_error( $result ) ) {
-                $errors[] = array(
-                    'slug'    => $theme_slug,
-                    'code'    => 'mainwp_' . $result->get_error_code(),
-                    'message' => $result->get_error_message(),
-                );
-            } elseif ( is_array( $result ) && isset( $result['success'] ) && $result['success'] ) {
-                $deleted[] = MainWP_Abilities_Util::format_theme_for_output(
-                    array(
-                        'slug' => $theme_slug,
-                        'Name' => $theme_slug,
-                    )
-                );
-            } else {
-                $message  = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Deletion failed', 'mainwp' );
-                $errors[] = array(
-                    'slug'    => $theme_slug,
-                    'code'    => 'mainwp_deletion_failed',
-                    'message' => $message,
-                );
-            }
-        }
-
-        return array(
-            'deleted' => $deleted,
-            'errors'  => $errors,
+        return self::execute_delete_remote_items(
+            $input,
+            array(
+                'input_key'       => 'themes',
+                'site_property'   => 'themes',
+                'remote_action'   => 'theme_action',
+                'remote_param'    => 'theme',
+                'formatter'       => array( MainWP_Abilities_Util::class, 'format_theme_for_output' ),
+                'empty_error'     => __( 'No themes specified.', 'mainwp' ),
+                'active_warning'  => __( 'Theme %s is the currently active theme.', 'mainwp' ),
+                'active_singular' => true,
+            )
         );
     }
 
@@ -3389,7 +3349,7 @@ class MainWP_Abilities_Sites {
                 'meta'                => array(
                     'show_in_rest' => true,
                     'annotations'  => array(
-                        'instructions' => 'Detects changes made outside MainWP (direct edits, other plugins). Requires Logs module enabled. Results paginated (default 20, max 100). Use date_from/date_to to filter by time range.',
+                        'instructions' => 'Detects changes made outside MainWP (direct edits, other plugins). Requires Logs module enabled. Results paginated (default 20, max 100).',
                         'readonly'     => false,
                         'destructive'  => false,
                         'idempotent'   => true,
@@ -3948,9 +3908,9 @@ class MainWP_Abilities_Sites {
         $per_page = max( 1, min( 100, (int) $input['per_page'] ) );
 
         $filters = array(
-            'offset'      => ( $page - 1 ) * $per_page,
-            'number'      => $per_page,
-            'selectgroup' => 'id,url,name',
+            'offset'       => ( $page - 1 ) * $per_page,
+            'number'       => $per_page,
+            'selectgroups' => false,
         );
 
         if ( ! empty( $input['status'] ) ) {
@@ -3966,7 +3926,16 @@ class MainWP_Abilities_Sites {
         }
 
         $sites = MainWP_DB::instance()->get_websites_for_current_user( $filters );
+
+        if ( is_wp_error( $sites ) ) {
+            return $sites;
+        }
+
         $total = MainWP_DB::instance()->get_websites_count_for_current_user( $filters );
+
+        if ( is_wp_error( $total ) ) {
+            return $total;
+        }
 
         $items = array();
         foreach ( $sites as $site ) {
@@ -4025,18 +3994,18 @@ class MainWP_Abilities_Sites {
      */
     private static function get_batch_sites_input_schema(): array {
         return array(
-            'type'       => 'object',
-            'required'   => array( 'site_ids_or_domains' ),
-            'properties' => array(
+            'type'                 => array( 'object', 'null' ),
+            'properties'           => array(
                 'site_ids_or_domains' => array(
                     'type'        => 'array',
-                    'description' => __( 'Site IDs or domains', 'mainwp' ),
+                    'description' => __( 'Site IDs or domains. Empty array means all sites.', 'mainwp' ),
                     'items'       => array(
                         'type' => array( 'integer', 'string' ),
                     ),
-                    'minItems'    => 1,
+                    'default'     => array(),
                 ),
             ),
+            'additionalProperties' => false,
         );
     }
 
@@ -4092,18 +4061,27 @@ class MainWP_Abilities_Sites {
 
         $identifiers = isset( $input['site_ids_or_domains'] ) && is_array( $input['site_ids_or_domains'] ) ? $input['site_ids_or_domains'] : array();
 
+        // If empty, get all sites for current user.
         if ( empty( $identifiers ) ) {
-            return new \WP_Error(
-                'mainwp_invalid_input',
-                __( 'No sites specified.', 'mainwp' ),
-                array( 'status' => 400 )
+            $all_sites = MainWP_DB::instance()->get_websites_for_current_user( array( 'selectgroups' => false ) );
+
+            // Handle potential errors from DB query.
+            if ( is_wp_error( $all_sites ) ) {
+                return $all_sites;
+            }
+
+            $identifiers = array_map(
+                function ( $s ) {
+                    return (int) $s->id;
+                },
+                $all_sites ? $all_sites : array()
             );
         }
 
-        // Resolve sites and capture any resolution errors.
-        $resolved = MainWP_Abilities_Util::resolve_sites( $identifiers );
-        $sites    = $resolved['sites'];
-        $errors   = $resolved['errors']; // Pre-populate with resolution errors.
+        // Resolve sites and enforce per-site ACLs.
+        $access = MainWP_Abilities_Util::check_batch_site_access( $identifiers, $input );
+        $sites  = $access['allowed'];
+        $errors = $access['denied']; // Resolution + access-denied errors.
 
         if ( empty( $sites ) ) {
             return new \WP_Error(
@@ -4124,7 +4102,7 @@ class MainWP_Abilities_Sites {
                 'queued' => true,
                 'job_id' => $job_id,
                 'total'  => count( $sites ),
-                'errors' => $errors, // Include resolution errors in queued response.
+                'errors' => $errors, // Include resolution + ACL errors in queued response.
             );
         }
 
@@ -4206,18 +4184,27 @@ class MainWP_Abilities_Sites {
 
         $identifiers = isset( $input['site_ids_or_domains'] ) && is_array( $input['site_ids_or_domains'] ) ? $input['site_ids_or_domains'] : array();
 
+        // If empty, get all sites for current user.
         if ( empty( $identifiers ) ) {
-            return new \WP_Error(
-                'mainwp_invalid_input',
-                __( 'No sites specified.', 'mainwp' ),
-                array( 'status' => 400 )
+            $all_sites = MainWP_DB::instance()->get_websites_for_current_user( array( 'selectgroups' => false ) );
+
+            // Handle potential errors from DB query.
+            if ( is_wp_error( $all_sites ) ) {
+                return $all_sites;
+            }
+
+            $identifiers = array_map(
+                function ( $s ) {
+                    return (int) $s->id;
+                },
+                $all_sites ? $all_sites : array()
             );
         }
 
-        // Resolve sites and capture any resolution errors.
-        $resolved = MainWP_Abilities_Util::resolve_sites( $identifiers );
-        $sites    = $resolved['sites'];
-        $errors   = $resolved['errors']; // Pre-populate with resolution errors.
+        // Resolve sites and enforce per-site ACLs.
+        $access = MainWP_Abilities_Util::check_batch_site_access( $identifiers, $input );
+        $sites  = $access['allowed'];
+        $errors = $access['denied']; // Resolution + access-denied errors.
 
         if ( empty( $sites ) ) {
             return new \WP_Error(
@@ -4238,7 +4225,7 @@ class MainWP_Abilities_Sites {
                 'queued' => true,
                 'job_id' => $job_id,
                 'total'  => count( $sites ),
-                'errors' => $errors, // Include resolution errors in queued response.
+                'errors' => $errors, // Include resolution + ACL errors in queued response.
             );
         }
 
@@ -4302,18 +4289,27 @@ class MainWP_Abilities_Sites {
 
         $identifiers = isset( $input['site_ids_or_domains'] ) && is_array( $input['site_ids_or_domains'] ) ? $input['site_ids_or_domains'] : array();
 
+        // If empty, get all sites for current user.
         if ( empty( $identifiers ) ) {
-            return new \WP_Error(
-                'mainwp_invalid_input',
-                __( 'No sites specified.', 'mainwp' ),
-                array( 'status' => 400 )
+            $all_sites = MainWP_DB::instance()->get_websites_for_current_user( array( 'selectgroups' => false ) );
+
+            // Handle potential errors from DB query.
+            if ( is_wp_error( $all_sites ) ) {
+                return $all_sites;
+            }
+
+            $identifiers = array_map(
+                function ( $s ) {
+                    return (int) $s->id;
+                },
+                $all_sites ? $all_sites : array()
             );
         }
 
-        // Resolve sites and capture any resolution errors.
-        $resolved = MainWP_Abilities_Util::resolve_sites( $identifiers );
-        $sites    = $resolved['sites'];
-        $errors   = $resolved['errors']; // Pre-populate with resolution errors.
+        // Resolve sites and enforce per-site ACLs.
+        $access = MainWP_Abilities_Util::check_batch_site_access( $identifiers, $input );
+        $sites  = $access['allowed'];
+        $errors = $access['denied']; // Resolution + access-denied errors.
 
         if ( empty( $sites ) ) {
             return new \WP_Error(
@@ -4334,7 +4330,7 @@ class MainWP_Abilities_Sites {
                 'queued' => true,
                 'job_id' => $job_id,
                 'total'  => count( $sites ),
-                'errors' => $errors, // Include resolution errors in queued response.
+                'errors' => $errors, // Include resolution + ACL errors in queued response.
             );
         }
 
@@ -4410,18 +4406,27 @@ class MainWP_Abilities_Sites {
 
         $identifiers = isset( $input['site_ids_or_domains'] ) && is_array( $input['site_ids_or_domains'] ) ? $input['site_ids_or_domains'] : array();
 
+        // If empty, get all sites for current user.
         if ( empty( $identifiers ) ) {
-            return new \WP_Error(
-                'mainwp_invalid_input',
-                __( 'No sites specified.', 'mainwp' ),
-                array( 'status' => 400 )
+            $all_sites = MainWP_DB::instance()->get_websites_for_current_user( array( 'selectgroups' => false ) );
+
+            // Handle potential errors from DB query.
+            if ( is_wp_error( $all_sites ) ) {
+                return $all_sites;
+            }
+
+            $identifiers = array_map(
+                function ( $s ) {
+                    return (int) $s->id;
+                },
+                $all_sites ? $all_sites : array()
             );
         }
 
-        // Resolve sites and capture any resolution errors.
-        $resolved = MainWP_Abilities_Util::resolve_sites( $identifiers );
-        $sites    = $resolved['sites'];
-        $errors   = $resolved['errors']; // Pre-populate with resolution errors.
+        // Resolve sites and enforce per-site ACLs.
+        $access = MainWP_Abilities_Util::check_batch_site_access( $identifiers, $input );
+        $sites  = $access['allowed'];
+        $errors = $access['denied']; // Resolution + access-denied errors.
 
         if ( empty( $sites ) ) {
             return new \WP_Error(
@@ -4442,7 +4447,7 @@ class MainWP_Abilities_Sites {
                 'queued' => true,
                 'job_id' => $job_id,
                 'total'  => count( $sites ),
-                'errors' => $errors, // Include resolution errors in queued response.
+                'errors' => $errors, // Include resolution + ACL errors in queued response.
             );
         }
 

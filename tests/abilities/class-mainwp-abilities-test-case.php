@@ -141,17 +141,17 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 		// Clean up job transients created during tests.
 		foreach ( $this->created_sync_job_ids as $job_id ) {
 			delete_transient( 'mainwp_sync_job_' . $job_id );
-			wp_unschedule_hook( 'mainwp_process_sync_job', [ $job_id ] );
+			wp_clear_scheduled_hook( 'mainwp_process_sync_job', [ $job_id ] );
 		}
 
 		foreach ( $this->created_update_job_ids as $job_id ) {
 			delete_transient( 'mainwp_update_job_' . $job_id );
-			wp_unschedule_hook( 'mainwp_process_update_job', [ $job_id ] );
+			wp_clear_scheduled_hook( 'mainwp_process_update_job', [ $job_id ] );
 		}
 
 		foreach ( $this->created_batch_job_ids as $job_id ) {
 			delete_transient( 'mainwp_batch_job_' . $job_id );
-			wp_unschedule_hook( 'mainwp_process_batch_job', [ $job_id ] );
+			wp_clear_scheduled_hook( 'mainwp_process_batch_job', [ $job_id ] );
 		}
 
 		// Remove any mock filters.

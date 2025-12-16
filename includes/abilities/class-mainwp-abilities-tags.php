@@ -1088,8 +1088,7 @@ class MainWP_Abilities_Tags {
             );
         }
 
-        $all_sites = MainWP_DB::instance()->get_websites_by_group_id( $tag_id );
-        $total     = is_array( $all_sites ) ? count( $all_sites ) : 0;
+        $total = MainWP_DB::instance()->get_websites_count_by_group_id( $tag_id );
 
         $formatted_sites = array();
         foreach ( $sites as $site ) {
@@ -1121,25 +1120,38 @@ class MainWP_Abilities_Tags {
             return $tag;
         }
 
-        $all_clients = MainWP_DB_Client::instance()->get_wp_client_by(
+        $offset = ( $page - 1 ) * $per_page;
+
+        // Get total count via efficient COUNT query.
+        $total = MainWP_DB_Client::instance()->get_wp_client_by(
             'all',
             null,
             OBJECT,
-            array( 'by_tags' => array( $tag_id ) )
+            array(
+                'by_tags'    => array( $tag_id ),
+                'count_only' => true,
+            )
         );
 
-        if ( ! is_array( $all_clients ) ) {
+        // Get only the page of clients we need via SQL LIMIT/OFFSET.
+        $clients = MainWP_DB_Client::instance()->get_wp_client_by(
+            'all',
+            null,
+            OBJECT,
+            array(
+                'by_tags' => array( $tag_id ),
+                'offset'  => $offset,
+                'limit'   => $per_page,
+            )
+        );
+
+        if ( ! is_array( $clients ) ) {
             return new \WP_Error(
                 'mainwp_operation_failed',
                 __( 'Failed to retrieve clients for tag.', 'mainwp' ),
                 array( 'status' => 500 )
             );
         }
-
-        $total = count( $all_clients );
-
-        $offset  = ( $page - 1 ) * $per_page;
-        $clients = array_slice( $all_clients, $offset, $per_page );
 
         $formatted_clients = array();
         foreach ( $clients as $client ) {

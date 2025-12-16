@@ -79,7 +79,7 @@ class MainWP_Abilities_Clients {
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false,
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -234,7 +234,7 @@ class MainWP_Abilities_Clients {
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false,
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -303,7 +303,7 @@ class MainWP_Abilities_Clients {
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false,
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -766,7 +766,7 @@ class MainWP_Abilities_Clients {
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false,
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -865,7 +865,7 @@ class MainWP_Abilities_Clients {
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false,
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -946,7 +946,7 @@ class MainWP_Abilities_Clients {
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => 'Requires Cost Tracker module',
-                        'readonly'     => false,
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),

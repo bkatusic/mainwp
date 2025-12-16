@@ -2528,6 +2528,31 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
     }
 
     /**
+     * Get count of child sites by group ID.
+     *
+     * Uses an efficient COUNT query instead of fetching all rows.
+     *
+     * @param int $id Group ID.
+     *
+     * @return int Number of sites in the group.
+     *
+     * @uses \MainWP\Dashboard\MainWP_Utility::ctype_digit()
+     */
+    public function get_websites_count_by_group_id( $id ) {
+        if ( ! MainWP_Utility::ctype_digit( $id ) ) {
+            return 0;
+        }
+
+        $where_allowed = $this->get_sql_where_allow_access_sites( 'wp', 'no' );
+
+        $qry = 'SELECT COUNT(DISTINCT wp.id) FROM ' . $this->table_name( 'wp' ) . ' wp
+                JOIN ' . $this->table_name( 'wp_group' ) . ' wpgroup ON wp.id = wpgroup.wpid
+                WHERE wpgroup.groupid = ' . intval( $id ) . $where_allowed;
+
+        return (int) $this->wpdb->get_var( $qry );
+    }
+
+    /**
      * Get child sites by group id via SQL.
      *
      * @param int    $id           Group ID.

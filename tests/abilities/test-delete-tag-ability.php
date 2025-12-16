@@ -55,6 +55,7 @@ class MainWP_Delete_Tag_Ability_Test extends MainWP_Abilities_Test_Case {
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'deleted', $result );
 		$this->assertArrayHasKey( 'tag', $result );
+		$this->assertIsArray( $result['tag'], 'Tag should be an array.' );
 		$this->assertTrue( $result['deleted'] );
 		$this->assertEquals( $tag_id, $result['tag']['id'] );
 		$this->assertEquals( 'Tag To Delete', $result['tag']['name'] );
@@ -205,6 +206,7 @@ class MainWP_Delete_Tag_Ability_Test extends MainWP_Abilities_Test_Case {
 		$this->assertNotWPError( $result );
 		$this->assertArrayHasKey( 'dry_run', $result );
 		$this->assertArrayHasKey( 'would_affect', $result );
+		$this->assertIsArray( $result['would_affect'], 'would_affect should be an array.' );
 		$this->assertTrue( $result['dry_run'] );
 		$this->assertEquals( $tag_id, $result['would_affect']['id'] );
 		$this->assertEquals( 'Tag For Dry Run', $result['would_affect']['name'] );

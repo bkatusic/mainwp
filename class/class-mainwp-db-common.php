@@ -288,15 +288,23 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
 
 
     /**
-     * Medthod get_groups_and_count()
+     * Method get_tags()
      *
-     * Get groups and count.
+     * Get tags (groups) with optional filtering and pagination.
      *
      * @since 5.1.1
      *
-     * @param array $params      params.
+     * @param array $params Optional parameters for filtering and pagination.
+     *                      - 's'              (string) Search term for tag name or ID.
+     *                      - 'exclude'        (array)  Tag IDs to exclude.
+     *                      - 'include'        (array)  Tag IDs to include.
+     *                      - 'page'           (int)    Page number for pagination.
+     *                      - 'per_page'       (int)    Items per page for pagination.
+     *                      - 'with_sites_ids' (bool)   Include associated site IDs.
+     *                      - 'count'          (bool)   Return count only instead of results.
      *
-     * @return object|null Database query result for groups and count or null on failure.
+     * @return object[]|int When $params['count'] is true, returns an integer count of matching tags.
+     *                      Otherwise, returns an array of tag objects keyed by ID, or empty array on failure.
      */
     public function get_tags( $params = array() ) { //phpcs:ignore -- NOSONAR - complex.
 

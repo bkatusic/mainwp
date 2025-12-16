@@ -521,23 +521,33 @@ class MainWP_Sync_Sites_Ability_Test extends MainWP_Abilities_Test_Case {
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_admin();
 
-		// Create exactly 50 test sites (at threshold).
-		$site_ids = [];
-		for ( $i = 0; $i < 50; $i++ ) {
-			$site_ids[] = $this->create_test_site( [
-				'name'                 => "Threshold Site {$i}",
-				'offline_check_result' => 1,
+		// Lower threshold to 50 for efficient testing.
+		$threshold_callback = function () {
+			return 50;
+		};
+		add_filter( 'mainwp_abilities_batch_threshold', $threshold_callback );
+
+		try {
+			// Create exactly 50 test sites (at lowered threshold).
+			$site_ids = [];
+			for ( $i = 0; $i < 50; $i++ ) {
+				$site_ids[] = $this->create_test_site( [
+					'name'                 => "Threshold Site {$i}",
+					'offline_check_result' => 1,
+				] );
+			}
+
+			$result = $this->execute_ability( 'mainwp/sync-sites-v1', [
+				'site_ids_or_domains' => $site_ids,
 			] );
+
+			$this->assertNotWPError( $result );
+
+			// At threshold (50) should execute immediately, not queue.
+			$this->assertFalse( $result['queued'] ?? false, 'Exactly at threshold (50) should execute immediately.' );
+			$this->assertArrayHasKey( 'synced', $result );
+		} finally {
+			remove_filter( 'mainwp_abilities_batch_threshold', $threshold_callback );
 		}
-
-		$result = $this->execute_ability( 'mainwp/sync-sites-v1', [
-			'site_ids_or_domains' => $site_ids,
-		] );
-
-		$this->assertNotWPError( $result );
-
-		// At threshold (50) should execute immediately.
-		$this->assertFalse( $result['queued'] ?? false, '50 sites should execute immediately.' );
-		$this->assertArrayHasKey( 'synced', $result );
 	}
 }

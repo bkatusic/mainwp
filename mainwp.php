@@ -130,7 +130,9 @@ require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' 
 require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities.php'; // NOSONAR -- WP compatible.
 
 // Initialize Abilities API integration (does nothing if Abilities API not available).
-\MainWP\Dashboard\MainWP_Abilities::init();
+if ( class_exists( '\MainWP\Dashboard\MainWP_Abilities' ) ) {
+    \MainWP\Dashboard\MainWP_Abilities::init();
+}
 
 // Detect if secupress_scanner is running.
 $mainwp_is_secupress_scanning = false;

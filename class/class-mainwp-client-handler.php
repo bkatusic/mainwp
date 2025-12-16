@@ -407,6 +407,7 @@ class MainWP_Client_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                 return array(
                     'success'   => true,
                     'client_id' => $client_id,
+                    'clientid'  => $client_id, // Legacy key for backwards compatibility.
                 );
 
             } else {
@@ -449,6 +450,7 @@ class MainWP_Client_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                 return array(
                     'success'   => true,
                     'client_id' => $inserted->client_id,
+                    'clientid'  => $inserted->client_id, // Legacy key for backwards compatibility.
                 );
             }
         } catch ( \Exception $e ) {

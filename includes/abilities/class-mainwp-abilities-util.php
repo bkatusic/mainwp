@@ -735,8 +735,12 @@ class MainWP_Abilities_Util {
 
             // Get site_info from DB option (stored as JSON).
             // Pass full $site object to allow property check before DB query.
-            $site_info = MainWP_DB::instance()->get_website_option( $site, 'site_info' );
-            $site_info = ! empty( $site_info ) ? json_decode( $site_info, true ) : array();
+            $site_info_raw = MainWP_DB::instance()->get_website_option( $site, 'site_info' );
+            $site_info     = ! empty( $site_info_raw ) ? json_decode( $site_info_raw, true ) : array();
+            // Ensure $site_info is an array (json_decode returns null on invalid JSON).
+            if ( ! is_array( $site_info ) ) {
+                $site_info = array();
+            }
 
             $output['wp_version']    = isset( $site_info['wpversion'] ) ? $site_info['wpversion'] : '';
             $output['php_version']   = isset( $site_info['phpversion'] ) ? $site_info['phpversion'] : '';

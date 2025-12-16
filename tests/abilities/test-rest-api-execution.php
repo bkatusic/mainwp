@@ -258,10 +258,16 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		$data = array_merge( $defaults, $args );
 		$data['wpid'] = $site_id;
 
+		// Build format array dynamically to match $data keys/values.
+		$formats = [];
+		foreach ( $data as $value ) {
+			$formats[] = is_int( $value ) ? '%d' : '%s';
+		}
+
 		$wpdb->insert(
 			$wpdb->prefix . 'mainwp_wp_sync',
 			$data,
-			[ '%d', '%s', '%s' ]
+			$formats
 		);
 	}
 
@@ -475,7 +481,7 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 	 *
 	 * @return void
 	 */
-	public function test_list_sites_via_rest_post_no_input() {
+	public function test_list_sites_via_rest_get_no_input() {
 		$this->skip_if_no_abilities_api();
 		$this->authenticate_as_admin();
 
@@ -1351,14 +1357,18 @@ class MainWP_REST_API_Execution_Test extends \WP_Test_REST_TestCase {
 		$this->assertIsInt( $data['per_page'] );
 		$this->assertIsInt( $data['total'] );
 
-		// Verify items structure.
-		if ( ! empty( $data['items'] ) ) {
-			$item = $data['items'][0];
-			$this->assertArrayHasKey( 'id', $item );
-			$this->assertArrayHasKey( 'url', $item );
-			$this->assertArrayHasKey( 'name', $item );
-			$this->assertArrayHasKey( 'status', $item );
-		}
+		// Verify items structure and that created site is in response.
+		$this->assertNotEmpty( $data['items'], 'Items should not be empty after creating a test site' );
+
+		$item = $data['items'][0];
+		$this->assertArrayHasKey( 'id', $item );
+		$this->assertArrayHasKey( 'url', $item );
+		$this->assertArrayHasKey( 'name', $item );
+		$this->assertArrayHasKey( 'status', $item );
+
+		// Verify the created site appears in the response.
+		$site_ids = array_column( $data['items'], 'id' );
+		$this->assertContains( $site_id, $site_ids, 'Created test site should appear in list-sites-v1 response' );
 	}
 
 	/**

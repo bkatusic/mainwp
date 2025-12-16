@@ -640,7 +640,13 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
      * @param string $by by.
      * @param mixed  $value by value.
      * @param mixed  $obj Format data.
-     * @param bool   $params Others params.
+     * @param array  $params Others params. Supports:
+     *               - 'with_selected_sites' (bool) Include selected sites.
+     *               - 'with_tags' (bool) Include tags info.
+     *               - 'by_tags' (array) Filter by tag IDs.
+     *               - 'offset' (int) SQL offset for pagination.
+     *               - 'limit' (int) SQL limit for pagination.
+     *               - 'count_only' (bool) Return only count instead of results.
      *
      * @return mixed $result results.
      */
@@ -649,6 +655,9 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
         $with_selected_sites = isset( $params['with_selected_sites'] ) && $params['with_selected_sites'] ? true : false;
         $with_tags           = isset( $params['with_tags'] ) && $params['with_tags'] ? true : false;
         $group_ids           = isset( $params['by_tags'] ) ? $params['by_tags'] : '';
+        $count_only          = isset( $params['count_only'] ) && $params['count_only'] ? true : false;
+        $offset              = isset( $params['offset'] ) ? intval( $params['offset'] ) : null;
+        $limit               = isset( $params['limit'] ) ? intval( $params['limit'] ) : null;
 
         // valid group ids.
         if ( is_array( $group_ids ) ) {
@@ -706,7 +715,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             $result_tags = $this->wpdb->get_results( $sql_tags );
 
             if ( empty( $result_tags ) ) {
-                return array();
+                return $count_only ? 0 : array();
             } else {
                 $cli_ids = array();
                 foreach ( $result_tags as $item ) {
@@ -732,11 +741,24 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
         $join_contact = ' LEFT JOIN ' . $this->table_name( 'wp_clients_contacts' ) . ' cc ON wc.primary_contact_id = cc.contact_id ';
 
         if ( 'all' === $by ) {
+            // Handle count-only mode for efficient pagination total.
+            if ( $count_only ) {
+                $sql  = ' SELECT COUNT(*) ';
+                $sql .= ' FROM ' . $this->table_name( 'wp_clients' ) . ' wc ';
+                $sql .= ' WHERE 1 ' . $where_clients;
+                return (int) $this->wpdb->get_var( $sql );
+            }
+
             $sql  = ' SELECT wc.*, cc.* ' . $select_sites . $select_tags;
             $sql .= ' FROM ' . $this->table_name( 'wp_clients' ) . ' wc ';
             $sql .= $join_contact;
             $sql .= ' WHERE 1 ' . $where_clients;
             $sql .= ' ORDER BY wc.name';
+
+            // Add pagination if offset and limit are provided.
+            if ( null !== $offset && null !== $limit && $limit > 0 ) {
+                $sql .= $this->wpdb->prepare( ' LIMIT %d, %d', $offset, $limit );
+            }
         }
 
         if ( ! empty( $sql ) ) {

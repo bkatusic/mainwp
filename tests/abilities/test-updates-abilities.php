@@ -232,6 +232,10 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 		foreach ( $result['updates'] as $update ) {
 			$this->assertEquals( $site1_id, $update['site_id'], 'Filtered updates should be for specified site.' );
 		}
+
+		// Verify site2 is excluded from results.
+		$returned_site_ids = array_column( $result['updates'], 'site_id' );
+		$this->assertNotContains( $site2_id, $returned_site_ids, 'Updates for site2 should be excluded when filtering by site1.' );
 	}
 
 	// =========================================================================
@@ -431,6 +435,8 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 		] );
 
 		$this->assertNotWPError( $result );
+		$this->assertArrayHasKey( 'summary', $result, 'Result should have summary key.' );
+		$this->assertIsArray( $result['summary'], 'Summary should be an array.' );
 
 		// Should have some errors for offline site.
 		$this->assertGreaterThan( 0, $result['summary']['total_errors'], 'Should have errors for offline site.' );
@@ -486,6 +492,7 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 		$this->assertArrayHasKey( 'updated', $result );
 		$this->assertArrayHasKey( 'errors', $result );
 		$this->assertArrayHasKey( 'summary', $result );
+		$this->assertIsArray( $result['summary'], 'Summary should be an array.' );
 
 		// Verify summary reflects correct counts.
 		$this->assertArrayHasKey( 'total_updated', $result['summary'] );
@@ -853,8 +860,9 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 		$site1_id = $this->create_test_site( [ 'name' => 'Ignored Site 1' ] );
 		$site2_id = $this->create_test_site( [ 'name' => 'Ignored Site 2' ] );
 
-		// Seed site1 with ignored plugin.
+		// Seed both sites with different ignored plugins.
 		$this->set_site_ignored_plugins( $site1_id, [ 'test-plugin' => 'Test Plugin' ] );
+		$this->set_site_ignored_plugins( $site2_id, [ 'other-plugin' => 'Other Plugin' ] );
 
 		// Request only site1.
 		$result = $this->execute_ability( 'mainwp/list-ignored-updates-v1', [
@@ -863,9 +871,10 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 
 		$this->assertNotWPError( $result );
 
-		// All items should be for site1.
+		// All items should be for site1, none for site2.
 		foreach ( $result['ignored'] as $item ) {
 			$this->assertEquals( $site1_id, $item['site_id'], 'Filtered items should be for site1.' );
+			$this->assertNotEquals( $site2_id, $item['site_id'], 'Site2 items should be excluded from filtered results.' );
 		}
 	}
 
@@ -953,6 +962,7 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'errors', $result );
 		$this->assertArrayHasKey( 'summary', $result );
+		$this->assertIsArray( $result['summary'], 'Summary should be an array.' );
 
 		// Find connection failure error for this site.
 		$found_connection_error = false;
@@ -1025,6 +1035,7 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'errors', $result );
 		$this->assertArrayHasKey( 'summary', $result );
+		$this->assertIsArray( $result['summary'], 'Summary should be an array.' );
 
 		// Find auth failure error for this site.
 		$found_auth_error = false;

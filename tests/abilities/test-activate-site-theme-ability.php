@@ -54,9 +54,10 @@ class Test_ActivateSiteTheme_Ability extends MainWP_Abilities_Test_Case {
         ] );
 
         $this->assertNotWPError( $result, 'Should return successful result.' );
-        $this->assertIsArray( $result );
-        $this->assertArrayHasKey('theme', $result);
-        $this->assertArrayHasKey('slug', $result['theme']);
+        $this->assertIsArray( $result, 'Result should be an array.' );
+        $this->assertArrayHasKey( 'theme', $result, 'Result should contain theme key.' );
+        $this->assertIsArray( $result['theme'], 'Result theme should be an array.' );
+        $this->assertArrayHasKey( 'slug', $result['theme'], 'Theme should contain slug key.' );
     }
 
     /**

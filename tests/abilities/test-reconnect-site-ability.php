@@ -123,8 +123,6 @@ class Test_ReconnectSite_Ability extends MainWP_Abilities_Test_Case {
         $this->skip_if_no_abilities_api();
         $this->set_current_user_as_admin();
 
-        $site_id = $this->create_test_site();
-
         $result = $this->execute_ability( 'mainwp/reconnect-site-v1', [
             'site_id_or_domain' => 999999, // Non-existent site
         ] );

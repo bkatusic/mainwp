@@ -38,7 +38,7 @@ class Test_CountSites_Ability extends MainWP_Abilities_Test_Case {
         $this->skip_if_no_abilities_api();
         $this->set_current_user_as_admin();
 
-        $site_id = $this->create_test_site( [
+        $this->create_test_site( [
             'name' => 'Test Site',
             'url'  => 'https://test-count-sites.example.com/',
         ] );
@@ -105,12 +105,15 @@ class Test_CountSites_Ability extends MainWP_Abilities_Test_Case {
         $this->skip_if_no_abilities_api();
         $this->set_current_user_as_admin();
 
-        $site_id = $this->create_test_site();
-
         $result = $this->execute_ability( 'mainwp/count-sites-v1', [
             'status' => 'invalid_status', // Invalid enum value
         ] );
 
         $this->assertWPError( $result, 'Invalid input should return WP_Error.' );
+        $this->assertEquals(
+            'ability_invalid_input',
+            $result->get_error_code(),
+            'Should return ability_invalid_input error code for schema validation failure.'
+        );
     }
 }

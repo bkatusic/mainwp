@@ -8,14 +8,16 @@
  * 1. Copy this file to: test-{ability-name}.php
  * 2. Rename the class: Test_{Ability_Name}_Ability
  * 3. Replace {ability-name} with your ability slug (e.g., "list-clients-v1")
- * 4. Replace {Category} with the category name (e.g., "Clients")
- * 5. Fill in the test methods with your specific assertions
- * 6. Delete this header comment block
+ * 4. Replace {ability} in method names with the snake_case slug without version
+ *    (e.g., for "list-clients-v1", use "list_clients" → test_list_clients_*)
+ * 5. Replace {Category} with the category name (e.g., "Clients")
+ * 6. Fill in the test methods with your specific assertions
+ * 7. Delete this header comment block
  *
- * @package MainWP\Dashboard\Tests\Abilities
+ * @package MainWP\Dashboard\Tests
  */
 
-namespace MainWP\Dashboard\Tests\Abilities;
+namespace MainWP\Dashboard\Tests;
 
 /**
  * Tests for mainwp/{ability-name} ability.

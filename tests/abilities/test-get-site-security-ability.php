@@ -102,23 +102,20 @@ class Test_GetSiteSecurity_Ability extends MainWP_Abilities_Test_Case {
     }
 
     /**
-     * Test input validation rejects invalid values.
+     * Test error for non-existent site.
      *
      * @return void
      */
-    public function test_get_site_security_validates_input() {
+    public function test_get_site_security_returns_error_for_not_found() {
         $this->skip_if_no_abilities_api();
         $this->set_current_user_as_admin();
 
-        // Expect the doing_it_wrong notice when site doesn't exist.
         $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
-
-        $site_id = $this->create_test_site();
 
         $result = $this->execute_ability( 'mainwp/get-site-security-v1', [
             'site_id_or_domain' => 999999,
         ] );
 
-        $this->assertWPError( $result, 'Invalid input should return WP_Error.' );
+        $this->assertWPError( $result, 'Non-existent site should return WP_Error.' );
     }
 }

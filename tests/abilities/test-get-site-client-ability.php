@@ -59,6 +59,7 @@ class Test_GetSiteClient_Ability extends MainWP_Abilities_Test_Case {
         $this->assertArrayHasKey( 'client', $result, 'Result should have client key.' );
         $this->assertArrayHasKey( 'message', $result, 'Result should have message key.' );
         $this->assertNotNull( $result['client'], 'Client should not be null when assigned.' );
+        $this->assertIsArray( $result['client'], 'Client should be an array.' );
         $this->assertArrayHasKey( 'id', $result['client'], 'Client should have id field.' );
         $this->assertEquals( $client_id, $result['client']['id'], 'Client ID should match.' );
     }

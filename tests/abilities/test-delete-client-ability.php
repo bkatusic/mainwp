@@ -238,6 +238,7 @@ class Test_Delete_Client_Ability extends MainWP_Abilities_Test_Case {
 
 		$this->assertNotWPError( $result );
 		$this->assertArrayHasKey( 'would_affect', $result );
+		$this->assertIsArray( $result['would_affect'], 'would_affect should be an array.' );
 		$this->assertArrayHasKey( 'associated_sites_count', $result['would_affect'] );
 		$this->assertGreaterThanOrEqual( 1, $result['would_affect']['associated_sites_count'] );
 		$this->assertNotEmpty( $result['warnings'], 'Should have warnings about associated sites.' );

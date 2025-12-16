@@ -555,7 +555,8 @@ class MainWP_REST_Integration_Test extends \WP_Test_REST_TestCase {
 		$this->skip_if_no_abilities_api();
 		$this->authenticate_as_admin();
 
-		$site_id = $this->create_test_site( [
+		// Create a test site to ensure updates data exists.
+		$this->create_test_site( [
 			'name'    => 'Updates Shape Test Site',
 			'version' => '5.0.0',
 		] );
@@ -1142,7 +1143,8 @@ class MainWP_REST_Integration_Test extends \WP_Test_REST_TestCase {
 		$this->skip_if_no_abilities_api();
 		$this->authenticate_as_admin();
 
-		$site_id = $this->create_test_site( [
+		// Create site for side effect - updates endpoint needs at least one site.
+		$this->create_test_site( [
 			'name'    => 'Updates Shape Test',
 			'version' => '5.0.0',
 		] );
