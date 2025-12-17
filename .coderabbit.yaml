@@ -4,10 +4,11 @@
 # Optimized for MainWP security patterns and conventions
 #
 language: "en-US"
+tone_instructions: "Focus on WordPress security patterns and MainWP conventions. Accept Instance() singleton naming and 4-space indentation."
 
 # Reviews configuration
 reviews:
-  profile: "assertive"  # Strict for security-sensitive codebase
+  profile: "chill"  # Reduces nitpicky feedback while maintaining security focus
   request_changes_workflow: true
   high_level_summary: true
   poem: false  # Keep reviews professional
@@ -191,3 +192,5 @@ chat:
 knowledge_base:
   learnings:
     scope: auto
+  code_guidelines:
+    enabled: true
