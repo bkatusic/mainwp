@@ -688,6 +688,18 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
                 $site_ids = array_map( fn( $item ) => isset( $item['id'] ) ? (int) $item['id'] : 0, $result['items'] );
                 $site_ids = array_filter( $site_ids );
 
+                // Re-apply include/exclude filters for backward compatibility.
+                // The ability doesn't support these parameters, so we filter post-fetch.
+                $include = ! empty( $args['include'] ) ? wp_parse_id_list( $args['include'] ) : array();
+                $exclude = ! empty( $args['exclude'] ) ? wp_parse_id_list( $args['exclude'] ) : array();
+
+                if ( ! empty( $include ) ) {
+                    $site_ids = array_intersect( $site_ids, $include );
+                }
+                if ( ! empty( $exclude ) ) {
+                    $site_ids = array_diff( $site_ids, $exclude );
+                }
+
                 if ( ! empty( $site_ids ) ) {
                     // Fetch full site data to normalize through REST filters.
                     $params   = array(
@@ -709,7 +721,7 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             return rest_ensure_response(
                 array(
                     'success' => 1,
-                    'total'   => isset( $result['total'] ) ? $result['total'] : count( $normalized_items ),
+                    'total'   => count( $normalized_items ),
                     'data'    => $normalized_items,
                 )
             );
