@@ -271,7 +271,10 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
         }
 
         if ( ! empty( $s ) ) {
-            $where .= ' AND ( wp.id LIKE "%' . $this->escape( $s ) . '%" OR wp.name LIKE "%' . $this->escape( $s ) . '%" OR wp.url LIKE "%' . $this->escape( $s ) . '%" ) ';
+            $s = trim( $s );
+            // Use esc_like() to escape LIKE wildcards (%, _) then escape() for SQL safety.
+            $escaped_like = $this->escape( $this->wpdb->esc_like( $s ) );
+            $where       .= ' AND ( wp.id LIKE "%' . $escaped_like . '%" OR wp.name LIKE "%' . $escaped_like . '%" OR wp.url LIKE "%' . $escaped_like . '%" ) ';
         }
 
         if ( ! empty( $exclude ) ) {
@@ -1193,8 +1196,11 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
 
         if ( null !== $search_site ) {
             $search_site = trim( $search_site );
-            $like_search = '%' . $this->wpdb->esc_like( $search_site ) . '%';
-            $where      .= $this->wpdb->prepare( ' AND (wp.name LIKE %s OR wp.url LIKE %s) ', $like_search, $like_search );
+            // Use esc_like() to escape LIKE wildcards (%, _) then escape() for SQL safety.
+            // Note: Can't use prepare() here due to WordPress placeholder escaping
+            // that mangles % wildcards in some environments.
+            $escaped_like = $this->escape( $this->wpdb->esc_like( $search_site ) );
+            $where       .= ' AND (wp.name LIKE "%' . $escaped_like . '%" OR wp.url LIKE "%' . $escaped_like . '%") ';
         }
 
         if ( ! empty( $extraWhere ) ) {
@@ -1226,7 +1232,12 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
             $_included_cache_ids = isset( $params['_included_cache_ids'] ) ? wp_parse_id_list( $params['_included_cache_ids'] ) : array();
 
             if ( ! empty( $s ) ) {
-                $where .= ' AND ( wp.id LIKE "%' . $this->escape( $s ) . '%" OR wp.name LIKE "%' . $this->escape( $s ) . '%" OR wp.url LIKE "%' . $this->escape( $s ) . '%" ) ';
+                $s = trim( $s );
+                // Use esc_like() to escape LIKE wildcards (%, _) then escape() for SQL safety.
+                // Note: Can't use prepare() here due to WordPress placeholder escaping
+                // that mangles % wildcards in some environments.
+                $escaped_like = $this->escape( $this->wpdb->esc_like( $s ) );
+                $where       .= ' AND ( wp.id LIKE "%' . $escaped_like . '%" OR wp.name LIKE "%' . $escaped_like . '%" OR wp.url LIKE "%' . $escaped_like . '%" ) ';
             }
 
             if ( ! empty( $exclude ) ) {
@@ -1376,7 +1387,9 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
 
         if ( null !== $search_site ) {
             $search_site = trim( $search_site );
-            $where      .= ' AND (wp.name LIKE "%' . $this->escape( $search_site ) . '%" OR wp.url LIKE  "%' . $this->escape( $search_site ) . '%") ';
+            // Use esc_like() to escape LIKE wildcards (%, _) then escape() for SQL safety.
+            $escaped_like = $this->escape( $this->wpdb->esc_like( $search_site ) );
+            $where       .= ' AND (wp.name LIKE "%' . $escaped_like . '%" OR wp.url LIKE "%' . $escaped_like . '%") ';
         }
 
         if ( null !== $extraWhere ) {
@@ -2589,8 +2602,10 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
 
         $where_search = '';
         if ( ! empty( $search_site ) ) {
-            $search_site   = trim( $search_site );
-            $where_search .= ' AND (wp.name LIKE "%' . $this->escape( $search_site ) . '%" OR wp.url LIKE  "%' . $this->escape( $search_site ) . '%") ';
+            $search_site = trim( $search_site );
+            // Use esc_like() to escape LIKE wildcards (%, _) then escape() for SQL safety.
+            $escaped_like  = $this->escape( $this->wpdb->esc_like( $search_site ) );
+            $where_search .= ' AND (wp.name LIKE "%' . $escaped_like . '%" OR wp.url LIKE "%' . $escaped_like . '%") ';
         }
 
         $extra_view = is_array( $others ) && isset( $others['extra_view'] ) && is_array( $others['extra_view'] ) && ! empty( $others['extra_view'] ) ? $others['extra_view'] : array( 'site_info' );

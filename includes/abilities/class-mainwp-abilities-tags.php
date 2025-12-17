@@ -756,11 +756,20 @@ class MainWP_Abilities_Tags {
     public static function execute_list_tags( $input ) {
         $input = ! is_null( $input ) ? (array) $input : array();
 
-        $page     = $input['page'] ?? 1;
-        $per_page = $input['per_page'] ?? 20;
-        $search   = $input['search'] ?? '';
-        $include  = $input['include'] ?? array();
-        $exclude  = $input['exclude'] ?? array();
+        // Sanitize and bound pagination parameters.
+        $page     = isset( $input['page'] ) ? max( 1, (int) $input['page'] ) : 1;
+        $per_page = isset( $input['per_page'] ) ? min( 100, max( 1, (int) $input['per_page'] ) ) : 20;
+
+        // Sanitize search string.
+        $search = isset( $input['search'] ) ? sanitize_text_field( $input['search'] ) : '';
+
+        // Normalize and sanitize include/exclude arrays.
+        $include = isset( $input['include'] ) && is_array( $input['include'] )
+            ? array_map( 'absint', $input['include'] )
+            : array();
+        $exclude = isset( $input['exclude'] ) && is_array( $input['exclude'] )
+            ? array_map( 'absint', $input['exclude'] )
+            : array();
 
         $params = array(
             'page'           => $page,
@@ -950,6 +959,8 @@ class MainWP_Abilities_Tags {
             // If sanitized_color is empty, do not set $params['color'] to preserve existing color.
         }
 
+        // add_tag() is used as an upsert: when 'id' is present in params, it updates the existing tag;
+        // when 'id' is absent, it creates a new tag. This allows unified insert/update logic.
         $updated_tag = MainWP_DB_Common::instance()->add_tag( $params );
 
         if ( empty( $updated_tag ) || ! isset( $updated_tag->id ) ) {
@@ -1012,14 +1023,17 @@ class MainWP_Abilities_Tags {
                 $sites_count = isset( $tag_obj->count_sites ) ? (int) $tag_obj->count_sites : 0;
             }
 
-            // For clients, no count-only method exists in MainWP_DB_Client - fetch all and count.
-            $clients       = MainWP_DB_Client::instance()->get_wp_client_by(
+            // Get clients count efficiently using count_only option (avoids loading all client objects).
+            $clients_count = MainWP_DB_Client::instance()->get_wp_client_by(
                 'all',
                 null,
                 OBJECT,
-                array( 'by_tags' => array( $tag_id ) )
+                array(
+                    'by_tags'    => array( $tag_id ),
+                    'count_only' => true,
+                )
             );
-            $clients_count = is_array( $clients ) ? count( $clients ) : 0;
+            $clients_count = is_numeric( $clients_count ) ? (int) $clients_count : 0;
 
             return array(
                 'dry_run'      => true,
@@ -1068,8 +1082,8 @@ class MainWP_Abilities_Tags {
      */
     public static function execute_get_tag_sites( $input ) {
         $tag_id   = (int) $input['tag_id'];
-        $page     = $input['page'] ?? 1;
-        $per_page = $input['per_page'] ?? 20;
+        $page     = isset( $input['page'] ) ? max( 1, (int) $input['page'] ) : 1;
+        $per_page = isset( $input['per_page'] ) ? min( 100, max( 1, (int) $input['per_page'] ) ) : 20;
 
         $tag = MainWP_Abilities_Util::resolve_tag( $tag_id );
 
@@ -1111,8 +1125,8 @@ class MainWP_Abilities_Tags {
      */
     public static function execute_get_tag_clients( $input ) {
         $tag_id   = (int) $input['tag_id'];
-        $page     = $input['page'] ?? 1;
-        $per_page = $input['per_page'] ?? 20;
+        $page     = isset( $input['page'] ) ? max( 1, (int) $input['page'] ) : 1;
+        $per_page = isset( $input['per_page'] ) ? min( 100, max( 1, (int) $input['per_page'] ) ) : 20;
 
         $tag = MainWP_Abilities_Util::resolve_tag( $tag_id );
 

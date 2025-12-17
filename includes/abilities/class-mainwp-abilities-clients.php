@@ -184,7 +184,7 @@ class MainWP_Abilities_Clients {
         }
 
         if ( ! empty( $input['search'] ) ) {
-            $args['s'] = $input['search'];
+            $args['s'] = sanitize_text_field( trim( $input['search'] ) );
         }
 
         if ( ! empty( $input['include'] ) ) {
@@ -393,7 +393,10 @@ class MainWP_Abilities_Clients {
             'type'       => 'object',
             'properties' => array(
                 'name'             => array( 'type' => 'string' ),
-                'client_email'     => array( 'type' => 'string' ),
+                'client_email'     => array(
+                    'type'   => 'string',
+                    'format' => 'email',
+                ),
                 'client_phone'     => array( 'type' => 'string' ),
                 'address_1'        => array( 'type' => 'string' ),
                 'address_2'        => array( 'type' => 'string' ),
@@ -507,7 +510,10 @@ class MainWP_Abilities_Clients {
             'properties' => array(
                 'client_id_or_email' => array( 'type' => array( 'integer', 'string' ) ),
                 'name'               => array( 'type' => 'string' ),
-                'client_email'       => array( 'type' => 'string' ),
+                'client_email'       => array(
+                    'type'   => 'string',
+                    'format' => 'email',
+                ),
                 'client_phone'       => array( 'type' => 'string' ),
                 'address_1'          => array( 'type' => 'string' ),
                 'address_2'          => array( 'type' => 'string' ),

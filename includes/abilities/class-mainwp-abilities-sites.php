@@ -1200,9 +1200,10 @@ class MainWP_Abilities_Sites {
      */
     private static function get_add_site_input_schema(): array {
         return array(
-            'type'       => 'object',
-            'required'   => array( 'url', 'name', 'admin_username' ),
-            'properties' => array(
+            'type'                 => 'object',
+            'required'             => array( 'url', 'name', 'admin_username' ),
+            'additionalProperties' => false,
+            'properties'           => array(
                 'url'                => array(
                     'type'        => 'string',
                     'description' => __( 'Site URL', 'mainwp' ),
@@ -1399,9 +1400,10 @@ class MainWP_Abilities_Sites {
      */
     private static function get_update_site_input_schema(): array {
         return array(
-            'type'       => 'object',
-            'required'   => array( 'site_id_or_domain' ),
-            'properties' => array(
+            'type'                 => 'object',
+            'required'             => array( 'site_id_or_domain' ),
+            'additionalProperties' => false,
+            'properties'           => array(
                 'site_id_or_domain'  => array(
                     'type'        => array( 'integer', 'string' ),
                     'description' => __( 'Site ID or domain', 'mainwp' ),
@@ -2761,8 +2763,11 @@ class MainWP_Abilities_Sites {
         }
 
         return array(
-            'deleted' => $deleted,
-            'errors'  => $errors,
+            'dry_run'  => false,
+            'deleted'  => $deleted,
+            'count'    => count( $deleted ),
+            'errors'   => $errors,
+            'warnings' => array(),
         );
     }
 
@@ -2835,7 +2840,7 @@ class MainWP_Abilities_Sites {
                             'name'              => array( 'type' => 'string' ),
                             'version'           => array( 'type' => 'string' ),
                             'last_updated'      => array( 'type' => 'string' ),
-                            'days_since_update' => array( 'type' => 'integer' ),
+                            'days_since_update' => array( 'type' => array( 'integer', 'null' ) ),
                         ),
                     ),
                 ),
@@ -2877,12 +2882,19 @@ class MainWP_Abilities_Sites {
             if ( is_numeric( $last_updated ) ) {
                 $last_updated = gmdate( 'c', (int) $last_updated );
             }
+
+            // Calculate days since update only if we have a valid numeric timestamp.
+            $days_since_update = null;
+            if ( isset( $info['outdate_timestamp'] ) && is_numeric( $info['outdate_timestamp'] ) && $info['outdate_timestamp'] > 0 ) {
+                $days_since_update = (int) ( ( time() - $info['outdate_timestamp'] ) / DAY_IN_SECONDS );
+            }
+
             $plugins[] = array(
                 'slug'              => $slug,
                 'name'              => isset( $info['Name'] ) ? $info['Name'] : $slug,
                 'version'           => isset( $info['Version'] ) ? $info['Version'] : '',
                 'last_updated'      => (string) $last_updated,
-                'days_since_update' => isset( $info['outdate_timestamp'] ) ? (int) ( ( time() - $info['outdate_timestamp'] ) / DAY_IN_SECONDS ) : 0,
+                'days_since_update' => $days_since_update,
             );
         }
 
@@ -3184,7 +3196,7 @@ class MainWP_Abilities_Sites {
                             'name'              => array( 'type' => 'string' ),
                             'version'           => array( 'type' => 'string' ),
                             'last_updated'      => array( 'type' => 'string' ),
-                            'days_since_update' => array( 'type' => 'integer' ),
+                            'days_since_update' => array( 'type' => array( 'integer', 'null' ) ),
                         ),
                     ),
                 ),
@@ -3226,12 +3238,19 @@ class MainWP_Abilities_Sites {
             if ( is_numeric( $last_updated ) ) {
                 $last_updated = gmdate( 'c', (int) $last_updated );
             }
+
+            // Calculate days since update only if we have a valid numeric timestamp.
+            $days_since_update = null;
+            if ( isset( $info['outdate_timestamp'] ) && is_numeric( $info['outdate_timestamp'] ) && $info['outdate_timestamp'] > 0 ) {
+                $days_since_update = (int) ( ( time() - $info['outdate_timestamp'] ) / DAY_IN_SECONDS );
+            }
+
             $themes[] = array(
                 'slug'              => $slug,
                 'name'              => isset( $info['Name'] ) ? $info['Name'] : $slug,
                 'version'           => isset( $info['Version'] ) ? $info['Version'] : '',
                 'last_updated'      => (string) $last_updated,
-                'days_since_update' => isset( $info['outdate_timestamp'] ) ? (int) ( ( time() - $info['outdate_timestamp'] ) / DAY_IN_SECONDS ) : 0,
+                'days_since_update' => $days_since_update,
             );
         }
 
@@ -3317,7 +3336,7 @@ class MainWP_Abilities_Sites {
         }
 
         $total_issues = 0;
-        foreach ( $security_issues as $key => $value ) {
+        foreach ( $security_issues as $value ) {
             if ( 'N' === $value || '0' === $value || 0 === $value ) {
                 ++$total_issues;
             }

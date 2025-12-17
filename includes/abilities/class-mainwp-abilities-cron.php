@@ -109,6 +109,13 @@ class MainWP_Abilities_Cron {
         ignore_user_abort( true );
         MainWP_System_Utility::set_time_limit( 0 );
 
+        // Sanitize job_id for safe transient lookup and logging.
+        $job_id = sanitize_key( (string) $job_id );
+        if ( empty( $job_id ) ) {
+            $this->log_debug( 'Sync job ID is empty after sanitization' );
+            return;
+        }
+
         // Load job from transient.
         $job = get_transient( 'mainwp_sync_job_' . $job_id );
         if ( empty( $job ) || ! is_array( $job ) ) {
@@ -250,6 +257,13 @@ class MainWP_Abilities_Cron {
         ignore_user_abort( true );
         MainWP_System_Utility::set_time_limit( 0 );
 
+        // Sanitize job_id for safe transient lookup and logging.
+        $job_id = sanitize_key( (string) $job_id );
+        if ( empty( $job_id ) ) {
+            $this->log_debug( 'Update job ID is empty after sanitization' );
+            return;
+        }
+
         // Load job from transient.
         $job = get_transient( 'mainwp_update_job_' . $job_id );
         if ( empty( $job ) || ! is_array( $job ) ) {
@@ -318,6 +332,11 @@ class MainWP_Abilities_Cron {
 
                 $site_success = true;
                 $site_errors  = array();
+
+                // Normalize specific_items to avoid TypeError if malformed in transient data.
+                $specific_items = isset( $job['specific_items'] ) && is_array( $job['specific_items'] )
+                    ? $job['specific_items']
+                    : array();
 
                 // Process each update type.
                 foreach ( $job['types'] as $type ) {
@@ -395,7 +414,7 @@ class MainWP_Abilities_Cron {
                                 break;
 
                             case 'plugins':
-                                $slugs = $this->get_update_slugs_for_site( $website, 'plugin', $job['specific_items'] );
+                                $slugs = $this->get_update_slugs_for_site( $website, 'plugin', $specific_items );
                                 if ( ! empty( $slugs ) ) {
                                     $slugs_list = implode( ',', $slugs );
 
@@ -501,7 +520,7 @@ class MainWP_Abilities_Cron {
                                 break;
 
                             case 'themes':
-                                $slugs = $this->get_update_slugs_for_site( $website, 'theme', $job['specific_items'] );
+                                $slugs = $this->get_update_slugs_for_site( $website, 'theme', $specific_items );
                                 if ( ! empty( $slugs ) ) {
                                     $slugs_list = implode( ',', $slugs );
 
@@ -637,8 +656,25 @@ class MainWP_Abilities_Cron {
                                             implode( '; ', $error_msgs )
                                         )
                                     );
+
+                                    // Still fire after-action and sync for partial success.
+                                    /** This action is documented in includes/abilities/class-mainwp-abilities-cron.php */
+                                    do_action( 'mainwp_after_plugin_theme_translation_update', $information, 'translation', '', $website );
+
+                                    // Sync site data immediately if child returned sync info.
+                                    if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
+                                        MainWP_Sync::sync_information_array( $website, $information['sync'] );
+                                    }
+                                } else {
+                                    // Success - fire after-action and sync.
+                                    /** This action is documented in includes/abilities/class-mainwp-abilities-cron.php */
+                                    do_action( 'mainwp_after_plugin_theme_translation_update', $information, 'translation', '', $website );
+
+                                    // Sync site data immediately if child returned sync info.
+                                    if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
+                                        MainWP_Sync::sync_information_array( $website, $information['sync'] );
+                                    }
                                 }
-                                // Note: Sync data is already handled by fetch_url_authed for upgrade operations.
                                 break;
                         }
                     } catch ( \Exception $e ) {
@@ -751,6 +787,13 @@ class MainWP_Abilities_Cron {
         // Environment setup for long-running process.
         ignore_user_abort( true );
         MainWP_System_Utility::set_time_limit( 0 );
+
+        // Sanitize job_id for safe transient lookup and logging.
+        $job_id = sanitize_key( (string) $job_id );
+        if ( empty( $job_id ) ) {
+            $this->log_debug( 'Batch job ID is empty after sanitization' );
+            return;
+        }
 
         // Load job from transient.
         $job = get_transient( 'mainwp_batch_job_' . $job_id );
