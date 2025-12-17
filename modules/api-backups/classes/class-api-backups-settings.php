@@ -1175,8 +1175,8 @@ class Api_Backups_Settings {
                         </div>
                     </div>
                 </div>
+                <?php $el_id_ind_set_chk_2 = 'kinsta_individual_settings_check'; ?>
                 <div class="ui grid field">
-                    <?php echo esc_attr( $el_id_ind_set_chk_2 ); ?>
                     <label class="six wide column middle aligned"><?php esc_html_e( 'Overwrite Global Settings', 'mainwp' ); ?></label>
                     <div id="<?php echo esc_attr( $el_id_ind_set_chk_2 ); ?>" class="ten wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'If enabled, the Kinsta Individual Settings will be used.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
                         <input type="checkbox" name="mainwp_enable_kinsta_individual" id="mainwp_enable_kinsta_individual" <?php echo ( 'on' === $mainwp_enable_kinsta_individual ) ? 'checked="true"' : 'off'; ?> />
