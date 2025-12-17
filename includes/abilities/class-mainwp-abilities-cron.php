@@ -465,6 +465,10 @@ class MainWP_Abilities_Cron {
                                                 $slugs_list
                                             )
                                         );
+
+                                        // Fire after-action even on failure so hooks always run.
+                                        /** This action is documented in includes/abilities/class-mainwp-abilities-cron.php */
+                                        do_action( 'mainwp_after_plugin_theme_translation_update', null, 'plugin', $slugs_list, $website );
                                     } elseif ( is_array( $information ) && isset( $information['error'] ) ) {
                                         $site_success  = false;
                                         $site_errors[] = 'plugins: ' . $information['error'];
@@ -476,6 +480,10 @@ class MainWP_Abilities_Cron {
                                                 $information['error']
                                             )
                                         );
+
+                                        // Fire after-action even on failure so hooks always run.
+                                        /** This action is documented in includes/abilities/class-mainwp-abilities-cron.php */
+                                        do_action( 'mainwp_after_plugin_theme_translation_update', $information, 'plugin', $slugs_list, $website );
                                     } elseif ( ! is_array( $information ) ) {
                                         $site_success  = false;
                                         $site_errors[] = 'plugins: ' . __( 'Invalid response from child site.', 'mainwp' );
@@ -488,6 +496,10 @@ class MainWP_Abilities_Cron {
                                                 is_scalar( $information ) ? $information : wp_json_encode( $information )
                                             )
                                         );
+
+                                        // Fire after-action even on failure so hooks always run.
+                                        /** This action is documented in includes/abilities/class-mainwp-abilities-cron.php */
+                                        do_action( 'mainwp_after_plugin_theme_translation_update', null, 'plugin', $slugs_list, $website );
                                     } elseif ( isset( $information['upgrades_error'] ) && ! empty( $information['upgrades_error'] ) ) {
                                         // Partial failure - some plugins failed to update.
                                         $error_msgs = array();
@@ -563,6 +575,10 @@ class MainWP_Abilities_Cron {
                                                 $slugs_list
                                             )
                                         );
+
+                                        // Fire after-action even on failure so hooks always run.
+                                        /** This action is documented in includes/abilities/class-mainwp-abilities-cron.php */
+                                        do_action( 'mainwp_after_plugin_theme_translation_update', null, 'theme', $slugs_list, $website );
                                     } elseif ( is_array( $information ) && isset( $information['error'] ) ) {
                                         $site_success  = false;
                                         $site_errors[] = 'themes: ' . $information['error'];
@@ -574,6 +590,10 @@ class MainWP_Abilities_Cron {
                                                 $information['error']
                                             )
                                         );
+
+                                        // Fire after-action even on failure so hooks always run.
+                                        /** This action is documented in includes/abilities/class-mainwp-abilities-cron.php */
+                                        do_action( 'mainwp_after_plugin_theme_translation_update', $information, 'theme', $slugs_list, $website );
                                     } elseif ( ! is_array( $information ) ) {
                                         $site_success  = false;
                                         $site_errors[] = 'themes: ' . __( 'Invalid response from child site.', 'mainwp' );
@@ -586,6 +606,10 @@ class MainWP_Abilities_Cron {
                                                 is_scalar( $information ) ? $information : wp_json_encode( $information )
                                             )
                                         );
+
+                                        // Fire after-action even on failure so hooks always run.
+                                        /** This action is documented in includes/abilities/class-mainwp-abilities-cron.php */
+                                        do_action( 'mainwp_after_plugin_theme_translation_update', null, 'theme', $slugs_list, $website );
                                     } elseif ( isset( $information['upgrades_error'] ) && ! empty( $information['upgrades_error'] ) ) {
                                         // Partial failure - some themes failed to update.
                                         $error_msgs = array();
@@ -625,6 +649,9 @@ class MainWP_Abilities_Cron {
                                 break;
 
                             case 'translations':
+                                /** This action is documented in includes/abilities/class-mainwp-abilities-cron.php */
+                                do_action( 'mainwp_before_plugin_theme_translation_update', 'translation', '', $website );
+
                                 $information = MainWP_Connect::fetch_url_authed( $website, 'upgradetranslation' );
 
                                 // Validate response - check for transport failure or API error.
@@ -637,6 +664,10 @@ class MainWP_Abilities_Cron {
                                             $website->id
                                         )
                                     );
+
+                                    // Fire after-action even on failure so hooks always run.
+                                    /** This action is documented in includes/abilities/class-mainwp-abilities-cron.php */
+                                    do_action( 'mainwp_after_plugin_theme_translation_update', null, 'translation', '', $website );
                                 } elseif ( is_array( $information ) && isset( $information['error'] ) ) {
                                     $site_success  = false;
                                     $site_errors[] = 'translations: ' . $information['error'];
@@ -647,6 +678,10 @@ class MainWP_Abilities_Cron {
                                             $information['error']
                                         )
                                     );
+
+                                    // Fire after-action even on failure so hooks always run.
+                                    /** This action is documented in includes/abilities/class-mainwp-abilities-cron.php */
+                                    do_action( 'mainwp_after_plugin_theme_translation_update', $information, 'translation', '', $website );
                                 } elseif ( ! is_array( $information ) ) {
                                     $site_success  = false;
                                     $site_errors[] = 'translations: ' . __( 'Invalid response from child site.', 'mainwp' );
@@ -657,6 +692,10 @@ class MainWP_Abilities_Cron {
                                             gettype( $information )
                                         )
                                     );
+
+                                    // Fire after-action even on failure so hooks always run.
+                                    /** This action is documented in includes/abilities/class-mainwp-abilities-cron.php */
+                                    do_action( 'mainwp_after_plugin_theme_translation_update', null, 'translation', '', $website );
                                 } elseif ( isset( $information['upgrades_error'] ) && ! empty( $information['upgrades_error'] ) ) {
                                     // Partial failure - some translations failed to update.
                                     $error_msgs = array();
