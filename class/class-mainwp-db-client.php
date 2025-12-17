@@ -842,9 +842,14 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
 
             if ( ! empty( $s ) ) {
                 $s = trim( $s );
-                // Use esc_like() to escape LIKE wildcards (%, _) then escape() for SQL safety.
-                $escaped_like = $this->escape( $this->wpdb->esc_like( $s ) );
-                $where       .= ' AND ( wc.client_id LIKE "%' . $escaped_like . '%" OR wc.name LIKE "%' . $escaped_like . '%" OR wc.client_email LIKE "%' . $escaped_like . '%" ) ';
+                // Use esc_like() to escape LIKE wildcards (%, _) then prepare() for SQL safety.
+                $like   = '%' . $this->wpdb->esc_like( $s ) . '%';
+                $where .= $this->wpdb->prepare(
+                    ' AND ( wc.client_id LIKE %s OR wc.name LIKE %s OR wc.client_email LIKE %s ) ',
+                    $like,
+                    $like,
+                    $like
+                );
             }
 
             if ( ! empty( $exclude ) ) {
