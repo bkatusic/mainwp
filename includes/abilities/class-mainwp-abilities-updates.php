@@ -1663,9 +1663,20 @@ class MainWP_Abilities_Updates {
             }
         } else {
             // Get all sites for current user (respects user access by default).
+            // Must request update fields explicitly - default only returns id, url, name, client_id.
             $websites = MainWP_DB::instance()->get_websites_for_current_user(
                 array(
                     'selectgroups' => false,
+                    'fields'       => array(
+                        'plugin_upgrades',
+                        'theme_upgrades',
+                        'translation_upgrades',
+                        'ignored_plugins',
+                        'ignored_themes',
+                        'is_ignoreCoreUpdates',
+                        'is_ignorePluginUpdates',
+                        'is_ignoreThemeUpdates',
+                    ),
                 )
             );
 
@@ -2059,9 +2070,14 @@ class MainWP_Abilities_Updates {
             }
         } else {
             // Get all sites for current user (respects user access by default).
+            // Must request ignored fields explicitly - default only returns id, url, name, client_id.
             $websites = MainWP_DB::instance()->get_websites_for_current_user(
                 array(
                     'selectgroups' => false,
+                    'fields'       => array(
+                        'ignored_plugins',
+                        'ignored_themes',
+                    ),
                 )
             );
 
