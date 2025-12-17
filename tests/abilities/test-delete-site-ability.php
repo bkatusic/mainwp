@@ -140,9 +140,7 @@ class Test_DeleteSite_Ability extends MainWP_Abilities_Test_Case {
 
         $input = [
             'site_id_or_domain' => $site_id,
-            'confirm'           => true,
         ];
-        unset( $input['confirm'] );
 
         $result = $this->execute_ability( 'mainwp/delete-site-v1', $input );
 
@@ -165,10 +163,8 @@ class Test_DeleteSite_Ability extends MainWP_Abilities_Test_Case {
 
         $input = [
             'site_id_or_domain' => $site_id,
-            'confirm'           => true,
+            'dry_run'           => true,
         ];
-        unset( $input['confirm'] );
-        $input['dry_run'] = true;
 
         $result = $this->execute_ability( 'mainwp/delete-site-v1', $input );
 

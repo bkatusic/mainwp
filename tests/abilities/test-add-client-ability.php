@@ -13,6 +13,9 @@ namespace MainWP\Dashboard\Tests;
  * Class Test_Add_Client_Ability
  *
  * Tests for the mainwp/add-client-v1 ability.
+ *
+ * @group abilities
+ * @group abilities-clients
  */
 class Test_Add_Client_Ability extends MainWP_Abilities_Test_Case {
 

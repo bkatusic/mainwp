@@ -158,6 +158,9 @@ class Test_ReconnectSites_Ability extends MainWP_Abilities_Test_Case {
             $this->assertArrayHasKey( 'total', $result, 'Result should have total.' );
             $this->assertEquals( 3, $result['total'], 'Total should match site count.' );
 
+            // Track job for cleanup in tearDown.
+            $this->track_batch_job( $result['job_id'] );
+
             // Verify transient was created.
             $job_data = get_transient( 'mainwp_batch_job_' . $result['job_id'] );
             $this->assertIsArray( $job_data, 'Job transient should exist.' );

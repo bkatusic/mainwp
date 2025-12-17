@@ -135,6 +135,18 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 		// Clean up test tags.
 		$wpdb->query( "DELETE FROM {$wpdb->prefix}mainwp_group WHERE name LIKE 'Test Tag%'" );
 
+		// Clean up site-tag junction table (mainwp_wp_group) for test sites and tags.
+		$wpdb->query(
+			"DELETE g FROM {$wpdb->prefix}mainwp_wp_group g
+			INNER JOIN {$wpdb->prefix}mainwp_wp w ON g.wpid = w.id
+			WHERE w.url LIKE 'https://test-%'"
+		);
+		$wpdb->query(
+			"DELETE g FROM {$wpdb->prefix}mainwp_wp_group g
+			LEFT JOIN {$wpdb->prefix}mainwp_group t ON g.groupid = t.id
+			WHERE t.id IS NULL"
+		);
+
 		// Restore error reporting.
 		$wpdb->suppress_errors( false );
 

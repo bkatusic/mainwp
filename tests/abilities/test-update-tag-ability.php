@@ -16,20 +16,15 @@ namespace MainWP\Dashboard\Tests;
 class MainWP_Update_Tag_Ability_Test extends MainWP_Abilities_Test_Case {
 
 	/**
-	 * Test that the ability is registered and discoverable.
+	 * Test that the ability is registered.
 	 *
 	 * @return void
 	 */
 	public function test_ability_is_registered() {
 		$this->skip_if_no_abilities_api();
 
-		$abilities = wp_get_abilities();
-
-		$this->assertArrayHasKey(
-			'mainwp/update-tag-v1',
-			$abilities,
-			'Ability mainwp/update-tag-v1 should be registered.'
-		);
+		$ability = wp_get_ability( 'mainwp/update-tag-v1' );
+		$this->assertNotNull( $ability, 'Ability mainwp/update-tag-v1 should be registered.' );
 	}
 
 	/**

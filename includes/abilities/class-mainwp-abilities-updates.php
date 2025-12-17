@@ -3333,14 +3333,21 @@ class MainWP_Abilities_Updates {
                 );
             }
 
+            // Handle WP_Error from fetch_url_authed.
+            if ( is_wp_error( $information ) ) {
+                return new \WP_Error( 'mainwp_update_failed', $information->get_error_message() );
+            }
+
             $error_message = __( 'Core update failed.', 'mainwp' );
-            if ( isset( $information['error'] ) ) {
-                $error_message = $information['error'];
-            } elseif ( isset( $information['upgrade'] ) ) {
-                if ( 'LOCALIZATION' === $information['upgrade'] ) {
-                    $error_message = __( 'No update found for the set locale.', 'mainwp' );
-                } elseif ( 'NORESPONSE' === $information['upgrade'] ) {
-                    $error_message = __( 'No response from the child site server.', 'mainwp' );
+            if ( is_array( $information ) ) {
+                if ( isset( $information['error'] ) ) {
+                    $error_message = $information['error'];
+                } elseif ( isset( $information['upgrade'] ) ) {
+                    if ( 'LOCALIZATION' === $information['upgrade'] ) {
+                        $error_message = __( 'No update found for the set locale.', 'mainwp' );
+                    } elseif ( 'NORESPONSE' === $information['upgrade'] ) {
+                        $error_message = __( 'No response from the child site server.', 'mainwp' );
+                    }
                 }
             }
 

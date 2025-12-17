@@ -117,7 +117,12 @@ class Test_SuspendSites_Ability extends MainWP_Abilities_Test_Case {
             'site_ids_or_domains' => [],
         ] );
 
-        $this->assertWPError( $result, 'Invalid input should return WP_Error.' );
+        $this->assertWPError( $result, 'Empty sites array should return WP_Error.' );
+        $this->assertEquals(
+            'mainwp_site_not_found',
+            $result->get_error_code(),
+            'Empty sites array should return mainwp_site_not_found error code.'
+        );
     }
 
     /**

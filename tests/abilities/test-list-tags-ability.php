@@ -102,8 +102,7 @@ class MainWP_List_Tags_Ability_Test extends MainWP_Abilities_Test_Case {
 		$this->skip_if_no_abilities_api();
 		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
 
-		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
-		wp_set_current_user( $subscriber_id );
+		$this->set_current_user_as_subscriber();
 
 		$result = $this->execute_ability( 'mainwp/list-tags-v1', [] );
 

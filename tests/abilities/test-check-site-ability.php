@@ -104,11 +104,11 @@ class Test_CheckSite_Ability extends MainWP_Abilities_Test_Case {
     }
 
     /**
-     * Test input validation rejects invalid values.
+     * Test that check-site returns error for non-existent site.
      *
      * @return void
      */
-    public function test_check_site_validates_input() {
+    public function test_check_site_returns_error_for_nonexistent_site() {
         $this->skip_if_no_abilities_api();
         $this->set_current_user_as_admin();
 
@@ -116,6 +116,6 @@ class Test_CheckSite_Ability extends MainWP_Abilities_Test_Case {
             'site_id_or_domain' => 999999, // Non-existent site
         ] );
 
-        $this->assertWPError( $result, 'Invalid input should return WP_Error.' );
+        $this->assertWPError( $result, 'Non-existent site should return WP_Error.' );
     }
 }

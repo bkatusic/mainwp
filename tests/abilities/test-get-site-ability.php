@@ -13,6 +13,9 @@ namespace MainWP\Dashboard\Tests;
  * Class MainWP_Get_Site_Ability_Test
  *
  * Tests for the mainwp/get-site-v1 ability.
+ *
+ * @group abilities
+ * @group abilities-sites
  */
 class MainWP_Get_Site_Ability_Test extends MainWP_Abilities_Test_Case {
 

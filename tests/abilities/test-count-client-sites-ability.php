@@ -13,6 +13,9 @@ namespace MainWP\Dashboard\Tests;
  * Class Test_Count_Client_Sites_Ability
  *
  * Tests for the mainwp/count-client-sites-v1 ability.
+ *
+ * @group abilities
+ * @group abilities-clients
  */
 class Test_Count_Client_Sites_Ability extends MainWP_Abilities_Test_Case {
 

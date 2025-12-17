@@ -95,9 +95,8 @@ class MainWP_Site_Plugins_Themes_Ability_Test extends MainWP_Abilities_Test_Case
 
 		// All returned plugins should be active.
 		foreach ( $result['plugins'] as $plugin ) {
-			if ( isset( $plugin['active'] ) ) {
-				$this->assertEquals( 1, $plugin['active'], 'Filtered plugins should be active.' );
-			}
+			$this->assertArrayHasKey( 'active', $plugin, 'Plugin should have active key.' );
+			$this->assertEquals( 1, $plugin['active'], 'Filtered plugins should be active.' );
 		}
 	}
 
@@ -311,9 +310,8 @@ class MainWP_Site_Plugins_Themes_Ability_Test extends MainWP_Abilities_Test_Case
 
 		// All returned themes should be active.
 		foreach ( $result['themes'] as $theme ) {
-			if ( isset( $theme['active'] ) ) {
-				$this->assertEquals( 1, $theme['active'], 'Filtered themes should be active.' );
-			}
+			$this->assertArrayHasKey( 'active', $theme, 'Theme should have active key.' );
+			$this->assertEquals( 1, $theme['active'], 'Filtered themes should be active.' );
 		}
 	}
 

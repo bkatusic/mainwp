@@ -243,7 +243,7 @@ class MainWP_Abilities_Batch_Operations_Test extends MainWP_Abilities_Test_Case 
 	 *
 	 * @return void
 	 */
-	public function test_sync_threshold_exactly_50_executes_immediately() {
+	public function test_sync_at_threshold_executes_immediately() {
 		$this->skip_if_no_abilities_api();
 		$this->set_current_user_as_admin();
 

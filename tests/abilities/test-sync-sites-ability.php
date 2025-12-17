@@ -17,6 +17,18 @@ namespace MainWP\Dashboard\Tests;
 class MainWP_Sync_Sites_Ability_Test extends MainWP_Abilities_Test_Case {
 
 	/**
+	 * Test that the ability is registered.
+	 *
+	 * @return void
+	 */
+	public function test_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$ability = wp_get_ability( 'mainwp/sync-sites-v1' );
+		$this->assertNotNull( $ability, 'Ability mainwp/sync-sites-v1 should be registered.' );
+	}
+
+	/**
 	 * Test that sync-sites with empty array syncs all sites.
 	 *
 	 * @return void

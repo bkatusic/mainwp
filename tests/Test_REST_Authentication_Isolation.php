@@ -29,6 +29,9 @@ class Test_REST_Authentication_Isolation extends \WP_UnitTestCase {
 	 */
 	private function is_mainwp_rest_request( string $request_uri ): bool {
 		// Reset the singleton to get fresh state.
+		// Note: This directly manipulates MainWP_REST_Authentication::$instance which couples
+		// this test to the singleton implementation. If the property name changes, update this line.
+		// Consider adding a reset() helper method to MainWP_REST_Authentication in future.
 		\MainWP_REST_Authentication::$instance = null;
 
 		// Set up the request URI.

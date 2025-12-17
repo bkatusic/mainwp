@@ -70,13 +70,12 @@ class Test_GetSitesBasic_Ability extends MainWP_Abilities_Test_Case {
         $this->assertEquals( 20, $result['per_page'], 'Default per_page should be 20.' );
         $this->assertGreaterThanOrEqual( 1, $result['total'], 'total should include at least the created test site.' );
 
-        // Validate site structure if items exist.
-        if ( ! empty( $result['items'] ) ) {
-            $first_site = $result['items'][0];
-            $this->assertArrayHasKey( 'id', $first_site, 'Site item should have id.' );
-            $this->assertArrayHasKey( 'url', $first_site, 'Site item should have url.' );
-            $this->assertArrayHasKey( 'name', $first_site, 'Site item should have name.' );
-        }
+        // Validate site structure - items should not be empty since we created a test site.
+        $this->assertNotEmpty( $result['items'], 'Items should not be empty after creating test site.' );
+        $first_site = $result['items'][0];
+        $this->assertArrayHasKey( 'id', $first_site, 'Site item should have id.' );
+        $this->assertArrayHasKey( 'url', $first_site, 'Site item should have url.' );
+        $this->assertArrayHasKey( 'name', $first_site, 'Site item should have name.' );
     }
 
     /**
