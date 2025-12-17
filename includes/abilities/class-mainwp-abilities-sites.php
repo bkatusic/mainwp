@@ -786,6 +786,7 @@ class MainWP_Abilities_Sites {
             'status'    => ( 'any' !== $status ) ? $status : '',
             'tags'      => isset( $input['tag_id'] ) ? array( (int) $input['tag_id'] ) : array(),
             'client_id' => isset( $input['client_id'] ) ? (int) $input['client_id'] : 0,
+            's'         => $input['search'] ?? '',
         );
         $total         = $db->get_websites_count_for_current_user( $count_filters );
 

@@ -213,6 +213,7 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 			'suspended'            => 0,
 			'offline_check_result' => 1, // 1 = online, -1 = offline.
 			'client_id'            => 0,
+			'is_staging'           => 0, // Required: queries filter by is_staging = 0.
 			// Initialize upgrade fields to empty string to avoid json_decode(null) warnings.
 			// Column names per class-mainwp-install.php table definition.
 			'plugin_upgrades'      => '',
@@ -235,6 +236,7 @@ abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
 			'suspended'            => '%d',
 			'offline_check_result' => '%d',
 			'client_id'            => '%d',
+			'is_staging'           => '%d',
 			'plugin_upgrades'      => '%s',
 			'theme_upgrades'       => '%s',
 			'translation_upgrades' => '%s',

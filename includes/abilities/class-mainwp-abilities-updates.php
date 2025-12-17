@@ -3200,7 +3200,7 @@ class MainWP_Abilities_Updates {
         // Fallback: direct database query.
         global $wpdb;
         $table = MainWP_DB::instance()->get_table_name( 'wp' );
-        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $column and $table are validated.
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery -- Fallback query; $column and $table are validated.
         $value = $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT {$column} FROM {$table} WHERE id = %d",

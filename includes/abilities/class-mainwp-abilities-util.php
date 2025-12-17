@@ -1285,12 +1285,12 @@ class MainWP_Abilities_Util {
             return false;
         }
 
-        // New format: { success: true }
+        // New format: { success: true }.
         if ( isset( $result['success'] ) && $result['success'] ) {
             return true;
         }
 
-        // Legacy format: { status: "SUCCESS" }
+        // Legacy format: { status: "SUCCESS" }.
         if ( isset( $result['status'] ) && 'SUCCESS' === $result['status'] ) {
             return true;
         }
