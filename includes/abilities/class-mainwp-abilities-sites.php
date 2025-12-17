@@ -1246,6 +1246,14 @@ class MainWP_Abilities_Sites {
                     'type'        => 'integer',
                     'description' => __( 'Client ID to assign', 'mainwp' ),
                 ),
+                'adminpassword'      => array(
+                    'type'        => 'string',
+                    'description' => __( 'WordPress admin password (optional, for sites requiring password authentication)', 'mainwp' ),
+                ),
+                'uniqueid'           => array(
+                    'type'        => 'string',
+                    'description' => __( 'Unique Security ID configured in MainWP Child plugin', 'mainwp' ),
+                ),
             ),
         );
     }
@@ -1310,6 +1318,12 @@ class MainWP_Abilities_Sites {
         if ( ! empty( $input['http_pass'] ) ) {
             $site_data['http_pass'] = $input['http_pass'];
         }
+        if ( ! empty( $input['adminpassword'] ) ) {
+            $site_data['adminpassword'] = $input['adminpassword'];
+        }
+        if ( ! empty( $input['uniqueid'] ) ) {
+            $site_data['uniqueid'] = sanitize_text_field( $input['uniqueid'] );
+        }
 
         // Add site using REST API method (not AJAX handler which calls die()).
         $result = MainWP_Manage_Sites_Handler::rest_api_add_site( $site_data );
@@ -1350,7 +1364,9 @@ class MainWP_Abilities_Sites {
 
         // Assign tags if provided.
         if ( ! empty( $input['tag_ids'] ) && is_array( $input['tag_ids'] ) ) {
-            MainWP_DB::instance()->update_website_values( $site_id, array( 'tags' => implode( ',', array_map( 'intval', $input['tag_ids'] ) ) ) );
+            foreach ( $input['tag_ids'] as $tag_id ) {
+                MainWP_DB_Common::instance()->update_group_site( (int) $tag_id, $site_id );
+            }
         }
 
         // Assign client if provided.
@@ -2331,7 +2347,7 @@ class MainWP_Abilities_Sites {
                 )
             );
 
-            if ( is_array( $result ) && isset( $result['success'] ) && $result['success'] ) {
+            if ( MainWP_Abilities_Util::is_child_response_success( $result ) ) {
                 $activated[] = MainWP_Abilities_Util::format_plugin_for_output(
                     array(
                         'slug' => $plugin_slug,
@@ -2454,7 +2470,7 @@ class MainWP_Abilities_Sites {
                 )
             );
 
-            if ( is_array( $result ) && isset( $result['success'] ) && $result['success'] ) {
+            if ( MainWP_Abilities_Util::is_child_response_success( $result ) ) {
                 $deactivated[] = MainWP_Abilities_Util::format_plugin_for_output(
                     array(
                         'slug' => $plugin_slug,
@@ -2744,7 +2760,7 @@ class MainWP_Abilities_Sites {
                     'code'    => 'mainwp_' . $result->get_error_code(),
                     'message' => $result->get_error_message(),
                 );
-            } elseif ( is_array( $result ) && isset( $result['success'] ) && $result['success'] ) {
+            } elseif ( MainWP_Abilities_Util::is_child_response_success( $result ) ) {
                 $deleted[] = call_user_func(
                     $formatter,
                     array(
@@ -3017,7 +3033,7 @@ class MainWP_Abilities_Sites {
             )
         );
 
-        if ( ! is_array( $result ) || empty( $result['success'] ) ) {
+        if ( ! MainWP_Abilities_Util::is_child_response_success( $result ) ) {
             $message = is_array( $result ) && isset( $result['error'] ) ? $result['error'] : __( 'Activation failed', 'mainwp' );
             return new \WP_Error( 'mainwp_activation_failed', $message, array( 'status' => 500 ) );
         }
@@ -3487,9 +3503,10 @@ class MainWP_Abilities_Sites {
             $query_args['contexts'] = sanitize_text_field( $input['type'] );
         }
 
-        $log_query = new \MainWP\Dashboard\Module\Log\Log_Query();
-        $records   = $log_query->query( $query_args );
-        $total     = $log_query->found_records;
+        // Use Log_Manager to ensure proper table name initialization.
+        $log_db  = \MainWP\Dashboard\Module\Log\Log_Manager::instance()->db;
+        $records = $log_db->query( $query_args );
+        $total   = $log_db->get_found_records_count();
 
         // Format records for output.
         $items = array();

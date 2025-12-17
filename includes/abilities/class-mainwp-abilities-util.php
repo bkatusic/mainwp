@@ -1268,4 +1268,33 @@ class MainWP_Abilities_Util {
             'update_version' => $update_version,
         );
     }
+
+    /**
+     * Check if a child site response indicates success.
+     *
+     * Handles both the new format ({ success: true }) and legacy format ({ status: "SUCCESS" })
+     * returned by MainWP Child plugin for plugin/theme actions.
+     *
+     * @since 5.4
+     *
+     * @param mixed $result The response from MainWP_Connect::fetch_url_authed().
+     * @return bool True if the response indicates success, false otherwise.
+     */
+    public static function is_child_response_success( $result ): bool {
+        if ( ! is_array( $result ) ) {
+            return false;
+        }
+
+        // New format: { success: true }
+        if ( isset( $result['success'] ) && $result['success'] ) {
+            return true;
+        }
+
+        // Legacy format: { status: "SUCCESS" }
+        if ( isset( $result['status'] ) && 'SUCCESS' === $result['status'] ) {
+            return true;
+        }
+
+        return false;
+    }
 }
