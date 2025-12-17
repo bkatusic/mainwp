@@ -1767,12 +1767,14 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
             $status = '';
         }
 
-        $where = '';
+        $where      = '';
+        $sql_params = array();
 
         // Multi-user support: filter by current user.
         if ( MainWP_System::instance()->is_multi_user() ) {
             global $current_user;
-            $where .= ' AND wp.userid = ' . intval( $current_user->ID ) . ' ';
+            $where       .= ' AND wp.userid = %d ';
+            $sql_params[] = (int) $current_user->ID;
         }
 
         // Access control for sites.
@@ -1795,7 +1797,8 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
 
         // Client ID filtering.
         if ( ! empty( $client_id ) ) {
-            $where .= ' AND wp.client_id = ' . intval( $client_id ) . ' ';
+            $where       .= ' AND wp.client_id = %d ';
+            $sql_params[] = (int) $client_id;
         }
 
         // Search filtering.
@@ -1821,8 +1824,10 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
                 }
             );
             if ( ! empty( $tags ) ) {
-                $join_group = ' JOIN ' . $this->table_name( 'wp_group' ) . ' wpgroup ON wp.id = wpgroup.wpid ';
-                $where     .= ' AND wpgroup.groupid IN (' . implode( ',', $tags ) . ') ';
+                $join_group   = ' JOIN ' . $this->table_name( 'wp_group' ) . ' wpgroup ON wp.id = wpgroup.wpid ';
+                $placeholders = implode( ', ', array_fill( 0, count( $tags ), '%d' ) );
+                $where       .= " AND wpgroup.groupid IN ( $placeholders ) ";
+                $sql_params   = array_merge( $sql_params, $tags );
             }
         }
 
@@ -1831,7 +1836,12 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
                 $join_group .
                 'WHERE 1 ' . $where;
 
-        return (int) $this->wpdb->get_var( $qry );
+        // Only call prepare() when we have placeholders.
+        $result = $sql_params
+            ? $this->wpdb->get_var( $this->wpdb->prepare( $qry, $sql_params ) )
+            : $this->wpdb->get_var( $qry );
+
+        return (int) $result;
     }
 
     /**

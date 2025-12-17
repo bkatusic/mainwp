@@ -311,12 +311,22 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
                 return new WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => $status ) );
             }
 
+            // Re-apply exclude filter for backward compatibility.
+            // The ability doesn't support this parameter, so we filter post-fetch.
+            // This matches the pattern used in the Sites controller.
+            $updates = isset( $result['updates'] ) ? $result['updates'] : array();
+            if ( ! empty( $exclud ) && ! empty( $updates ) ) {
+                foreach ( $exclud as $excluded_id ) {
+                    unset( $updates[ $excluded_id ] );
+                }
+            }
+
             // Transform ability output to REST response format.
             // Ability returns 'updates' keyed by site ID with nested type arrays.
             return rest_ensure_response(
                 array(
                     'success' => 1,
-                    'data'    => isset( $result['updates'] ) ? $result['updates'] : array(),
+                    'data'    => $updates,
                 )
             );
         }
