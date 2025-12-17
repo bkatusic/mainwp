@@ -719,7 +719,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             } else {
                 $cli_ids = array();
                 foreach ( $result_tags as $item ) {
-                    $cli_ids[] = $item->client_id;
+                    $cli_ids[] = (int) $item->client_id;
                 }
                 $cli_ids       = array_values( array_unique( $cli_ids ) );
                 $where_clients = ' AND wc.client_id IN (' . implode( ',', $cli_ids ) . ') ';
@@ -841,7 +841,10 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             $per_page = isset( $params['per_page'] ) ? intval( $params['per_page'] ) : false;
 
             if ( ! empty( $s ) ) {
-                $where .= ' AND ( wc.client_id LIKE "%' . $this->escape( $s ) . '%" OR wc.name LIKE "%' . $this->escape( $s ) . '%" OR wc.client_email LIKE "%' . $this->escape( $s ) . '%" ) ';
+                $s = trim( $s );
+                // Use esc_like() to escape LIKE wildcards (%, _) then escape() for SQL safety.
+                $escaped_like = $this->escape( $this->wpdb->esc_like( $s ) );
+                $where       .= ' AND ( wc.client_id LIKE "%' . $escaped_like . '%" OR wc.name LIKE "%' . $escaped_like . '%" OR wc.client_email LIKE "%' . $escaped_like . '%" ) ';
             }
 
             if ( ! empty( $exclude ) ) {

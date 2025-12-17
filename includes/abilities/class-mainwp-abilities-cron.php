@@ -145,7 +145,15 @@ class MainWP_Abilities_Cron {
         }
 
         // Chunk processing (default 20 sites per run).
-        $chunk_size = apply_filters( 'mainwp_abilities_cron_chunk_size', 20 );
+        // Cast to int and clamp to minimum of 1 to prevent infinite loop from misconfigured filter.
+        $chunk_size = (int) apply_filters( 'mainwp_abilities_cron_chunk_size', 20 );
+        if ( $chunk_size < 1 ) {
+            $chunk_size = 1;
+        }
+
+        // Normalize result arrays defensively (transient data could be corrupted).
+        $job['synced'] = isset( $job['synced'] ) && is_array( $job['synced'] ) ? $job['synced'] : array();
+        $job['errors'] = isset( $job['errors'] ) && is_array( $job['errors'] ) ? $job['errors'] : array();
 
         // Calculate already processed site IDs.
         $processed_ids = array_merge(
@@ -293,7 +301,15 @@ class MainWP_Abilities_Cron {
         }
 
         // Chunk processing (default 20 sites per run).
-        $chunk_size = apply_filters( 'mainwp_abilities_cron_chunk_size', 20 );
+        // Cast to int and clamp to minimum of 1 to prevent infinite loop from misconfigured filter.
+        $chunk_size = (int) apply_filters( 'mainwp_abilities_cron_chunk_size', 20 );
+        if ( $chunk_size < 1 ) {
+            $chunk_size = 1;
+        }
+
+        // Normalize result arrays defensively (transient data could be corrupted).
+        $job['updated'] = isset( $job['updated'] ) && is_array( $job['updated'] ) ? $job['updated'] : array();
+        $job['errors']  = isset( $job['errors'] ) && is_array( $job['errors'] ) ? $job['errors'] : array();
 
         // Calculate already processed site IDs.
         $processed_ids = array_merge(
@@ -824,7 +840,15 @@ class MainWP_Abilities_Cron {
         }
 
         // Chunk processing (default 20 sites per run).
-        $chunk_size = apply_filters( 'mainwp_abilities_cron_chunk_size', 20 );
+        // Cast to int and clamp to minimum of 1 to prevent infinite loop from misconfigured filter.
+        $chunk_size = (int) apply_filters( 'mainwp_abilities_cron_chunk_size', 20 );
+        if ( $chunk_size < 1 ) {
+            $chunk_size = 1;
+        }
+
+        // Normalize result arrays defensively (transient data could be corrupted).
+        $job['successful'] = isset( $job['successful'] ) && is_array( $job['successful'] ) ? $job['successful'] : array();
+        $job['errors']     = isset( $job['errors'] ) && is_array( $job['errors'] ) ? $job['errors'] : array();
 
         // Calculate already processed site IDs.
         $processed_ids = array_merge(
