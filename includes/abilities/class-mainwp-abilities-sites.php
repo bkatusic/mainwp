@@ -2351,8 +2351,9 @@ class MainWP_Abilities_Sites {
             if ( MainWP_Abilities_Util::is_child_response_success( $result ) ) {
                 $activated[] = MainWP_Abilities_Util::format_plugin_for_output(
                     array(
-                        'slug' => $plugin_slug,
-                        'Name' => $plugin_slug,
+                        'slug'   => $plugin_slug,
+                        'Name'   => $plugin_slug,
+                        'active' => true, // Plugin was just activated.
                     )
                 );
             } else {
@@ -2474,8 +2475,9 @@ class MainWP_Abilities_Sites {
             if ( MainWP_Abilities_Util::is_child_response_success( $result ) ) {
                 $deactivated[] = MainWP_Abilities_Util::format_plugin_for_output(
                     array(
-                        'slug' => $plugin_slug,
-                        'Name' => $plugin_slug,
+                        'slug'   => $plugin_slug,
+                        'Name'   => $plugin_slug,
+                        'active' => false, // Plugin was just deactivated.
                     )
                 );
             } else {

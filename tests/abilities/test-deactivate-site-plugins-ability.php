@@ -45,9 +45,7 @@ class Test_DeactivateSitePlugins_Ability extends MainWP_Abilities_Test_Case {
 
         // Mock child site response to bypass OpenSSL signing with test keys.
         $this->mock_child_site_response( $site_id, [
-            'plugin' => [
-                'akismet/akismet.php' => true,
-            ],
+            'success' => true,
         ] );
 
         $result = $this->execute_ability( 'mainwp/deactivate-site-plugins-v1', [
@@ -60,6 +58,12 @@ class Test_DeactivateSitePlugins_Ability extends MainWP_Abilities_Test_Case {
         $this->assertArrayHasKey('deactivated', $result);
         $this->assertArrayHasKey('errors', $result);
         $this->assertIsArray($result['deactivated']);
+
+        // MWP-1207: Verify deactivated plugins have active: false.
+        $this->assertNotEmpty( $result['deactivated'], 'Should have at least one deactivated plugin.' );
+        $plugin = $result['deactivated'][0];
+        $this->assertArrayHasKey( 'active', $plugin, 'Plugin should have active field.' );
+        $this->assertFalse( $plugin['active'], 'Deactivated plugin should have active: false (MWP-1207).' );
     }
 
     /**

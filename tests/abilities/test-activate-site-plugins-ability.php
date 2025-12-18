@@ -58,6 +58,12 @@ class Test_ActivateSitePlugins_Ability extends MainWP_Abilities_Test_Case {
         $this->assertArrayHasKey('activated', $result);
         $this->assertArrayHasKey('errors', $result);
         $this->assertIsArray($result['activated']);
+
+        // MWP-1207: Verify activated plugins have active: true.
+        $this->assertNotEmpty( $result['activated'], 'Should have at least one activated plugin.' );
+        $plugin = $result['activated'][0];
+        $this->assertArrayHasKey( 'active', $plugin, 'Plugin should have active field.' );
+        $this->assertTrue( $plugin['active'], 'Activated plugin should have active: true (MWP-1207).' );
     }
 
     /**
