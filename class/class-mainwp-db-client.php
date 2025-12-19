@@ -170,13 +170,13 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
 
         if ( ! $convert_pro_reports_dt && ! $convert_client_reports_dt ) {
             $table_token = esc_sql( $this->table_name( 'pro_reports_token' ) );
-            $rslt = $this->query( 'SHOW TABLES LIKE ' . $this->wpdb->prepare( '%s', $table_token ) );
+            $rslt        = $this->query( 'SHOW TABLES LIKE ' . $this->wpdb->prepare( '%s', $table_token ) );
             if ( static::num_rows( $rslt ) ) {
                 $convert_pro_reports_dt = true;
             }
 
             $table_report_token = esc_sql( $this->table_name( 'client_report_token' ) );
-            $rslt = $this->query( 'SHOW TABLES LIKE ' . $this->wpdb->prepare( '%s', $table_report_token ) );
+            $rslt               = $this->query( 'SHOW TABLES LIKE ' . $this->wpdb->prepare( '%s', $table_report_token ) );
             if ( static::num_rows( $rslt ) ) {
                 $convert_client_reports_dt = true;
             }
@@ -551,7 +551,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
      */
     public function get_wp_client_contact_by( $by = 'contact_id', $value = null, $obj = OBJECT, $params = array() ) { // phpcs:ignore -- NOSONAR - complex.
 
-        $sql = '';
+        $sql            = '';
         $table_contacts = esc_sql( $this->table_name( 'wp_clients_contacts' ) );
 
         if ( 'client_id' === $by && ! empty( $value ) ) {
@@ -596,7 +596,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
      * @return bool Results.
      */
     public function delete_client_contact( $client_id, $contact_id ) {
-        $current = $this->get_wp_client_contact_by( 'contact_id', $contact_id );
+        $current        = $this->get_wp_client_contact_by( 'contact_id', $contact_id );
         $table_contacts = esc_sql( $this->table_name( 'wp_clients_contacts' ) );
         if ( $current && $this->wpdb->query( $this->wpdb->prepare( 'DELETE FROM ' . $table_contacts . ' WHERE contact_client_id=%d AND contact_id = %d', $client_id, $contact_id ) ) ) {
             if ( ! empty( $current->contact_image ) ) {
@@ -674,11 +674,11 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
         $where_clients = '';
 
         $sql = '';
-        
-        $table_wp = esc_sql( $this->table_name( 'wp' ) );
-        $table_wp_group = esc_sql( $this->table_name( 'wp_group' ) );
-        $table_group = esc_sql( $this->table_name( 'group' ) );
-        $table_clients = esc_sql( $this->table_name( 'wp_clients' ) );
+
+        $table_wp               = esc_sql( $this->table_name( 'wp' ) );
+        $table_wp_group         = esc_sql( $this->table_name( 'wp_group' ) );
+        $table_group            = esc_sql( $this->table_name( 'group' ) );
+        $table_clients          = esc_sql( $this->table_name( 'wp_clients' ) );
         $table_clients_contacts = esc_sql( $this->table_name( 'wp_clients_contacts' ) );
 
         if ( $with_selected_sites ) {
@@ -798,11 +798,11 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
 
         $where       = '';
         $select_tags = '';
-        
-        $table_wp = esc_sql( $this->table_name( 'wp' ) );
+
+        $table_wp       = esc_sql( $this->table_name( 'wp' ) );
         $table_wp_group = esc_sql( $this->table_name( 'wp_group' ) );
-        $table_group = esc_sql( $this->table_name( 'group' ) );
-        $table_clients = esc_sql( $this->table_name( 'wp_clients' ) );
+        $table_group    = esc_sql( $this->table_name( 'group' ) );
+        $table_clients  = esc_sql( $this->table_name( 'wp_clients' ) );
 
         if ( $params && is_array( $params ) ) {
             $client = isset( $params['client'] ) ? sanitize_text_field( wp_unslash( $params['client'] ) ) : '';
@@ -1005,12 +1005,12 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
      */
     public function delete_client( $client_id ) {
 
-        $current = $this->get_wp_client_by( 'client_id', $client_id );
-        $table_clients = esc_sql( $this->table_name( 'wp_clients' ) );
-        $table_wp = esc_sql( $this->table_name( 'wp' ) );
-        $table_fields = esc_sql( $this->table_name( 'wp_clients_fields' ) );
+        $current            = $this->get_wp_client_by( 'client_id', $client_id );
+        $table_clients      = esc_sql( $this->table_name( 'wp_clients' ) );
+        $table_wp           = esc_sql( $this->table_name( 'wp' ) );
+        $table_fields       = esc_sql( $this->table_name( 'wp_clients_fields' ) );
         $table_field_values = esc_sql( $this->table_name( 'wp_clients_field_values' ) );
-        
+
         if ( $current && $this->wpdb->query( $this->wpdb->prepare( 'DELETE FROM ' . $table_clients . ' WHERE client_id=%d ', $client_id ) ) ) {
             $this->wpdb->query( $this->wpdb->prepare( 'UPDATE ' . $table_wp . ' SET client_id=0 WHERE client_id=%d ', $client_id ) );
             $fields = $this->get_client_fields_by( 'client_id', $client_id );
@@ -1030,6 +1030,8 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
 
             $this->delete_client_contacts_by_client_id( $client_id );
 
+            $snapshot_info = $this->get_clients_snapshot_info();
+
             /**
              * Delete client
              *
@@ -1038,13 +1040,47 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
              * @param object $current client deleted.
              *
              * @since 4.5.1.1
+             *
+             * @since 6.0 Added $snapshot_info parameter.
              */
-            do_action( 'mainwp_client_deleted', $current );
+            do_action( 'mainwp_client_deleted', $current, $snapshot_info );
 
             return true;
         }
         return false;
     }
+
+
+    /**
+     * Get clients snapshot info.
+     *
+     * @return array
+     */
+    public function get_clients_snapshot_info() {
+
+        $total_clients        = $this->get_wp_clients( array( 'count_only' => true ) );
+        $total_active_clients = $this->get_wp_clients(
+            array(
+                'status'     => '0',
+                'count_only' => true,
+            )
+        );
+        $total_suspended      = $this->get_wp_clients(
+            array(
+                'status'     => '1',
+                'count_only' => true,
+            )
+        );
+        $count_sites          = MainWP_DB::instance()->get_websites_count();
+        $avg_sites_per_client = $total_clients && $count_sites ? round( $count_sites / $total_clients, 2 ) : 0;
+
+        return array(
+            'clients_active_count'   => $total_active_clients,
+            'clients_inactive_count' => $total_suspended,
+            'avg_sites_per_client'   => $avg_sites_per_client,
+        );
+    }
+
 
     /**
      * Method get_websites_by_client_ids.
@@ -1170,7 +1206,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
     public function update_client_field_value( $field_id, $value, $client_id ) {
         if ( ! empty( $field_id ) ) {
             $table_field_values = esc_sql( $this->table_name( 'wp_clients_field_values' ) );
-            $row = $this->wpdb->get_row( $this->wpdb->prepare( 'SELECT * FROM ' . $table_field_values . ' WHERE field_id = %d AND value_client_id=%d ', $field_id, $client_id ) );
+            $row                = $this->wpdb->get_row( $this->wpdb->prepare( 'SELECT * FROM ' . $table_field_values . ' WHERE field_id = %d AND value_client_id=%d ', $field_id, $client_id ) );
             if ( $row ) {
                 if ( $row->field_value != $value ) { //phpcs:ignore -- to valid.
                     $this->wpdb->update( $table_field_values, array( 'field_value' => $value ), array( 'value_id' => $row->value_id ) );
@@ -1207,7 +1243,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             return null;
         }
 
-        $sql = '';
+        $sql          = '';
         $table_fields = esc_sql( $this->table_name( 'wp_clients_fields' ) );
 
         if ( 'client_id' === $by ) {
@@ -1262,8 +1298,8 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             return false;
         }
 
-        $gene_results = array();
-        $table_fields = esc_sql( $this->table_name( 'wp_clients_fields' ) );
+        $gene_results       = array();
+        $table_fields       = esc_sql( $this->table_name( 'wp_clients_fields' ) );
         $table_field_values = esc_sql( $this->table_name( 'wp_clients_field_values' ) );
 
         if ( $general ) {
@@ -1345,7 +1381,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
      */
     public function delete_client_field_by( $by = 'field_id', $value = false, $client_id = false ) {
 
-        $table_fields = esc_sql( $this->table_name( 'wp_clients_fields' ) );
+        $table_fields       = esc_sql( $this->table_name( 'wp_clients_fields' ) );
         $table_field_values = esc_sql( $this->table_name( 'wp_clients_field_values' ) );
 
         if ( 'field_id' === $by && $this->wpdb->query( $this->wpdb->prepare( 'DELETE FROM ' . $table_fields . ' WHERE field_id=%d AND client_id=%d', $value, $client_id ) ) ) { // delete individual or general client field.

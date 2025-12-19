@@ -451,6 +451,8 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             MainWP_DB_Common::instance()->update_user_extension( $userExtension );
             if ( MainWP_System_Utility::is_admin() ) {
 
+                $old_settings = self::get_all_settings_values();
+
                 /**
                 * Action: mainwp_before_save_general_settings
                 *
@@ -586,7 +588,6 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
                 //phpcs:enable
 
                 MainWP_Utility::update_option( 'mainwp_use_favicon', 1 );
-
                 /**
                 * Action: mainwp_after_save_general_settings
                 *
@@ -595,12 +596,111 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
                 * @since 4.1
                 */
                 do_action( 'mainwp_after_save_general_settings', $_POST );
+
+                $new_settings = self::get_all_settings_values();
+
+                /**
+                * Action: mainwp_after_save_settings
+                *
+                * Fires after save settings.
+                *
+                * @since 6.0
+                *
+                * @param array $new_settings The new settings.
+                * @param array $old_settings The old settings.
+                */
+                do_action( 'mainwp_after_save_settings', $new_settings, $old_settings );
+
             }
 
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * Method get_all_settings_values().
+     *
+     * @param  mixed $keys_only True if get Keys only.
+     *
+     * @return array All Settings Fields.
+     */
+    public static function get_all_settings_values( $keys_only = false ) {
+        $keys = array(
+            'mainwp_hide_update_everything',
+            'mainwp_pluginAutomaticDailyUpdate',
+            'mainwp_themeAutomaticDailyUpdate',
+            'mainwp_transAutomaticDailyUpdate',
+            'mainwp_automaticDailyUpdate',
+            'mainwp_show_language_updates',
+            'mainwp_disable_update_confirmations',
+            'mainwp_backup_before_upgrade',
+            'mainwp_backup_before_upgrade_days',
+            'mainwp_maximumComments',
+            'mainwp_automatic_update_next_run_timestamp',
+            'mainwp_delay_autoupdate',
+            'mainwp_numberdays_Outdate_Plugin_Theme',
+            'mainwp_check_http_response',
+            'mainwp_check_http_response_method',
+            'mainwp_site_actions_notification_enable',
+            'mainwp_use_favicon',
+            'mainwp_backupsOnServer',
+            'mainwp_maximumFileDescriptors',
+            'mainwp_maximumFileDescriptorsAuto',
+            'mainwp_backupOnExternalSources',
+            'mainwp_archiveFormat',
+            'mainwp_notificationOnBackupFail',
+            'mainwp_notificationOnBackupStart',
+            'mainwp_chunkedBackupTasks',
+            'mainwp_primaryBackup',
+            'mainwp_enableLegacyBackupFeature',
+            'mainwp_global_uptime_monitoring_settings',
+            'mainwp_disableSitesHealthMonitoring',
+            'mainwp_sitehealthThreshold',
+            'mainwp_maximumRequests',
+            'mainwp_minimumDelay',
+            'mainwp_maximumIPRequests',
+            'mainwp_minimumIPDelay',
+            'mainwp_maximumSyncRequests',
+            'mainwp_maximumInstallUpdateRequests',
+            'mainwp_sslVerifyCertificate',
+            'mainwp_connect_signature_algo',
+            'mainwp_verify_connection_method',
+            'mainwp_forceUseIPv4',
+            'mainwp_wp_cron',
+            'mainwp_warm_cache_pages_ttl',
+            'mainwp_optimize',
+            'mainwp_maximum_uptime_monitoring_requests',
+            'mainwp_chunksitesnumber',
+            'mainwp_chunksleepinterval',
+            'mainwp_settings_sync_data',
+            'mainwp_module_log_settings',
+            'mainwp_module_log_settings_logs_selection_data',
+            'mainwp_uptimecheck_running',
+            'mainwp_uptimecheck_auto_main_counter_lasttime_started',
+            'mainwp_enable_guided_tours',
+            'mainwp_enable_guided_chatbase',
+            'mainwp_enable_guided_video',
+            'mainwp_enable_cloudways_api',
+            'mainwp_enable_gridpane_api',
+            'mainwp_enable_vultr_api',
+            'mainwp_enable_linode_api',
+            'mainwp_enable_digitalocean_api',
+            'mainwp_enable_cpanel_api',
+            'mainwp_enable_plesk_api',
+            'mainwp_enable_kinsta_api',
+        );
+
+        if ( $keys_only ) {
+            return $keys;
+        }
+
+        $values = array();
+        foreach ( $keys as $key ) {
+            $values[ $key ] = get_option( $key );
+        }
+        return $values;
     }
 
     /**
@@ -1311,6 +1411,8 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
 
         if ( isset( $_POST['submit'] ) && isset( $_POST['wp_nonce'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_nonce'] ), 'SettingsAdvanced' ) ) {
 
+            $old_settings = static::get_all_settings_values();
+
             /**
             * Action: mainwp_before_save_advanced_settings
             *
@@ -1366,7 +1468,6 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
                 $openssl_loc = ! empty( $_POST['mainwp_openssl_lib_location'] ) ? sanitize_text_field( wp_unslash( $_POST['mainwp_openssl_lib_location'] ) ) : '';
                 MainWP_Utility::update_option( 'mainwp_opensslLibLocation', $openssl_loc );
             }
-
             /**
             * Action: mainwp_after_save_advanced_settings
             *
@@ -1375,6 +1476,21 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             * @since 4.1
             */
             do_action( 'mainwp_after_save_advanced_settings', $_POST );
+
+            $new_settings = self::get_all_settings_values();
+
+            /**
+            * Action: mainwp_after_save_settings
+            *
+            * Fires after save settings.
+            *
+            * @since 6.0
+            *
+            * @param array $new_settings The new settings.
+            * @param array $old_settings The old settings.
+            */
+            do_action( 'mainwp_after_save_settings', $new_settings, $old_settings );
+
         }
         static::render_header( 'Advanced' );
         ?>

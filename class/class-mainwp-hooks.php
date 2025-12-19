@@ -101,6 +101,20 @@ class MainWP_Hooks { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conten
         add_filter( 'mainwp_extension_is_pro_member', array( &$this, 'is_pro_member' ), 10, 1 );
 
         /**
+         * Handle get avaiable add-ons.
+         *
+         * @since 6.0
+         */
+        add_filter(
+            'mainwp_get_avaiable_add_ons',
+            function () {
+                return MainWP_Extensions_View::get_available_extensions( 'all' );
+            },
+            10,
+            1
+        );
+
+        /**
          * Logging debug actions.
          */
         add_action( 'mainwp_log_debug', array( &$this, 'mainwp_log_debug' ), 10, 1 );
@@ -1454,10 +1468,6 @@ class MainWP_Hooks { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conten
                 * @since 4.1
                 */
                 do_action( 'mainwp_after_plugin_theme_translation_update', $information, $type, implode( ',', $slugs ), $website );
-
-                if ( isset( $information['sync'] ) ) {
-                    unset( $information['sync'] );
-                }
                 wp_send_json( $information );
             }
         } catch ( MainWP_Exception $e ) {

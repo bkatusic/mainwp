@@ -434,6 +434,9 @@ class MainWP_System_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         $update_selected_mainwp_themes = false;
 
         if ( isset( $_GET['page'] ) && 'MainWPTools' === $_GET['page'] && isset( $_POST['wp_nonce'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_nonce'] ), 'MainWPTools' ) ) {
+
+            $old_settings = MainWP_Settings::get_all_settings_values();
+
             if ( isset( $_POST['mainwp_restore_info_messages'] ) && ! empty( $_POST['mainwp_restore_info_messages'] ) ) {
                 delete_user_option( $user->ID, 'mainwp_notice_saved_status' );
             }
@@ -449,6 +452,20 @@ class MainWP_System_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
             if ( isset( $_POST['mainwp_settings_custom_theme'] ) ) {
                 $update_selected_mainwp_themes = true;
             }
+
+            $new_settings = MainWP_Settings::get_all_settings_values();
+
+            /**
+            * Action: mainwp_after_save_settings
+            *
+            * Fires after save settings.
+            *
+            * @since 6.0
+            *
+            * @param array $new_settings The new settings.
+            * @param array $old_settings The old settings.
+            */
+            do_action( 'mainwp_after_save_settings', $new_settings, $old_settings );
         }
 
         if ( isset( $_POST['wp_scr_options_nonce'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_scr_options_nonce'] ), 'MainWPSelectThemes' ) ) {

@@ -606,6 +606,21 @@ PRIMARY KEY  (`id`)  ';
             $this->invalidate_cost_tracker_caches( 'id' === $by ? $value : null );
         }
 
+        $snapshot_info = Cost_Tracker_Admin::get_costs_snapshot_info();
+
+        /**
+         * Action mainwp_cost_tracker_deleted.
+         *
+         * @param string $by Delete by.
+         * @param mixed $value Value.
+         * @param bool $deleted Deleted.
+         * @param array $snapshot_info costs snapshot info.
+         *
+         * @since 6.0
+         *
+         */
+        do_action( 'mainwp_cost_tracker_deleted', $by, $value, $deleted, $snapshot_info );
+
         return $deleted;
     }
 

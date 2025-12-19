@@ -208,6 +208,8 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             $synclist             = MainWP_Settings::get_instance()->get_data_list_to_sync();
             $postdata['syncdata'] = wp_json_encode( $synclist );
 
+            MainWP_Stack_Helper::stack_push( 'sync_stats' );
+
             $information = MainWP_Connect::fetch_url_authed(
                 $pWebsite,
                 'stats',
@@ -244,6 +246,8 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      * @param int    $check_result Check if offline.
      * @param bool   $error True|False.
      * @param bool   $pAllowDisconnect True|False.
+     * @param array  $other Additional parameters.
+     * @param array  $fetch_output Fetch output.
      *
      * @return bool true|false True on success, false on failure.
      *
@@ -255,7 +259,7 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      * @uses  \MainWP\Dashboard\MainWP_Utility::ctype_digit()
      * @uses  \MainWP\Dashboard\MainWP_Utility::get_site_health()
      */
-    public static function sync_information_array( &$pWebsite, &$information, $sync_errors = '', $check_result = false, $error = false, $pAllowDisconnect = true ) { // phpcs:ignore -- NOSONAR -Current complexity is the only way to achieve desired results, pull request solutions appreciated.
+    public static function sync_information_array( &$pWebsite, &$information, $sync_errors = '', $check_result = false, $error = false, $pAllowDisconnect = true, $other = array(), $fetch_output = array() ) { // phpcs:ignore -- NOSONAR -Current complexity is the only way to achieve desired results, pull request solutions appreciated.
         $emptyArray        = wp_json_encode( array() );
         $websiteValues     = array();
         $websiteSyncValues = array(
@@ -328,6 +332,8 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             $done                         = true;
         }
 
+        $had_pending_updates = null;
+
         $wp_updates_empty = true;
         if ( isset( $information['wp_updates'] ) && ! empty( $information['wp_updates'] ) ) {
             MainWP_DB::instance()->update_website_option(
@@ -340,8 +346,9 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     )
                 )
             );
-            $done             = true;
-            $wp_updates_empty = false;
+            $done                = true;
+            $wp_updates_empty    = false;
+            $had_pending_updates = true;
         }
 
         if ( isset( $information['plugin_updates'] ) ) {
@@ -351,6 +358,9 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     $update_values[ $file ] = $update;
                 }
             }
+
+            $had_pending_updates = ! empty( $update_values ) || (bool) $had_pending_updates;
+
             $websiteValues['plugin_upgrades'] = wp_json_encode( $update_values );
             $done                             = true;
         }
@@ -362,16 +372,20 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     $update_values[ $file ] = $update;
                 }
             }
+            $had_pending_updates             = ! empty( $update_values ) || (bool) $had_pending_updates;
             $websiteValues['theme_upgrades'] = wp_json_encode( $update_values );
             $done                            = true;
         }
 
         if ( isset( $information['translation_updates'] ) ) {
+            $had_pending_updates                   = ! empty( $information['translation_updates'] ) || (bool) $had_pending_updates;
             $websiteValues['translation_upgrades'] = wp_json_encode( $information['translation_updates'] );
             $done                                  = true;
         }
 
         if ( isset( $information['premium_updates'] ) ) {
+            $had_pending_updates = ! empty( $information['premium_updates'] ) || (bool) $had_pending_updates;
+
             MainWP_DB::instance()->update_website_option( $pWebsite, 'premium_upgrades', wp_json_encode( $information['premium_updates'] ) );
             $done = true;
         }
@@ -588,9 +602,9 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             }
         }
 
-        $act_success = false;
+        $sync_success = false;
         if ( $done ) {
-            $act_success                  = true;
+            $sync_success                 = true;
             $websiteSyncValues['dtsSync'] = time();
             if ( $wp_updates_empty ) {
                 MainWP_DB::instance()->update_website_option(
@@ -607,6 +621,9 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             MainWP_DB::instance()->update_website_values( $pWebsite->id, $websiteValues );
             MainWP_Logger::instance()->log_events( 'db-queries', sprintf( '[Update site sync data=%s]', MainWP_DB::instance()->get_last_query() ) );
         }
+
+        $error_occurred = $error;
+        $msg_errors     = $_error;
 
         $error = apply_filters( 'mainwp_sync_site_after_sync_result', $error, $pWebsite, $information );
 
@@ -637,6 +654,43 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             do_action( 'mainwp_site_synced', $pWebsite, $information );
         }
 
+        $telem_info = static::get_telem_sync_info( $sync_success );
+
+        if ( isset( $information['version'] ) ) {
+            $telem_info['child_plugin_version'] = $information['version'];
+        }
+
+        if ( isset( $had_pending_updates ) ) {
+            $telem_info['site_had_pending_updates'] = $had_pending_updates ? true : false;
+        }
+
+        if ( $error_occurred && ! empty( $information['fetch_url_output'] ) && is_array( $information['fetch_url_output'] ) ) {
+            $output                        = $information['fetch_url_output'];
+            $telem_info['error_message']   = $msg_errors;
+            $telem_info['error_category']  = ! empty( $output['error_category'] ) ? $output['error_category'] : 'unknown';
+            $telem_info['error_code']      = ! empty( $output['error_code'] ) ? $output['error_code'] : 'undefined_error';
+            $telem_info['connection_step'] = ! empty( $output['connection_step'] ) ? $output['connection_step'] : 'handshake';
+            if ( ! empty( $output['http_status'] ) ) {
+                $telem_info['http_status'] = $output['http_status'];
+            }
+        }
+
+        /**
+         * Action: mainwp_after_site_synced
+         *
+         * Fires upon site synchronization.
+         *
+         * @param object $pWebsite    Object containing child site info.
+         * @param array  $information Array containing information returned from child site.
+         * @param mixed  $error       Sync error result.
+         * @param mixed  $sync_errors Sync error message if existed.
+         * @param array  $other      Additional parameters.
+         * @param array  $telem_info  Telemetry information.
+         *
+         * @since 6.0
+         */
+        do_action( 'mainwp_after_site_synced', $pWebsite, $information, $error, $sync_errors, $other, $telem_info );
+
         $post_data = array();
 
         /**
@@ -646,17 +700,58 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
          *
          * @param object $pWebsite    Object containing child site info.
          * @param array  $information Array containing information returned from child site.
-         * @param bool  $act_success action success or failed.
+         * @param bool  $sync_success action success or failed.
          *  @param string  $_error Sync error message if existed.
          * @param array  $post_data Addition post data.
          *
          * @since 3.4
          */
-        do_action( 'mainwp_site_sync', $pWebsite, $information, $act_success, $_error, $post_data );
+        do_action( 'mainwp_site_sync', $pWebsite, $information, $sync_success, $_error, $post_data );
 
         return ! $error;
     }
 
+
+    /**
+     * Method get_telem_sync_info.
+     *
+     * @param  mixed $sync_done
+     * @return void
+     */
+    public static function get_telem_sync_info( $sync_done ) {
+
+        $is_bulk_sync = ! empty( $_POST['bulkSync'] ) ? true : false; // phpcs:ignore -- NOSONAR - superglobal usage is acceptable.
+
+        $tp = 'post_add_site';
+
+        if ( $is_bulk_sync ) {
+            $tp = 'manual_bulk';
+        } elseif ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+            $tp = 'auto_cron';
+        } elseif ( isset( $_POST['bulkSync'] ) && ! $is_bulk_sync ) { //phpcs:ignore -- NOSONAR - superglobal usage is acceptable.
+            $tp = 'manual_single';
+        }
+
+        $trigger = 'system';
+        if ( 'manual_single' === $tp || 'manual_bulk' === $tp ) {
+            $trigger = 'user_click';
+        } elseif ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+            $trigger = 'cron';
+        }
+
+        $curr_stack       = MainWP_Stack_Helper::stack_current();
+        $prev_conn_status = in_array( $curr_stack, array( 'sync_before_reconnect', 'sync_reconnect' ) ) ? 'disconnected' : 'connected';
+        $new_conn_status  = $sync_done ? 'disconnected' : 'connected';
+
+        return array(
+            'sync_type'                  => $tp,
+            'trigger'                    => $trigger,
+            'previous_connection_status' => $prev_conn_status,
+            'new_connection_status'      => $new_conn_status,
+            'connection_status_changed'  => $prev_conn_status === $new_conn_status ? false : true,
+            'sync_duration_ms'           => MainWP_Execution_Helper::get_run_time( true ),
+        );
+    }
 
     /**
      * Method init empty sync values.

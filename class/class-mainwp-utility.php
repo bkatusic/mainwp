@@ -1492,10 +1492,6 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                 $error = '';
                 try {
                     $information = MainWP_Connect::fetch_url_authed( $website, 'check_abandoned', array( 'which' => $which ) );
-                    if ( is_array( $information ) && isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-                        MainWP_Sync::sync_information_array( $website, $information['sync'] );
-                        unset( $information['sync'] );
-                    }
                 } catch ( MainWP_Exception $e ) {
                     $error = $e->getMessage();
                 }
@@ -2141,7 +2137,7 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
 
         $html = '<div class="mainwp-site-display">';
 
-        // WP Admin link (if enabled and user has permission)
+        // WP Admin link (if enabled and user has permission).
         if ( $wp_admin && \mainwp_current_user_can( 'dashboard', 'access_wpadmin_on_child_sites' ) ) {
             $admin_url = MainWP_Site_Open::get_open_site_url( $website->id, '', false );
             $html     .= '<a href="' . esc_url( $admin_url ) . '" class="open_newwindow_wpadmin" target="_blank" data-tooltip="' . esc_attr__( 'Go to WP Admin', 'mainwp' ) . '" data-position="top left" data-inverted=""><i class="sign in icon"></i></a> ';
@@ -2149,10 +2145,10 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             $html .= '<i class="sign in icon"></i> ';
         }
 
-        // Site name with dashboard link
+        // Site name with dashboard link.
         $html .= '<a href="' . esc_url( admin_url( 'admin.php?page=managesites&dashboard=' . intval( $website->id ) ) ) . '">' . $site_name . '</a>';
 
-        // Site URL
+        // Site URL.
         $html .= '<div><span class="ui small text">';
         $html .= '<a href="' . $site_url . '" class="mainwp-may-hide-referrer open_site_url ui grey text" target="_blank">' . $nice_url . '</a>';
         $html .= '</span></div>';
