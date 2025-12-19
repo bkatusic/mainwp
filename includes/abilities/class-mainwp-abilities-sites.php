@@ -1525,7 +1525,18 @@ class MainWP_Abilities_Sites {
         }
 
         if ( isset( $input['tag_ids'] ) && is_array( $input['tag_ids'] ) ) {
-            MainWP_DB::instance()->update_website_values( $site->id, array( 'tags' => implode( ',', array_map( 'intval', $input['tag_ids'] ) ) ) );
+            global $wpdb;
+            // Clear existing tag associations for this site.
+            $wpdb->query(
+                $wpdb->prepare(
+                    'DELETE FROM ' . $wpdb->prefix . 'mainwp_wp_group WHERE wpid = %d',
+                    $site->id
+                )
+            );
+            // Add new tag associations.
+            foreach ( $input['tag_ids'] as $tag_id ) {
+                MainWP_DB_Common::instance()->update_group_site( (int) $tag_id, $site->id );
+            }
         }
 
         if ( isset( $input['client_id'] ) ) {
