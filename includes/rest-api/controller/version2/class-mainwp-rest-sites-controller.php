@@ -639,18 +639,15 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
         $full_data = isset( $request['full_data'] ) ? mainwp_string_to_bool( $request['full_data'] ) : true;
 
         // Try abilities-first approach (with fallback to legacy logic).
-        // Skip abilities if with_tags=false or full_data=false since these require
-        // different response handling that the ability schema doesn't support.
+        // Skip abilities when with_tags=false, full_data=false, or include/exclude
+        // are set (ability returns paginated results that would corrupt metadata).
         $ability = null;
-        if ( $with_tags && $full_data ) {
+        if ( empty( $args['include'] ) && empty( $args['exclude'] ) && $with_tags && $full_data ) {
             $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/list-sites-v1' ) : null;
         }
 
         if ( null !== $ability ) {
             // Build ability input from REST parameters.
-            // Note: include/exclude are not part of the ability schema; the ability
-            // handles pagination and filtering, then the controller can apply
-            // include/exclude when refetching full data from DB.
             $ability_input = array(
                 'page'      => isset( $args['paged'] ) ? (int) $args['paged'] : 1,
                 'per_page'  => isset( $args['items_per_page'] ) ? (int) $args['items_per_page'] : 20,
@@ -687,18 +684,6 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
                 // Get site IDs from ability results.
                 $site_ids = array_map( fn( $item ) => isset( $item['id'] ) ? (int) $item['id'] : 0, $result['items'] );
                 $site_ids = array_filter( $site_ids );
-
-                // Re-apply include/exclude filters for backward compatibility.
-                // The ability doesn't support these parameters, so we filter post-fetch.
-                $include = ! empty( $args['include'] ) ? wp_parse_id_list( $args['include'] ) : array();
-                $exclude = ! empty( $args['exclude'] ) ? wp_parse_id_list( $args['exclude'] ) : array();
-
-                if ( ! empty( $include ) ) {
-                    $site_ids = array_intersect( $site_ids, $include );
-                }
-                if ( ! empty( $exclude ) ) {
-                    $site_ids = array_diff( $site_ids, $exclude );
-                }
 
                 if ( ! empty( $site_ids ) ) {
                     // Fetch full site data to normalize through REST filters.
@@ -861,10 +846,12 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             }
 
             // Transform ability output to REST response format.
-            // Ability returns array of results, REST expects single result.
-            $first_result = ! empty( $result['results'] ) ? $result['results'][0] : array();
-            $success      = ! empty( $first_result['success'] );
-            $site_data    = array();
+            // The sync-sites-v1 ability returns 'synced' and 'errors' arrays.
+            // A single-site sync is successful if the site appears in 'synced' and not in 'errors'.
+            $synced    = isset( $result['synced'] ) && is_array( $result['synced'] ) ? $result['synced'] : array();
+            $errors    = isset( $result['errors'] ) && is_array( $result['errors'] ) ? $result['errors'] : array();
+            $success   = ! empty( $synced ) && empty( $errors );
+            $site_data = array();
 
             // Normalize site data to REST format for backward compatibility.
             if ( $success ) {
@@ -971,12 +958,18 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
         }
 
         // Try abilities-first approach (with fallback to legacy logic).
-        $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/get-site-plugins-v1' ) : null;
+        // Skip abilities if unsupported parameters are present.
+        // The ability schema doesn't support search, must_use, or pagination.
+        $ability                = null;
+        $has_unsupported_params = ! empty( $args['s'] ) || ! empty( $args['must_use'] )
+            || ! empty( $args['paged'] ) || ! empty( $args['items_per_page'] );
+
+        if ( ! $has_unsupported_params ) {
+            $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/get-site-plugins-v1' ) : null;
+        }
 
         if ( null !== $ability ) {
             // Build ability input matching the ability's JSON Schema.
-            // Note: search, must_use, and pagination are not supported by the ability schema.
-            // These features would need to be handled at the REST layer or added to the ability.
             $ability_input = array(
                 'site_id_or_domain' => (int) $website->id,
             );
