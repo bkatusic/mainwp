@@ -544,7 +544,8 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
         }
 
         // Extract with_tags flag early so both paths use the same value.
-        $with_tags = isset( $request['with_tags'] ) ? mainwp_string_to_bool( $request['with_tags'] ) : false;
+        // Default to true for consistency with get_items() endpoint.
+        $with_tags = isset( $request['with_tags'] ) ? mainwp_string_to_bool( $request['with_tags'] ) : true;
 
         // Try abilities-first approach (with fallback to legacy logic).
         $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/get-site-v1' ) : null;
@@ -960,9 +961,10 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
         // Try abilities-first approach (with fallback to legacy logic).
         // Skip abilities if unsupported parameters are present.
         // The ability schema doesn't support search, must_use, or pagination.
+        // Note: Pagination only applies when BOTH paged AND items_per_page are set (matches legacy).
         $ability                = null;
         $has_unsupported_params = ! empty( $args['s'] ) || ! empty( $args['must_use'] )
-            || ! empty( $args['paged'] ) || ! empty( $args['items_per_page'] );
+            || ( ! empty( $args['paged'] ) && ! empty( $args['items_per_page'] ) );
 
         if ( ! $has_unsupported_params ) {
             $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/get-site-plugins-v1' ) : null;
@@ -1261,9 +1263,10 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
         // Try abilities-first approach (with fallback to legacy logic).
         // Skip abilities if unsupported parameters are present.
         // The ability schema doesn't support search or pagination.
+        // Note: Pagination only applies when BOTH paged AND items_per_page are set (matches legacy).
         $ability                = null;
         $has_unsupported_params = ! empty( $args['s'] )
-            || ! empty( $args['paged'] ) || ! empty( $args['items_per_page'] );
+            || ( ! empty( $args['paged'] ) && ! empty( $args['items_per_page'] ) );
 
         if ( ! $has_unsupported_params ) {
             $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/get-site-themes-v1' ) : null;
