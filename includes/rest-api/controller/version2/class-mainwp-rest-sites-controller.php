@@ -1259,22 +1259,32 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
         }
 
         // Try abilities-first approach (with fallback to legacy logic).
-        $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/get-site-themes-v1' ) : null;
+        // Skip abilities if unsupported parameters are present.
+        // The ability schema doesn't support search or pagination.
+        $ability                = null;
+        $has_unsupported_params = ! empty( $args['s'] )
+            || ! empty( $args['paged'] ) || ! empty( $args['items_per_page'] );
+
+        if ( ! $has_unsupported_params ) {
+            $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/get-site-themes-v1' ) : null;
+        }
 
         if ( null !== $ability ) {
-            // Build ability input.
-            // Note: Only set page/per_page when both pagination params are explicitly provided.
-            // This matches legacy behavior: without pagination params, return ALL items.
+            // Build ability input matching the ability's JSON Schema.
             $ability_input = array(
                 'site_id_or_domain' => (int) $website->id,
-                'status'            => isset( $args['status'] ) ? $args['status'] : array( 'any' ),
-                'search'            => isset( $args['s'] ) ? $args['s'] : '',
             );
 
-            // Only apply pagination when both params are provided (matching legacy behavior).
-            if ( ! empty( $args['paged'] ) && ! empty( $args['items_per_page'] ) ) {
-                $ability_input['page']     = (int) $args['paged'];
-                $ability_input['per_page'] = (int) $args['items_per_page'];
+            // Status must be a string matching the ability schema enum ['all', 'active', 'inactive'].
+            if ( isset( $args['status'] ) && in_array( $args['status'], array( 'all', 'active', 'inactive' ), true ) ) {
+                $ability_input['status'] = $args['status'];
+            } else {
+                $ability_input['status'] = 'all';
+            }
+
+            // Pass has_update filter if provided.
+            if ( isset( $args['has_update'] ) ) {
+                $ability_input['has_update'] = (bool) $args['has_update'];
             }
 
             $result = $ability->execute( $ability_input );
@@ -1630,35 +1640,46 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
                         'success' => 1,
                         'message' => esc_html__( 'Sync queued for background processing.', 'mainwp' ),
                         'job_id'  => $result['job_id'],
-                        'total'   => isset( $result['queued_count'] ) ? $result['queued_count'] : 0,
+                        'total'   => isset( $result['sites_queued'] ) ? $result['sites_queued'] : 0,
                     )
                 );
             }
 
-            // Transform ability output: map results array to REST format.
-            // Ability returns results array, REST expects site ID as key.
-            // CONTRACT: The ability's 'site' field should match the format returned by
-            // prepare_item_for_response() + filter_response_data_by_allowed_fields( ..., 'view' ).
-            // If the ability returns raw site objects instead, they must be normalized here.
-            // See: .mwpdev/plans/abilities-api/phase-3-rest-integration-notes.md
+            // Transform ability output: map synced/errors arrays to REST format.
+            // The sync-sites-v1 ability returns 'synced' and 'errors' arrays.
+            // REST expects site ID as key with 'result' field indicating success/failure.
             $transformed_data = array();
-            if ( ! empty( $result['results'] ) ) {
-                foreach ( $result['results'] as $sync_result ) {
-                    $site_id   = isset( $sync_result['site_id'] ) ? $sync_result['site_id'] : 0;
-                    $success   = ! empty( $sync_result['success'] );
-                    $site_data = isset( $sync_result['site'] ) ? $sync_result['site'] : array();
+            $synced           = isset( $result['synced'] ) && is_array( $result['synced'] ) ? $result['synced'] : array();
+            $errors           = isset( $result['errors'] ) && is_array( $result['errors'] ) ? $result['errors'] : array();
 
-                    // If the ability returns a raw site object, normalize it to REST format.
-                    // Check if this is a raw object (has database-style keys) vs already formatted.
-                    if ( is_object( $site_data ) || ( is_array( $site_data ) && isset( $site_data['adminname'] ) ) ) {
-                        // Raw format detected - normalize through REST response filters.
+            // Process successfully synced sites.
+            foreach ( $synced as $site_info ) {
+                $site_id = isset( $site_info['id'] ) ? (int) $site_info['id'] : 0;
+                if ( $site_id > 0 ) {
+                    // Re-fetch full site data for REST response format.
+                    $site_params = array(
+                        'full_data'    => true,
+                        'selectgroups' => true,
+                        'include'      => array( $site_id ),
+                        'fields'       => $this->get_fields_for_response( $request ),
+                    );
+                    $websites    = MainWP_DB::instance()->get_websites_for_current_user( $site_params );
+                    $site_data   = $websites ? current( $websites ) : array();
+                    if ( ! empty( $site_data ) ) {
                         $site_data = $this->filter_response_data_by_allowed_fields(
                             $this->prepare_item_for_response( $site_data, $request ),
                             'view'
                         );
                     }
+                    $transformed_data[ $site_id ] = array_merge( array( 'result' => 'success' ), $site_data );
+                }
+            }
 
-                    $transformed_data[ $site_id ] = array_merge( array( 'result' => $success ? 'success' : 'failed' ), $site_data );
+            // Process failed sites.
+            foreach ( $errors as $error_info ) {
+                $site_id = isset( $error_info['identifier'] ) ? (int) $error_info['identifier'] : 0;
+                if ( $site_id > 0 ) {
+                    $transformed_data[ $site_id ] = array( 'result' => 'failed' );
                 }
             }
 
