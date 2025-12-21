@@ -974,20 +974,23 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
         $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/get-site-plugins-v1' ) : null;
 
         if ( null !== $ability ) {
-            // Build ability input.
-            // Note: Only set page/per_page when both pagination params are explicitly provided.
-            // This matches legacy behavior: without pagination params, return ALL items.
+            // Build ability input matching the ability's JSON Schema.
+            // Note: search, must_use, and pagination are not supported by the ability schema.
+            // These features would need to be handled at the REST layer or added to the ability.
             $ability_input = array(
                 'site_id_or_domain' => (int) $website->id,
-                'status'            => isset( $args['status'] ) ? $args['status'] : array( 'any' ),
-                'search'            => isset( $args['s'] ) ? $args['s'] : '',
-                'must_use'          => ! empty( $args['must_use'] ),
             );
 
-            // Only apply pagination when both params are provided (matching legacy behavior).
-            if ( ! empty( $args['paged'] ) && ! empty( $args['items_per_page'] ) ) {
-                $ability_input['page']     = (int) $args['paged'];
-                $ability_input['per_page'] = (int) $args['items_per_page'];
+            // Status must be a string matching the ability schema enum ['all', 'active', 'inactive'].
+            if ( isset( $args['status'] ) && in_array( $args['status'], array( 'all', 'active', 'inactive' ), true ) ) {
+                $ability_input['status'] = $args['status'];
+            } else {
+                $ability_input['status'] = 'all';
+            }
+
+            // Pass has_update filter if provided.
+            if ( isset( $args['has_update'] ) ) {
+                $ability_input['has_update'] = (bool) $args['has_update'];
             }
 
             $result = $ability->execute( $ability_input );

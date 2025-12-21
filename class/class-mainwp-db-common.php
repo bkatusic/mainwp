@@ -330,10 +330,13 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             }
 
             if ( ! empty( $s ) ) {
-                $s = trim( $s );
-                // Use esc_like() to escape LIKE wildcards (%, _) then escape() for SQL safety.
-                $escaped_like = $this->escape( $this->wpdb->esc_like( $s ) );
-                $where       .= ' AND ( gr.name LIKE "%' . $escaped_like . '%" OR gr.id LIKE "%' . $escaped_like . '%" ) ';
+                $s            = trim( $s );
+                $like_pattern = '%' . $this->wpdb->esc_like( $s ) . '%';
+                $where       .= $this->wpdb->prepare(
+                    ' AND ( gr.name LIKE %s OR gr.id LIKE %s ) ',
+                    $like_pattern,
+                    $like_pattern
+                );
             }
 
             if ( ! empty( $exclude ) ) {
