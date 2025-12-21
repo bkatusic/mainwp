@@ -706,7 +706,7 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             return rest_ensure_response(
                 array(
                     'success' => 1,
-                    'total'   => count( $normalized_items ),
+                    'total'   => isset( $result['total'] ) ? (int) $result['total'] : count( $normalized_items ),
                     'data'    => $normalized_items,
                 )
             );
