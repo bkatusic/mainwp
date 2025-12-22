@@ -167,13 +167,17 @@ class MainWP_Abilities_Batch {
                         'required'   => array( 'site_id', 'code', 'message' ),
                     ),
                 ),
+                'job_timed_out'     => array(
+                    'type'        => 'boolean',
+                    'description' => __( 'Whether the job exceeded the maximum processing time window (4 hours).', 'mainwp' ),
+                ),
                 'job_error_code'    => array(
                     'type'        => 'string',
-                    'description' => __( 'Top-level error code when job failed due to timeout or other job-level issue. Only present when job_timed_out is true.', 'mainwp' ),
+                    'description' => __( 'Top-level error code when job failed due to timeout or other job-level issue. Present when job_timed_out is true.', 'mainwp' ),
                 ),
                 'job_error_message' => array(
                     'type'        => 'string',
-                    'description' => __( 'Human-readable description of the job-level error. Only present when job_timed_out is true.', 'mainwp' ),
+                    'description' => __( 'Human-readable description of the job-level error. Present when job_timed_out is true.', 'mainwp' ),
                 ),
             ),
             'required'   => array( 'job_id', 'type', 'status', 'progress', 'processed', 'total', 'succeeded', 'failed' ),
@@ -319,9 +323,12 @@ class MainWP_Abilities_Batch {
             'errors'       => $normalized_errors,
         );
 
-        // Add top-level error fields when job timed out.
+        // Expose timeout state and add top-level error fields when job timed out.
         // This provides a clear indicator without requiring clients to scan the errors array.
-        if ( ! empty( $job_data['job_timed_out'] ) ) {
+        $job_timed_out             = ! empty( $job_data['job_timed_out'] );
+        $response['job_timed_out'] = $job_timed_out;
+
+        if ( $job_timed_out ) {
             $response['job_error_code']    = 'timeout';
             $response['job_error_message'] = __( 'Job timed out after 4 hours. Partial results may be available.', 'mainwp' );
         }
