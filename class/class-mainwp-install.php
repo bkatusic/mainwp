@@ -25,7 +25,7 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
      *
      * @var string DB version info.
      */
-    protected $mainwp_db_version = '9.0.0.62'; // NOSONAR - no IP.
+    protected $mainwp_db_version = '9.0.0.62.001'; // NOSONAR - no IP.
 
     /**
      * Protected variable to hold the database option name.
@@ -368,8 +368,8 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
             $tbl .= ',
     PRIMARY KEY  (key_id)  ';
         }
-            $tbl  .= ') ' . $charset_collate . ';';
-            $sql[] = $tbl;
+        $tbl  .= ') ' . $charset_collate . ';';
+        $sql[] = $tbl;
 
         $tbl = 'CREATE TABLE ' . $this->table_name( 'action_log' ) . " (
     id int(11) NOT NULL auto_increment,
@@ -382,8 +382,8 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
             $tbl .= ',
     PRIMARY KEY  (id)  ';
         }
-            $tbl  .= ') ' . $charset_collate . ';';
-            $sql[] = $tbl;
+        $tbl  .= ') ' . $charset_collate . ';';
+        $sql[] = $tbl;
 
         $tbl = 'CREATE TABLE ' . $this->table_name( 'request_log' ) . " (
   id int(11) NOT NULL auto_increment,
@@ -409,7 +409,7 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
     dts_process_init_time int(11) NOT NULL DEFAULT 0,
     dts_process_stop int(11) NOT NULL DEFAULT 0";
 
-        if ( empty( $currentVersion ) || version_compare( $currentVersion, '9.0.0.45', '<' ) ) { //phpcs:ignore -- NOSONAR - no ip.
+    if ( empty( $currentVersion ) || version_compare( $currentVersion, '9.0.0.45', '<' ) ) { //phpcs:ignore -- NOSONAR - no ip.
             $tbl .= ',
     PRIMARY KEY  (process_id)  ';
         }
@@ -474,6 +474,8 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
         }
 
         $suppress = $this->wpdb->suppress_errors();
+
+        $this->post_update_90( $currentVersion );
 
         $this->post_update_81( $currentVersion );
 
@@ -564,6 +566,46 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
         }
 
         $this->wpdb->suppress_errors( $suppress );
+    }
+
+    /**
+     * Method post_update_81()
+     *
+     * Update MainWP DB for version 8.1.
+     *
+     * @param string $current_version Current version DB.
+     *
+     * @return void
+     */
+    public function post_update_90( $current_version ) { //phpcs:ignore -- NOSONAR - complex.
+        if ( version_compare( $current_version, '9.0.0.62', '=' ) ) {
+            $sites = MainWP_DB::instance()->get_sites();
+            if ( $sites ) {
+                foreach ( $sites as $site ) {
+                    if ( ! empty( $site['id'] ) ) {
+                        $params = array(
+                            'wpid'  => $site['id'],
+                            'issub' => 0,
+                        );
+                        $mos    = $this->wpdb->get_results( MainWP_DB_Uptime_Monitoring::instance()->get_sql_monitor( $params ) );
+                        if ( is_array( $mos ) && count( $mos ) > 1 ) {
+                            $last_id = $mos[0]->monitor_id;
+                            if ( $last_id ) {
+                                foreach ( $mos as $mo ) {
+                                    if ( $mo->monitor_id < $last_id ) {
+                                        $mo_id = $mo->monitor_id;
+                                        if ( $this->wpdb->query( $this->wpdb->prepare( 'DELETE FROM ' . $this->table_name( 'monitors' ) . ' WHERE monitor_id=%d', $mo_id ) ) ) {
+                                            MainWP_DB_Uptime_Monitoring::instance()->delete_heartbeat( $mo_id );
+                                            MainWP_DB_Uptime_Monitoring::instance()->delete_stats( $mo_id );
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
