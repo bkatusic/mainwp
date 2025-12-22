@@ -523,7 +523,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
      * @uses  \MainWP\Dashboard\MainWP_Utility::show_mainwp_message()
      */
     public static function render_secure_priv_key_connection() {
-        if ( MainWP_DB::instance()->get_websites_count() > 0 && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_secure_priv_key_notice' ) ) {
+        if ( MainWP_DB::instance()->get_websites_count() > 0 && ! static::check_keys_encrypted() && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_secure_priv_key_notice' ) ) {
             ?>
             <div class="ui attention message">
                 <h3><?php esc_html_e( 'New Security Feature: OpenSSL Key Encryption', 'mainwp' ); ?></h3>
@@ -534,6 +534,28 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             <?php
         }
     }
+
+    /**
+     * Method check_keys_encrypted().
+     *
+     * @return bool Keys encrypted or not.
+     */
+    public static function check_keys_encrypted() {
+        if ( get_option( 'mainwp_keys_is_encrypted' ) ) {
+            return true;
+        }
+        $websites = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_websites_for_current_user( false, null, 'wp.url', false, false, null, true ) );
+        while ( $websites && ( $website = MainWP_DB::fetch_object( $websites ) ) ) {
+            // try to decrypt priv key.
+            $de_privkey = MainWP_Encrypt_Data_Lib::instance()->decrypt_privkey( base64_decode( $website->privkey ), $website->id );  // phpcs:ignore -- NOSONAR - base64_encode trust.
+            if ( ! empty( $de_privkey ) ) {
+                update_option( 'mainwp_keys_is_encrypted', 1 );
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Renders wp_mail warning.
@@ -1261,6 +1283,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             return;
         }
 
+        $items_list_id = 'sync-sites-status';
         ?>
         <div class="ui modal" id="mainwp-install-check-modal" noti-slug="<?php echo esc_html( $check_slug ); ?>">
         <i class="mainwp-modal-close close icon"></i>
@@ -1268,7 +1291,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             <div class="scrolling content mainwp-modal-content">
                 <div class="ui message" id="mainwp-message-zone-install" style="display:none;"></div>
                 <div class="ui message blue"><?php printf( esc_html__( 'We have detected the following sites do not have the %s plugin installed. This plugin is required to be installed on your Child Sites for the Extension to work on those sites. Please select sites where you want to install it and click the Install Plugin button. Uncheck any site you don\'t want to add the plugin to or cancel to skip this step. After the installation process, resync your sites to see sites with the newly installed plugin.', 'mainwp' ), esc_html( $plugin_name ) ); ?></div>
-                <div class="ui middle aligned divided list" id="sync-sites-status">
+                <div class="ui middle aligned divided list" id="<?php echo esc_attr( $items_list_id ); ?>">
                     <?php foreach ( $missing_installed as $siteid => $site_name ) : ?>
                         <div class="item siteBulkInstall" siteid="<?php echo intval( $siteid ); ?>" status="">
                             <div class="right floated content">
