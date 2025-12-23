@@ -1016,7 +1016,7 @@ class MainWP_Manage_Backups { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
             <label class="six wide column middle aligned"><?php esc_html_e( 'Select primary backup system', 'mainwp' ); ?></label>
             <div class="ten wide column">
                 <select class="ui dropdown" name="mainwp_primaryBackup" id="mainwp_primaryBackup">
-                    <?php if ( $enableLegacyBackupFeature ) { ?>
+                    <?php if ( $enableLegacyBackupFeature || empty( $primaryBackup ) ) { ?>
                         <option value="" ><?php esc_html_e( 'Native backups', 'mainwp' ); ?></option>
                     <?php } ?>
                     <?php

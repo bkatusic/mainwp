@@ -199,7 +199,7 @@ class Log_Settings {
                         <div class="ui grid field <?php echo esc_attr( $hide_field_class ); ?>" <?php echo $enabled ? '' : 'style="display:none"'; ?> hide-element="auto-purge">
                             <label class="six wide column middle aligned"><?php esc_html_e( 'Keep records for', 'mainwp' ); ?></label>
                             <div class="ten wide column ui" data-tooltip="<?php esc_attr_e( 'Maximum number of days to keep activity records.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
-                                <input type="number" name="mainwp_module_log_records_ttl" id="mainwp_module_log_records_ttl" class="small-text" placeholder="" min="1" max="999" step="1" value="<?php echo isset( $this->options['records_ttl'] ) ? intval( $this->options['records_ttl'] ) : 100; ?>">
+                                <input type="number" name="mainwp_module_log_records_ttl" id="mainwp_module_log_records_ttl" class="small-text" placeholder="" min="1" max="999" step="1" <?php echo ! $enabled ? 'disabled' : ''; ?> value="<?php echo isset( $this->options['records_ttl'] ) ? intval( $this->options['records_ttl'] ) : 100; ?>">
                             </div>
                         </div>
                         <h3 class="ui dividing header <?php echo esc_attr( $hide_field_class ); ?>"><?php esc_html_e( 'Dashboard Insights Tools', 'mainwp' ); ?></h3>

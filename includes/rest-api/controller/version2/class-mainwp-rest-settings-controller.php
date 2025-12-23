@@ -23,6 +23,8 @@ use MainWP\Dashboard\MainWP_Connect;
 use MainWP\Dashboard\MainWP_Logger;
 use MainWP\Dashboard\MainWP_Sync;
 use MainWP\Dashboard\MainWP_Manage_Sites_View;
+use MainWP\Dashboard\MainWP_Uptime_Monitoring_Handle;
+use MainWP\Dashboard\MainWP_Uptime_Monitoring_Edit;
 /**
  * Class MainWP_Rest_Settings_Controller
  *
@@ -103,6 +105,7 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
                 'callback'            => array( $this, 'update_general_settings' ),
                 'permission_callback' => array( $this, 'get_rest_permissions_check' ),
                 'args'                => $this->get_update_general_allowed_fields(),
+                'validate_callback'   => array( $this, 'validate_update_general_params' ),
             ),
         );
 
@@ -127,6 +130,31 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
                     'callback'            => array( $this, 'update_advanced_settings' ),
                     'permission_callback' => array( $this, 'get_rest_permissions_check' ),
                     'args'                => $this->get_update_advanced_allowed_fields(),
+                ),
+            )
+        );
+
+        // Monitoring settings.
+        register_rest_route(
+            $this->namespace,
+            '/' . $this->rest_base . '/monitoring',
+            array(
+                array(
+                    'methods'             => WP_REST_Server::READABLE,
+                    'callback'            => array( $this, 'get_monitoring_settings' ),
+                    'permission_callback' => array( $this, 'get_rest_permissions_check' ),
+                ),
+            )
+        );
+        register_rest_route(
+            $this->namespace,
+            '/' . $this->rest_base . '/monitoring/edit',
+            array(
+                array(
+                    'methods'             => 'PUT, PATCH',
+                    'callback'            => array( $this, 'update_monitoring_settings' ),
+                    'permission_callback' => array( $this, 'get_rest_permissions_check' ),
+                    'args'                => $this->get_update_monitoring_allowed_fields(),
                 ),
             )
         );
@@ -527,6 +555,16 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
             $update_if_present( 'dayinmonth_auto_update', 'mainwp_dayinmonth_AutoUpdate', 'int' );
             $update_if_present( 'delay_autoupdate', 'mainwp_delay_autoupdate', 'int' );
 
+            // Update backup settings.
+            $update_if_present( 'mainwp_primary_backup', 'mainwp_primaryBackup', 'string' );
+            $update_if_present( 'mainwp_enable_legacy_backup_feature', 'mainwp_enableLegacyBackupFeature', 'int' );
+            $update_if_present( 'mainwp_backups_on_server', 'mainwp_backupsOnServer', 'string' );
+            $update_if_present( 'mainwp_backup_on_external_sources', 'mainwp_backupOnExternalSources', 'string' );
+            $update_if_present( 'mainwp_archive_format', 'mainwp_archiveFormat', 'string' );
+            $update_if_present( 'mainwp_notification_on_backup_fail', 'mainwp_notificationOnBackupFail', 'int' );
+            $update_if_present( 'mainwp_notification_on_backup_start', 'mainwp_notificationOnBackupStart', 'int' );
+            $update_if_present( 'mainwp_chunked_backup_tasks', 'mainwp_chunkedBackupTasks', 'int' );
+
             // Update Sidebar.
             $update_use_option( 'sidebar_position', 'mainwp_sidebarPosition', 'int' );
             $update_use_option( 'mainwp_widgets', 'mainwp_settings_show_widgets', 'array' );
@@ -647,6 +685,102 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
                 'success' => 1,
                 'message' => esc_html__( 'General settings updated successfully.', 'mainwp' ),
                 'data'    => $this->filter_response_data_by_allowed_fields( $settings, 'advanced_edit' ),
+            )
+        );
+    }
+
+    /**
+     * Get all monitoring settings.
+     *
+     * @param WP_REST_Request $request Full details about the request.
+     *
+     * @return WP_Error|WP_REST_Response
+     */
+    public function get_monitoring_settings( $request ) { // phpcs:ignore -- NOSONAR - complex.
+        // Get monitoring settings data.
+        $settings = $this->get_monitoring_settings_data();
+
+        return rest_ensure_response(
+            array(
+                'success' => 1,
+                'data'    => $this->filter_response_data_by_allowed_fields( $settings, 'monitoring_view' ),
+            )
+        );
+    }
+
+    /**
+     * Update monitoring settings.
+     *
+     * @param WP_REST_Request $request Full details about the request.
+     *
+     * @uses MainWP_Uptime_Monitoring_Handle::get_global_monitoring_settings()
+     * @uses MainWP_Uptime_Monitoring_Handle::update_uptime_global_settings()
+     *
+     * @return WP_Error|WP_REST_Response
+     */
+    public function update_monitoring_settings( $request ) { // phpcs:ignore -- NOSONAR - long method.
+        // Check content type.
+        $content_type = $this->validate_content_type( $request );
+        if ( is_wp_error( $content_type ) ) {
+            return $content_type;
+        }
+
+        // Get request body.
+        $body = $this->get_request_body( $request );
+        if ( is_wp_error( $body ) ) {
+            return $body;
+        }
+
+        // Get current settings.
+        $current_settings = MainWP_Uptime_Monitoring_Handle::get_global_monitoring_settings();
+        $updated_settings = $current_settings;
+
+        // Process setting.
+        if ( isset( $body['mainwp_uptime_monitoring_active'] ) ) {
+            $updated_settings['active'] = $body['mainwp_uptime_monitoring_active'] ? 1 : 0;
+        }
+        if ( isset( $body['mainwp_uptime_monitoring_down_confirmation_check'] ) ) {
+            $updated_settings['maxretries'] = $body['mainwp_uptime_monitoring_down_confirmation_check'];
+        }
+        if ( isset( $body['mainwp_uptime_monitoring_up_status_codes'] ) ) {
+            $updated_settings['up_status_codes'] = implode( ',', $body['mainwp_uptime_monitoring_up_status_codes'] );
+        }
+        if ( isset( $body['mainwp_uptime_monitoring_interval'] ) ) {
+            $interval_values   = MainWP_Uptime_Monitoring_Edit::get_interval_values( false );
+            $interval = array_search( $body['mainwp_uptime_monitoring_interval'], $interval_values, true );
+            $updated_settings['interval'] = $interval;
+        }
+        if ( isset( $body['mainwp_uptime_monitoring_keyword'] ) ) {
+            $updated_settings['keyword'] = $body['mainwp_uptime_monitoring_keyword'];
+        }
+        if ( isset( $body['mainwp_uptime_monitoring_method'] ) ) {
+            $updated_settings['method'] = $body['mainwp_uptime_monitoring_method'];
+        }
+        if ( isset( $body['mainwp_uptime_monitoring_timeout'] ) ) {
+            $timeout_values   = MainWP_Uptime_Monitoring_Edit::get_timeout_values( false );
+            $timeout = array_search( $body['mainwp_uptime_monitoring_timeout'], $timeout_values, true );
+            $updated_settings['timeout'] = $timeout;
+        }
+        if ( isset( $body['mainwp_uptime_monitoring_type'] ) ) {
+            $updated_settings['type'] = $body['mainwp_uptime_monitoring_type'];
+        }
+
+        // Save monitoring the updated settings.
+        $updated_settings = apply_filters( 'mainwp_uptime_monitoring_update_global_settings', $updated_settings );
+        MainWP_Uptime_Monitoring_Handle::update_uptime_global_settings( $updated_settings );
+
+        // Save Health Monitoring.
+        if ( isset( $body['mainwp_disable_sites_health_monitoring'] ) ) {
+            update_option( 'mainwp_disableSitesHealthMonitoring', (int) $body['mainwp_disable_sites_health_monitoring'] );
+        }
+        if ( isset( $body['mainwp_sitehealth_threshold'] ) ) {
+            update_option( 'mainwp_sitehealthThreshold', (int) $body['mainwp_sitehealth_threshold'] );
+        }
+
+        return rest_ensure_response(
+            array(
+                'success' => 1,
+                'data'    => $this->filter_response_data_by_allowed_fields( $this->get_monitoring_settings_data(), 'monitoring_view' ),
             )
         );
     }
@@ -1198,9 +1332,9 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
      * @return WP_Error|WP_REST_Response
      */
     public function get_dashboard_insights_settings( $request ) { // phpcs:ignore -- NOSONAR - complex.
+        $options  = get_option( 'mainwp_module_log_settings', array() );
         $settings = array(
-            'enable_insights_logging' => get_option( 'mainwp_module_log_enabled', 1 ),
-            'module_log_settings'     => get_option( 'mainwp_module_log_settings', array() ),
+            'enable_insights_logging' => $options['enabled'] ?? 0,
         );
 
         return rest_ensure_response(
@@ -1232,30 +1366,21 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
         }
 
         // Get Current settings.
-        $current_insights_logging = (bool) get_option( 'mainwp_module_log_enabled', 1 );
-        $current_log_settings     = get_option( 'mainwp_module_log_settings', array() );
-
-        // Get log settings.
-        $incoming_log_settings = array();
-        if ( isset( $body['module_log_settings'] ) && is_array( $body['module_log_settings'] ) ) {
-            $incoming_log_settings = $body['module_log_settings'];
-            $new_log_settings      = array_replace( $current_log_settings, $incoming_log_settings );
+        $current_insights_logging = get_option( 'mainwp_module_log_settings', 1 );
+        $new_insights_logging     = $current_insights_logging;
+        if ( isset( $body['enable_insights_logging'] ) ) {
+            $new_insights_logging['enabled'] = $body['enable_insights_logging'];
         }
 
-        // Get insights logging.
-        $new_insights_logging = isset( $body['enable_insights_logging'] ) ? $body['enable_insights_logging'] : $current_insights_logging;
-
         // Save settings.
-        MainWP_Utility::update_option( 'mainwp_module_log_settings', $new_log_settings );
-        MainWP_Utility::update_option( 'mainwp_module_log_enabled', $new_insights_logging );
+        MainWP_Utility::update_option( 'mainwp_module_log_settings', $new_insights_logging );
 
         return rest_ensure_response(
             array(
                 'success' => 1,
                 'message' => __( 'Dashboard insights settings updated successfully.', 'mainwp' ),
                 'data'    => array(
-                    'enable_insights_logging' => $new_insights_logging,
-                    'module_log_settings'     => $new_log_settings,
+                    'enable_insights_logging' => $new_insights_logging['enabled'],
                 ),
             )
         );
@@ -2049,173 +2174,229 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
         $frequency       = array( 'daily', 'weekly', 'monthly' );
         $frequency_daily = range( 1, 12 );
         $http_methods    = array( 'head', 'get' );
+        $archive_format  = array( 'zip', 'tar.gz', 'tar.bz2', 'tar' );
+        $primary_backup  = array( '', 'module-api-backups' );
 
         return array(
-            'time_daily_update'               => array(
+            'time_daily_update'                   => array(
                 'required'          => false,
                 'description'       => __( 'Time for daily updates (HH:MM format).', 'mainwp' ),
                 'type'              => 'string',
                 'validate_callback' => array( $this, 'validate_time_update' ),
                 'sanitize_callback' => array( $this, 'sanitize_time_update' ),
             ),
-            'frequency_daily_update'          => array(
+            'frequency_daily_update'              => array(
                 'required'          => false,
                 'description'       => __( 'Frequency of daily updates (1-12).', 'mainwp' ),
                 'type'              => 'integer',
                 'sanitize_callback' => $this->make_enum_sanitizer( $frequency_daily ),
                 'validate_callback' => $this->make_enum_validator( $frequency_daily ),
             ),
-            'date_format'                     => array(
+            'date_format'                         => array(
                 'required'          => false,
                 'description'       => __( 'Date format.', 'mainwp' ),
                 'type'              => 'string',
                 'sanitize_callback' => 'sanitize_text_field',
                 'validate_callback' => array( $this, 'validate_date_format' ),
             ),
-            'time_format'                     => array(
+            'time_format'                         => array(
                 'required'          => false,
                 'description'       => __( 'Time format.', 'mainwp' ),
                 'type'              => 'string',
                 'sanitize_callback' => 'sanitize_text_field',
                 'validate_callback' => array( $this, 'validate_time_format' ),
             ),
-            'timezone_string'                 => array(
+            'timezone_string'                     => array(
                 'required'          => false,
                 'description'       => __( 'Timezone.', 'mainwp' ),
                 'type'              => 'string',
                 'sanitize_callback' => array( $this, 'sanitize_timezone_field' ),
                 'validate_callback' => array( $this, 'validate_timezone' ),
             ),
-            'sidebar_position'                => array(
+            'sidebar_position'                    => array(
                 'required'          => false,
                 'description'       => __( 'Sidebar position.', 'mainwp' ),
                 'type'              => 'boolean',
                 'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
                 'validate_callback' => $this->make_enum_validator( $val_bool ),
             ),
-            'hide_update_everything'          => array(
+            'hide_update_everything'              => array(
                 'required'          => false,
                 'description'       => __( 'Hide update everything button.', 'mainwp' ),
                 'type'              => 'boolean',
                 'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
                 'validate_callback' => $this->make_enum_validator( $val_bool ),
             ),
-            'mainwp_widgets'                  => array(
+            'mainwp_widgets'                      => array(
                 'required'          => false,
                 'description'       => __( 'MainWP dashboard widgets.', 'mainwp' ),
                 'type'              => 'array',
                 'sanitize_callback' => array( $this, 'sanitize_mainwp_widgets' ),
                 'validate_callback' => array( $this, 'validate_mainwp_widgets' ),
             ),
-            'plugin_automatic_daily_update'   => array(
+            'plugin_automatic_daily_update'       => array(
                 'required'          => false,
                 'description'       => __( 'Plugin automatic daily update.', 'mainwp' ),
                 'type'              => 'boolean',
                 'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
                 'validate_callback' => $this->make_enum_validator( $val_bool ),
             ),
-            'theme_automatic_daily_update'    => array(
+            'theme_automatic_daily_update'        => array(
                 'required'          => false,
                 'description'       => __( 'Theme automatic daily update.', 'mainwp' ),
                 'type'              => 'boolean',
                 'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
                 'validate_callback' => $this->make_enum_validator( $val_bool ),
             ),
-            'trans_automatic_daily_update'    => array(
+            'trans_automatic_daily_update'        => array(
                 'required'          => false,
                 'description'       => __( 'Translation automatic daily update.', 'mainwp' ),
                 'type'              => 'array',
                 'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
                 'validate_callback' => $this->make_enum_validator( $val_bool ),
             ),
-            'automatic_daily_update'          => array(
+            'automatic_daily_update'              => array(
                 'required'          => false,
                 'description'       => __( 'Plugin automatic daily update.', 'mainwp' ),
                 'type'              => 'array',
                 'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
                 'validate_callback' => $this->make_enum_validator( $val_bool ),
             ),
-            'frequency_auto_update'           => array(
+            'frequency_auto_update'               => array(
                 'required'          => false,
                 'description'       => __( 'Frequency of auto updates.', 'mainwp' ),
                 'type'              => 'string',
                 'sanitize_callback' => $this->make_enum_sanitizer( $frequency, 'string' ),
                 'validate_callback' => $this->make_enum_validator( $frequency, 'string' ),
             ),
-            'time_auto_update'                => array(
+            'time_auto_update'                    => array(
                 'required'          => false,
                 'description'       => __( 'Auto update time (whole hour, 24h).', 'mainwp' ),
                 'type'              => 'string',
                 'validate_callback' => array( $this, 'validate_time_update' ),
                 'sanitize_callback' => array( $this, 'sanitize_time_update' ),
             ),
-            'show_language_updates'           => array(
+            'show_language_updates'               => array(
                 'required'          => false,
                 'description'       => __( 'Show language updates.', 'mainwp' ),
                 'type'              => 'boolean',
                 'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
                 'validate_callback' => $this->make_enum_validator( $val_bool ),
             ),
-            'disable_update_confirmations'    => array(
+            'disable_update_confirmations'        => array(
                 'required'          => false,
                 'description'       => __( 'Disable update confirmations.', 'mainwp' ),
                 'type'              => 'integer',
                 'sanitize_callback' => $this->make_enum_sanitizer( $disable_update ),
                 'validate_callback' => $this->make_enum_validator( $disable_update ),
             ),
-            'check_http_response'             => array(
+            'check_http_response'                 => array(
                 'required'          => false,
                 'description'       => __( 'Check HTTP response after update.', 'mainwp' ),
                 'type'              => 'boolean',
                 'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
                 'validate_callback' => $this->make_enum_validator( $val_bool ),
             ),
-            'check_http_response_method'      => array(
+            'check_http_response_method'          => array(
                 'required'          => false,
                 'description'       => __( 'HTTP method for response check.', 'mainwp' ),
                 'type'              => 'string',
                 'sanitize_callback' => $this->make_enum_sanitizer( $http_methods, 'string' ),
                 'validate_callback' => $this->make_enum_validator( $http_methods, 'string' ),
             ),
-            'backup_before_upgrade'           => array(
+            'backup_before_upgrade'               => array(
                 'required'          => false,
                 'description'       => __( 'Backup before upgrade.', 'mainwp' ),
                 'type'              => 'boolean',
                 'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
                 'validate_callback' => $this->make_enum_validator( $val_bool ),
             ),
-            'backup_before_upgrade_days'      => array(
+            'backup_before_upgrade_days'          => array(
                 'required'          => false,
                 'description'       => __( 'Days to check for backup before upgrade.', 'mainwp' ),
                 'type'              => 'integer',
                 'sanitize_callback' => 'absint',
             ),
-            'numberdays_outdate_plugin_theme' => array(
+            'numberdays_outdate_plugin_theme'     => array(
                 'required'          => false,
                 'description'       => __( 'Number of days to consider plugin/theme as outdated.', 'mainwp' ),
                 'type'              => 'integer',
                 'sanitize_callback' => 'absint',
             ),
-            'dayinweek_auto_update'           => array(
+            'dayinweek_auto_update'               => array(
                 'required'          => false,
                 'description'       => __( 'Day in week for auto updates.', 'mainwp' ),
                 'type'              => 'integer',
                 'sanitize_callback' => $this->make_enum_sanitizer( $days_week ),
                 'validate_callback' => $this->make_enum_validator( $days_week ),
             ),
-            'dayinmonth_auto_update'          => array(
+            'dayinmonth_auto_update'              => array(
                 'required'          => false,
                 'description'       => __( 'Day in month for auto updates.', 'mainwp' ),
                 'type'              => 'integer',
                 'sanitize_callback' => $this->make_enum_sanitizer( $days_month ),
                 'validate_callback' => $this->make_enum_validator( $days_month ),
             ),
-            'delay_autoupdate'                => array(
+            'delay_autoupdate'                    => array(
                 'required'          => false,
                 'description'       => __( 'Delay automatic updates.', 'mainwp' ),
                 'type'              => 'integer',
                 'sanitize_callback' => $this->make_enum_sanitizer( $delay ),
                 'validate_callback' => $this->make_enum_validator( $delay ),
+            ),
+            'mainwp_primary_backup'               => array(
+                'required'          => false,
+                'description'       => __( 'Primary backup method.', 'mainwp' ),
+                'type'              => 'string',
+                'sanitize_callback' => $this->make_enum_sanitizer( $primary_backup, 'string' ),
+                'validate_callback' => $this->make_enum_validator( $primary_backup, 'string' ),
+            ),
+            'mainwp_enable_legacy_backup_feature' => array(
+                'required'          => false,
+                'description'       => __( 'Enable legacy backup feature.', 'mainwp' ),
+                'type'              => 'boolean',
+                'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
+                'validate_callback' => $this->make_enum_validator( $val_bool ),
+            ),
+            'mainwp_backups_on_server'            => array(
+                'required'          => false,
+                'description'       => __( 'Backups on server.', 'mainwp' ),
+                'type'              => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+            ),
+            'mainwp_backup_on_external_sources'   => array(
+                'required'          => false,
+                'description'       => __( 'Backup on external sources.', 'mainwp' ),
+                'type'              => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+            ),
+            'mainwp_archive_format'               => array(
+                'required'          => false,
+                'description'       => __( 'Archive format.', 'mainwp' ),
+                'type'              => 'string',
+                'sanitize_callback' => $this->make_enum_sanitizer( $archive_format, 'string' ),
+                'validate_callback' => $this->make_enum_validator( $archive_format, 'string' ),
+            ),
+            'mainwp_notification_on_backup_fail'  => array(
+                'required'          => false,
+                'description'       => __( 'Notification on backup fail.', 'mainwp' ),
+                'type'              => 'boolean',
+                'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
+                'validate_callback' => $this->make_enum_validator( $val_bool ),
+            ),
+            'mainwp_notification_on_backup_start' => array(
+                'required'          => false,
+                'description'       => __( 'Notification on backup start.', 'mainwp' ),
+                'type'              => 'boolean',
+                'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
+                'validate_callback' => $this->make_enum_validator( $val_bool ),
+            ),
+            'mainwp_chunked_backup_tasks'         => array(
+                'required'          => false,
+                'description'       => __( 'Chunked backup tasks.', 'mainwp' ),
+                'type'              => 'boolean',
+                'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
+                'validate_callback' => $this->make_enum_validator( $val_bool ),
             ),
         );
     }
@@ -2351,6 +2532,84 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
                 'type'              => 'array',
                 'sanitize_callback' => array( $this, 'sanitize_sync_data' ),
                 'validate_callback' => array( $this, 'validate_sync_data' ),
+            ),
+        );
+    }
+
+    /**
+     * Get allowed fields for monitoring settings.
+     *
+     * @return array Allowed fields.
+     */
+    public function get_update_monitoring_allowed_fields() {
+        $val_bool        = array( 0, 1 );
+        $threshold       = array( 80, 100 );
+        $monitoring_type = array( 'http', 'ping', 'keyword' );
+        $timeout_values  = array_values( MainWP_Uptime_Monitoring_Edit::get_timeout_values( false ) );
+        $interval_values = array_values( MainWP_Uptime_Monitoring_Edit::get_interval_values( false ) );
+
+        return array(
+            'mainwp_uptime_monitoring_active'          => array(
+                'required'          => false,
+                'description'       => __( 'Active or disable monitoring globally.', 'mainwp' ),
+                'type'              => 'boolean',
+                'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
+                'validate_callback' => $this->make_enum_validator( $val_bool ),
+            ),
+            'mainwp_uptime_monitoring_down_confirmation_check' => array(
+                'required'          => false,
+                'description'       => __( 'Uptime monitoring down confirmation check.', 'mainwp' ),
+                'type'              => 'integer',
+                'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
+                'validate_callback' => $this->make_enum_validator( $val_bool ),
+            ),
+            'mainwp_disable_sites_health_monitoring'   => array(
+                'required'          => false,
+                'description'       => __( 'Disable sites health monitoring.', 'mainwp' ),
+                'type'              => 'boolean',
+                'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
+                'validate_callback' => $this->make_enum_validator( $val_bool ),
+            ),
+            'mainwp_sitehealth_threshold'              => array(
+                'required'          => false,
+                'description'       => __( 'Site health threshold.', 'mainwp' ),
+                'type'              => 'integer',
+                'sanitize_callback' => $this->make_enum_sanitizer( $threshold ),
+                'validate_callback' => $this->make_enum_validator( $threshold ),
+            ),
+            'mainwp_uptime_monitoring_type'            => array(
+                'required'          => false,
+                'description'       => __( 'Uptime monitoring type.', 'mainwp' ),
+                'type'              => 'string',
+                'sanitize_callback' => $this->make_enum_sanitizer( $monitoring_type, 'string' ),
+                'validate_callback' => $this->make_enum_validator( $monitoring_type, 'string' ),
+            ),
+            'mainwp_uptime_monitoring_timeout'         => array(
+                'required'          => false,
+                'description'       => __( 'Uptime monitoring timeout.', 'mainwp' ),
+                'type'              => 'integer',
+                'sanitize_callback' => $this->make_enum_sanitizer( $timeout_values, 'string' ),
+                'validate_callback' => $this->make_enum_validator( $timeout_values, 'string' ),
+            ),
+            'mainwp_uptime_monitoring_interval'        => array(
+                'required'          => false,
+                'description'       => __( 'Uptime monitoring interval.', 'mainwp' ),
+                'type'              => 'integer',
+                'sanitize_callback' => $this->make_enum_sanitizer( $interval_values, 'string' ),
+                'validate_callback' => $this->make_enum_validator( $interval_values, 'string' ),
+            ),
+            'mainwp_uptime_monitoring_keyword'         => array(
+                'required'          => false,
+                'description'       => __( 'Uptime monitoring keyword.', 'mainwp' ),
+                'type'              => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+            ),
+            'mainwp_uptime_monitoring_up_status_codes' => array(
+                'required'          => false,
+                'description'       => __( 'Uptime monitoring up status codes.', 'mainwp' ),
+                'type'              => 'array',
+                'sanitize_callback' => array( $this, 'sanitize_uptime_monitoring_status_codes' ),
+                'validate_callback' => array( $this, 'validate_uptime_monitoring_status_codes' ),
             ),
         );
     }
@@ -2564,29 +2823,9 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
             'enable_insights_logging' => array(
                 'required'          => false,
                 'description'       => __( 'Enable insights logging.', 'mainwp' ),
-                'type'              => 'boolean',
+                'type'              => 'integer',
                 'sanitize_callback' => $this->make_enum_sanitizer( $val_bool ),
                 'validate_callback' => $this->make_enum_validator( $val_bool ),
-            ),
-            'module_log_settings'     => array(
-                'type'        => 'object',
-                'required'    => false,
-                'description' => __( 'Module log settings.', 'mainwp' ),
-                'properties'  => array(
-                    'enabled'     => array(
-                        'type'              => 'integer',
-                        'required'          => true,
-                        'description'       => __( 'Module log status.', 'mainwp' ),
-                        'sanitize_callback' => 'absint',
-                        'enum'              => $val_bool,
-                    ),
-                    'records_ttl' => array(
-                        'type'              => 'integer',
-                        'sanitize_callback' => 'absint',
-                        'required'          => true,
-                        'description'       => __( 'Time to live for logs in seconds.', 'mainwp' ),
-                    ),
-                ),
             ),
         );
     }
@@ -3231,6 +3470,80 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
     }
 
     /**
+     * Sanitize uptime monitoring status codes.
+     *
+     * @param array $value Status codes array.
+     *
+     * @return array|WP_Error
+     */
+    public function sanitize_uptime_monitoring_status_codes( $value ) {
+        if ( empty( $value ) ) {
+            return array();
+        }
+
+        if ( ! is_array( $value ) ) {
+            return new WP_Error(
+                'invalid_status_codes_type',
+                __( 'Status codes must be an array.', 'mainwp' )
+            );
+        }
+
+        // Parse ID list to ensure all values are integers.
+        $codes = wp_parse_id_list( $value );
+
+        // Remove duplicates and sort.
+        $codes = array_unique( array_map( 'intval', $codes ) );
+        sort( $codes );
+
+        return $codes;
+    }
+
+    /**
+     * Validate uptime monitoring status codes.
+     *
+     * @param array           $value Status codes array.
+     * @param WP_REST_Request $request Request object.
+     *
+     * @return bool|WP_Error
+     */
+    public function validate_uptime_monitoring_status_codes( $value, $request ) { // phpcs:ignore -- NOSONAR
+        if ( empty( $value ) ) {
+            return true; // Allow empty array.
+        }
+
+        if ( ! is_array( $value ) ) {
+            return new WP_Error(
+                'invalid_status_codes_type',
+                __( 'Status codes must be an array.', 'mainwp' ),
+                array( 'status' => 400 )
+            );
+        }
+
+        // Get valid HTTP status codes.
+        $http_error_codes = array_keys( MainWP_Utility::get_http_codes() );
+        $status_codes     = wp_parse_id_list( $value );
+
+        // Validate each status code.
+        foreach ( $status_codes as $code ) {
+            $code_int = (int) $code;
+            if ( ! in_array( $code_int, $http_error_codes, true ) ) {
+                return new WP_Error(
+                    'invalid_status_code',
+                    sprintf(
+                        /* translators: 1: invalid status code, 2: allowed codes list */
+                        __( 'Invalid HTTP status code: %1$d. Allowed codes: %2$s.', 'mainwp' ),
+                        $code_int,
+                        esc_html( implode( ', ', $http_error_codes ) )
+                    ),
+                    array( 'status' => 400 )
+                );
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Sanitize sync data.
      *
      * @param array $value Sync data.
@@ -3366,6 +3679,50 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
             'invalid_time_update',
             __( 'Invalid time. Use whole hours in 24h format like 0:00, 9:00, 23:00, etc...', 'mainwp' ),
         );
+    }
+
+    /**
+     * Validate update general params.
+     *
+     * @param WP_REST_Request $request Request object.
+     *
+     * @return bool|WP_Error
+     */
+    public function validate_update_general_params( $request ) { // phpcs:ignore -- NOSONAR - complex.
+        $primary_backup = $request->get_param( 'mainwp_primary_backup' );
+        $backup_feature = $request->get_param( 'mainwp_enable_legacy_backup_feature' );
+
+        // Validate mainwp_primary_backup and mainwp_enable_legacy_backup_feature relationship.
+        if ( null !== $primary_backup || null !== $backup_feature ) {
+            if ( null === $primary_backup ) {
+                $primary_backup = get_option( 'mainwp_primaryBackup' );
+            }
+
+            if ( null === $backup_feature ) {
+                $backup_feature = get_option( 'mainwp_enableLegacyBackupFeature' );
+            }
+
+            $primary_backup_value = $primary_backup;
+            if ( is_array( $primary_backup ) && isset( $primary_backup['value'] ) ) {
+                $primary_backup_value = $primary_backup['value'];
+            }
+
+            if ( 'module-api-backups' === $primary_backup_value && ( null !== $backup_feature && '0' !== (string) $backup_feature && 0 !== (int) $backup_feature ) ) {
+                // When primary backup is module-api-backups, legacy feature must be 0.
+                return new WP_Error(
+                    'invalid_backup_config',
+                    __( 'When mainwp_primary_backup is "module-api-backups", mainwp_enable_legacy_backup_feature must be disabled (0).', 'mainwp' )
+                );
+            } elseif ( '' === $primary_backup_value && ( null !== $backup_feature && '1' !== (string) $backup_feature && 1 !== (int) $backup_feature ) ) {
+                // When primary backup is not module-api-backups, legacy feature must be 1.
+                return new WP_Error(
+                    'invalid_backup_config',
+                    __( 'When mainwp_primary_backup is not "module-api-backups", mainwp_enable_legacy_backup_feature must be enabled (1).', 'mainwp' )
+                );
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -3702,32 +4059,73 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
         $show_widgets    = get_user_option( 'mainwp_settings_show_widgets', array() );
 
         // Map settings.
+        $gmt_offset = (float) get_option( 'gmt_offset', 0 );
+        $tz_sign    = $gmt_offset >= 0 ? '+' : '-';
+        $tz_value   = (string) abs( $gmt_offset );
+        $tz_string  = sprintf( 'UTC%s%s', $tz_sign, $tz_value );
+
+        // Primary backup.
+        $primary_backup = get_option( 'mainwp_primaryBackup' );
+
+        // Get primary backup methods.
+        $primary_methods        = array();
+        $primary_methods        = apply_filters_deprecated( 'mainwp-getprimarybackup-methods', array( $primary_methods ), '4.0.7.2', 'mainwp_getprimarybackup_methods' );  // @deprecated Use 'mainwp_getprimarybackup_methods' instead. NOSONAR - not IP.
+        $primary_backup_methods = apply_filters( 'mainwp_getprimarybackup_methods', $primary_methods );
+
+        if ( ! is_array( $primary_backup_methods ) ) {
+            $primary_backup_methods = array();
+        }
+
+        // Get selected backup method.
+        $backup_method = array_filter(
+            $primary_backup_methods,
+            function ( $method ) use ( $primary_backup ) {
+                return $method['value'] === $primary_backup;
+            }
+        );
+
+        if ( empty( $backup_method ) ) {
+            $backup_method = array(
+                'value' => '',
+                'title' => 'Native backups',
+            );
+        }
+
+        $enable_legacy_backup = get_option( 'mainwp_enableLegacyBackupFeature' );
         return array(
             // General settings.
-            'time_daily_update'               => get_option( 'mainwp_timeDailyUpdate', $default_setting['mainwp_timeDailyUpdate'] ),
-            'frequency_daily_update'          => (int) get_option( 'mainwp_frequencyDailyUpdate', $default_setting['mainwp_frequencyDailyUpdate'] ),
-            'date_format'                     => get_option( 'date_format', $default_setting['date_format'] ),
-            'time_format'                     => get_option( 'time_format', $default_setting['time_format'] ),
-            'timezone_string'                 => sprintf( 'UTC%s', get_option( 'gmt_offset', 0 ) ),
-            'sidebar_position'                => get_user_option( ' mainwp_sidebarPosition', $default_setting['sidebar_position'] ),
-            'hide_update_everything'          => get_option( 'mainwp_hide_update_everything', $default_setting['mainwp_hide_update_everything'] ),
-            'mainwp_widgets'                  => $show_widgets,
-            'plugin_automatic_daily_update'   => (int) get_option( 'mainwp_pluginAutomaticDailyUpdate', $default_setting['mainwp_pluginAutomaticDailyUpdate'] ),
-            'theme_automatic_daily_update'    => (int) get_option( 'mainwp_themeAutomaticDailyUpdate', $default_setting['mainwp_themeAutomaticDailyUpdate'] ),
-            'trans_automatic_daily_update'    => (int) get_option( 'mainwp_transAutomaticDailyUpdate', 0 ),
-            'automatic_daily_update'          => (int) get_option( 'mainwp_automaticDailyUpdate', $default_setting['mainwp_automaticDailyUpdate'] ),
-            'frequency_auto_update'           => get_option( 'mainwp_frequency_AutoUpdate', $default_setting['mainwp_frequency_AutoUpdate'] ),
-            'time_auto_update'                => get_option( 'mainwp_time_AutoUpdate', $default_setting['mainwp_time_AutoUpdate'] ),
-            'show_language_updates'           => (int) get_option( 'mainwp_show_language_updates', $default_setting['mainwp_show_language_updates'] ),
-            'disable_update_confirmations'    => (int) get_option( 'mainwp_disable_update_confirmations', $default_setting['mainwp_disable_update_confirmations'] ),
-            'check_http_response'             => (int) get_option( 'mainwp_check_http_response', $default_setting['mainwp_check_http_response'] ),
-            'check_http_response_method'      => get_option( 'mainwp_check_http_response_method', $default_setting['mainwp_check_http_response_method'] ),
-            'backup_before_upgrade'           => (int) get_option( 'mainwp_backup_before_upgrade', $default_setting['mainwp_backup_before_upgrade'] ),
-            'backup_before_upgrade_days'      => (int) get_option( 'mainwp_backup_before_upgrade_days', $default_setting['mainwp_backup_before_upgrade_days'] ),
-            'numberdays_outdate_plugin_theme' => (int) get_option( 'mainwp_numberdays_Outdate_Plugin_Theme', $default_setting['mainwp_numberdays_Outdate_Plugin_Theme'] ),
-            'dayinweek_auto_update'           => (int) get_option( 'mainwp_dayinweek_AutoUpdate', $default_setting['mainwp_dayinweek_AutoUpdate'] ),
-            'dayinmonth_auto_update'          => (int) get_option( 'mainwp_dayinmonth_AutoUpdate', $default_setting['mainwp_dayinmonth_AutoUpdate'] ),
-            'delay_autoupdate'                => (int) get_option( 'mainwp_delay_autoupdate', $default_setting['mainwp_delay_autoupdate'] ),
+            'time_daily_update'                   => get_option( 'mainwp_timeDailyUpdate', $default_setting['mainwp_timeDailyUpdate'] ),
+            'frequency_daily_update'              => (int) get_option( 'mainwp_frequencyDailyUpdate', $default_setting['mainwp_frequencyDailyUpdate'] ),
+            'date_format'                         => get_option( 'date_format', $default_setting['date_format'] ),
+            'time_format'                         => get_option( 'time_format', $default_setting['time_format'] ),
+            'timezone_string'                     => $tz_string,
+            'sidebar_position'                    => get_user_option( ' mainwp_sidebarPosition', $default_setting['sidebar_position'] ),
+            'hide_update_everything'              => get_option( 'mainwp_hide_update_everything', $default_setting['mainwp_hide_update_everything'] ),
+            'mainwp_widgets'                      => $show_widgets,
+            'plugin_automatic_daily_update'       => (int) get_option( 'mainwp_pluginAutomaticDailyUpdate', $default_setting['mainwp_pluginAutomaticDailyUpdate'] ),
+            'theme_automatic_daily_update'        => (int) get_option( 'mainwp_themeAutomaticDailyUpdate', $default_setting['mainwp_themeAutomaticDailyUpdate'] ),
+            'trans_automatic_daily_update'        => (int) get_option( 'mainwp_transAutomaticDailyUpdate', 0 ),
+            'automatic_daily_update'              => (int) get_option( 'mainwp_automaticDailyUpdate', $default_setting['mainwp_automaticDailyUpdate'] ),
+            'frequency_auto_update'               => get_option( 'mainwp_frequency_AutoUpdate', $default_setting['mainwp_frequency_AutoUpdate'] ),
+            'time_auto_update'                    => get_option( 'mainwp_time_AutoUpdate', $default_setting['mainwp_time_AutoUpdate'] ),
+            'show_language_updates'               => (int) get_option( 'mainwp_show_language_updates', $default_setting['mainwp_show_language_updates'] ),
+            'disable_update_confirmations'        => (int) get_option( 'mainwp_disable_update_confirmations', $default_setting['mainwp_disable_update_confirmations'] ),
+            'check_http_response'                 => (int) get_option( 'mainwp_check_http_response', $default_setting['mainwp_check_http_response'] ),
+            'check_http_response_method'          => get_option( 'mainwp_check_http_response_method', $default_setting['mainwp_check_http_response_method'] ),
+            'backup_before_upgrade'               => (int) get_option( 'mainwp_backup_before_upgrade', $default_setting['mainwp_backup_before_upgrade'] ),
+            'backup_before_upgrade_days'          => (int) get_option( 'mainwp_backup_before_upgrade_days', $default_setting['mainwp_backup_before_upgrade_days'] ),
+            'numberdays_outdate_plugin_theme'     => (int) get_option( 'mainwp_numberdays_Outdate_Plugin_Theme', $default_setting['mainwp_numberdays_Outdate_Plugin_Theme'] ),
+            'dayinweek_auto_update'               => (int) get_option( 'mainwp_dayinweek_AutoUpdate', $default_setting['mainwp_dayinweek_AutoUpdate'] ),
+            'dayinmonth_auto_update'              => (int) get_option( 'mainwp_dayinmonth_AutoUpdate', $default_setting['mainwp_dayinmonth_AutoUpdate'] ),
+            'delay_autoupdate'                    => (int) get_option( 'mainwp_delay_autoupdate', $default_setting['mainwp_delay_autoupdate'] ),
+            'mainwp_primary_backup'               => $backup_method,
+            'mainwp_enable_legacy_backup_feature' => $enable_legacy_backup,
+            'mainwp_backups_on_server'            => get_option( 'mainwp_backupsOnServer' ),
+            'mainwp_backup_on_external_sources'   => get_option( 'mainwp_backupOnExternalSources' ),
+            'mainwp_archive_format'               => get_option( 'mainwp_archiveFormat' ),
+            'mainwp_notification_on_backup_fail'  => get_option( 'mainwp_notificationOnBackupFail' ),
+            'mainwp_notification_on_backup_start' => get_option( 'mainwp_notificationOnBackupStart' ),
+            'mainwp_chunked_backup_tasks'         => get_option( 'mainwp_chunkedBackupTasks' ),
         );
     }
 
@@ -3770,6 +4168,42 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
     }
 
     /**
+     * Get monitoring settings data.
+     *
+     * @uses MainWP_Uptime_Monitoring_Handle::get_global_monitoring_settings()
+     * @uses MainWP_Uptime_Monitoring_Edit::get_interval_values()
+     * @uses MainWP_Uptime_Monitoring_Edit::get_timeout_values()
+     *
+     * @return array
+     */
+    protected function get_monitoring_settings_data() {
+        $monitoring_settings = MainWP_Uptime_Monitoring_Handle::get_global_monitoring_settings();
+
+        // Get interval values.
+        $interval_values   = MainWP_Uptime_Monitoring_Edit::get_interval_values( false );
+        $interval = $monitoring_settings['interval'] ?? 60;
+        $interval          = isset( $interval_values[ $interval ] ) ? $interval_values[ $interval ] : $interval_values[60];
+
+        // Get timeout values.
+        $timeout_values   = MainWP_Uptime_Monitoring_Edit::get_timeout_values( false );
+        $timeout = $monitoring_settings['timeout'] ?? 60;
+        $timeout          = isset( $timeout_values[ $timeout ] ) ? $timeout_values[ $timeout ] : $timeout_values[60];
+
+        return array(
+            'mainwp_uptime_monitoring_active'          => (int) $monitoring_settings['active'] ?? 0,
+            'mainwp_uptime_monitoring_interval'        => $interval,
+            'mainwp_uptime_monitoring_method'          => $monitoring_settings['method'] ?? 'head',
+            'mainwp_uptime_monitoring_timeout'         => $timeout,
+            'mainwp_uptime_monitoring_type'            => $monitoring_settings['type'] ?? 'http',
+            'mainwp_uptime_monitoring_up_status_codes' => explode( ',', $monitoring_settings['up_status_codes'] ) ?? array(),
+            'mainwp_uptime_monitoring_down_confirmation_check' => (int) $monitoring_settings['maxretries'] ?? 1,
+            'mainwp_uptime_monitoring_keyword'         => $monitoring_settings['keyword'] ?? '',
+            'mainwp_disable_sites_health_monitoring'   => (int) get_option( 'mainwp_disableSitesHealthMonitoring', 1 ),
+            'mainwp_sitehealth_threshold'              => (int) get_option( 'mainwp_sitehealthThreshold', 80 ),
+        );
+    }
+
+    /**
      * Get the API keys schema, conforming to JSON Schema.
      *
      * @since  5.2
@@ -3781,42 +4215,42 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
             'title'      => 'settings',
             'type'       => 'object',
             'properties' => array(
-                'time_daily_update'                      => array(
+                'time_daily_update'                        => array(
                     'type'        => 'string',
                     'description' => __( 'Time for daily updates.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'frequency_daily_update'                 => array(
+                'frequency_daily_update'                   => array(
                     'type'        => 'integer',
                     'description' => __( 'Frequency of daily updates.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'date_format'                            => array(
+                'date_format'                              => array(
                     'type'        => 'string',
                     'description' => __( 'Date format.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'time_format'                            => array(
+                'time_format'                              => array(
                     'type'        => 'string',
                     'description' => __( 'Time format.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'timezone_string'                        => array(
+                'timezone_string'                          => array(
                     'type'        => 'string',
                     'description' => __( 'Timezone string.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'sidebar_position'                       => array(
+                'sidebar_position'                         => array(
                     'type'        => 'integer',
                     'description' => __( 'Plugin automatic daily update enabled.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'hide_update_everything'                 => array(
+                'hide_update_everything'                   => array(
                     'type'        => 'integer',
                     'description' => __( 'Hide update everything.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'mainwp_widgets'                         => array(
+                'mainwp_widgets'                           => array(
                     'type'        => 'array',
                     'description' => __( 'MainWP widgets.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
@@ -3824,122 +4258,122 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
                         'type' => 'integer',
                     ),
                 ),
-                'plugin_automatic_daily_update'          => array(
+                'plugin_automatic_daily_update'            => array(
                     'type'        => 'integer',
                     'description' => __( 'Plugin automatic daily update enabled.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'theme_automatic_daily_update'           => array(
+                'theme_automatic_daily_update'             => array(
                     'type'        => 'integer',
                     'description' => __( 'Theme automatic daily update enabled.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'trans_automatic_daily_update'           => array(
+                'trans_automatic_daily_update'             => array(
                     'type'        => 'integer',
                     'description' => __( 'Translation automatic daily update enabled.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'automatic_daily_update'                 => array(
+                'automatic_daily_update'                   => array(
                     'type'        => 'integer',
                     'description' => __( 'Automatic daily update enabled.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'frequency_auto_update'                  => array(
+                'frequency_auto_update'                    => array(
                     'type'        => 'string',
                     'description' => __( 'Frequency of auto updates.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'time_auto_update'                       => array(
+                'time_auto_update'                         => array(
                     'type'        => 'string',
                     'description' => __( 'Time for auto updates.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'show_language_updates'                  => array(
+                'show_language_updates'                    => array(
                     'type'        => 'integer',
                     'description' => __( 'Show language updates.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'disable_update_confirmations'           => array(
+                'disable_update_confirmations'             => array(
                     'type'        => 'integer',
                     'description' => __( 'Disable update confirmations.', 'mainwp' ),
                     'context'     => array( 'view' ),
                 ),
-                'check_http_response'                    => array(
+                'check_http_response'                      => array(
                     'type'        => 'integer',
                     'description' => __( 'Check HTTP response after update.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'check_http_response_method'             => array(
+                'check_http_response_method'               => array(
                     'type'        => 'string',
                     'description' => __( 'HTTP method for response check.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'backup_before_upgrade'                  => array(
+                'backup_before_upgrade'                    => array(
                     'type'        => 'integer',
                     'description' => __( 'Backup before upgrade enabled.', 'mainwp' ),
                     'context'     => array( 'view' ),
                 ),
-                'backup_before_upgrade_days'             => array(
+                'backup_before_upgrade_days'               => array(
                     'type'        => 'integer',
                     'description' => __( 'Days to check for backup before upgrade.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'numberdays_outdate_plugin_theme'        => array(
+                'numberdays_outdate_plugin_theme'          => array(
                     'type'        => 'integer',
                     'description' => __( 'Number of days to consider plugin/theme as outdated.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'dayinweek_auto_update'                  => array(
+                'dayinweek_auto_update'                    => array(
                     'type'        => 'integer',
                     'description' => __( 'Day in week for auto updates.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'dayinmonth_auto_update'                 => array(
+                'dayinmonth_auto_update'                   => array(
                     'type'        => 'integer',
                     'description' => __( 'Day in month for auto updates.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'delay_autoupdate'                       => array(
+                'delay_autoupdate'                         => array(
                     'type'        => 'integer',
                     'description' => __( 'Delay for auto updates.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
                 ),
-                'mainwp_maximum_requests'                => array(
+                'mainwp_maximum_requests'                  => array(
                     'type'        => 'integer',
                     'description' => __( 'Maximum requests.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
                 ),
-                'mainwp_minimum_delay'                   => array(
+                'mainwp_minimum_delay'                     => array(
                     'type'        => 'integer',
                     'description' => __( 'Minimum delay.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
                 ),
-                'mainwp_maximum_ip_requests'             => array(
+                'mainwp_maximum_ip_requests'               => array(
                     'type'        => 'integer',
                     'description' => __( 'Maximum IP requests.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
                 ),
-                'mainwp_minimum_ip_delay'                => array(
+                'mainwp_minimum_ip_delay'                  => array(
                     'type'        => 'integer',
                     'description' => __( 'Minimum IP delay.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
                 ),
-                'mainwp_chunksitesnumber'                => array(
+                'mainwp_chunksitesnumber'                  => array(
                     'type'        => 'integer',
                     'description' => __( 'Chunk sites number.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
                 ),
-                'mainwp_chunksleepinterval'              => array(
+                'mainwp_chunksleepinterval'                => array(
                     'type'        => 'integer',
                     'description' => __( 'Chunk sleep interval.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
                 ),
-                'mainwp_maximum_sync_requests'           => array(
+                'mainwp_maximum_sync_requests'             => array(
                     'type'        => 'integer',
                     'description' => __( 'Maximum sync requests.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
                 ),
-                'mainwp_maximum_install_update_requests' => array(
+                'mainwp_maximum_install_update_requests'   => array(
                     'type'        => 'integer',
                     'description' => __( 'Maximum install and update requests.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
@@ -3949,37 +4383,37 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
                     'description' => __( 'Maximum uptime monitoring requests.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
                 ),
-                'mainwp_optimize'                        => array(
+                'mainwp_optimize'                          => array(
                     'type'        => 'integer',
                     'description' => __( 'Optimize data loading.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
                 ),
-                'mainwp_wp_cron'                         => array(
+                'mainwp_wp_cron'                           => array(
                     'type'        => 'integer',
                     'description' => __( 'Use WP Cron.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
                 ),
-                'mainwp_ssl_verify_certificate'          => array(
+                'mainwp_ssl_verify_certificate'            => array(
                     'type'        => 'integer',
                     'description' => __( 'Verify SSL certificate.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
                 ),
-                'mainwp_verify_connection_method'        => array(
+                'mainwp_verify_connection_method'          => array(
                     'type'        => 'integer',
                     'description' => __( 'Verify connection method.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
                 ),
-                'mainwp_connect_signature_algo'          => array(
+                'mainwp_connect_signature_algo'            => array(
                     'type'        => 'integer',
                     'description' => __( 'OpenSSL signature algorithm.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
                 ),
-                'mainwp_force_use_ipv4'                  => array(
+                'mainwp_force_use_ipv4'                    => array(
                     'type'        => 'integer',
                     'description' => __( 'Force use IPv4.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
                 ),
-                'sync_data'                              => array(
+                'sync_data'                                => array(
                     'type'        => 'array',
                     'description' => __( 'Sync data.', 'mainwp' ),
                     'context'     => array( 'advanced_view', 'advanced_edit' ),
@@ -3987,57 +4421,57 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
                         'type' => 'string',
                     ),
                 ),
-                'heading'                                => array(
+                'heading'                                  => array(
                     'type'        => 'string',
                     'description' => __( 'Mail heading.', 'mainwp' ),
                     'context'     => array( 'email_view', 'email_edit' ),
                 ),
-                'type'                                   => array(
+                'type'                                     => array(
                     'type'        => 'string',
                     'description' => __( 'Type.', 'mainwp' ),
                     'context'     => array( 'email_view' ),
                 ),
-                'subject'                                => array(
+                'subject'                                  => array(
                     'type'        => 'string',
                     'description' => __( 'Mail subject.', 'mainwp' ),
                     'context'     => array( 'email_view', 'email_edit' ),
                 ),
-                'recipients'                             => array(
+                'recipients'                               => array(
                     'type'        => 'string',
                     'description' => __( 'Recipients.', 'mainwp' ),
                     'context'     => array( 'email_view', 'email_edit' ),
                 ),
-                'disable'                                => array(
+                'disable'                                  => array(
                     'type'        => 'integer',
                     'description' => __( 'Disable.', 'mainwp' ),
                     'context'     => array( 'email_view', 'email_edit' ),
                 ),
-                'currency'                               => array(
+                'currency'                                 => array(
                     'type'        => 'string',
                     'description' => __( 'Currency.', 'mainwp' ),
                     'context'     => array( 'cost_tracker_view' ),
                 ),
-                'currency_position'                      => array(
+                'currency_position'                        => array(
                     'type'        => 'string',
                     'description' => __( 'Currency position.', 'mainwp' ),
                     'context'     => array( 'cost_tracker_view' ),
                 ),
-                'thousand_separator'                     => array(
+                'thousand_separator'                       => array(
                     'type'        => 'string',
                     'description' => __( 'Thousand separator.', 'mainwp' ),
                     'context'     => array( 'cost_tracker_view' ),
                 ),
-                'decimal_separator'                      => array(
+                'decimal_separator'                        => array(
                     'type'        => 'string',
                     'description' => __( 'Decimal separator.', 'mainwp' ),
                     'context'     => array( 'cost_tracker_view' ),
                 ),
-                'decimals'                               => array(
+                'decimals'                                 => array(
                     'type'        => 'integer',
                     'description' => __( 'Decimals.', 'mainwp' ),
                     'context'     => array( 'cost_tracker_view' ),
                 ),
-                'product_categories'                     => array(
+                'product_categories'                       => array(
                     'type'        => 'array',
                     'description' => __( 'Product categories.', 'mainwp' ),
                     'context'     => array( 'cost_tracker_view' ),
@@ -4045,7 +4479,7 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
                         'type' => 'object',
                     ),
                 ),
-                'payment_methods'                        => array(
+                'payment_methods'                          => array(
                     'type'        => 'array',
                     'description' => __( 'Payment methods.', 'mainwp' ),
                     'context'     => array( 'cost_tracker_view' ),
@@ -4053,20 +4487,12 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
                         'type' => 'string',
                     ),
                 ),
-                'enable_insights_logging'                => array(
+                'enable_insights_logging'                  => array(
                     'type'        => 'integer',
                     'description' => __( 'Enable insights logging.', 'mainwp' ),
                     'context'     => array( 'dashboard_insights_view' ),
                 ),
-                'module_log_settings'                    => array(
-                    'type'        => 'array',
-                    'description' => __( 'Module log settings.', 'mainwp' ),
-                    'context'     => array( 'dashboard_insights_view' ),
-                    'items'       => array(
-                        'type' => 'string',
-                    ),
-                ),
-                'api_backups'                            => array(
+                'api_backups'                              => array(
                     'type'        => 'array',
                     'description' => __( 'API backups.', 'mainwp' ),
                     'context'     => array( 'api_backups_view' ),
@@ -4074,25 +4500,115 @@ class MainWP_Rest_Settings_Controller extends MainWP_REST_Controller { //phpcs:i
                         'type' => 'object',
                     ),
                 ),
-                'mainwp_theme'                           => array(
+                'mainwp_theme'                             => array(
                     'type'        => 'string',
                     'description' => __( 'MainWP theme.', 'mainwp' ),
                     'context'     => array( 'tool_view' ),
                 ),
-                'guided_tours'                           => array(
+                'guided_tours'                             => array(
                     'type'        => 'integer',
                     'description' => __( 'Usetiful (Interactiive Guides & Tips).', 'mainwp' ),
                     'context'     => array( 'tool_view' ),
                 ),
-                'chatbase'                               => array(
+                'chatbase'                                 => array(
                     'type'        => 'integer',
                     'description' => __( 'Chatbase (AI-Powered Chat Support).', 'mainwp' ),
                     'context'     => array( 'tool_view' ),
                 ),
-                'guided_video'                           => array(
+                'guided_video'                             => array(
                     'type'        => 'integer',
                     'description' => __( 'Youtube Embeds (Video Tutorials).', 'mainwp' ),
                     'context'     => array( 'tool_view' ),
+                ),
+                'mainwp_disable_sites_health_monitoring'   => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Disable sites health monitoring.', 'mainwp' ),
+                    'context'     => array( 'monitoring_view' ),
+                ),
+                'mainwp_sitehealth_threshold'              => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Site health threshold.', 'mainwp' ),
+                    'context'     => array( 'monitoring_view' ),
+                ),
+                'mainwp_uptime_monitoring_active'          => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Uptime monitoring active.', 'mainwp' ),
+                    'context'     => array( 'monitoring_view' ),
+                ),
+                'mainwp_uptime_monitoring_interval'        => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Uptime monitoring interval.', 'mainwp' ),
+                    'context'     => array( 'monitoring_view' ),
+                ),
+                'mainwp_uptime_monitoring_method'          => array(
+                    'type'        => 'string',
+                    'description' => __( 'Uptime monitoring method.', 'mainwp' ),
+                    'context'     => array( 'monitoring_view' ),
+                ),
+                'mainwp_uptime_monitoring_timeout'         => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Uptime monitoring timeout.', 'mainwp' ),
+                    'context'     => array( 'monitoring_view' ),
+                ),
+                'mainwp_uptime_monitoring_type'            => array(
+                    'type'        => 'string',
+                    'description' => __( 'Uptime monitoring type.', 'mainwp' ),
+                    'context'     => array( 'monitoring_view' ),
+                ),
+                'mainwp_uptime_monitoring_up_status_codes' => array(
+                    'type'        => 'array',
+                    'description' => __( 'Uptime monitoring up status codes.', 'mainwp' ),
+                    'context'     => array( 'monitoring_view' ),
+                ),
+                'mainwp_uptime_monitoring_down_confirmation_check' => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Uptime monitoring down confirmation check.', 'mainwp' ),
+                    'context'     => array( 'monitoring_view' ),
+                ),
+                'mainwp_uptime_monitoring_keyword'         => array(
+                    'type'        => 'string',
+                    'description' => __( 'Uptime monitoring keyword.', 'mainwp' ),
+                    'context'     => array( 'monitoring_view' ),
+                ),
+                'mainwp_primary_backup'                    => array(
+                    'type'        => 'object',
+                    'description' => __( 'Primary backup.', 'mainwp' ),
+                    'context'     => array( 'view', 'edit' ),
+                ),
+                'mainwp_enable_legacy_backup_feature'      => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Enable legacy backup feature.', 'mainwp' ),
+                    'context'     => array( 'view' ),
+                ),
+                'mainwp_backups_on_server'                 => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Backups on server.', 'mainwp' ),
+                    'context'     => array( 'view', 'edit' ),
+                ),
+                'mainwp_backup_on_external_sources'        => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Backups on external sources.', 'mainwp' ),
+                    'context'     => array( 'view', 'edit' ),
+                ),
+                'mainwp_archive_format'                    => array(
+                    'type'        => 'string',
+                    'description' => __( 'Archive format.', 'mainwp' ),
+                    'context'     => array( 'view', 'edit' ),
+                ),
+                'mainwp_notification_on_backup_fail'       => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Notification on backup fail.', 'mainwp' ),
+                    'context'     => array( 'view', 'edit' ),
+                ),
+                'mainwp_notification_on_backup_start'      => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Notification on backup start.', 'mainwp' ),
+                    'context'     => array( 'view', 'edit' ),
+                ),
+                'mainwp_chunked_backup_tasks'              => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Chunked backup tasks.', 'mainwp' ),
+                    'context'     => array( 'view', 'edit' ),
                 ),
             ),
         );

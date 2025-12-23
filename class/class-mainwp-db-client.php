@@ -1288,7 +1288,8 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             $sub_conditions                    = array();
             $sub_conditions[]                  = empty( $ids ) ? '' : $this->wpdb->prepare( 'clients_fields.field_id NOT IN (' . implode( ',', array_fill( 0, count( $ids ), '%d' ) ) . ')', ...$ids );
             $sub_conditions[]                  = empty( $names ) ? '' : $this->wpdb->prepare( 'clients_fields.field_name NOT IN (' . implode( ',', array_fill( 0, count( $names ), '%s' ) ) . ')', ...$names );
-            $where                            .= empty( $sub_conditions ) ? '' : ' AND (' . implode( ' OR ', $sub_conditions ) . ')';
+            $sub_conditions                    = array_filter( $sub_conditions );
+            $where                            .= empty( $sub_conditions ) ? '' : ' AND (' . implode( ' AND ', $sub_conditions ) . ')';
         }
 
         // Handle include.
@@ -1297,7 +1298,8 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             $sub_conditions                    = array();
             $sub_conditions[]                  = empty( $ids ) ? '' : $this->wpdb->prepare( 'clients_fields.field_id IN (' . implode( ',', array_fill( 0, count( $ids ), '%d' ) ) . ')', ...$ids );
             $sub_conditions[]                  = empty( $names ) ? '' : $this->wpdb->prepare( 'clients_fields.field_name IN (' . implode( ',', array_fill( 0, count( $names ), '%s' ) ) . ')', ...$names );
-            $where                            .= empty( $sub_conditions ) ? '' : ' AND (' . implode( ' OR ', $sub_conditions ) . ')';
+            $sub_conditions                    = array_filter( $sub_conditions );
+            $where                            .= empty( $sub_conditions ) ? '' : ' AND (' . implode( ' AND ', $sub_conditions ) . ')';
         }
 
         // Handle search.
