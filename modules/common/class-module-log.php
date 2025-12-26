@@ -35,7 +35,7 @@ class MainWP_Module_Log { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.C
      * Init method.
      */
     public function plugins_loaded() {
-        if ( class_exists( '\MainWP\Dashboard\Module\Log\Log_Install' ) ) {
+        if ( mainwp_modules_is_enabled( 'logs' ) && class_exists( '\MainWP\Dashboard\Module\Log\Log_Install' ) ) {
             Log_Install::instance()->install();
         }
     }

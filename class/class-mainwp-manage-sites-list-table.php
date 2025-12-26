@@ -783,7 +783,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                     $orderby = ' INET_ATON( SUBSTRING_INDEX( CONCAT( SUBSTRING_INDEX(wp_optionview.phpversion, "-", 1), ".0.0.0.0" ), ".", 4) ) ' . ( 'asc' === $req_order ? 'asc' : 'desc' );
                 } elseif ( 'wpcore_version' === $req_orderby ) {
                     $orderby = "CAST( JSON_UNQUOTE( JSON_EXTRACT( wp_optionview.site_info, '$.wpversion' ) ) AS CHAR ) " . ( 'asc' === $req_order ? 'ASC' : 'DESC' );
-                 } elseif ( 'ip' === $req_orderby ) {
+                } elseif ( 'ip' === $req_orderby ) {
                     // Sort by Server IP (string sort covers both IPv4 and IPv6).
                     $orderby = ' wp.ip ' . ( 'asc' === $req_order ? 'asc' : 'desc' );
                 } elseif ( 'status' === $req_orderby ) {
@@ -924,10 +924,10 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             if ( 'connected' === $site_status ) {
                 $where = 'wp_sync.sync_errors = ""';
                 if ( $is_not ) {
-                    $where = 'wp_sync.sync_errors != ""';
+                    $where = 'wp_sync.sync_errors <> ""';
                 }
             } elseif ( 'disconnected' === $site_status ) {
-                $where = 'wp_sync.sync_errors != ""';
+                $where = 'wp_sync.sync_errors <> ""';
                 if ( $is_not ) {
                     $where = 'wp_sync.sync_errors = ""';
                 }

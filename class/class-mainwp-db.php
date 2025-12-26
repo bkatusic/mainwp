@@ -271,7 +271,15 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
         }
 
         if ( ! empty( $s ) ) {
-            $where .= ' AND ( wp.id LIKE "%' . $this->escape( $s ) . '%" OR wp.name LIKE "%' . $this->escape( $s ) . '%" OR wp.url LIKE "%' . $this->escape( $s ) . '%" ) ';
+            $s = trim( $s );
+            // Use esc_like() to escape LIKE wildcards (%, _) then prepare() for SQL safety.
+            $like_pattern = '%' . $this->wpdb->esc_like( $s ) . '%';
+            $where       .= $this->wpdb->prepare(
+                ' AND ( wp.id LIKE %s OR wp.name LIKE %s OR wp.url LIKE %s ) ',
+                $like_pattern,
+                $like_pattern,
+                $like_pattern
+            );
         }
 
         if ( ! empty( $exclude ) ) {
@@ -325,7 +333,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
             }
 
             if ( in_array( 'connected', $status ) ) {
-                $status_conds[] = ' ( wp_sync.sync_errors == "" ) ';
+                $status_conds[] = ' ( wp_sync.sync_errors = "" ) ';
             }
             if ( in_array( 'disconnected', $status ) ) {
                 $status_conds[] = " wp_sync.sync_errors <> '' ";
@@ -647,6 +655,10 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
      * @return int Child site count.
      *
      * @uses \MainWP\Dashboard\MainWP_System::is_multi_user()
+     *
+     * @see get_websites_count_for_current_user() For Abilities API with status/tags/client filters.
+     *      This method is intentionally simple for UI display purposes (total sites count).
+     *      The two methods serve different use cases and should not be consolidated.
      */
     public function get_websites_count( $userId = null, $all_access = false ) {
         static $total_sites;
@@ -701,7 +713,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
         $select_stats = ' ( SELECT COUNT(wp.id) as count_all ';
         if ( ! empty( $params['count_disconnected'] ) ) {
             $select_stats .= ',( SELECT COUNT(wp_disconnected.id) FROM ' . $this->table_name( 'wp' ) . ' wp_disconnected LEFT JOIN ' . $this->table_name( 'wp_sync' ) . ' as wp_sync ';
-            $select_stats .= ' ON wp_disconnected.id = wp_sync.wpid WHERE wp_sync.sync_errors != "" ) as count_disconnected  ';
+            $select_stats .= ' ON wp_disconnected.id = wp_sync.wpid WHERE wp_sync.sync_errors <> "" ) as count_disconnected  ';
         }
         if ( ! empty( $params['count_suspended'] ) ) {
             $select_stats .= ',( SELECT COUNT(wp_suspended.id) FROM ' . $this->table_name( 'wp' ) . ' wp_suspended WHERE wp_suspended.suspended = 1 ) as count_suspended ';
@@ -1202,7 +1214,13 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
 
         if ( null !== $search_site ) {
             $search_site = trim( $search_site );
-            $where      .= ' AND (wp.name LIKE "%' . $search_site . '%" OR wp.url LIKE  "%' . $search_site . '%") ';
+            // Use esc_like() to escape LIKE wildcards (%, _) then prepare() for SQL safety.
+            $like_pattern = '%' . $this->wpdb->esc_like( $search_site ) . '%';
+            $where       .= $this->wpdb->prepare(
+                ' AND (wp.name LIKE %s OR wp.url LIKE %s) ',
+                $like_pattern,
+                $like_pattern
+            );
         }
 
         if ( ! empty( $extraWhere ) ) {
@@ -1234,7 +1252,13 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
             $_included_cache_ids = isset( $params['_included_cache_ids'] ) ? wp_parse_id_list( $params['_included_cache_ids'] ) : array();
 
             if ( ! empty( $s ) ) {
-                $where .= ' AND ( wp.id LIKE "%' . $this->escape( $s ) . '%" OR wp.name LIKE "%' . $this->escape( $s ) . '%" OR wp.url LIKE "%' . $this->escape( $s ) . '%" ) ';
+                $s = trim( $s );
+                // Note: This SQL is executed via m_query() which bypasses wpdb, so we can't
+                // use wpdb->prepare() (its placeholders won't be resolved). Instead, escape
+                // LIKE wildcards and the value manually. First escape LIKE special chars,
+                // then SQL escape the result.
+                $like_value = '%' . $this->escape( $this->wpdb->esc_like( $s ) ) . '%';
+                $where     .= " AND ( wp.id LIKE '{$like_value}' OR wp.name LIKE '{$like_value}' OR wp.url LIKE '{$like_value}' ) ";
             }
 
             if ( ! empty( $exclude ) ) {
@@ -1272,7 +1296,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
                 }
 
                 if ( in_array( 'connected', $status ) ) {
-                    $status_conds[] = ' ( wp_sync.sync_errors == "" ) ';
+                    $status_conds[] = ' ( wp_sync.sync_errors = "" ) ';
                 }
                 if ( in_array( 'disconnected', $status ) ) {
                     $status_conds[] = " wp_sync.sync_errors <> '' ";
@@ -1385,7 +1409,13 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
 
         if ( null !== $search_site ) {
             $search_site = trim( $search_site );
-            $where      .= ' AND (wp.name LIKE "%' . $this->escape( $search_site ) . '%" OR wp.url LIKE  "%' . $this->escape( $search_site ) . '%") ';
+            // Use esc_like() to escape LIKE wildcards (%, _) then prepare() for SQL safety.
+            $like_pattern = '%' . $this->wpdb->esc_like( $search_site ) . '%';
+            $where       .= $this->wpdb->prepare(
+                ' AND (wp.name LIKE %s OR wp.url LIKE %s) ',
+                $like_pattern,
+                $like_pattern
+            );
         }
 
         if ( null !== $extraWhere ) {
@@ -1715,6 +1745,120 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
     }
 
     /**
+     * Get count of child sites for the current user with filters.
+     *
+     * This method is optimized for the Abilities API to return site counts
+     * with filtering support for status, tags (groups), and client_id.
+     *
+     * IMPORTANT: This method is intended ONLY for Abilities API consumers.
+     * For legacy UI code paths (e.g., admin dashboard widgets, site count displays),
+     * use get_websites_count() instead. The two methods serve different purposes:
+     * - get_websites_count(): Simple total count for UI display (cached, no filters)
+     * - get_websites_count_for_current_user(): Filtered count for API pagination
+     *
+     * @since 5.3
+     *
+     * @param array $params Filter parameters:
+     *                      - status (string): 'connected', 'disconnected', 'suspended'
+     *                      - tags (array): Array of tag/group IDs to filter by
+     *                      - client_id (int): Client ID to filter by.
+     *
+     * @return int Count of sites matching the filters.
+     */
+    public function get_websites_count_for_current_user( $params = array() ) {
+        if ( ! is_array( $params ) ) {
+            $params = array();
+        }
+
+        $status    = isset( $params['status'] ) ? $params['status'] : '';
+        $tags      = isset( $params['tags'] ) && is_array( $params['tags'] ) ? $params['tags'] : array();
+        $client_id = isset( $params['client_id'] ) ? intval( $params['client_id'] ) : 0;
+        $s         = isset( $params['s'] ) ? $params['s'] : '';
+
+        // Validate status value (defense-in-depth for direct callers outside Abilities API).
+        $valid_statuses = array( 'connected', 'disconnected', 'suspended', '' );
+        if ( ! in_array( $status, $valid_statuses, true ) ) {
+            $status = '';
+        }
+
+        $where      = '';
+        $sql_params = array();
+
+        // Multi-user support: filter by current user.
+        if ( MainWP_System::instance()->is_multi_user() ) {
+            global $current_user;
+            $where       .= ' AND wp.userid = %d ';
+            $sql_params[] = (int) $current_user->ID;
+        }
+
+        // Access control for sites.
+        $where .= $this->get_sql_where_allow_access_sites( 'wp', 'no' );
+
+        // Status filtering: connected, disconnected, suspended.
+        if ( ! empty( $status ) ) {
+            switch ( $status ) {
+                case 'connected':
+                    $where .= ' AND wp_sync.sync_errors = "" AND wp.suspended = 0 ';
+                    break;
+                case 'disconnected':
+                    $where .= ' AND wp_sync.sync_errors <> "" ';
+                    break;
+                case 'suspended':
+                    $where .= ' AND wp.suspended = 1 ';
+                    break;
+            }
+        }
+
+        // Client ID filtering.
+        if ( ! empty( $client_id ) ) {
+            $where       .= ' AND wp.client_id = %d ';
+            $sql_params[] = (int) $client_id;
+        }
+
+        // Search filtering.
+        if ( ! empty( $s ) ) {
+            $s            = trim( $s );
+            $like_pattern = '%' . $this->wpdb->esc_like( $s ) . '%';
+            $where       .= $this->wpdb->prepare(
+                ' AND ( wp.id LIKE %s OR wp.name LIKE %s OR wp.url LIKE %s ) ',
+                $like_pattern,
+                $like_pattern,
+                $like_pattern
+            );
+        }
+
+        // Tags (groups) filtering.
+        $join_group = '';
+        if ( ! empty( $tags ) ) {
+            $tags = array_map( 'intval', $tags );
+            $tags = array_filter(
+                $tags,
+                function ( $id ) {
+                    return $id > 0;
+                }
+            );
+            if ( ! empty( $tags ) ) {
+                $join_group   = ' JOIN ' . $this->table_name( 'wp_group' ) . ' wpgroup ON wp.id = wpgroup.wpid ';
+                $placeholders = implode( ', ', array_fill( 0, count( $tags ), '%d' ) );
+                $where       .= " AND wpgroup.groupid IN ( $placeholders ) ";
+                $sql_params   = array_merge( $sql_params, $tags );
+            }
+        }
+
+        $qry = 'SELECT COUNT(DISTINCT wp.id) FROM ' . $this->table_name( 'wp' ) . ' wp ' .
+                'JOIN ' . $this->table_name( 'wp_sync' ) . ' wp_sync ON wp.id = wp_sync.wpid ' .
+                $join_group .
+                'WHERE 1 ' . $where;
+
+        // Only call prepare() when we have placeholders.
+        $result = $sql_params
+            ? $this->wpdb->get_var( $this->wpdb->prepare( $qry, $sql_params ) )
+            : $this->wpdb->get_var( $qry );
+
+        return (int) $result;
+    }
+
+    /**
      * Get the child sites the current user has searched for.
      *
      * @param array $params Query parameters.
@@ -1818,7 +1962,8 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
 
             // for searching.
             if ( null !== $search_site && '' !== $search_site ) {
-                $where .= ' AND (wp.name LIKE "%' . $search_site . '%" OR wp.url LIKE  "%' . $search_site . '%") ';
+                $like_search = '%' . $this->wpdb->esc_like( $search_site ) . '%';
+                $where      .= $this->wpdb->prepare( ' AND (wp.name LIKE %s OR wp.url LIKE %s) ', $like_search, $like_search );
             }
 
             if ( null !== $extraWhere ) {
@@ -2050,7 +2195,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
             $join_monitors . '
             JOIN ' . $this->table_name( 'wp_sync' ) . ' wp_sync ON wp.id = wp_sync.wpid
             JOIN ' . $this->get_wp_options_view( $extra_view, $view ) . ' wp_optionview ON wp.id = wp_optionview.wpid
-            WHERE 1 ' . $where_cache_ids . $where . $where_group . $where_client . $group_by  .
+            WHERE 1 ' . $where_cache_ids . $where . $where_group . $where_client . $group_by .
             $orderBy;
         }
 
@@ -2058,11 +2203,6 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
             $qry .= ' LIMIT ' . $offset . ', ' . $rowcount;
         } elseif ( false !== $rowcount ) {
             $qry .= ' LIMIT ' . $rowcount;
-        }
-
-        if ( ! empty( $params['dev_log_query'] ) ) {
-            error_log( print_r( $params, true ) ); //phpcs:ignore -- NOSONAR - for dev.
-            error_log( $qry ); //phpcs:ignore -- NOSONAR - for dev.
         }
 
         if ( ! empty( $_included_cache_ids ) ) {
@@ -2465,6 +2605,42 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
     }
 
     /**
+     * Get count of child sites by group ID.
+     *
+     * Uses an efficient COUNT query instead of fetching all rows.
+     *
+     * @param int $id Group ID.
+     *
+     * @return int Number of sites in the group.
+     *
+     * @uses \MainWP\Dashboard\MainWP_Utility::ctype_digit()
+     */
+    public function get_websites_count_by_group_id( $id ) {
+        if ( ! MainWP_Utility::ctype_digit( $id ) ) {
+            return 0;
+        }
+
+        // Determine if this is the staging group.
+        $is_staging    = 'no';
+        $staging_group = get_option( 'mainwp_stagingsites_group_id' );
+        if ( $staging_group && (int) $id === (int) $staging_group ) {
+            $is_staging = 'yes';
+        }
+
+        $where_allowed = $this->get_sql_where_allow_access_sites( 'wp', $is_staging );
+
+        // Use prepare() for the groupid parameter.
+        $qry = $this->wpdb->prepare(
+            'SELECT COUNT(DISTINCT wp.id) FROM ' . $this->table_name( 'wp' ) . ' wp
+            JOIN ' . $this->table_name( 'wp_group' ) . ' wpgroup ON wp.id = wpgroup.wpid
+            WHERE wpgroup.groupid = %d',
+            $id
+        ) . $where_allowed;
+
+        return (int) $this->wpdb->get_var( $qry );
+    }
+
+    /**
      * Get child sites by group id via SQL.
      *
      * @param int    $id           Group ID.
@@ -2501,8 +2677,14 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
 
         $where_search = '';
         if ( ! empty( $search_site ) ) {
-            $search_site   = trim( $search_site );
-            $where_search .= ' AND (wp.name LIKE "%' . $this->escape( $search_site ) . '%" OR wp.url LIKE  "%' . $this->escape( $search_site ) . '%") ';
+            $search_site = trim( $search_site );
+            // Use esc_like() to escape LIKE wildcards (%, _) then prepare() for SQL safety.
+            $like_pattern  = '%' . $this->wpdb->esc_like( $search_site ) . '%';
+            $where_search .= $this->wpdb->prepare(
+                ' AND (wp.name LIKE %s OR wp.url LIKE %s) ',
+                $like_pattern,
+                $like_pattern
+            );
         }
 
         $extra_view = is_array( $others ) && isset( $others['extra_view'] ) && is_array( $others['extra_view'] ) && ! empty( $others['extra_view'] ) ? $others['extra_view'] : array( 'site_info' );
@@ -3613,18 +3795,32 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
     }
 
     /**
-     * Method log_system_query
+     * Log SQL queries for debugging via hook.
      *
-     * @param  array  $params params.
-     * @param  string $sql query.
-     * @param  mixed  $caller Instance of caller class.
+     * This method provides a structured way to log SQL queries for development/debugging.
+     * It does NOT use error_log() directly - instead, it fires the `mainwp_log_system_query`
+     * action hook, allowing external listeners (logging plugins, debug tools) to handle
+     * the log output appropriately.
+     *
+     * To enable query logging:
+     * 1. Set `$params['dev_log_query'] = 1` when calling database methods
+     * 2. Add a listener to the `mainwp_log_system_query` action hook
+     *
+     * Example listener:
+     * ```php
+     * add_action( 'mainwp_log_system_query', function( $params, $sql, $caller ) {
+     *     error_log( 'MainWP Query: ' . $sql );
+     * }, 10, 3 );
+     * ```
+     *
+     * @param array  $params Query parameters. Set 'dev_log_query' to enable logging.
+     * @param string $sql    The SQL query string.
+     * @param mixed  $caller Instance of caller class (optional).
      * @return void
      */
     public function log_system_query( $params, $sql, $caller = false ) {
         $params = apply_filters( 'mainwp_log_system_query_params', $params, $sql, $caller );
         if ( is_array( $params ) && ! empty( $params['dev_log_query'] ) && ! empty( $sql ) ) {
-            error_log( print_r($params, true ) ); //phpcs:ignore -- NOSONAR - for dev.
-            error_log( $sql ); //phpcs:ignore -- NOSONAR - for dev.
             do_action( 'mainwp_log_system_query', $params, $sql, $caller );
         }
     }
