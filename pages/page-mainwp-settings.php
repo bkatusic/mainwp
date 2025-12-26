@@ -194,6 +194,20 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             );
         }
 
+        if ( ! MainWP_Menu::is_disable_menu_item( 3, 'MonitoringSettings' ) ) {
+            add_submenu_page(
+                'mainwp_tab',
+                __( 'Monitoring Options', 'mainwp' ),
+                ' <div class="mainwp-hidden">' . esc_html__( 'Monitoring Options', 'mainwp' ) . '</div>',
+                'read',
+                'MonitoringSettings',
+                array(
+                    static::get_class_name(),
+                    'render_monitoring',
+                )
+            );
+        }
+
         if ( ! MainWP_Menu::is_disable_menu_item( 3, 'SettingsEmail' ) ) {
             add_submenu_page(
                 'mainwp_tab',
@@ -242,6 +256,9 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
                     <a href="<?php echo esc_url( admin_url( 'admin.php?page=Settings' ) ); ?>" class="mainwp-submenu"><?php esc_html_e( 'General Settings', 'mainwp' ); ?></a>
                     <?php if ( ! MainWP_Menu::is_disable_menu_item( 3, 'SettingsAdvanced' ) ) { ?>
                         <a href="<?php echo esc_url( admin_url( 'admin.php?page=SettingsAdvanced' ) ); ?>" class="mainwp-submenu"><?php esc_html_e( 'Advanced Settings', 'mainwp' ); ?></a>
+                    <?php } ?>
+                    <?php if ( ! MainWP_Menu::is_disable_menu_item( 3, 'MonitoringSettings' ) ) { ?>
+                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=MonitoringSettings' ) ); ?>" class="mainwp-submenu"><?php esc_html_e( 'Monitoring Settings', 'mainwp' ); ?></a>
                     <?php } ?>
                     <?php if ( ! MainWP_Menu::is_disable_menu_item( 3, 'SettingsEmail' ) ) { ?>
                         <a href="<?php echo esc_url( admin_url( 'admin.php?page=SettingsEmail' ) ); ?>" class="mainwp-submenu"><?php esc_html_e( 'Email Settings', 'mainwp' ); ?></a>
@@ -309,6 +326,13 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
                 'right'      => '',
             ),
             array(
+                'title'      => esc_html__( 'Monitoring Settings', 'mainwp' ),
+                'parent_key' => 'Settings',
+                'href'       => 'admin.php?page=MonitoringSettings',
+                'slug'       => 'MonitoringSettings',
+                'right'      => '',
+            ),
+            array(
                 'title'      => esc_html__( 'Email Settings', 'mainwp' ),
                 'parent_key' => 'Settings',
                 'href'       => 'admin.php?page=SettingsEmail',
@@ -371,6 +395,14 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
                 'title'  => esc_html__( 'Advanced Settings', 'mainwp' ),
                 'href'   => 'admin.php?page=SettingsAdvanced',
                 'active' => ( 'Advanced' === $shownPage ) ? true : false,
+            );
+        }
+
+        if ( ! MainWP_Menu::is_disable_menu_item( 3, 'MonitoringSettings' ) ) {
+            $renderItems[] = array(
+                'title'  => esc_html__( 'Monitoring Settings', 'mainwp' ),
+                'href'   => 'admin.php?page=MonitoringSettings',
+                'active' => ( 'Monitoring' === $shownPage ) ? true : false,
             );
         }
 
@@ -893,7 +925,7 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
                                 <input type="text" class="settings-field-value-change-handler" name="mainwp_numberdays_Outdate_Plugin_Theme" id="mainwp_numberdays_Outdate_Plugin_Theme" value="<?php echo false === get_option( 'mainwp_numberdays_Outdate_Plugin_Theme' ) ? 365 : intval( get_option( 'mainwp_numberdays_Outdate_Plugin_Theme' ) ); ?>"/>
                             </div>
                         </div>
-                        <?php MainWP_Monitoring_View::render_settings(); ?>
+
                         <?php MainWP_Manage_Backups::render_settings(); ?>
                         <?php
                         /**
@@ -1988,9 +2020,21 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
                     <div><?php esc_html_e( 'To create a custom theme, copy the `mainwp-dark-theme.css` file from the MainWP Custom Dashboard Extension located in the `css` directory, make your edits and upload the file to the `../wp-content/uploads/mainwp/custom-dashboard/` directory.', 'mainwp' ); ?></div>
                 </div>
             <?php endif; ?>
-        <?php if ( isset( $_POST['submit'] ) && isset( $_POST['wp_nonce'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_nonce'] ), 'MainWPTools' ) ) : ?>
-                    <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'Settings have been saved successfully!', 'mainwp' ); ?></div>
-                <?php endif; ?>
+        <?php
+        $show_saved_message = false;
+        if ( isset( $_POST['submit'] ) && isset( $_POST['wp_nonce'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_nonce'] ), 'MainWPTools' ) ) {
+            $show_saved_message = true;
+        } elseif ( get_transient( 'mainwp_settings_saved' ) ) {
+            $show_saved_message = true;
+            delete_transient( 'mainwp_settings_saved' ); // Remove transient after showing message.
+        }
+        ?>
+        <?php if ( $show_saved_message ) : ?>
+            <div class="ui green message">
+                <i class="close icon"></i>
+                <?php esc_html_e( 'Settings have been saved successfully!', 'mainwp' ); ?>
+            </div>
+        <?php endif; ?>
         <?php if ( isset( $_POST['mainwp_restore_info_messages'] ) && isset( $_POST['wp_nonce'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_nonce'] ), 'MainWPTools' ) ) : ?>
                 <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'Info messages have been restored successfully!', 'mainwp' ); ?></div>
             <?php endif; ?>
@@ -2404,7 +2448,7 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
      * Creates the MainWP Help Documentation List for the help component in the sidebar.
      */
     public static function mainwp_help_content() {
-        if ( isset( $_GET['page'] ) && ( 'Settings' === $_GET['page'] || 'SettingsAdvanced' === $_GET['page'] || 'MainWPTools' === $_GET['page'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        if ( isset( $_GET['page'] ) && ( 'Settings' === $_GET['page'] || 'SettingsAdvanced' === $_GET['page'] || 'MainWPTools' === $_GET['page'] || 'MonitoringSettings' === $_GET['page'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
             ?>
             <p><?php esc_html_e( 'If you need help with your MainWP Dashboard settings, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
@@ -2432,5 +2476,57 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             do_action( 'mainwp_settings_help_item' );
 
         }
+    }
+
+    /**
+     * Method render_monitoring()
+     *
+     * Render Monitoring Settings.
+     *
+     * @uses \MainWP\Dashboard\MainWP_Monitoring_View::render_settings()
+     */
+    public static function render_monitoring() {
+        if ( ! \mainwp_current_user_can( 'dashboard', 'manage_dashboard_settings' ) ) {
+            \mainwp_do_not_have_permissions( esc_html__( 'manage dashboard settings', 'mainwp' ) );
+            return;
+        }
+        static::render_header( 'Monitoring' );
+        ?>
+            <div id="mainwp-monitoring-settings" class="ui segment">
+                <?php if ( isset( $_GET['message'] ) && 'saved' === sanitize_text_field( wp_unslash( $_GET['message'] ) ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+                    <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'Monitoring settings have been saved successfully!', 'mainwp' ); ?></div>
+                <?php endif; ?>
+                <div class="ui form">
+                    <form method="POST" action="">
+                        <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                        <input type="hidden" name="wp_nonce" value="<?php echo esc_attr( wp_create_nonce( 'MonitoringSettings' ) ); ?>" />
+                        <?php
+                            /**
+                             * Action: mainwp_monitoring_settings_form_top
+                             *
+                             * Fires at the top of monitoring settings form.
+                             *
+                             * @since 4.1
+                             */
+                            do_action( 'mainwp_monitoring_settings_form_top' );
+                        ?>
+                        <?php MainWP_Monitoring_View::render_settings(); ?>
+                        <?php
+                            /**
+                             * Action: mainwp_monitoring_form_bottom
+                             *
+                             * Fires at the bottom of mainwp monitoring form.
+                             *
+                             * @since 4.1
+                             */
+                            do_action( 'mainwp_monitoring_settings_form_bottom' );
+                        ?>
+                    <div class="ui divider"></div>
+                    <input type="submit" name="submit" id="submit-monitoring" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
+                </form>
+            </div>
+        </div>
+        <?php
+        static::render_footer( 'Monitoring' );
     }
 }
