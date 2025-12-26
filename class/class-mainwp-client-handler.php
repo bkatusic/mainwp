@@ -405,8 +405,9 @@ class MainWP_Client_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                 }
 
                 return array(
-                    'success'  => true,
-                    'clientid' => $client_id,
+                    'success'   => true,
+                    'client_id' => $client_id,
+                    'clientid'  => $client_id, // Legacy key for backwards compatibility.
                 );
 
             } else {
@@ -447,8 +448,9 @@ class MainWP_Client_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                 MainWP_DB_Client::instance()->update_selected_sites_for_client( $inserted->client_id, $selected_sites );
 
                 return array(
-                    'success'  => true,
-                    'clientid' => $inserted->client_id,
+                    'success'   => true,
+                    'client_id' => $inserted->client_id,
+                    'clientid'  => $inserted->client_id, // Legacy key for backwards compatibility.
                 );
             }
         } catch ( \Exception $e ) {

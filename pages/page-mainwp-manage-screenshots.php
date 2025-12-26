@@ -614,10 +614,10 @@ class MainWP_Manage_Screenshots { // phpcs:ignore Generic.Classes.OpeningBraceSa
             if ( 'connected' === $site_status ) {
                 $where = 'wp_sync.sync_errors = ""';
                 if ( $is_not ) {
-                    $where = 'wp_sync.sync_errors != ""';
+                    $where = 'wp_sync.sync_errors <> ""';
                 }
             } elseif ( 'disconnected' === $site_status ) {
-                $where = 'wp_sync.sync_errors != ""';
+                $where = 'wp_sync.sync_errors <> ""';
                 if ( $is_not ) {
                     $where = 'wp_sync.sync_errors = ""';
                 }

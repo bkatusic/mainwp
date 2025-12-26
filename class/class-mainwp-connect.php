@@ -1170,6 +1170,40 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             return MainWP_Demo_Handle::get_instance()->handle_action_demo( $website, $what );
         }
 
+        /**
+         * Filter to mock fetch_url_authed response before any HTTP/signing occurs.
+         *
+         * This filter fires early, before OpenSSL signing or HTTP requests, allowing
+         * tests to bypass child site communication entirely.
+         *
+         * SECURITY WARNING - TEST ONLY:
+         * This filter ONLY fires when ALL of the following conditions are met:
+         * 1. MAINWP_TESTING_MODE constant is defined and true
+         * 2. A PHPUnit test harness constant is present (WP_TESTS_DOMAIN, PHPUNIT_COMPOSER_INSTALL, or WP_TESTS_DIR)
+         *
+         * This triple-check prevents malicious code from defining MAINWP_TESTING_MODE
+         * in production to spoof child site responses.
+         *
+         * IMPORTANT: MAINWP_TESTING_MODE must ONLY be defined in the PHPUnit bootstrap
+         * file (tests/bootstrap.php). Defining it in production code, wp-config.php, or
+         * plugin files would create a security vulnerability allowing response spoofing.
+         *
+         * @since 5.4
+         *
+         * @param mixed  $pre_result Return non-false to short-circuit and return this value.
+         * @param object $website    Website object being communicated with.
+         * @param string $what       Action being performed (e.g., 'plugin_action').
+         * @param array  $params     Request parameters.
+         * @return mixed Array to return early, false to proceed normally.
+         */
+        $is_phpunit_env = defined( 'WP_TESTS_DOMAIN' ) || defined( 'PHPUNIT_COMPOSER_INSTALL' ) || ( defined( 'WP_TESTS_DIR' ) && WP_TESTS_DIR );
+        if ( defined( 'MAINWP_TESTING_MODE' ) && MAINWP_TESTING_MODE && $is_phpunit_env ) {
+            $pre_result = apply_filters( 'mainwp_fetch_url_authed_pre', false, $website, $what, $params );
+            if ( false !== $pre_result ) {
+                return $pre_result;
+            }
+        }
+
         if ( ! is_array( $params ) ) {
             $params = array();
         }

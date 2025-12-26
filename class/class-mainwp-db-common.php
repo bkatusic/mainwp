@@ -288,15 +288,23 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
 
 
     /**
-     * Medthod get_groups_and_count()
+     * Method get_tags()
      *
-     * Get groups and count.
+     * Get tags (groups) with optional filtering and pagination.
      *
      * @since 5.1.1
      *
-     * @param array $params      params.
+     * @param array $params Optional parameters for filtering and pagination.
+     *                      - 's'              (string) Search term for tag name or ID.
+     *                      - 'exclude'        (array)  Tag IDs to exclude.
+     *                      - 'include'        (array)  Tag IDs to include.
+     *                      - 'page'           (int)    Page number for pagination.
+     *                      - 'per_page'       (int)    Items per page for pagination.
+     *                      - 'with_sites_ids' (bool)   Include associated site IDs.
+     *                      - 'count'          (bool)   Return count only instead of results.
      *
-     * @return object|null Database query result for groups and count or null on failure.
+     * @return object[]|int When $params['count'] is true, returns an integer count of matching tags.
+     *                      Otherwise, returns an array of tag objects keyed by ID, or empty array on failure.
      */
     public function get_tags( $params = array() ) { //phpcs:ignore -- NOSONAR - complex.
 
@@ -315,13 +323,17 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             $page           = isset( $params['page'] ) ? intval( $params['page'] ) : false;
             $per_page       = isset( $params['per_page'] ) ? intval( $params['per_page'] ) : false;
             $with_sites_ids = isset( $params['with_sites_ids'] ) && $params['with_sites_ids'] ? true : false;
+            $count_only     = ! empty( $params['count'] );
 
             if ( $with_sites_ids ) {
                 $select .= ', wp_tagview.* ';
             }
 
             if ( ! empty( $s ) ) {
-                $where .= ' AND ( gr.name LIKE "%' . $this->escape( $s ) . '%" OR gr.id LIKE "%' . $this->escape( $s ) . '%" ) ';
+                $s = trim( $s );
+                // Use esc_like() to escape LIKE wildcards (%, _) then escape() for SQL safety.
+                $escaped_like = $this->escape( $this->wpdb->esc_like( $s ) );
+                $where       .= ' AND ( gr.name LIKE "%' . $escaped_like . '%" OR gr.id LIKE "%' . $escaped_like . '%" ) ';
             }
 
             if ( ! empty( $exclude ) ) {
@@ -332,8 +344,13 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
                 $where .= ' AND  gr.id IN (' . implode( ',', $include ) . ') ';
             }
 
+            // Return count only if requested.
+            if ( $count_only ) {
+                return (int) $this->wpdb->get_var( 'SELECT COUNT(*) FROM ' . $this->table_name( 'group' ) . ' gr WHERE 1 ' . $where );
+            }
+
             if ( ! empty( $page ) && ! empty( $per_page ) ) {
-                $limit = ' LIMIT ' . ( $page - 1 ) * $per_page . ',' . $per_page;
+                $limit = $this->wpdb->prepare( ' LIMIT %d, %d', ( $page - 1 ) * $per_page, $per_page );
             }
 
             $join = '';

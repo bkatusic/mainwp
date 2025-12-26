@@ -430,8 +430,8 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
                 $item['selected_sites'] = array_unique( wp_parse_list( $item['selected_sites'] ) );
             }
             $result = MainWP_Client_Handler::rest_api_add_client( $item );
-            if ( is_array( $result ) && isset( $result['clientid'] ) ) {
-                $client               = MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $result['clientid'], OBJECT, array( 'with_selected_sites' => true ) );
+            if ( is_array( $result ) && isset( $result['client_id'] ) ) {
+                $client               = MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $result['client_id'], OBJECT, array( 'with_selected_sites' => true ) );
                 $resp_data['success'] = 1;
                 $resp_data['message'] = esc_html__( 'Client created Successfully.', 'mainwp' );
                 $resp_data['data']    = $this->filter_response_data_by_allowed_fields( $client, 'simple_view', array( 'selected_sites' ) );
@@ -472,8 +472,8 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
                 $data['selected_sites'] = array_unique( wp_parse_list( $data['selected_sites'] ) );
             }
             $result = MainWP_Client_Handler::rest_api_add_client( $data, true );
-            if ( is_array( $result ) && isset( $result['clientid'] ) ) {
-                $client               = MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $result['clientid'], OBJECT, array( 'with_selected_sites' => true ) );
+            if ( is_array( $result ) && isset( $result['client_id'] ) ) {
+                $client               = MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $result['client_id'], OBJECT, array( 'with_selected_sites' => true ) );
                 $resp_data['success'] = 1;
                 $resp_data['message'] = esc_html__( 'Client updated Successfully.', 'mainwp' );
                 $resp_data['data']    = $this->filter_response_data_by_allowed_fields( $client, 'simple_view', array( 'selected_sites' ) );
