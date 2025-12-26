@@ -375,8 +375,8 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
             $tbl .= ',
     PRIMARY KEY  (key_id)  ';
         }
-            $tbl  .= ') ' . $charset_collate . ';';
-            $sql[] = $tbl;
+        $tbl  .= ') ' . $charset_collate . ';';
+        $sql[] = $tbl;
 
         $tbl = 'CREATE TABLE ' . $this->table_name( 'action_log' ) . " (
     id int(11) NOT NULL auto_increment,
@@ -389,8 +389,8 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
             $tbl .= ',
     PRIMARY KEY  (id)  ';
         }
-            $tbl  .= ') ' . $charset_collate . ';';
-            $sql[] = $tbl;
+        $tbl  .= ') ' . $charset_collate . ';';
+        $sql[] = $tbl;
 
         $tbl = 'CREATE TABLE ' . $this->table_name( 'request_log' ) . " (
   id int(11) NOT NULL auto_increment,
@@ -416,7 +416,7 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
     dts_process_init_time int(11) NOT NULL DEFAULT 0,
     dts_process_stop int(11) NOT NULL DEFAULT 0";
 
-        if ( empty( $currentVersion ) || version_compare( $currentVersion, '9.0.0.45', '<' ) ) { //phpcs:ignore -- NOSONAR - no ip.
+    if ( empty( $currentVersion ) || version_compare( $currentVersion, '9.0.0.45', '<' ) ) { //phpcs:ignore -- NOSONAR - no ip.
             $tbl .= ',
     PRIMARY KEY  (process_id)  ';
         }
