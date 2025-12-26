@@ -1572,6 +1572,19 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
         }
         //phpcs:enable
 
+        $snapshot_info = MainWP_DB_Client::instance()->get_clients_snapshot_info();
+
+        /**
+        * Action: mainwp_insert_update_client
+        *
+        * @since 6.0
+        *
+        * @param int $client_id Client ID.
+        * @param bool $add_new True if adding a new client, false if updating an existing one.
+        * @param array $snapshot_info Snapshot information.
+        */
+        do_action( 'mainwp_insert_update_client', $client_id, $add_new, $snapshot_info );
+
         echo wp_json_encode(
             array(
                 'success'   => 'yes',

@@ -429,7 +429,6 @@ class MainWP_System_Cron_Jobs { // phpcs:ignore Generic.Classes.OpeningBraceSame
      * @uses \MainWP\Dashboard\MainWP_Notification_Settings::get_default_emails_fields()
      * @uses \MainWP\Dashboard\MainWP_Sync::sync_site()
      * @uses \MainWP\Dashboard\MainWP_Sync::get_wp_icon()
-     * @uses \MainWP\Dashboard\MainWP_Sync::sync_information_array()
      * @uses \MainWP\Dashboard\MainWP_System_Utility::get_wp_file_system()
      * @uses \MainWP\Dashboard\MainWP_System_Utility::get_mainwp_specific_dir()
      * @uses  \MainWP\Dashboard\MainWP_Utility::get_timestamp()

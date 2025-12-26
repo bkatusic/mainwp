@@ -1032,7 +1032,8 @@ let updatesoverview_plugins_upgrade_int_after_backup = function (pSlug, pWebsite
             action: 'mainwp_upgradeplugintheme',
             websiteId: pWebsiteId,
             type: 'plugin',
-            slug: pSlug
+            slug: pSlug,
+            bulkUpdate: mainwpVars.websitesTotal > 1 ? 1 : 0
         });
         jQuery.ajax({
             type: "POST",
@@ -1474,7 +1475,8 @@ let updatesoverview_themes_upgrade_int = function (slug, websiteId, bulkMode) {
         action: 'mainwp_upgradeplugintheme',
         websiteId: websiteId,
         type: 'theme',
-        slug: slug
+        slug: slug,
+        bulkUpdate: mainwpVars.websitesTotal > 1 ? 1 : 0
     });
     jQuery.ajax({
         type: "POST",
@@ -1945,7 +1947,8 @@ let updatesoverview_upgrade_int_flow = function (params) { // NOSONAR - complex.
             action: 'mainwp_upgradeplugintheme',
             websiteId: pWebsiteId,
             type: 'theme',
-            slug: pThemeSlugToUpgrade
+            slug: pThemeSlugToUpgrade,
+            bulkUpdate: mainwpVars.websitesTotal > 1 ? 1 : 0
         });
 
         jQuery.ajax({
@@ -2064,7 +2067,8 @@ let updatesoverview_upgrade_int_flow = function (params) { // NOSONAR - complex.
             action: 'mainwp_upgradeplugintheme',
             websiteId: pWebsiteId,
             type: 'plugin',
-            slug: pPluginSlugToUpgrade
+            slug: pPluginSlugToUpgrade,
+            bulkUpdate: 1
         });
 
         jQuery.ajax({
@@ -2265,7 +2269,8 @@ let updatesoverview_upgrade_int_flow = function (params) { // NOSONAR - complex.
             action: 'mainwp_upgradeplugintheme',
             websiteId: pWebsiteId,
             type: 'translation',
-            slug: pTransSlugToUpgrade
+            slug: pTransSlugToUpgrade,
+            bulkUpdate: 1
         });
 
         jQuery.ajax({
@@ -3379,7 +3384,8 @@ let updatesoverview_upgrade_plugintheme_list = function (what, id, list, noCheck
                     action: 'mainwp_upgradeplugintheme',
                     websiteId: pId,
                     type: pWhat,
-                    slug: newList.join(',')
+                    slug: newList.join(','),
+                    bulkUpdate: 1
                 });
                 jQuery.post(ajaxurl, data, function (response) { //NOSONAR
                     let success = false;
@@ -3465,7 +3471,8 @@ let updatesoverview_upgrade_plugintheme_list_popup = function (what, pId, pSiteN
         action: 'mainwp_upgradeplugintheme',
         websiteId: pId,
         type: what,
-        slug: list.join(',')
+        slug: list.join(','),
+        bulkUpdate: 1
     });
 
     // Show icon waiting

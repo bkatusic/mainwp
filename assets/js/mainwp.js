@@ -1027,7 +1027,8 @@ let dashboard_update_next = function (pAction) {
     let data = mainwp_secure_data({
         action: ('checknow' == pAction ? 'mainwp_checksites' : 'mainwp_syncsites'),
         wp_id: websiteId,
-        isGlobalSync: globalSync
+        isGlobalSync: globalSync,
+        bulkSync: mainwpVars.websitesTotal > 1 ? 1 : 0
     });
 
 

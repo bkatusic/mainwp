@@ -1259,9 +1259,13 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         $others['function'] = $what;
 
         $information = array();
+        $output      = array();
 
         if ( ! $request_update ) {
-            $information = static::fetch_url( $website, $website->url, $postdata, $checkConstraints, $website->verify_certificate, $pRetryFailed, $website->http_user, $website->http_pass, $website->ssl_version, $others );
+            $information = static::fetch_url( $website, $website->url, $postdata, $checkConstraints, $website->verify_certificate, $pRetryFailed, $website->http_user, $website->http_pass, $website->ssl_version, $others, $output );
+            if ( ! empty( $output ) ) {
+                $information['fetch_url_output'] = $output;
+            }
             /**
              * Fires immediately after fetch url action.
              *
@@ -1679,6 +1683,10 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             $hidden_data = $data;
         }
 
+        if ( ! is_array( $output ) ) {
+            $output = array();
+        }
+
         $output['fetch_data'] = $hidden_data;
 
         $output['http_status'] = (int) $http_status;
@@ -1694,20 +1702,33 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
 
         if ( ( false === $data ) && empty( $http_status ) ) {
             MainWP_Logger::instance()->debug_for_website( $website, 'fetch_url', '[' . $url . '] HTTP Error: [status=0][' . $err . ']' );
-            $thr_error = new MainWP_Exception( 'HTTPERROR', $err ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+            $thr_error                = new MainWP_Exception( 'HTTPERROR', $err ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+            $output['error_category'] = 'http_error';
         } elseif ( empty( $data ) && ! empty( $err ) ) {
             MainWP_Logger::instance()->debug_for_website( $website, 'fetch_url', '[' . $url . '] HTTP Error: [status=' . $http_status . '][' . $err . ']' );
-            $thr_error = new MainWP_Exception( 'HTTPERROR', $err ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+            $thr_error                = new MainWP_Exception( 'HTTPERROR', $err ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+            $output['error_category'] = 'http_error';
+            $output['error_code']     = 'http_request_failed';
+            $output['error_message']  = $err;
         } elseif ( 0 < preg_match( '/<mainwp>(.*)<\/mainwp>/', $data, $results ) ) {
-            $result      = $results[1];
-            $information = MainWP_System_Utility::get_child_response( base64_decode( $result ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
+            $output['connection_step'] = 'verify_credentials';
+            $result                    = $results[1];
+            $information               = MainWP_System_Utility::get_child_response( base64_decode( $result ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
             unset( $output['fetch_data'] ); // hide the data.
             $pdt      = is_string( $postdata ) ? $postdata : '';
             $data_log = is_array( $postdata ) ? print_r( $postdata, true ) : $pdt;  //phpcs:ignore -- good.
             MainWP_Logger::instance()->debug_for_website( $website, 'fetch_url_site', '[' . $url . '] postdata [' . $data_log . '] information: [OK]' ); //phpcs:ignore -- ok.
+
+            $error_code = is_array( $information ) && isset( $information['error_code'] ) ? sanitize_text_field( wp_unslash( $information['error_code'] ) ) : '';
+            if ( ! empty( $error_code ) ) {
+                $output['child_error_code'] = $error_code;
+            }
             return $information;
         } elseif ( 200 === (int) $http_status && ! empty( $err ) ) {
-            $thr_error = new MainWP_Exception( 'HTTPERROR', $err ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+            $thr_error                = new MainWP_Exception( 'HTTPERROR', $err ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+            $output['error_category'] = 'http_error';
+            $output['error_code']     = 'http_request_failed';
+            $output['error_message']  = $err;
         } elseif ( $raw_response ) {
             MainWP_Logger::instance()->debug_for_website( $website, 'fetch_url_site', 'Response: [RAW]' );
             return $data;
@@ -1715,10 +1736,14 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             MainWP_Logger::instance()->debug_for_website( $website, 'fetch_url', '[' . $url . '] Error: NOMAINWP [data=' . $hidden_data . ']' );
             $detect_wsidchk = is_string( $data ) ? strpos( $data, 'wsidchk' ) : false;
             if ( false !== $detect_wsidchk ) {
-                $thr_error = new MainWP_Exception( 'ERROR:Connection Failed. We suspect that Imunify360, a security layer added by your host, is causing this problem. Please contact your host to whitelist your Dashboard IP in their system. If you need help determining your MainWP Dashboard site IP address, check with your hosting provider.', $url );
+                $err_msg   = 'Connection Failed. We suspect that Imunify360, a security layer added by your host, is causing this problem. Please contact your host to whitelist your Dashboard IP in their system. If you need help determining your MainWP Dashboard site IP address, check with your hosting provider.';
+                $thr_error = new MainWP_Exception( 'ERROR:' . $err_msg, $url );
             } else {
                 $thr_error = new MainWP_Exception( 'NOMAINWP', $url ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+                $err_msg   = 'Connection Failed. Please ensure that the MainWP Child plugin is installed and activated on the child site.';
             }
+            $output['error_category'] = 'child_plugin_missing';
+            $output['error_message']  = $err_msg;
         }
 
         if ( null !== $thr_error ) {
