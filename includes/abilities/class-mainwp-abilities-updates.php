@@ -1663,9 +1663,20 @@ class MainWP_Abilities_Updates {
             }
         } else {
             // Get all sites for current user (respects user access by default).
+            // Must request update fields explicitly - default only returns id, url, name, client_id.
             $websites = MainWP_DB::instance()->get_websites_for_current_user(
                 array(
                     'selectgroups' => false,
+                    'fields'       => array(
+                        'plugin_upgrades',
+                        'theme_upgrades',
+                        'translation_upgrades',
+                        'ignored_plugins',
+                        'ignored_themes',
+                        'is_ignoreCoreUpdates',
+                        'is_ignorePluginUpdates',
+                        'is_ignoreThemeUpdates',
+                    ),
                 )
             );
 
@@ -2059,9 +2070,14 @@ class MainWP_Abilities_Updates {
             }
         } else {
             // Get all sites for current user (respects user access by default).
+            // Must request ignored fields explicitly - default only returns id, url, name, client_id.
             $websites = MainWP_DB::instance()->get_websites_for_current_user(
                 array(
                     'selectgroups' => false,
+                    'fields'       => array(
+                        'ignored_plugins',
+                        'ignored_themes',
+                    ),
                 )
             );
 
@@ -3142,6 +3158,61 @@ class MainWP_Abilities_Updates {
     }
 
     /**
+     * Allowed columns for get_site_column_value() to prevent SQL injection.
+     *
+     * @var array
+     */
+    private static $allowed_site_columns = array(
+        'plugin_upgrades',
+        'theme_upgrades',
+        'translation_upgrades',
+        'ignored_plugins',
+        'ignored_themes',
+    );
+
+    /**
+     * Get a site column value with fallback to direct database query.
+     *
+     * This method first tries to read from the site object property. If not found
+     * (empty), it falls back to a direct database query. This ensures update data
+     * is retrieved regardless of how the site object was constructed.
+     *
+     * @param object $site   Site object.
+     * @param string $column Column name from wp table (must be in allowed list).
+     * @return string Column value or empty string.
+     */
+    private static function get_site_column_value( $site, string $column ): string {
+        // Validate column is in allowed list (security).
+        if ( ! in_array( $column, self::$allowed_site_columns, true ) ) {
+            return '';
+        }
+
+        // Validate site has an ID.
+        if ( empty( $site->id ) ) {
+            return '';
+        }
+
+        // Try object property first (fast path).
+        if ( ! empty( $site->{$column} ) ) {
+            return $site->{$column};
+        }
+
+        // Fallback: direct database query.
+        global $wpdb;
+        $table = MainWP_DB::instance()->get_table_name( 'wp' );
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery -- Fallback query; $column and $table are validated.
+        $value = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT {$column} FROM {$table} WHERE id = %d",
+                (int) $site->id
+            )
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+        return $value ?? '';
+    }
+
+    /**
      * Get updates for a single site.
      *
      * @param object $site                   Site object.
@@ -3158,9 +3229,11 @@ class MainWP_Abilities_Updates {
         $site_url  = $site->url;
         $site_name = $site->name;
 
-        // Get per-site ignored lists.
-        $site_ignored_plugins = ! empty( $site->ignored_plugins ) ? json_decode( $site->ignored_plugins, true ) : array();
-        $site_ignored_themes  = ! empty( $site->ignored_themes ) ? json_decode( $site->ignored_themes, true ) : array();
+        // Get per-site ignored lists (with fallback to database query).
+        $raw_ignored_plugins  = self::get_site_column_value( $site, 'ignored_plugins' );
+        $site_ignored_plugins = ! empty( $raw_ignored_plugins ) ? json_decode( $raw_ignored_plugins, true ) : array();
+        $raw_ignored_themes   = self::get_site_column_value( $site, 'ignored_themes' );
+        $site_ignored_themes  = ! empty( $raw_ignored_themes ) ? json_decode( $raw_ignored_themes, true ) : array();
 
         if ( ! is_array( $site_ignored_plugins ) ) {
             $site_ignored_plugins = array();
@@ -3206,7 +3279,8 @@ class MainWP_Abilities_Updates {
         // Plugin updates.
         // Guard against missing ignore flag property (treat missing/falsy as "not ignored").
         if ( in_array( 'plugins', $types, true ) && empty( $site->is_ignorePluginUpdates ) ) {
-            $plugin_upgrades = ! empty( $site->plugin_upgrades ) ? json_decode( $site->plugin_upgrades, true ) : array();
+            $raw_plugin_upgrades = self::get_site_column_value( $site, 'plugin_upgrades' );
+            $plugin_upgrades     = ! empty( $raw_plugin_upgrades ) ? json_decode( $raw_plugin_upgrades, true ) : array();
 
             if ( is_array( $plugin_upgrades ) && ! empty( $plugin_upgrades ) ) {
                 // Filter by per-site ignored.
@@ -3236,7 +3310,8 @@ class MainWP_Abilities_Updates {
         // Theme updates.
         // Guard against missing ignore flag property (treat missing/falsy as "not ignored").
         if ( in_array( 'themes', $types, true ) && empty( $site->is_ignoreThemeUpdates ) ) {
-            $theme_upgrades = ! empty( $site->theme_upgrades ) ? json_decode( $site->theme_upgrades, true ) : array();
+            $raw_theme_upgrades = self::get_site_column_value( $site, 'theme_upgrades' );
+            $theme_upgrades     = ! empty( $raw_theme_upgrades ) ? json_decode( $raw_theme_upgrades, true ) : array();
 
             if ( is_array( $theme_upgrades ) && ! empty( $theme_upgrades ) ) {
                 // Filter by per-site ignored.
@@ -3265,7 +3340,8 @@ class MainWP_Abilities_Updates {
 
         // Translation updates.
         if ( in_array( 'translations', $types, true ) ) {
-            $translation_upgrades = ! empty( $site->translation_upgrades ) ? json_decode( $site->translation_upgrades, true ) : array();
+            $raw_translation_upgrades = self::get_site_column_value( $site, 'translation_upgrades' );
+            $translation_upgrades     = ! empty( $raw_translation_upgrades ) ? json_decode( $raw_translation_upgrades, true ) : array();
 
             if ( is_array( $translation_upgrades ) && ! empty( $translation_upgrades ) ) {
                 foreach ( $translation_upgrades as $translation ) {

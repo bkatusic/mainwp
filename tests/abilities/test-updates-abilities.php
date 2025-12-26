@@ -238,6 +238,185 @@ class MainWP_Updates_Abilities_Test extends MainWP_Abilities_Test_Case {
 		$this->assertNotContains( $site2_id, $returned_site_ids, 'Updates for site2 should be excluded when filtering by site1.' );
 	}
 
+	/**
+	 * Test that list-updates includes plugin updates (verifies fallback retrieval).
+	 *
+	 * This test ensures the fix for retrieving plugin_upgrades works correctly,
+	 * even when the site object property is not populated by map_site().
+	 *
+	 * @return void
+	 */
+	public function test_list_updates_includes_plugin_updates() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Plugin Updates Test Site',
+			'offline_check_result' => 1,
+		] );
+
+		// Seed plugin upgrades.
+		$this->set_site_plugin_upgrades( $site_id, [
+			'akismet/akismet.php' => [
+				'Name'        => 'Akismet Anti-spam',
+				'Version'     => '5.0.0',
+				'new_version' => '5.1.0',
+			],
+			'jetpack/jetpack.php' => [
+				'Name'        => 'Jetpack',
+				'Version'     => '12.0',
+				'new_version' => '12.5',
+			],
+		] );
+
+		// Call list-updates with all sites (empty site_ids_or_domains).
+		$result = $this->execute_ability( 'mainwp/list-updates-v1', [
+			'types' => [ 'plugins' ],
+		] );
+
+		$this->assertNotWPError( $result, 'list-updates should not return WP_Error.' );
+		$this->assertGreaterThan( 0, $result['summary']['plugins'], 'Plugin updates should be returned in summary.' );
+
+		// Verify updates contain our seeded plugins.
+		$plugin_slugs = array_column( $result['updates'], 'slug' );
+		$this->assertContains( 'akismet/akismet.php', $plugin_slugs, 'Akismet plugin update should be returned.' );
+		$this->assertContains( 'jetpack/jetpack.php', $plugin_slugs, 'Jetpack plugin update should be returned.' );
+	}
+
+	/**
+	 * Test that list-updates includes theme updates (verifies fallback retrieval).
+	 *
+	 * This test ensures the fix for retrieving theme_upgrades works correctly.
+	 *
+	 * @return void
+	 */
+	public function test_list_updates_includes_theme_updates() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Theme Updates Test Site',
+			'offline_check_result' => 1,
+		] );
+
+		// Seed theme upgrades.
+		$this->set_site_theme_upgrades( $site_id, [
+			'twentytwentyfour' => [
+				'Name'        => 'Twenty Twenty-Four',
+				'Version'     => '1.0',
+				'new_version' => '1.2',
+			],
+		] );
+
+		// Call list-updates with all sites (empty site_ids_or_domains).
+		$result = $this->execute_ability( 'mainwp/list-updates-v1', [
+			'types' => [ 'themes' ],
+		] );
+
+		$this->assertNotWPError( $result, 'list-updates should not return WP_Error.' );
+		$this->assertGreaterThan( 0, $result['summary']['themes'], 'Theme updates should be returned in summary.' );
+
+		// Verify updates contain our seeded theme.
+		$theme_slugs = array_column( $result['updates'], 'slug' );
+		$this->assertContains( 'twentytwentyfour', $theme_slugs, 'Twenty Twenty-Four theme update should be returned.' );
+	}
+
+	/**
+	 * Test that list-updates includes translation updates (verifies fallback retrieval).
+	 *
+	 * This test ensures the fix for retrieving translation_upgrades works correctly.
+	 *
+	 * @return void
+	 */
+	public function test_list_updates_includes_translation_updates() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'Translation Updates Test Site',
+			'offline_check_result' => 1,
+		] );
+
+		// Seed translation upgrades.
+		$this->set_site_translation_upgrades( $site_id, [
+			[
+				'slug'        => 'default',
+				'name'        => 'WordPress Core',
+				'version'     => '6.4',
+				'new_version' => '6.5',
+			],
+			[
+				'slug'        => 'akismet',
+				'name'        => 'Akismet',
+				'version'     => '5.0',
+				'new_version' => '5.1',
+			],
+		] );
+
+		// Call list-updates with all sites (empty site_ids_or_domains).
+		$result = $this->execute_ability( 'mainwp/list-updates-v1', [
+			'types' => [ 'translations' ],
+		] );
+
+		$this->assertNotWPError( $result, 'list-updates should not return WP_Error.' );
+		$this->assertGreaterThan( 0, $result['summary']['translations'], 'Translation updates should be returned in summary.' );
+	}
+
+	/**
+	 * Test that list-updates includes all update types when using specific site IDs.
+	 *
+	 * This test verifies the fix works through the resolve_site() code path.
+	 *
+	 * @return void
+	 */
+	public function test_list_updates_with_specific_site_ids_includes_all_types() {
+		$this->skip_if_no_abilities_api();
+		$this->set_current_user_as_admin();
+
+		$site_id = $this->create_test_site( [
+			'name'                 => 'All Updates Test Site',
+			'offline_check_result' => 1,
+		] );
+
+		// Seed all update types.
+		$this->set_site_plugin_upgrades( $site_id, [
+			'hello-dolly/hello.php' => [
+				'Name'        => 'Hello Dolly',
+				'Version'     => '1.7',
+				'new_version' => '1.8',
+			],
+		] );
+
+		$this->set_site_theme_upgrades( $site_id, [
+			'twentytwentythree' => [
+				'Name'        => 'Twenty Twenty-Three',
+				'Version'     => '1.0',
+				'new_version' => '1.3',
+			],
+		] );
+
+		$this->set_site_translation_upgrades( $site_id, [
+			[
+				'slug'        => 'default',
+				'name'        => 'WordPress Core',
+				'version'     => '6.3',
+				'new_version' => '6.4',
+			],
+		] );
+
+		// Call list-updates with SPECIFIC site ID (tests resolve_site path).
+		$result = $this->execute_ability( 'mainwp/list-updates-v1', [
+			'site_ids_or_domains' => [ $site_id ],
+		] );
+
+		$this->assertNotWPError( $result, 'list-updates should not return WP_Error.' );
+
+		// Verify all types are returned.
+		$this->assertGreaterThan( 0, $result['summary']['plugins'], 'Plugin updates should be returned for specific site.' );
+		$this->assertGreaterThan( 0, $result['summary']['themes'], 'Theme updates should be returned for specific site.' );
+		$this->assertGreaterThan( 0, $result['summary']['translations'], 'Translation updates should be returned for specific site.' );
+	}
+
 	// =========================================================================
 	// Run Updates Tests
 	// =========================================================================

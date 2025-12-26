@@ -663,6 +663,7 @@ class MainWP_Abilities_Batch_Operations_Test extends MainWP_Abilities_Test_Case 
 	 * Simulates a failure to persist the transient by intercepting set_transient
 	 * and immediately deleting the value, causing the verification to fail.
 	 *
+	 * @expectedDeprecated setted_transient
 	 * @return void
 	 */
 	public function test_queue_batch_sync_transient_failure() {
@@ -707,6 +708,7 @@ class MainWP_Abilities_Batch_Operations_Test extends MainWP_Abilities_Test_Case 
 	 * Simulates a failure to persist the transient by intercepting set_transient
 	 * and immediately deleting the value, causing the verification to fail.
 	 *
+	 * @expectedDeprecated setted_transient
 	 * @return void
 	 */
 	public function test_queue_batch_updates_transient_failure() {

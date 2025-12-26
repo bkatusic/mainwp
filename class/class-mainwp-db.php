@@ -1240,14 +1240,12 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
 
             if ( ! empty( $s ) ) {
                 $s = trim( $s );
-                // Use esc_like() to escape LIKE wildcards (%, _) then prepare() for SQL safety.
-                $like_pattern = '%' . $this->wpdb->esc_like( $s ) . '%';
-                $where       .= $this->wpdb->prepare(
-                    ' AND ( wp.id LIKE %s OR wp.name LIKE %s OR wp.url LIKE %s ) ',
-                    $like_pattern,
-                    $like_pattern,
-                    $like_pattern
-                );
+                // Note: This SQL is executed via m_query() which bypasses wpdb, so we can't
+                // use wpdb->prepare() (its placeholders won't be resolved). Instead, escape
+                // LIKE wildcards and the value manually. First escape LIKE special chars,
+                // then SQL escape the result.
+                $like_value = '%' . $this->escape( $this->wpdb->esc_like( $s ) ) . '%';
+                $where     .= " AND ( wp.id LIKE '{$like_value}' OR wp.name LIKE '{$like_value}' OR wp.url LIKE '{$like_value}' ) ";
             }
 
             if ( ! empty( $exclude ) ) {
@@ -1761,6 +1759,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
         $status    = isset( $params['status'] ) ? $params['status'] : '';
         $tags      = isset( $params['tags'] ) && is_array( $params['tags'] ) ? $params['tags'] : array();
         $client_id = isset( $params['client_id'] ) ? intval( $params['client_id'] ) : 0;
+        $s         = isset( $params['s'] ) ? $params['s'] : '';
 
         // Validate status value (defense-in-depth for direct callers outside Abilities API).
         $valid_statuses = array( 'connected', 'disconnected', 'suspended', '' );
@@ -1768,12 +1767,14 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
             $status = '';
         }
 
-        $where = '';
+        $where      = '';
+        $sql_params = array();
 
         // Multi-user support: filter by current user.
         if ( MainWP_System::instance()->is_multi_user() ) {
             global $current_user;
-            $where .= ' AND wp.userid = ' . intval( $current_user->ID ) . ' ';
+            $where       .= ' AND wp.userid = %d ';
+            $sql_params[] = (int) $current_user->ID;
         }
 
         // Access control for sites.
@@ -1796,7 +1797,20 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
 
         // Client ID filtering.
         if ( ! empty( $client_id ) ) {
-            $where .= ' AND wp.client_id = ' . intval( $client_id ) . ' ';
+            $where       .= ' AND wp.client_id = %d ';
+            $sql_params[] = (int) $client_id;
+        }
+
+        // Search filtering.
+        if ( ! empty( $s ) ) {
+            $s            = trim( $s );
+            $like_pattern = '%' . $this->wpdb->esc_like( $s ) . '%';
+            $where       .= $this->wpdb->prepare(
+                ' AND ( wp.id LIKE %s OR wp.name LIKE %s OR wp.url LIKE %s ) ',
+                $like_pattern,
+                $like_pattern,
+                $like_pattern
+            );
         }
 
         // Tags (groups) filtering.
@@ -1810,8 +1824,10 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
                 }
             );
             if ( ! empty( $tags ) ) {
-                $join_group = ' JOIN ' . $this->table_name( 'wp_group' ) . ' wpgroup ON wp.id = wpgroup.wpid ';
-                $where     .= ' AND wpgroup.groupid IN (' . implode( ',', $tags ) . ') ';
+                $join_group   = ' JOIN ' . $this->table_name( 'wp_group' ) . ' wpgroup ON wp.id = wpgroup.wpid ';
+                $placeholders = implode( ', ', array_fill( 0, count( $tags ), '%d' ) );
+                $where       .= " AND wpgroup.groupid IN ( $placeholders ) ";
+                $sql_params   = array_merge( $sql_params, $tags );
             }
         }
 
@@ -1820,7 +1836,12 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
                 $join_group .
                 'WHERE 1 ' . $where;
 
-        return (int) $this->wpdb->get_var( $qry );
+        // Only call prepare() when we have placeholders.
+        $result = $sql_params
+            ? $this->wpdb->get_var( $this->wpdb->prepare( $qry, $sql_params ) )
+            : $this->wpdb->get_var( $qry );
+
+        return (int) $result;
     }
 
     /**
