@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
+    bootstrap="tests/bootstrap.php"
+    colors="true"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    processIsolation="false"
+    stopOnFailure="false"
+    beStrictAboutTestsThatDoNotTestAnything="true"
+    beStrictAboutOutputDuringTests="true"
+    verbose="true"
+>
+    <testsuites>
+        <testsuite name="MainWP Dashboard Test Suite">
+            <directory suffix=".php">tests</directory>
+            <exclude>tests/abilities</exclude>
+        </testsuite>
+        <testsuite name="Abilities">
+            <directory suffix=".php">tests/abilities</directory>
+            <exclude>tests/abilities/class-mainwp-abilities-test-case.php</exclude>
+            <exclude>tests/abilities/README.md</exclude>
+        </testsuite>
+    </testsuites>
+
+    <coverage processUncoveredFiles="true">
+        <include>
+            <directory suffix=".php">class</directory>
+            <directory suffix=".php">includes</directory>
+            <directory suffix=".php">pages</directory>
+            <directory suffix=".php">widgets</directory>
+        </include>
+        <exclude>
+            <directory>vendor</directory>
+            <directory>tests</directory>
+        </exclude>
+    </coverage>
+
+    <php>
+        <const name="WP_TESTS_DOMAIN" value="example.org"/>
+        <const name="WP_TESTS_EMAIL" value="admin@example.org"/>
+        <const name="WP_TESTS_TITLE" value="MainWP Test"/>
+        <const name="WP_PHP_BINARY" value="php"/>
+    </php>
+</phpunit>

@@ -162,12 +162,11 @@ let mainwp_fetch_pages = function () {
                 "orderable": false
             }],
             "preDrawCallback": function () {
-                console.log('preDrawCallback js');
                 setTimeout(() => {
                     jQuery('#mainwp-pages-table .ui.dropdown').dropdown();
                     jQuery('#mainwp-pages-table .ui.checkbox').checkbox();
                     mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
-                    mainwp_datatable_fix_menu_overflow();
+                    mainwp_datatable_fix_menu_overflow('#mainwp-pages-table');
                 }, 1000);
             },
             select: {
@@ -188,11 +187,10 @@ let mainwp_fetch_pages = function () {
                     .to$().find('td.check-column .ui.checkbox').checkbox('set unchecked');
             }
         }).on('columns-reordered', function () {
-            console.log('columns-reordered');
             setTimeout(() => {
                 jQuery('#mainwp-pages-table .ui.dropdown').dropdown();
                 jQuery('#mainwp-pages-table .ui.checkbox').checkbox();
-                mainwp_datatable_fix_menu_overflow();
+                mainwp_datatable_fix_menu_overflow('#mainwp-pages-table');
                 mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
             }, 1000);
         });
@@ -370,12 +368,16 @@ let mainwppost_postAction = function (elem, what, postType) {
         } else {
             rowElement.hide();
             if (what == 'get_edit' && response.id) {
+                let reloadUrl = '';
                 if (response.redirect_to) {
-                    location.href = response.redirect_to;
+                    reloadUrl = response.redirect_to;
                 } else if (postType == 'post') {
-                    location.href = 'admin.php?page=PostBulkEdit&post_id=' + response.id;
+                    reloadUrl = 'admin.php?page=PostBulkEdit&post_id=' + response.id;
                 } else if (postType == 'page') {
-                    location.href = 'admin.php?page=PageBulkEdit&post_id=' + response.id;
+                    reloadUrl = 'admin.php?page=PageBulkEdit&post_id=' + response.id;
+                }
+                if(reloadUrl !== ''){
+                    mainwp_forceReload(reloadUrl);
                 }
             }
         }
@@ -400,9 +402,6 @@ let mainwp_show_post = function (siteId, postId, userId) {
 let mainwp_fetch_posts = function (postId, userId, start_sites) {
 
     let params = mainwp_fetch_posts_prepare(postId, userId, start_sites);
-
-    console.log('params:');
-    console.log(params);
 
     if (typeof params !== 'object') {
         return;
@@ -526,7 +525,6 @@ let mainwp_fetch_posts_prepare = function (postId, userId, start_sites) { // NOS
         if(selected_groups.length == 0){
             errors.push(select_sites_error);
         } else if (selected_groups.length > 0 && bulk_search && start_sites == undefined) {
-            console.log(num_sites);
             start_sites = 0;
             // get sites of groups.
             let data = mainwp_secure_data({
@@ -594,7 +592,7 @@ let mainwp_fetch_posts_done = function () {
             setTimeout(() => {
                 jQuery('#mainwp-posts-table-wrapper table .ui.dropdown').dropdown();
                 jQuery('#mainwp-posts-table-wrapper table .ui.checkbox').checkbox();
-                mainwp_datatable_fix_menu_overflow();
+                mainwp_datatable_fix_menu_overflow('#mainwp-posts-table-wrapper');
                 mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
             }, 1000);
         },
@@ -616,11 +614,10 @@ let mainwp_fetch_posts_done = function () {
                 .to$().find('td.check-column .ui.checkbox').checkbox('set unchecked');
         }
     }).on('columns-reordered', function () {
-        console.log('columns-reordered');
         setTimeout(() => {
             jQuery('#mainwp-posts-table-wrapper table .ui.dropdown').dropdown();
             jQuery('#mainwp-posts-table-wrapper table .ui.checkbox').checkbox();
-            mainwp_datatable_fix_menu_overflow();
+            mainwp_datatable_fix_menu_overflow('#mainwp-posts-table-wrapper');
             mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
         }, 1000);
     });

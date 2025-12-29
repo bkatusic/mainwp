@@ -339,7 +339,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
             <form method="POST" action="" id="mainwp-edit-monitor-site-form" enctype="multipart/form-data" class="ui form">
         <?php } ?>
 
-            <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+            <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
             <input type="hidden" name="wp_nonce_uptime_settings" value="<?php echo esc_attr( wp_create_nonce( 'UpdateMonitorSettings' ) ); ?>" />
             <input type="hidden" id="mainwp_edit_monitor_site_id" name="mainwp_edit_monitor_site_id" value="<?php echo intval( $site_id ); ?>" />
             <input type="hidden" name="mainwp_edit_monitor_id" id="mainwp_edit_monitor_id" value="<?php echo ! empty( $mo_settings['monitor_id'] ) ? intval( $mo_settings['monitor_id'] ) : 0; ?>" />
@@ -375,8 +375,36 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 </div>
                 <?php
             }
-
             ?>
+            <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates">
+                <label class="six wide column middle aligned">
+                <?php
+                MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_check_http_response', get_option( 'mainwp_check_http_response', '' ) );
+                esc_html_e( 'Check site HTTP response after update', 'mainwp' );
+                ?>
+                </label>
+                <div class="ten wide column ui toggle checkbox mainwp-checkbox-showhide-elements" hide-parent="http-respon-check"  <?php echo ! $individual ? 'fire-event-parent="on-showhide-up-http-codes-element"' : ''; ?> data-tooltip="<?php esc_attr_e( 'Enable if you want your MainWP Dashboard to check child site header response after updates.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
+                    <input type="checkbox" class="settings-field-value-change-handler" inverted-value="1" name="mainwp_check_http_response" id="mainwp_check_http_response" <?php echo 1 === (int) get_option( 'mainwp_check_http_response', 0 ) ? 'checked="true"' : ''; ?>/>
+                </div>
+            </div>
+            <?php
+            $chk_http_method = get_option( 'mainwp_check_http_response_method', 'head' );
+            $chk_http_method = in_array( $chk_http_method, array( 'get', 'head' ) ) ? $chk_http_method : 'head';
+            ?>
+            <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates" default-indi-value="head" <?php echo 1 !== (int) get_option( 'mainwp_check_http_response', 0 ) ? 'style="display:none"' : ''; ?> hide-element="http-respon-check">
+                <label class="six wide column middle aligned">
+                <?php
+                MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_check_http_response_method', (string) $chk_http_method );
+                esc_html_e( 'Check site HTTP response method', 'mainwp' );
+                ?>
+                </label>
+                <div class="ui six wide column" data-tooltip="<?php esc_attr_e( 'Select Check site HTTP response method. If you are not sure, select "Default".', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                    <select class="ui dropdown settings-field-value-change-handler"id="mainwp_check_http_response_method" name="mainwp_check_http_response_method">
+                        <option <?php echo 'head' === $chk_http_method ? 'selected' : ''; ?> value="head"><?php esc_html_e( 'Head (default)', 'mainwp' ); ?></option>
+                        <option <?php echo 'get' === $chk_http_method ? 'selected' : ''; ?> value="get"><?php esc_html_e( 'Get', 'mainwp' ); ?></option>
+                    </select>
+                </div>
+            </div>
             <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-monitor-general" default-indi-value="<?php echo $individual ? -1 : 0; ?>">
                 <label class="six wide column middle aligned">
                 <?php
@@ -387,7 +415,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 <?php
                 if ( $individual ) {
                     ?>
-                    <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Enable Uptime Monitoring.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                    <div class="ten wide column">
                         <select name="mainwp_edit_monitor_active" id="mainwp_edit_monitor_active" class="ui dropdown settings-field-value-change-handler">
                             <option value="-1" <?php echo -1 === (int) $mo_settings['active'] ? 'selected' : ''; ?>><?php esc_html_e( 'Use global setting', 'mainwp' ); ?></option>
                             <option value="1" <?php echo 1 === (int) $mo_settings['active'] ? 'selected' : ''; ?>><?php esc_html_e( 'Enable', 'mainwp' ); ?></option>
@@ -396,9 +424,10 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                     </div>
                     <?php
                 } else {
+                    $el_id_act_1 = 'mainwp_edit_monitor_active';
                     ?>
-                    <div class="ten wide column ui toggle checkbox mainwp-checkbox-showhide-elements" hide-parent="uptime-monitoring">
-                        <input type="checkbox" value="1" class="settings-field-value-change-handler" name="mainwp_edit_monitor_active" id="mainwp_edit_monitor_active" <?php echo 1 === (int) $mo_settings['active'] ? 'checked="true"' : ''; ?>/>
+                    <div class="ten wide column ui toggle checkbox mainwp-checkbox-showhide-elements" hide-parent="uptime-monitoring" <?php echo ! $individual ? 'fire-event-parent="on-showhide-up-http-codes-element"' : ''; ?>>
+                    <input type="checkbox" value="1" class="settings-field-value-change-handler" name="mainwp_edit_monitor_active" id="<?php echo esc_attr( $el_id_act_1 ); ?>" <?php echo 1 === (int) $mo_settings['active'] ? 'checked="true"' : ''; ?>/>
                     </div>
                     <?php
                 }
@@ -412,7 +441,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 esc_html_e( 'Monitor Type', 'mainwp' );
                 ?>
                 </label>
-                <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Select Monitor Type.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                <div class="ten wide column">
                     <select name="mainwp_edit_monitor_type" id="mainwp_edit_monitor_type" class="ui dropdown settings-field-value-change-handler mainwp-selecter-showhide-elements" hide-parent="monitor-type" hide-value="http;ping;useglobal">
                     <?php
                     if ( $individual ) {
@@ -436,7 +465,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 $allowed_methods = static::get_allowed_methods( $individual );
                 ?>
                 </label>
-                <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Select Method.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                <div class="ten wide column">
                     <select name="mainwp_edit_monitor_method" id="mainwp_edit_monitor_method" class="ui dropdown settings-field-value-change-handler mainwp-selecter-showhide-elements" hide-parent="monitor-method" hide-value="http;ping;useglobal">
                     <?php
                     foreach ( $allowed_methods as $val => $name ) {
@@ -456,7 +485,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 esc_html_e( 'Keyword to Look For', 'mainwp' );
                 ?>
                 </label>
-                <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Set Keyword to Look For.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                <div class="ten wide column" >
                     <input type="text" class="settings-field-value-change-handler" name="mainwp_edit_monitor_keyword" id="mainwp_edit_monitor_keyword" value="<?php echo esc_attr( $mo_settings['keyword'] ); ?>"/>
                 </div>
             </div>
@@ -468,7 +497,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 esc_html_e( 'Monitor Interval (minutes)', 'mainwp' );
                 ?>
                 </label>
-                <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Set Monitor Interval.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                <div class="ten wide column">
                     <div class="ui labeled ticked slider settings-field-value-change-handler" id="mainwp_edit_monitor_interval_slider"></div>
                     <input type="hidden" name="mainwp_edit_monitor_interval_hidden" class="settings-field-value-change-handler" id="mainwp_edit_monitor_interval_hidden" value="<?php echo intval( $mo_settings['interval'] ); ?>" />
                 </div>
@@ -480,7 +509,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 esc_html_e( 'Timeout (seconds)', 'mainwp' );
                 ?>
                 </label>
-                <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Set Monitor Interval.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                <div class="ten wide column">
                     <div class="ui labeled ticked slider settings-field-value-change-handler" id="mainwp_edit_monitor_timeout_slider"></div>
                     <input type="hidden" name="mainwp_edit_monitor_timeout_number" class="settings-field-value-change-handler" id="mainwp_edit_monitor_timeout_number" value="<?php echo intval( $mo_settings['timeout'] ); ?>" />
                 </div>
@@ -496,7 +525,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 esc_html_e( 'Down Confirmation Check', 'mainwp' );
                 ?>
                 </label>
-                <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Select Down Confirmation Check.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                <div class="ten wide column">
                     <select name="mainwp_edit_monitor_maxretries" id="mainwp_edit_monitor_maxretries" class="ui dropdown settings-field-value-change-handler">
                         <?php
                         if ( $individual ) {
@@ -514,15 +543,15 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
             <?php
             $http_error_codes = MainWP_Utility::get_http_codes();
             ?>
-            <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-monitor-general" <?php echo $disableGeneralSitesMonitoring ? 'style="display:none"' : ''; ?> hide-element="uptime-monitoring">
+            <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-monitor-general" <?php echo $disableGeneralSitesMonitoring && 1 !== (int) get_option( 'mainwp_check_http_response', 0 ) ? 'style="display:none"' : ''; ?> hide-element="uptime-monitoring" id="up-http-codes-selection">
                     <label class="six wide column middle aligned">
                     <?php
                     $up_statuscodes = ! empty( $mo_settings['up_status_codes'] ) ? $mo_settings['up_status_codes'] : '';
                     MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_edit_monitor_up_status_codes', $up_statuscodes );
-                    esc_html_e( 'Up HTTP Codes', 'mainwp' );
+                    esc_html_e( 'Up HTTP Codes for HTTP Response and Uptime Monitoring', 'mainwp' );
                     ?>
                     </label>
-                    <div class="ten wide column"  data-tooltip="<?php esc_attr_e( 'Select Up HTTP Codes.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
+                    <div class="ten wide column">
                         <div class="ui multiple selection dropdown" init-value="<?php echo esc_attr( $up_statuscodes ); ?>">
                             <input name="mainwp_edit_monitor_up_status_codes" class="settings-field-value-change-handler" type="hidden">
                             <i class="dropdown icon"></i>
@@ -558,7 +587,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                     ?>
                     <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-monitor-general">
                         <label class="six wide column middle aligned"><?php esc_html_e( 'Sub-Monitors', 'mainwp' ); ?></label>
-                        <div class="ui six wide column" data-tooltip="<?php esc_attr_e( 'Click to create a sub-monitor.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                        <div class="ui six wide column">
                             <?php
                             $this->render_sub_urls_monitoring( $mo_settings, $sub_monitors );
                             ?>
@@ -576,8 +605,9 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 }
 
                 if ( ! $show_in_modal && $is_editing_monitor_or_sub_monitor ) {
+                    $el_id_del_mo_1 = 'delete_uptime_monitor_btn';
                     ?>
-                    <input type="button" name="delete_uptime_monitor_btn" id="delete_uptime_monitor_btn" class="ui button basic big" value="<?php esc_html_e( 'Disable Monitor', 'mainwp' ); ?>">
+                    <input type="button" name="delete_uptime_monitor_btn" id="<?php echo esc_attr( $el_id_del_mo_1 ); ?>" class="ui button basic big" value="<?php esc_html_e( 'Disable Monitor', 'mainwp' ); ?>">
                     <?php
                 }
                 ?>
@@ -588,57 +618,59 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                         echo 'var interval_label = ' . wp_json_encode( array_values( $all_intervals ) ) . ";\n";
                         echo 'var interval_values = ' . wp_json_encode( array_keys( $all_intervals ) ) . ";\n";
                         ?>
-                        jQuery('#mainwp_edit_monitor_interval_slider').slider({
-                            interpretLabel: function(value) {
-                                return interval_label[value];
-                            },
-                            autoAdjustLabels: false,
-                            min: 0,
-                            smooth: true,
-                            restrictedLabels: [interval_label[0],interval_label[<?php echo count( $all_intervals ) - 1; ?>]],
-                            showThumbTooltip: true,
-                            tooltipConfig: {
-                                position: 'bottom center',
-                                variation: 'small visible black'
-                            },
-                            max: <?php echo count( $all_intervals ) - 1; ?>,
-                            onChange: function(value) {
-                                jQuery('#mainwp_edit_monitor_interval_hidden').val(interval_values[value]).change();
-                            },
-                            onMove: function(value) {
-                                jQuery(this).find('.thumb').attr('data-tooltip', interval_label[value]);
-                            }
-                        });
-                        jQuery('#mainwp_edit_monitor_interval_slider').slider('set value', interval_values.indexOf(<?php echo intval( $mo_settings['interval'] ); ?>));
-
+                        jQuery( document ).ready( function() {
+                            jQuery('#mainwp_edit_monitor_interval_slider').slider({
+                                interpretLabel: function(value) {
+                                    return interval_label[value];
+                                },
+                                autoAdjustLabels: false,
+                                min: 0,
+                                smooth: true,
+                                restrictedLabels: [interval_label[0],interval_label[<?php echo count( $all_intervals ) - 1; ?>]],
+                                showThumbTooltip: true,
+                                tooltipConfig: {
+                                    position: 'bottom center',
+                                    variation: 'small visible black'
+                                },
+                                max: <?php echo count( $all_intervals ) - 1; ?>,
+                                onChange: function(value) {
+                                    jQuery('#mainwp_edit_monitor_interval_hidden').val(interval_values[value]).change();
+                                },
+                                onMove: function(value) {
+                                    jQuery(this).find('.thumb').attr('data-tooltip', interval_label[value]);
+                                }
+                            });
+                            jQuery('#mainwp_edit_monitor_interval_slider').slider('set value', interval_values.indexOf(<?php echo intval( $mo_settings['interval'] ); ?>));
+                        } );
                         <?php
                         $all_timeouts = static::get_timeout_values( $individual );
                         echo 'var timeouts_label = ' . wp_json_encode( array_values( $all_timeouts ) ) . ";\n";
                         echo 'var timeouts_values = ' . wp_json_encode( array_keys( $all_timeouts ) ) . ";\n";
                         ?>
-                        jQuery('#mainwp_edit_monitor_timeout_slider').slider({
-                            interpretLabel: function(value) {
-                                return timeouts_label[value];
-                            },
-                            autoAdjustLabels: false,
-                            min: 0,
-                            smooth: true,
-                            restrictedLabels: [interval_label[0],timeouts_label[<?php echo count( $all_timeouts ) - 1; ?>]],
-                            showThumbTooltip: true,
-                            tooltipConfig: {
-                                position: 'bottom center',
-                                variation: 'small visible black'
-                            },
-                            max: <?php echo count( $all_timeouts ) - 1; ?>,
-                            onChange: function(value) {
-                                jQuery('#mainwp_edit_monitor_timeout_number').val(timeouts_values[value]).change();
-                            },
-                            onMove: function(value) {
-                                jQuery(this).find('.thumb').attr('data-tooltip', timeouts_label[value]);
-                            }
-                        });
-                        jQuery('#mainwp_edit_monitor_timeout_slider').slider('set value', timeouts_values.indexOf(<?php echo intval( $mo_settings['timeout'] ); ?>));
-
+                        jQuery( document ).ready( function() {
+                            jQuery('#mainwp_edit_monitor_timeout_slider').slider({
+                                interpretLabel: function(value) {
+                                    return timeouts_label[value];
+                                },
+                                autoAdjustLabels: false,
+                                min: 0,
+                                smooth: true,
+                                restrictedLabels: [interval_label[0],timeouts_label[<?php echo count( $all_timeouts ) - 1; ?>]],
+                                showThumbTooltip: true,
+                                tooltipConfig: {
+                                    position: 'bottom center',
+                                    variation: 'small visible black'
+                                },
+                                max: <?php echo count( $all_timeouts ) - 1; ?>,
+                                onChange: function(value) {
+                                    jQuery('#mainwp_edit_monitor_timeout_number').val(timeouts_values[value]).change();
+                                },
+                                onMove: function(value) {
+                                    jQuery(this).find('.thumb').attr('data-tooltip', timeouts_label[value]);
+                                }
+                            });
+                            jQuery('#mainwp_edit_monitor_timeout_slider').slider('set value', timeouts_values.indexOf(<?php echo intval( $mo_settings['timeout'] ); ?>));
+                        } );
                         jQuery( document ).ready( function() {
                             jQuery( '#mainwp_edit_monitor_type' ).on( 'change', function() {
                                 const val = jQuery(this).val();
@@ -649,6 +681,19 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                                 }
                             } );
                         } );
+                        document.addEventListener('on-showhide-up-http-codes-element', function() {
+                            let hideCodes = true;
+                            jQuery('[fire-event-parent="on-showhide-up-http-codes-element"]').each(function(){
+                                if(jQuery(this).hasClass('checked')){
+                                    hideCodes = false;
+                                }
+                            });
+                            if(hideCodes){
+                                jQuery('#up-http-codes-selection').fadeOut(100);
+                            }else{
+                                jQuery('#up-http-codes-selection').fadeIn(100);
+                            }
+                        });
                 </script>
 
             <?php if ( $individual ) { ?>
@@ -682,20 +727,14 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
         if ( empty( $site_id ) ) {
             return;
         }
-        if ( empty( $sub_urls_monitors ) || ! is_array( $sub_urls_monitors ) ) {
-            esc_html_e( 'This site has no sub-monitors.', 'mainwp' );
-        } else {
+        if ( ! empty( $sub_urls_monitors ) || is_array( $sub_urls_monitors ) ) {
             ?>
             <ul>
-            <?php
-            foreach ( $sub_urls_monitors as $sub ) {
-                ?>
+            <?php foreach ( $sub_urls_monitors as $sub ) : ?>
                 <li>
-                <a class="" href="admin.php?page=managesites&id=<?php echo intval( $site_id ); ?>&monitor_wpid=<?php echo intval( $site_id ); ?>&sub_monitor_id=<?php echo intval( $sub['monitor_id'] ); ?>"><?php echo ( ! empty( $sub['suburl'] ) ) ? esc_html( $mo_settings['url'] . $sub['suburl'] ) : esc_html__( 'Invalid sub URL: field is empty.', 'mainwp' ); ?></a>
-            </li>
-                <?php
-            }
-            ?>
+                    <a class="" href="admin.php?page=managesites&id=<?php echo intval( $site_id ); ?>&monitor_wpid=<?php echo intval( $site_id ); ?>&sub_monitor_id=<?php echo intval( $sub['monitor_id'] ); ?>"><?php echo ( ! empty( $sub['suburl'] ) ) ? esc_html( $mo_settings['url'] . $sub['suburl'] ) : esc_html__( 'Invalid sub URL: field is empty.', 'mainwp' ); ?></a>
+                </li>
+            <?php endforeach; ?>
             </ul>
             <?php
         }
@@ -841,8 +880,9 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                             <input type="submit" name="submit" id="submit" class="ui green button" value="<?php esc_html_e( 'Save', 'mainwp' ); ?>">
                                 <?php
                                 if ( $is_editing ) {
+                                    $el_id_del_mo_2 = 'delete_uptime_monitor_btn';
                                     ?>
-                                    <input type="button" name="delete_uptime_monitor_btn" id="delete_uptime_monitor_btn" class="ui basic button" value="<?php esc_html_e( 'Delete', 'mainwp' ); ?>">
+                                    <input type="button" name="delete_uptime_monitor_btn" id="<?php echo esc_attr( $el_id_del_mo_2 ); ?>" class="ui basic button" value="<?php esc_html_e( 'Delete', 'mainwp' ); ?>">
                                     <?php
                                 }
                                 ?>
@@ -850,12 +890,14 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                     </div>
                 </div>
             <script type="text/javascript">
-                jQuery('#mainwp-uptime-monitoring-add-edit-modal').modal({
-                    allowMultiple: true,
-                    onHide: function () {
-                        location.href = 'admin.php?page=managesites&id=<?php echo intval( $site_id ); ?>&monitor_wpid=<?php echo intval( $site_id ); ?>';
-                    }
-                }).modal('show');
+                jQuery( document ).ready( function() {
+                    jQuery('#mainwp-uptime-monitoring-add-edit-modal').modal({
+                        allowMultiple: true,
+                        onHide: function () {
+                            location.href = 'admin.php?page=managesites&id=<?php echo intval( $site_id ); ?>&monitor_wpid=<?php echo intval( $site_id ); ?>';
+                        }
+                    }).modal('show');
+                } );
             </script>
             <?php
     }

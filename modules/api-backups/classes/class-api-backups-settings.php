@@ -10,6 +10,7 @@
 
 namespace MainWP\Dashboard\Module\ApiBackups;
 
+use MainWP\Dashboard\MainWP_UI;
 use MainWP\Dashboard\MainWP_Settings_Indicator;
 
 
@@ -131,11 +132,11 @@ class Api_Backups_Settings {
         ?>
         <div id="3rd-party-api-manager">
             <div class="ui segment">
-                
-                <div class="ui grid">
-                    <div class="three wide column">
-                        <div class="ui vertical fluid pointing menu">
-                            <h3 class="item ui header"><?php esc_html_e( 'Backup API Providers', 'mainwp' ); ?></h3>
+
+                <div class="ui stackable grid">
+                    <div class="sixteen wide column">
+                        <div class="ui secondary pointing fluid menu">
+
                             <a class="item active" data-tab="cloudways">
                                 <?php esc_html_e( 'Cloudways', 'mainwp' ); ?>
                             </a>
@@ -162,7 +163,7 @@ class Api_Backups_Settings {
                             </a>
                         </div>
                     </div>
-                    <div class="thirteen wide column">
+                    <div class="sixteen wide column">
                         <?php if ( Api_Backups_Utility::show_mainwp_message( 'mainwp-module-api-backups-manager-info-message' ) ) : ?>
                             <div class="ui blue message">
                                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-module-api-backups-manager-info-message"></i>
@@ -176,10 +177,19 @@ class Api_Backups_Settings {
                                     '</a> <i class="external alternate icon"></i>'
                                 );
                                 ?>
+                                <div class="ui hidden divider"></div>
+                                <strong><?php esc_html_e( 'Note: VHM (Virtual Host Manager) is not supported.', 'mainwp' ); ?></strong> <?php esc_html_e( 'The purpose of having these global cPanel settings is to save you time when setting up per-site cPanel settings, which is particularly useful if you manage multiple child sites on the same cPanel account.', 'mainwp' ); ?>
                             </div>
                         <?php endif; ?>
 
                         <?php
+
+                        $saved_settings = false;
+
+                        if ( isset( $_POST['submit'] ) ) {
+                            $old_settings = MainWP_Settings::get_all_settings_values();
+                        }
+
                         // Save CloudWays Data.
                         //phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
                         ?>
@@ -188,7 +198,10 @@ class Api_Backups_Settings {
                             <?php Api_Backups_Utility::update_option( 'mainwp_cloudways_api_account_email', ( isset( $_POST['mainwp_cloudways_api_account_email'] ) ? wp_unslash( $_POST['mainwp_cloudways_api_account_email'] ) : '' ) ); ?>
                             <?php Api_Backups_Utility::get_instance()->update_api_key( 'cloudways', ( isset( $_POST['mainwp_cloudways_api_key'] ) ? wp_unslash( $_POST['mainwp_cloudways_api_key'] ) : '' ) ); ?>
                             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'API credentials have been successfully saved.', 'mainwp' ); ?></div>
-                            <?php Api_Backups_3rd_Party::cloudways_action_update_ids(); ?>
+                            <?php
+                            Api_Backups_3rd_Party::cloudways_action_update_ids();
+                            $saved_settings = true;
+                            ?>
                         <?php endif; ?>
                         <?php // END Save CloudWays Data. ?>
                         <?php // Save GridPane Data. ?>
@@ -196,27 +209,39 @@ class Api_Backups_Settings {
                             <?php Api_Backups_Utility::update_option( 'mainwp_enable_gridpane_api', ( ! isset( $_POST['mainwp_enable_gridpane_api'] ) ? 0 : 1 ) ); ?>
                             <?php Api_Backups_Utility::get_instance()->update_api_key( 'gridpane', ( isset( $_POST['mainwp_gridpane_api_key'] ) ? wp_unslash( $_POST['mainwp_gridpane_api_key'] ) : '' ) ); ?>
                             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'API credentials have been successfully saved.', 'mainwp' ); ?></div>
-                            <?php Api_Backups_3rd_Party::gridpane_action_update_ids(); ?>
+                            <?php
+                            Api_Backups_3rd_Party::gridpane_action_update_ids();
+                            $saved_settings = true;
+                            ?>
                         <?php endif; ?>
                         <?php // END Save GridPane Data. ?>
                         <?php // Save Vultr Data. ?>
                         <?php if ( isset( $_POST['submit'] ) && isset( $_POST['wp_nonce_vultr'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_nonce_vultr'] ), 'cloudways_api_form_general' ) ) : ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_enable_vultr_api', ( ! isset( $_POST['mainwp_enable_vultr_api'] ) ? 0 : 1 ) ); ?>
-                            <?php Api_Backups_Utility::get_instance()->update_api_key( 'vultr', ( isset( $_POST['mainwp_vultr_api_key'] ) ? wp_unslash( $_POST['mainwp_vultr_api_key'] ) : '' ) ); ?>
+                            <?php
+                            Api_Backups_Utility::get_instance()->update_api_key( 'vultr', ( isset( $_POST['mainwp_vultr_api_key'] ) ? wp_unslash( $_POST['mainwp_vultr_api_key'] ) : '' ) );
+                            $saved_settings = true;
+                            ?>
                             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'API credentials have been successfully saved.', 'mainwp' ); ?></div>
                         <?php endif; ?>
                         <?php // END Save Vultr Data. ?>
                         <?php // Save Linode Data. ?>
                         <?php if ( isset( $_POST['submit'] ) && isset( $_POST['wp_nonce_linode'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_nonce_linode'] ), 'cloudways_api_form_general' ) ) : ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_enable_linode_api', ( ! isset( $_POST['mainwp_enable_linode_api'] ) ? 0 : 1 ) ); ?>
-                            <?php Api_Backups_Utility::get_instance()->update_api_key( 'linode', ( isset( $_POST['mainwp_linode_api_key'] ) ? wp_unslash( $_POST['mainwp_linode_api_key'] ) : '' ) ); ?>
+                            <?php
+                            Api_Backups_Utility::get_instance()->update_api_key( 'linode', ( isset( $_POST['mainwp_linode_api_key'] ) ? wp_unslash( $_POST['mainwp_linode_api_key'] ) : '' ) );
+                            $saved_settings = true;
+                            ?>
                             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'API credentials have been successfully saved.', 'mainwp' ); ?></div>
                         <?php endif; ?>
                         <?php // END Save Linode Data. ?>
                         <?php // Save DigitalOcean Data. ?>
                         <?php if ( isset( $_POST['submit'] ) && isset( $_POST['wp_nonce_digitalocean'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_nonce_digitalocean'] ), 'cloudways_api_form_general' ) ) : ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_enable_digitalocean_api', ( ! isset( $_POST['mainwp_enable_digitalocean_api'] ) ? 0 : 1 ) ); ?>
-                            <?php Api_Backups_Utility::get_instance()->update_api_key( 'digitalocean', ( isset( $_POST['mainwp_digitalocean_api_key'] ) ? wp_unslash( $_POST['mainwp_digitalocean_api_key'] ) : '' ) ); ?>
+                            <?php
+                            Api_Backups_Utility::get_instance()->update_api_key( 'digitalocean', ( isset( $_POST['mainwp_digitalocean_api_key'] ) ? wp_unslash( $_POST['mainwp_digitalocean_api_key'] ) : '' ) );
+                            $saved_settings = true;
+                            ?>
                             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'API credentials have been successfully saved.', 'mainwp' ); ?></div>
                         <?php endif; ?>
                         <?php // END Save Linode Data. ?>
@@ -226,7 +251,10 @@ class Api_Backups_Settings {
                             <?php Api_Backups_Utility::update_option( 'mainwp_cpanel_url', ( isset( $_POST['mainwp_cpanel_url'] ) ? wp_unslash( $_POST['mainwp_cpanel_url'] ) : '' ) ); ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_cpanel_site_path', ( isset( $_POST['mainwp_cpanel_site_path'] ) ? wp_unslash( $_POST['mainwp_cpanel_site_path'] ) : '' ) ); ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_cpanel_account_username', ( isset( $_POST['mainwp_cpanel_account_username'] ) ? wp_unslash( $_POST['mainwp_cpanel_account_username'] ) : '' ) ); ?>
-                            <?php Api_Backups_Utility::get_instance()->update_api_key( 'cpanel', ( isset( $_POST['mainwp_cpanel_account_password'] ) ? wp_unslash( $_POST['mainwp_cpanel_account_password'] ) : '' ) ); ?>
+                            <?php
+                            Api_Backups_Utility::get_instance()->update_api_key( 'cpanel', ( isset( $_POST['mainwp_cpanel_account_password'] ) ? wp_unslash( $_POST['mainwp_cpanel_account_password'] ) : '' ) );
+                            $saved_settings = true;
+                            ?>
                             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'API credentials have been successfully saved.', 'mainwp' ); ?></div>
                         <?php endif; ?>
                         <?php // END Save cPanel Data. ?>
@@ -234,7 +262,10 @@ class Api_Backups_Settings {
                         <?php if ( isset( $_POST['submit'] ) && isset( $_POST['wp_nonce_plesk'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_nonce_plesk'] ), 'cloudways_api_form_general' ) ) : ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_enable_plesk_api', ( ! isset( $_POST['mainwp_enable_plesk_api'] ) ? 0 : 1 ) ); ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_plesk_api_url', ( isset( $_POST['mainwp_plesk_api_url'] ) ? wp_unslash( $_POST['mainwp_plesk_api_url'] ) : '' ) ); ?>
-                            <?php Api_Backups_Utility::get_instance()->update_api_key( 'plesk', ( isset( $_POST['mainwp_plesk_api_key'] ) ? wp_unslash( $_POST['mainwp_plesk_api_key'] ) : '' ) ); ?>
+                            <?php
+                            Api_Backups_Utility::get_instance()->update_api_key( 'plesk', ( isset( $_POST['mainwp_plesk_api_key'] ) ? wp_unslash( $_POST['mainwp_plesk_api_key'] ) : '' ) );
+                            $saved_settings = true;
+                            ?>
                             <?php
                             if ( isset( $_POST['mainwp_plesk_installation_id'] ) ) {
                                 Api_Backups_Utility::update_option( 'mainwp_plesk_installation_id', sanitize_text_field( wp_unslash( $_POST['mainwp_plesk_installation_id'] ) ) );
@@ -248,10 +279,32 @@ class Api_Backups_Settings {
                             <?php Api_Backups_Utility::update_option( 'mainwp_enable_kinsta_api', ( ! isset( $_POST['mainwp_enable_kinsta_api'] ) ? 0 : 1 ) ); ?>
                             <?php Api_Backups_Utility::get_instance()->update_api_key( 'kinsta', ! empty( $_POST['mainwp_kinsta_api_key'] ) ? wp_unslash( $_POST['mainwp_kinsta_api_key'] ) : '' ); ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_kinsta_api_account_email', ( isset( $_POST['mainwp_kinsta_api_account_email'] ) ? wp_unslash( $_POST['mainwp_kinsta_api_account_email'] ) : '' ) ); ?>
-                            <?php Api_Backups_Utility::update_option( 'mainwp_kinsta_company_id', ( isset( $_POST['mainwp_kinsta_company_id'] ) ? wp_unslash( $_POST['mainwp_kinsta_company_id'] ) : '' ) ); ?>
+                            <?php
+                            Api_Backups_Utility::update_option( 'mainwp_kinsta_company_id', ( isset( $_POST['mainwp_kinsta_company_id'] ) ? wp_unslash( $_POST['mainwp_kinsta_company_id'] ) : '' ) );
+                            $saved_settings = true;
+                            ?>
                             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'API credentials have been successfully saved.', 'mainwp' ); ?></div>
                         <?php endif; ?>
                         <?php // END Save Kinsta Data. ?>
+
+                        <?php
+
+                        if ( $saved_settings ) {
+                            $new_settings = MainWP_Settings::get_all_settings_values();
+                            /**
+                            * Action: mainwp_after_save_settings
+                            *
+                            * Fires after save settings.
+                            *
+                            * @since 6.0
+                            *
+                            * @param array $new_settings The new settings.
+                            * @param array $old_settings The old settings.
+                            */
+                            do_action( 'mainwp_after_save_settings', $new_settings, $old_settings );
+                        }
+
+                        ?>
 
                         <?php // Build Cloudways API Form. ?>
                         <div class="ui tab segment active" data-tab="cloudways">
@@ -267,7 +320,7 @@ class Api_Backups_Settings {
                             <div class="ui form">
                                 <form method="POST" action="">
                                     <?php
-                                    wp_nonce_field( 'mainwp-admin-nonce' );
+                                    MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' );
                                     ?>
                                     <input type="hidden" name="wp_nonce_cloudways" value="<?php echo esc_attr( wp_create_nonce( $_nonce_slug ) ); ?>" />
                                     <?php
@@ -322,9 +375,10 @@ class Api_Backups_Settings {
                                      * @since 4.1
                                      */
                                     do_action( 'cloudways_api_form_bottom' );
+                                    $el_id_btn_sbm_1 = 'submit';
                                     ?>
                                     <div class="ui divider"></div>
-                                    <input type="submit" name="submit" id="submit" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
+                                    <input type="submit" name="submit" id="<?php echo esc_attr( $el_id_btn_sbm_1 ); ?>" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
                                     <div style="clear:both"></div>
                                 </form>
                             </div>
@@ -344,7 +398,7 @@ class Api_Backups_Settings {
                             <div class="ui hidden divider settings-field-indicator-wrapper settings-field-indicator-gridpane-settings"></div>
                             <div class="ui form">
                                 <form method="POST" action="">
-                                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                                     <input type="hidden" name="wp_nonce_gridpane" value="<?php echo esc_attr( wp_create_nonce( $_nonce_slug ) ); ?>" />
                                     <?php
                                     /**
@@ -388,9 +442,10 @@ class Api_Backups_Settings {
                                      * @since 4.1
                                      */
                                     do_action( 'gridpane_api_form_bottom' );
+                                    $el_id_btn_sbm_2 = 'submit';
                                     ?>
                                     <div class="ui divider"></div>
-                                    <input type="submit" name="submit" id="submit" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
+                                    <input type="submit" name="submit" id="<?php echo esc_attr( $el_id_btn_sbm_2 ); ?>" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
                                     <div style="clear:both"></div>
                                 </form>
                             </div>
@@ -411,7 +466,7 @@ class Api_Backups_Settings {
                             <div class="ui hidden divider"></div>
                             <div class="ui form">
                                 <form method="POST" action="">
-                                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                                     <input type="hidden" name="wp_nonce_vultr" value="<?php echo esc_attr( wp_create_nonce( $_nonce_slug ) ); ?>" />
                                     <?php
                                         /**
@@ -455,9 +510,10 @@ class Api_Backups_Settings {
                                          * @since 4.1
                                          */
                                         do_action( 'vultr_api_form_bottom' );
+                                        $el_id_sbm_btn_1 = 'submit';
                                     ?>
                                     <div class="ui divider"></div>
-                                    <input type="submit" name="submit" id="submit" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
+                                    <input type="submit" name="submit" id="<?php echo esc_attr( $el_id_sbm_btn_1 ); ?>" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
                                     <div style="clear:both"></div>
                                 </form>
                             </div>
@@ -477,7 +533,7 @@ class Api_Backups_Settings {
                             <div class="ui hidden divider"></div>
                             <div class="ui form">
                                 <form method="POST" action="">
-                                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                                     <input type="hidden" name="wp_nonce_linode" value="<?php echo esc_attr( wp_create_nonce( $_nonce_slug ) ); ?>" />
                                     <?php
                                         /**
@@ -523,9 +579,10 @@ class Api_Backups_Settings {
                                          * @since 4.1
                                          */
                                         do_action( 'linode_api_form_bottom' );
+                                        $el_id_btn_sbm_3 = 'submit';
                                     ?>
                                     <div class="ui divider"></div>
-                                    <input type="submit" name="submit" id="submit" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
+                                    <input type="submit" name="submit" id="<?php echo esc_attr( $el_id_btn_sbm_3 ); ?>" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
                                     <div style="clear:both"></div>
                                 </form>
                             </div>
@@ -545,7 +602,7 @@ class Api_Backups_Settings {
                             <div class="ui hidden divider"></div>
                             <div class="ui form">
                                 <form method="POST" action="">
-                                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                                     <input type="hidden" name="wp_nonce_digitalocean" value="<?php echo esc_attr( wp_create_nonce( $_nonce_slug ) ); ?>" />
                                     <?php
                                         /**
@@ -591,9 +648,10 @@ class Api_Backups_Settings {
                                          * @since 4.1
                                          */
                                         do_action( 'digitalocean_api_form_bottom' );
+                                        $el_id_btn_sbm_4 = 'submit';
                                     ?>
                                     <div class="ui divider"></div>
-                                    <input type="submit" name="submit" id="submit" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
+                                    <input type="submit" name="submit" id="<?php echo esc_attr( $el_id_btn_sbm_4 ); ?>" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
                                     <div style="clear:both"></div>
                                 </form>
                             </div>
@@ -612,7 +670,7 @@ class Api_Backups_Settings {
                             <div class="ui hidden divider"></div>
                             <div class="ui form">
                                 <form method="POST" action="">
-                                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                                     <input type="hidden" name="wp_nonce_cpanel" value="<?php echo esc_attr( wp_create_nonce( $_nonce_slug ) ); ?>" />
                                     <?php
                                     /**
@@ -690,9 +748,10 @@ class Api_Backups_Settings {
                                          * @since 4.1
                                          */
                                         do_action( 'cpanel_api_form_bottom' );
+                                        $el_id_btn_sbm_5 = 'submit';
                                     ?>
                                     <div class="ui divider"></div>
-                                    <input type="submit" name="submit" id="submit" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
+                                    <input type="submit" name="submit" id="<?php echo esc_attr( $el_id_btn_sbm_5 ); ?>" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
                                     <div style="clear:both"></div>
                                 </form>
                             </div>
@@ -712,7 +771,7 @@ class Api_Backups_Settings {
                             <div class="ui hidden divider"></div>
                             <div class="ui form">
                                 <form method="POST" action="">
-                                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                                     <input type="hidden" name="wp_nonce_plesk" value="<?php echo esc_attr( wp_create_nonce( $_nonce_slug ) ); ?>" />
                                     <?php
                                     /**
@@ -767,9 +826,10 @@ class Api_Backups_Settings {
                                      * @since 4.1
                                      */
                                     do_action( 'plesk_api_form_bottom' );
+                                    $el_id_btn_sbm_7 = 'submit';
                                     ?>
                                     <div class="ui divider"></div>
-                                    <input type="submit" name="submit" id="submit" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
+                                    <input type="submit" name="submit" id="<?php echo esc_attr( $el_id_btn_sbm_7 ); ?>" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
                                     <div style="clear:both"></div>
                                 </form>
                             </div>
@@ -789,7 +849,7 @@ class Api_Backups_Settings {
                             <div class="ui hidden divider"></div>
                             <div class="ui form">
                                 <form method="POST" action="">
-                                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                                     <input type="hidden" name="wp_nonce" value="<?php echo esc_attr( wp_create_nonce( 'kinsta_api_form' ) ); ?>" />
                                     <?php
                                         /**
@@ -856,9 +916,10 @@ class Api_Backups_Settings {
                                          * @since 4.1
                                          */
                                         do_action( 'kinsta_api_form_bottom' );
+                                        $el_id_btn_sbm_6 = 'submit';
                                     ?>
                                     <div class="ui divider"></div>
-                                    <input type="submit" name="submit" id="submit" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
+                                    <input type="submit" name="submit" id="<?php echo esc_attr( $el_id_btn_sbm_6 ); ?>" class="ui green big button" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
                                     <div style="clear:both"></div>
                                 </form>
                             </div>
@@ -999,6 +1060,8 @@ class Api_Backups_Settings {
         $mainwp_cpanel_account_username       = '';
         $mainwp_plesk_api_url                 = '';
 
+        $cpanel_account_password = '';
+
         if ( is_object( $website ) && property_exists( $website, 'id' ) ) {
             $opts = Api_Backups_Helper::get_website_options(
                 $website,
@@ -1039,6 +1102,24 @@ class Api_Backups_Settings {
                 $mainwp_kinsta_environment_id         = isset( $opts['mainwp_kinsta_environment_id'] ) ? $opts['mainwp_kinsta_environment_id'] : '';
                 $mainwp_kinsta_account_email          = isset( $opts['mainwp_kinsta_account_email'] ) ? $opts['mainwp_kinsta_account_email'] : '';
                 $mainwp_kinsta_company_id             = isset( $opts['mainwp_kinsta_company_id'] ) ? $opts['mainwp_kinsta_company_id'] : '';
+            }
+
+            if ( empty( $mainwp_cpanel_api_url ) && ! empty( get_option( 'mainwp_cpanel_url' ) ) ) {
+                $mainwp_cpanel_api_url = get_option( 'mainwp_cpanel_url' );
+            }
+
+            if ( empty( $mainwp_cpanel_account_username ) && ! empty( get_option( 'mainwp_cpanel_account_username' ) ) ) {
+                $mainwp_cpanel_account_username = get_option( 'mainwp_cpanel_account_username' );
+            }
+
+            $cpanel_account_password = Api_Backups_Utility::get_instance()->get_child_api_key( $website, 'cpanel' );
+            $_api_key                = Api_Backups_3rd_Party::get_cpanel_account_password();
+            if ( empty( $cpanel_account_password ) && ! empty( $_api_key ) ) {
+                $cpanel_account_password = $_api_key;
+            }
+
+            if ( empty( $mainwp_cpanel_site_path ) && ! empty( get_option( 'mainwp_cpanel_site_path' ) ) ) {
+                $mainwp_cpanel_site_path = get_option( 'mainwp_cpanel_site_path' );
             }
         }
 
@@ -1094,7 +1175,8 @@ class Api_Backups_Settings {
                         <label class="six wide column middle aligned"><?php esc_html_e( 'Username', 'mainwp' ); ?></label>
                         <div class="ui six wide column" data-tooltip="<?php esc_attr_e( 'Enter the cPanel Account Username.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
                             <div class="ui left labeled input">
-                                <input type="text" name="mainwp_cpanel_account_username" id="mainwp_cpanel_account_username" value="<?php echo empty( $mainwp_cpanel_account_username ) ? '' : esc_attr( $mainwp_cpanel_account_username ); ?>"  />
+                                <?php $el_id_int_un_1 = 'mainwp_cpanel_account_username'; ?>
+                                <input type="text" name="mainwp_cpanel_account_username" id="<?php echo esc_attr( $el_id_int_un_1 ); ?>" value="<?php echo empty( $mainwp_cpanel_account_username ) ? '' : esc_attr( $mainwp_cpanel_account_username ); ?>"  />
                             </div>
                         </div>
                     </div>
@@ -1102,9 +1184,6 @@ class Api_Backups_Settings {
                         <label class="six wide column middle aligned"><?php esc_html_e( 'Password', 'mainwp' ); ?></label>
                         <div class="ui six wide column" data-tooltip="<?php esc_attr_e( 'Enter the cPanel Account Password.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
                             <div class="ui left labeled input">
-                                <?php
-                                    $cpanel_account_password = Api_Backups_Utility::get_instance()->get_child_api_key( $website, 'cpanel' );
-                                ?>
                                 <input type="password" name="mainwp_cpanel_account_password" id="mainwp_cpanel_account_password" value="<?php echo esc_attr( $cpanel_account_password ); ?>"  />
                             </div>
                         </div>
@@ -1128,9 +1207,10 @@ class Api_Backups_Settings {
                         </div>
                     </div>
                 </div>
+                <?php $el_id_ind_set_chk_1 = 'individual_settings_check'; ?>
                 <div class="ui grid field">
                     <label class="six wide column middle aligned"><?php esc_html_e( 'Overwrite Global Settings', 'mainwp' ); ?></label>
-                    <div id="individual_settings_check" class="ten wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'If enabled, the Plesk (WP Toolkit) Individual Settings will be used.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
+                    <div id="<?php echo esc_attr( $el_id_ind_set_chk_1 ); ?>" class="ten wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'If enabled, the Plesk (WP Toolkit) Individual Settings will be used.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
                         <input type="checkbox" name="mainwp_enable_plesk_individual" id="mainwp_enable_plesk_individual" <?php echo 'on' === $mainwp_enable_plesk_individual ? 'checked="true"' : 'off'; ?> />
                     </div>
                 </div>
@@ -1165,9 +1245,10 @@ class Api_Backups_Settings {
                         </div>
                     </div>
                 </div>
+                <?php $el_id_ind_set_chk_2 = 'kinsta_individual_settings_check'; ?>
                 <div class="ui grid field">
                     <label class="six wide column middle aligned"><?php esc_html_e( 'Overwrite Global Settings', 'mainwp' ); ?></label>
-                    <div id="individual_settings_check" class="ten wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'If enabled, the Kinsta Individual Settings will be used.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
+                    <div id="<?php echo esc_attr( $el_id_ind_set_chk_2 ); ?>" class="ten wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'If enabled, the Kinsta Individual Settings will be used.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
                         <input type="checkbox" name="mainwp_enable_kinsta_individual" id="mainwp_enable_kinsta_individual" <?php echo ( 'on' === $mainwp_enable_kinsta_individual ) ? 'checked="true"' : 'off'; ?> />
                     </div>
                 </div>
@@ -1207,10 +1288,12 @@ class Api_Backups_Settings {
                 <label class="six wide column middle aligned">
                 <?php
                     MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $mainwp_3rd_party_api );
+
+                    $el_id_api_bk_prov_sl_1 = 'mainwp_managesites_edit_module_api_backups_provider';
                 ?>
                 <?php esc_html_e( 'Choose a provider', 'mainwp' ); ?></label>
                 <div class="ui six wide column" data-tooltip="<?php esc_attr_e( 'Detected provider', 'mainwp' ); ?>" data-inverted="" data-position="top left">
-                    <select class="ui dropdown settings-field-value-change-handler" id="mainwp_managesites_edit_module_api_backups_provider" name="mainwp_managesites_edit_module_api_backups_provider">
+                    <select class="ui dropdown settings-field-value-change-handler" id="<?php echo esc_attr( $el_id_api_bk_prov_sl_1 ); ?>" name="mainwp_managesites_edit_module_api_backups_provider">
                         <option <?php echo ( '' === $mainwp_3rd_party_api ) ? 'selected' : ''; ?> value="0"><?php esc_html_e( 'None', 'mainwp' ); ?></option>
                         <option <?php echo ( 'DigitalOcean' === $mainwp_3rd_party_api ) ? 'selected' : ''; ?> value="1"><?php esc_html_e( 'DigitalOcean', 'mainwp' ); ?></option>
                         <option <?php echo ( 'Linode' === $mainwp_3rd_party_api ) ? 'selected' : ''; ?> value="2"><?php esc_html_e( 'Akamai (Linode)', 'mainwp' ); ?></option>

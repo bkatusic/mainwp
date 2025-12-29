@@ -99,23 +99,33 @@ class MainWP_Site_Open { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Co
         }
         $open_download = ! empty( $params['filedl'] ) ? true : false;
         $close_window  = ! empty( $_GET['closeWindow'] ) ? true : false; //phpcs:ignore -- ok.
+
+        /**
+         * Action: mainwp_site_go_to_wpadmin
+         *
+         * Fire before go to wp admin child site.
+         *
+         * @since 5.5
+         */
+        do_action( 'mainwp_site_go_to_wpadmin', $website, $location, $params );
+
         ?>
         <div class="ui segment" style="padding: 25rem">
-            <div class="ui active inverted dimmer <?php echo $open_download || $close_window ? 'open-site-close-window' : ''; ?>">
+            <div class="ui active dimmer <?php echo $open_download || $close_window ? 'open-site-close-window' : ''; ?>">
                 <?php
                 if ( $open_download ) {
                     ?>
-                    <div class="ui massive text loader"><?php esc_html_e( 'Downloading...', 'mainwp' ); ?></div>
+                    <div class="ui double text loader"><?php esc_html_e( 'Downloading...', 'mainwp' ); ?></div>
                     <?php
                 } else {
                     ?>
-                    <div class="ui massive text loader"><?php esc_html_e( 'Redirecting...', 'mainwp' ); ?></div>
+                    <div class="ui double text loader"><?php esc_html_e( 'Redirecting...', 'mainwp' ); ?></div>
                     <?php
                 }
                 ?>
             </div>
             <form method="POST" action="<?php echo $action; // phpcs:ignore WordPress.Security.EscapeOutput ?>" id="redirectForm">
-                <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
             </form>
         </div>
         <?php
@@ -166,8 +176,8 @@ class MainWP_Site_Open { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Co
     public static function open_site_restore( $website, $file, $size ) {
         ?>
         <div class="ui segment" style="padding: 25rem">
-            <div class="ui active inverted dimmer">
-                <div class="ui massive text loader"><?php esc_html_e( 'Redirecting...', 'mainwp' ); ?></div>
+            <div class="ui active dimmer">
+                <div class="ui massive double text loader"><?php esc_html_e( 'Redirecting...', 'mainwp' ); ?></div>
             </div>
             <?php
 
@@ -178,7 +188,7 @@ class MainWP_Site_Open { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Co
             $postdata['size'] = $size;
             ?>
             <form method="POST" action="<?php echo esc_url( $url ); ?>" id="redirectForm">
-                <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                 <?php
                 foreach ( $postdata as $name => $value ) {
                     echo '<input type="hidden" name="' . esc_attr( $name ) . '" value="' . esc_attr( $value ) . '" />';
@@ -212,8 +222,8 @@ class MainWP_Site_Open { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Co
     public static function open_site_location( $website, $open_location ) {
         ?>
         <div class="ui segment" style="padding: 25rem">
-            <div class="ui active inverted dimmer">
-                <div class="ui massive text loader"><?php esc_html_e( 'Redirecting...', 'mainwp' ); ?></div>
+            <div class="ui active dimmer">
+                <div class="ui massive double text loader"><?php esc_html_e( 'Redirecting...', 'mainwp' ); ?></div>
             </div>
             <?php
 
@@ -224,7 +234,7 @@ class MainWP_Site_Open { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Co
             $postdata['open_location'] = $open_location; // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
             ?>
             <form method="POST" action="<?php echo esc_url( $url ); ?>" id="redirectForm">
-                <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                 <?php
                 foreach ( $postdata as $name => $value ) {
                     echo '<input type="hidden" name="' . esc_attr( $name ) . '" value="' . esc_attr( $value ) . '" />';

@@ -90,12 +90,21 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
         } else {
             if ( $current_wpid ) {
                 $sql        = MainWP_DB::instance()->get_sql_website_by_id( $current_wpid );
+                $websites   = MainWP_DB::instance()->query( $sql );
                 $individual = true;
             } else {
-                $sql        = MainWP_DB::instance()->get_sql_websites_for_current_user();
-                $individual = false;
+                $wpsite_fields = array( 'id', 'name', 'url' );
+                $websites      = MainWP_DB::instance()->query(
+                    MainWP_DB::instance()->get_sql_websites_for_current_user_by_params(
+                        array(
+                            'view'             => 'custom_view',
+                            'others_fields'    => array( 'recent_posts' ),
+                            'select_wp_fields' => $wpsite_fields,
+                        )
+                    )
+                );
+                $individual    = false;
             }
-            $websites = MainWP_DB::instance()->query( $sql );
 
             if ( $websites ) {
                 while ( $websites && ( $website = MainWP_DB::fetch_object( $websites ) ) ) {
@@ -242,7 +251,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
              */
             do_action( 'mainwp_recent_posts_before_publised_list', $allPosts, $recent_number );
             if ( empty( $recent_posts_published ) ) {
-                MainWP_UI::render_empty_element_placeholder();
+                MainWP_UI::render_empty_element_placeholder( __( 'No Recent Posts Found', 'mainwp' ), __( 'Recent post changes will appear here once activity is detected.', 'mainwp' ), '<em data-emoji=":pencil:" class="medium"></em>' );
             }
             ?>
             <div class="ui middle aligned divided list">
@@ -260,7 +269,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
 
                 ?>
                 <div class="item">
-                    <div class="ui stackable grid">
+                    <div class="ui grid">
                         <input class="postId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_published[ $i ]['id'] ); ?>"/>
                         <input class="websiteId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_published[ $i ]['website']->id ); ?>"/>
                         <div class="fourteen wide column middle aligned">
@@ -336,7 +345,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
              */
             do_action( 'mainwp_recent_posts_before_draft_list', $allPosts, $recent_number );
             if ( empty( $recent_posts_draft ) ) {
-                MainWP_UI::render_empty_element_placeholder();
+                MainWP_UI::render_empty_element_placeholder( __( 'No Recent Posts Found', 'mainwp' ), __( 'Recent post changes will appear here once activity is detected.', 'mainwp' ), '<em data-emoji=":pencil:" class="big"></em>' );
             }
             ?>
             <div class="ui middle aligned divided list">
@@ -352,7 +361,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                 $name = wp_strip_all_tags( $recent_posts_draft[ $i ]['website']->name );
                 ?>
                 <div class="item">
-                    <div class="ui stackable grid">
+                    <div class="ui grid">
                         <input class="postId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_draft[ $i ]['id'] ); ?>"/>
                         <input class="websiteId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_draft[ $i ]['website']->id ); ?>"/>
                         <div class="fourteen wide column middle aligned">
@@ -427,7 +436,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                  */
                 do_action( 'mainwp_recent_posts_before_pending_list', $allPosts, $recent_number );
                 if ( empty( $recent_posts_pending ) ) {
-                    MainWP_UI::render_empty_element_placeholder();
+                    MainWP_UI::render_empty_element_placeholder( __( 'No Recent Posts Found', 'mainwp' ), __( 'Recent post changes will appear here once activity is detected.', 'mainwp' ), '<em data-emoji=":pencil:" class="big"></em>' );
                 }
                 ?>
             <div class="ui middle aligned divided list">
@@ -443,7 +452,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                 $name = wp_strip_all_tags( $recent_posts_pending[ $i ]['website']->name );
                 ?>
                 <div class="item">
-                    <div class="ui stackable grid">
+                    <div class="ui grid">
                         <input class="postId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_pending[ $i ]['id'] ); ?>"/>
                         <input class="websiteId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_pending[ $i ]['website']->id ); ?>"/>
                         <div class="fourteen wide column middle aligned">
@@ -518,7 +527,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
          */
         do_action( 'mainwp_recent_posts_before_future_list', $allPosts, $recent_number );
         if ( empty( $recent_posts_future ) ) {
-            MainWP_UI::render_empty_element_placeholder();
+            MainWP_UI::render_empty_element_placeholder( __( 'No Recent Posts Found', 'mainwp' ), __( 'Recent post changes will appear here once activity is detected.', 'mainwp' ), '<em data-emoji=":pencil:" class="big"></em>' );
         }
         ?>
         <div class="ui middle aligned divided list">
@@ -534,7 +543,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
             $name = wp_strip_all_tags( $recent_posts_future[ $i ]['website']->name );
             ?>
                 <div class="item">
-                    <div class="ui stackable grid">
+                    <div class="ui grid">
                         <input class="postId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_future[ $i ]['id'] ); ?>"/>
                         <input class="websiteId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_future[ $i ]['website']->id ); ?>"/>
                         <div class="fourteen wide column middle aligned">
@@ -610,7 +619,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
          */
         do_action( 'mainwp_recent_posts_before_trash_list', $allPosts, $recent_number );
         if ( empty( $recent_posts_trash ) ) {
-            MainWP_UI::render_empty_element_placeholder();
+            MainWP_UI::render_empty_element_placeholder( __( 'No Recent Posts Found', 'mainwp' ), __( 'Recent post changes will appear here once activity is detected.', 'mainwp' ), '<em data-emoji=":pencil:" class="big"></em>' );
         }
         ?>
         <div class="ui middle aligned divided list">
@@ -626,7 +635,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
             $name = wp_strip_all_tags( $recent_posts_trash[ $i ]['website']->name );
             ?>
             <div class="item">
-                <div class="ui stackable grid">
+                <div class="ui grid">
                     <input class="postId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_trash[ $i ]['id'] ); ?>"/>
                     <input class="websiteId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_trash[ $i ]['website']->id ); ?>"/>
                     <div class="fourteen wide column middle aligned">
