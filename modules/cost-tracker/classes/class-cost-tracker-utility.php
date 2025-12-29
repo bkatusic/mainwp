@@ -214,10 +214,10 @@ class Cost_Tracker_Utility {
                 $format = '%2$s%1$s';
                 break;
             case 'left_space':
-                $format = '%1$s&nbsp;%2$s';
+                $format = '%1$s %2$s';
                 break;
             case 'right_space':
-                $format = '%2$s&nbsp;%1$s';
+                $format = '%2$s %1$s';
                 break;
             default:
                 break;
