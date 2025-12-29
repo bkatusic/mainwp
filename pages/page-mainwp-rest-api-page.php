@@ -615,8 +615,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                             }
                             if ( 'read_write' === $per ) {
                                 $pers_title[] = esc_html__( 'Read', 'mainwp' );
-                                $pers_title[] = esc_html__( 'Write', 'mainwp' );
-                                $pers_title[] = esc_html__( 'Delete', 'mainwp' );
+                                $pers_title[] = esc_html__( 'Write & Delete', 'mainwp' );
                             }
                             ?>
                             <tr key-ck-id="<?php echo intval( $key_id ); ?>">
@@ -642,33 +641,6 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                             </tr>
                             <?php
                         }
-                        if ( 'read_write' === $per ) {
-                            $pers_title[] = esc_html__( 'Read', 'mainwp' );
-                            $pers_title[] = esc_html__( 'Write & Delete', 'mainwp' );
-                        }
-                        ?>
-                        <tr key-ck-id="<?php echo intval( $key_id ); ?>">
-                            <td class="check-column">
-                                <div class="ui checkbox">
-                                    <input type="checkbox" aria-label="<?php echo esc_attr__( 'Select API key described as: ', 'mainwp' ) . esc_html( $desc ); ?>" value="<?php echo intval( $key_id ); ?>" name=""/>
-                                </div>
-                            </td>
-                            <td><?php echo $enabled ? '<span class="ui green fluid label">' . esc_html__( 'Enabled', 'mainwp' ) . '</span>' : '<span class="ui gray fluid label">' . esc_html__( 'Disabled', 'mainwp' ) . '</span>'; ?></td>
-                            <td><a href="admin.php?page=AddApiKeys&editkey=<?php echo intval( $key_id ); ?>&rest_ver=2&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>"><?php echo esc_html( $desc ); ?></a></td>
-                            <td><?php echo ! empty( $pers_title ) ? implode( ', ', $pers_title ) : 'N/A'; // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
-                            <td><code><?php echo esc_html( '...' . $ending ); // phpcs:ignore WordPress.Security.EscapeOutput ?></code></td>
-                            <td data-order="<?php echo ! empty( $item->last_access ) ? strtotime( $item->last_access ) : 0; ?>"><?php echo ! empty( $item->last_access ) ? '<span data-tooltip="' . MainWP_Utility::format_timestamp( MainWP_Utility::get_timestamp( strtotime( $item->last_access ) ) ) . '" data-position="left center" data-inverted="">' . MainWP_Utility::time_elapsed_string( strtotime( $item->last_access ) ) . '</span>' : 'N/A'; // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
-                            <td class="right aligned">
-                                <div class="ui right pointing dropdown" style="z-index:999">
-                                <i class="ellipsis vertical icon"></i>
-                                    <div class="menu">
-                                        <a class="item" href="admin.php?page=AddApiKeys&editkey=<?php echo intval( $key_id ); ?>&rest_ver=2&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>"><?php esc_html_e( 'Edit', 'mainwp' ); ?></a>
-                                        <a class="item" href="javascript:void(0)" onclick="mainwp_restapi_remove_key_confirm(jQuery(this).closest('tr').find('.check-column INPUT:checkbox'));" ><?php esc_html_e( 'Delete', 'mainwp' ); ?></a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php
                     }
                 ?>
             </tbody>
