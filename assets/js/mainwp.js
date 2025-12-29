@@ -2121,7 +2121,7 @@ let managesites_remove = function (obj) {
     let name = jQuery(obj).attr('site-name');
     let id = jQuery(obj).attr('site-id');
 
-    let msg = sprintf(__('Are you sure you want to remove %1 from your MainWP Dashboard?', name));
+    let msg = __('Are you sure you want to remove', 'mainwp') + ' ' + name + ' ' + __('from your MainWP Dashboard?', 'mainwp');
 
     mainwp_confirm(msg, function () {
         jQuery('tr#child-site-' + id).html('<td colspan="999"><i class="notched circle loading icon"></i> ' + 'Removing and deactivating the MainWP Child plugin! Please wait...' + '</td>');
