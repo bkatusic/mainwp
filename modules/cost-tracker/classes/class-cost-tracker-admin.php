@@ -15,6 +15,7 @@ use MainWP\Dashboard\MainWP_Utility;
 use MainWP\Dashboard\MainWP_System_Utility;
 use MainWP\Dashboard\MainWP_Logger;
 use MainWP\Dashboard\MainWP_Post_Handler;
+use MainWP\Dashboard\MainWP_Settings;
 use MainWP\Dashboard\MainWP_Settings_Indicator;
 use MainWP\Dashboard\MainWP_Exception;
 
