@@ -670,7 +670,6 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                         </tr>
                         <?php
                     }
-                }
                 ?>
             </tbody>
         </table>
