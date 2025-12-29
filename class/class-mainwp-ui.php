@@ -2840,7 +2840,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                     <?php if ( '' !== $title ) : ?>
                         <?php echo $title; //phpcs:ignore -- requires escaped. ?>
                     <?php else : ?>
-                        <?php echo esc_html__( 'Nothing to show here, check back later!', 'mainwp' ); ?>
+                        <?php echo esc_html__( 'Nothing to show right now.', 'mainwp' ); ?>
                     <?php endif; ?>
                     <?php if ( '' !== $message ) : ?>
                     <div class="sub header">
@@ -2874,7 +2874,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 <?php endif; ?>
                 <div class="content">
                     <?php if ( '' !== $title ) : ?>
-                    <?php echo $title; //phpcs:ignore -- requires escaped. ?>
+                        <?php echo $title; //phpcs:ignore -- requires escaped. ?>
                     <?php else : ?>
                         <?php echo esc_html__( 'Nothing to show here!', 'mainwp' ); ?>
                     <?php endif; ?>
