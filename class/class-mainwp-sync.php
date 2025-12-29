@@ -310,6 +310,7 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         }
 
         $phpversion = '';
+        $wpversion  = '';
         if ( isset( $information['site_info'] ) && ! empty( $information['site_info'] ) ) {
             if ( is_array( $information['site_info'] ) && isset( $information['site_info']['phpversion'] ) ) {
                 $phpversion = $information['site_info']['phpversion'];
@@ -317,6 +318,11 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             if ( is_array( $information['site_info'] ) && isset( $information['site_info']['ip'] ) ) {
                 $websiteValues['ip'] = sanitize_text_field( wp_unslash( $information['site_info']['ip'] ) );
             }
+
+            if ( is_array( $information['site_info'] ) && isset( $information['site_info']['wpversion'] ) ) {
+                $wpversion = $information['site_info']['wpversion'];
+            }
+
             MainWP_DB::instance()->update_website_option( $pWebsite, 'site_info', wp_json_encode( $information['site_info'] ) );
             $done = true;
         }
@@ -324,6 +330,10 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         if ( ! empty( $phpversion ) ) {
             MainWP_DB::instance()->update_website_option( $pWebsite, 'phpversion', $phpversion );
         }
+        if ( ! empty( $wpversion ) ) { // to support sorting by wpversion.
+            MainWP_DB::instance()->update_website_option( $pWebsite, 'wpversion', $wpversion );
+        }
+
         if ( isset( $information['directories'] ) && is_array( $information['directories'] ) ) {
             $websiteValues['directories'] = wp_json_encode( $information['directories'] );
             $done                         = true;
