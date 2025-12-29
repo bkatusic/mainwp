@@ -48,7 +48,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
             <div class="wp-submenu sub-open" style="">
                 <div class="mainwp_boxout">
                     <div class="mainwp_boxoutin"></div>
-                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=managesites' ) ); ?>" class="mainwp-submenu"><?php esc_html_e( 'Manage Sites', 'mainwp' ); ?></a>
+                    <a href="<?php echo esc_url( admin_url( MainWP_Unhooks_Helper::add_unhooks_params( 'admin.php?page=managesites' ) ) ); ?>" class="mainwp-submenu"><?php esc_html_e( 'Manage Sites', 'mainwp' ); ?></a>
                     <?php if ( \mainwp_current_user_can( 'dashboard', 'add_sites' ) ) { ?>
                         <?php if ( ! MainWP_Menu::is_disable_menu_item( 3, 'managesites_add_new' ) ) { ?>
                             <a href="<?php echo esc_url( admin_url( 'admin.php?page=managesites&do=new' ) ); ?>" class="mainwp-submenu"><?php esc_html_e( 'Add New', 'mainwp' ); ?></a>
@@ -64,11 +64,13 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     if ( isset( $subPages ) && is_array( $subPages ) ) {
                         foreach ( $subPages as $subPage ) {
                             if ( ! isset( $subPage['menu_hidden'] ) || ( isset( $subPage['menu_hidden'] ) && true !== $subPage['menu_hidden'] ) ) {
-                                if ( MainWP_Menu::is_disable_menu_item( 3, 'ManageSites' . $subPage['slug'] ) ) {
+                                $sub_slug  = isset( $subPage['slug'] ) ? $subPage['slug'] : '';
+                                $sub_title = isset( $subPage['title'] ) ? $subPage['title'] : '';
+                                if ( MainWP_Menu::is_disable_menu_item( 3, 'ManageSites' . $sub_slug ) ) {
                                     continue;
                                 }
                                 ?>
-                                <a href="<?php echo esc_url( admin_url( 'admin.php?page=ManageSites' . $subPage['slug'] ) ); ?>" class="mainwp-submenu"><?php echo esc_html( $subPage['title'] ); ?></a>
+                                <a href="<?php echo esc_url( admin_url( 'admin.php?page=ManageSites' . $sub_slug ) ); ?>" class="mainwp-submenu"><?php echo esc_html( $sub_title ); ?></a>
                                 <?php
                             }
                         }
@@ -98,7 +100,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 'title'      => esc_html__( 'Sites', 'mainwp' ),
                 'parent_key' => 'mainwp_tab',
                 'slug'       => 'managesites',
-                'href'       => 'admin.php?page=managesites',
+                'href'       => MainWP_Unhooks_Helper::add_unhooks_params( 'admin.php?page=managesites' ),
                 'icon'       => '<i class="globe icon"></i>',
             ),
             0
@@ -109,9 +111,10 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 'title'                => esc_html__( 'Manage Sites', 'mainwp' ),
                 'parent_key'           => 'managesites',
                 'slug'                 => 'managesites',
-                'href'                 => 'admin.php?page=managesites',
+                'href'                 => MainWP_Unhooks_Helper::add_unhooks_params( 'admin.php?page=managesites' ),
                 'right'                => '',
                 'leftsub_order_level2' => 1,
+                'id'                   => 'managesites-root',
             ),
             array(
                 'title'                => esc_html__( 'Add New', 'mainwp' ),
@@ -191,7 +194,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
         $managesites_pages = array(
             'ManageSites'     => array(
-                'href'   => 'admin.php?page=managesites',
+                'href'   => MainWP_Unhooks_Helper::add_unhooks_params( 'admin.php?page=managesites' ),
                 'title'  => esc_html__( 'Manage Sites', 'mainwp' ),
                 'access' => true,
             ),
@@ -387,8 +390,8 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
      */
     public static function render_import_sites() { // phpcs:ignore -- NOSONAR - complex.
         ?>
-        <div id="mainwp-importing-sites" class="ui active inverted dimmer">
-            <div class="ui medium text loader"><?php esc_html_e( 'Importing', 'mainwp' ); ?></div>
+        <div id="mainwp-importing-sites" class="ui active dimmer">
+            <div class="ui double text loader"><?php esc_html_e( 'Importing...', 'mainwp' ); ?></div>
         </div>
         <div class="ui message" id="mainwp-import-sites-status-message">
             <?php echo '<i class="notched circle loading icon"></i> ' . esc_html__( 'Importing...', 'mainwp' ); ?>
@@ -473,11 +476,9 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                         ++$row;
                     }
                     $header_line = trim( $header_line );
-
                     ?>
                     <input type="hidden" id="mainwp_managesites_do_import" value="1"/>
                     <input type="hidden" id="mainwp_managesites_total_import" value="<?php echo esc_attr( $row ); ?>"/>
-
                     <div class="mainwp_managesites_import_listing" id="mainwp_managesites_import_logging">
                         <span class="log ui medium text"><?php echo esc_html( $header_line ) . '<br/>'; ?></span>
                     </div>
@@ -528,17 +529,23 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                         $line = trim( implode( ',', $val_import ) )
                         ?>
                         <input type="hidden" id="mainwp_managesites_import_csv_line_<?php echo esc_attr( $key_import + 1 ); ?>" value="" encoded-data="<?php echo esc_attr( wp_json_encode( $val_import ) ); ?>" original="<?php echo esc_attr( $line ); ?>" />
-                    <?php } ?>
+                        <?php
+                    }
+                    $hd_id1       = 'mainwp_managesites_do_import';
+                    $hd_id2       = 'mainwp_managesites_total_import';
+                    $list_id      = 'mainwp_managesites_import_logging';
+                    $fail_list_id = 'mainwp_managesites_import_fail_logging';
+                    ?>
                     <input type="hidden" id="mainwp_managesites_do_managesites_import" value="1"/>
-                    <input type="hidden" id="mainwp_managesites_do_import" value="1"/>
-                    <input type="hidden" id="mainwp_managesites_total_import" value="<?php echo esc_attr( count( $import_data ) ); ?>"/>
+                    <input type="hidden" id="<?php esc_attr( $hd_id1 ); ?>" value="1"/>
+                    <input type="hidden" id="<?php esc_attr( $hd_id2 ); ?>" value="<?php echo esc_attr( count( $import_data ) ); ?>"/>
 
-                    <div class="mainwp_managesites_import_listing" id="mainwp_managesites_import_logging">
+                    <div class="mainwp_managesites_import_listing" id="<?php esc_attr( $list_id ); ?>">
                         <span class="log ui small text">
                             <?php echo esc_html( $header_line ) . '<br/>'; ?>
                         </span>
                     </div>
-                    <div class="mainwp_managesites_import_listing" id="mainwp_managesites_import_fail_logging" style="display: none;">
+                    <div class="mainwp_managesites_import_listing" id="<?php esc_attr( $fail_list_id ); ?>" style="display: none;">
                         <?php echo esc_html( $header_line ); ?>
                     </div>
                     <?php
@@ -582,8 +589,8 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
             ?>
 
             <h3 class="ui dividing header">
-                <?php esc_html_e( 'Extensions Settings Synchronization', 'mainwp' ); ?>
-                <div class="sub header"><?php esc_html_e( 'Select the plugins you want to install and if you want to apply the Extensions default settings to this Child site.', 'mainwp' ); ?></div>
+                <?php esc_html_e( 'Add-ons Settings Synchronization', 'mainwp' ); ?>
+                <div class="sub header"><?php esc_html_e( 'Select the plugins you want to install and if you want to apply the Add-ons default settings to this Child site.', 'mainwp' ); ?></div>
             </h3>
 
             <?php
@@ -627,7 +634,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     }
                 } else {
                     $html .= '<div class="sync-global-options options-row">';
-                    $html .= '<div class="ui checkbox"><input type="checkbox" /> <label>' . esc_html( sprintf( esc_html__( 'Apply global %1$s options' ), trim( $ext_name ) ) ) . '</label></div> ';
+                    $html .= '<div class="ui checkbox"><input type="checkbox" /> <label>' . esc_html( sprintf( esc_html__( 'Apply global %1$s options', 'mainwp' ), trim( $ext_name ) ) ) . '</label></div> ';
                     $html .= '<i class="ui active inline loader tiny"  style="display: none"></i> <span class="status"></span>';
                     $html .= '</div>';
                 }
@@ -717,14 +724,14 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                      *
                      * Updates actions top content.
                      *
-                     * @since 5.4.1
+                     * @since 5.5
                      */
                     do_action( 'mainwp_widget_updates_actions_top', $active_tab );
                     ?>
                     </div>
                     <div class="middle aligned right aligned column select-buttons-individual-updates">
-                            <?php echo '<a href="javascript:void(0)" data-tooltip="' . esc_html__( 'Update Selected Plugins.', 'mainwp' ) . '" onClick="updatesoverview_plugins_global_upgrade_all( false, true ); return false;" class="ui mini green basic button plugins ' . ( 'plugins' === $active_tab ? '' : 'hidden' ) . '  "data-inverted="" data-position="top right">' . esc_html__( 'Update Selected' ) . '</a>'; ?>
-                            <?php echo '<a href="javascript:void(0)" onClick="updatesoverview_themes_global_upgrade_all( false, true );return false;" class="ui mini green basic button themes ' . ( 'themes' === $active_tab ? '' : 'hidden' ) . '" data-tooltip="' . esc_html__( 'Update Selected Themes.', 'mainwp' ) . '" data-inverted="" data-position="top right">' . esc_html__( 'Update Selected' ) . '</a>'; ?>
+                            <?php echo '<a href="javascript:void(0)" data-tooltip="' . esc_html__( 'Update Selected Plugins.', 'mainwp' ) . '" onClick="updatesoverview_plugins_global_upgrade_all( false, true ); return false;" class="ui mini green basic button plugins ' . ( 'plugins' === $active_tab ? '' : 'hidden' ) . '  "data-inverted="" data-position="top right">' . esc_html__( 'Update Selected', 'mainwp' ) . '</a>'; ?>
+                            <?php echo '<a href="javascript:void(0)" onClick="updatesoverview_themes_global_upgrade_all( false, true );return false;" class="ui mini green basic button themes ' . ( 'themes' === $active_tab ? '' : 'hidden' ) . '" data-tooltip="' . esc_html__( 'Update Selected Themes.', 'mainwp' ) . '" data-inverted="" data-position="top right">' . esc_html__( 'Update Selected', 'mainwp' ) . '</a>'; ?>
                     </div>
                 </div>
             </div>
@@ -856,7 +863,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
             return;
         }
 
-        $website = MainWP_DB::instance()->get_website_by_id( $websiteid, false, array( 'monitoring_notification_emails', 'settings_notification_emails' ) );
+        $website = MainWP_DB::instance()->get_website_by_id( $websiteid, false, array( 'monitoring_notification_emails', 'settings_notification_emails', 'ignored_trans_updates' ) );
         if ( ! MainWP_System_Utility::can_edit_website( $website ) ) {
             $website = null;
         }
@@ -891,7 +898,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
             <div class="ui message green"><i class="close icon"></i> <?php esc_html_e( 'Child site settings saved successfully.', 'mainwp' ); ?></div>
             <?php } ?>
             <form method="POST" action="" id="mainwp-edit-single-site-form" enctype="multipart/form-data" class="ui form">
-                <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                 <input type="hidden" name="wp_nonce" value="<?php echo esc_attr( wp_create_nonce( 'UpdateWebsite' . $website->id ) ); ?>" />
                 <h3 class="ui dividing header">
                 <?php MainWP_Settings_Indicator::render_indicator( 'header', 'settings-field-indicator-edit-site-general' ); ?>
@@ -1065,7 +1072,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $init_groups );
                     ?>
                     <?php esc_html_e( 'Tags', 'mainwp' ); ?></label>
-                    <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Add the website to existing tags(s).', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                    <div class="ten wide column">
                         <div class="ui multiple selection dropdown" init-value="<?php echo esc_attr( $init_groups ); ?>">
                             <input name="mainwp_managesites_edit_addgroups" value="" class="settings-field-value-change-handler" type="hidden">
                             <i class="dropdown icon"></i>
@@ -1180,6 +1187,17 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                         </label>
                         <div class="six wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'Enable if you want to ignore theme updates on this website.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
                             <input type="checkbox" name="mainwp_is_ignoreThemeUpdates" class="settings-field-value-change-handler" id="mainwp_is_ignoreThemeUpdates" <?php echo 1 === (int) $website->is_ignoreThemeUpdates ? $style_checked : ''; //phpcs:ignore -- ok.  ?>><label for="mainwp_is_ignoreThemeUpdates"></label>
+                        </div>
+                    </div>
+                    <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-edit-site-general">
+                        <label class="six wide column middle aligned">
+                        <?php
+                        MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_site_is_ignore_trans_updates', (int) $website->ignored_trans_updates );
+                        esc_html_e( 'Ignore translation updates', 'mainwp' );
+                        ?>
+                        </label>
+                        <div class="six wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'Enable if you want to ignore translation updates on this website.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                            <input type="checkbox" name="mainwp_is_ignore_trans_updates" class="settings-field-value-change-handler" id="mainwp_is_ignore_trans_updates" <?php echo 1 === (int) $website->ignored_trans_updates ? $style_checked : ''; //phpcs:ignore -- ok.  ?>><label for="mainwp_is_ignore_trans_updates"></label>
                         </div>
                     </div>
                 <?php } ?>
@@ -1408,7 +1426,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
             <i class="close icon"></i>
             <div class="header"><?php esc_html_e( 'Connection Test', 'mainwp' ); ?></div>
             <div class="content">
-                <div class="ui active inverted dimmer">
+                <div class="ui active dimmer">
                     <div class="ui text loader"><?php esc_html_e( 'Testing connection...', 'mainwp' ); ?></div>
                 </div>
                 <div id="mainwp-test-connection-result" class="ui segment" style="display:none">
@@ -1484,7 +1502,6 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                                             }
                                         }
                                         setTimeout(function () {
-                                            //window.location.href = location.href;
                                             jQuery('#mainwp-upload-custom-icon-modal').modal('hide')
                                         }, 1000);
                                     });
@@ -1695,7 +1712,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
             <div class="ui large modal" id="mainwp-edit-email-template-modal">
                 <i class="close icon"></i>
                 <div class="header"><?php esc_html_e( 'Edit Email Template', 'mainwp' ); ?></div>
-                    <div class="scrolling header">
+                    <div class="scrolling content">
                     <form method="POST" id="email-template-form" action="<?php echo esc_html( $localion ); ?>" class="ui form">
                         <input type="hidden" name="wp_nonce" value="<?php echo esc_attr( wp_create_nonce( 'save-email-template' ) ); ?>" />
                         <div class="template <?php echo esc_attr( $type ); ?>">
@@ -1893,6 +1910,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                         if ( empty( $alg ) && is_object( $website ) ) {
                             MainWP_DB::instance()->update_website_option( $website, 'signature_algo', 9999 ); // use global.
                             $website = MainWP_DB::instance()->get_website_by_id( $website->id );
+                            MainWP_Stack_Helper::stack_push( 'sync_before_reconnect' );
                             $success = MainWP_Sync::sync_site( $website, true );
                         }
                     }
@@ -1984,7 +2002,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                         if ( ! empty( $information['regverify'] ) ) {
                             MainWP_DB::instance()->update_website_option( $website, 'register_verify_key', $information['regverify'] );
                         }
-
+                        MainWP_Stack_Helper::stack_push( 'sync_reconnect' );
                         MainWP_Sync::sync_information_array( $website, $information );
                         $success = true;
                     } else {
@@ -2085,6 +2103,11 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
         $id         = 0;
         $existed_id = 0;
 
+        $error_category  = 'unknown';
+        $error_code      = '';
+        $http_status     = '';
+        $connection_step = '';
+
         if ( $website ) {
             $error = esc_html__( 'The site is already connected to your MainWP Dashboard', 'mainwp' );
             if ( is_array( $website ) && ! empty( $website[0] ) && is_object( $website[0] ) ) {
@@ -2092,6 +2115,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
             } elseif ( is_object( $website ) && property_exists( $website, 'id' ) ) {
                 $existed_id = $website->id;
             }
+            $error_category = 'already_connected';
         } else {
             try {
                 if ( MainWP_Connect_Lib::is_use_fallback_sec_lib( $website ) ) {
@@ -2129,6 +2153,8 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
                 MainWP_Logger::instance()->debug( ' :: register site :: ' . $url );
 
+                $connection_step = 'handshake';
+
                 $information = MainWP_Connect::fetch_url_not_authed(
                     $url,
                     $params['wpadmin'],
@@ -2150,10 +2176,22 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
                 if ( isset( $information['error'] ) && '' !== $information['error'] ) {
                     $error = MainWP_Utility::esc_content( $information['error'] );
+                    if ( is_array( $output ) ) {
+                        if ( ! empty( $output['error_category'] ) ) {
+                            $error_category = $output['error_category'];
+                        }
+                        if ( ! empty( $output['connection_step'] ) ) {
+                            $connection_step = $output['connection_step'];
+                        }
+                        if ( ! empty( $output['error_code'] ) ) {
+                            $error_code = $output['error_code'];
+                        }
+                    }
                 } elseif ( isset( $information['register'] ) && 'OK' === $information['register'] ) {
-                    $groupids   = array();
-                    $groupnames = array();
-                    $tmpArr     = array();
+                    $connection_step = 'save_site';
+                    $groupids        = array();
+                    $groupnames      = array();
+                    $tmpArr          = array();
                     if ( isset( $params['groupids'] ) && is_array( $params['groupids'] ) ) {
                         foreach ( $params['groupids'] as $group ) {
                             if ( is_numeric( $group ) ) {
@@ -2231,7 +2269,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
                         if ( isset( $params['qsw_page'] ) && $params['qsw_page'] ) {
                             set_transient( 'mainwp_transient_just_connected_site_id', $id, HOUR_IN_SECONDS );
-                            $message = sprintf( esc_html__( '%1$sCongratulations you have connected %2$s.%3$s After finishing the Quick Setup Wizard, you can add additional sites from the Add New Sites page.', 'mainwp' ), '<div class="ui header">', '<strong>' . esc_html( $params['name'] ) . '</strong>', '</div>' );
+                            $message = sprintf( esc_html__( '%4$s%1$sCongratulations you have connected %2$s.%3$s After finishing the Quick Setup Wizard, you can add additional sites from the Add New Sites page. Proceeding to the next step in 3 seconds...', 'mainwp' ), '<div class="ui header">', '<strong>' . esc_html( $params['name'] ) . '</strong>', '</div>', '<a href="admin.php?page=mainwp-setup&step=monitoring" class="ui mini basic green right floated button">Continue</a>' );
                         } else {
                             $message = sprintf( esc_html__( 'Site successfully added - Visit the Site\'s %1$sDashboard%2$s now.%3$s', 'mainwp' ), '<a href="admin.php?page=managesites&dashboard=' . $id . '" style="text-decoration: none;" title="' . esc_html__( 'Dashboard', 'mainwp' ) . '">', '</a>', '<br/>' );
                         }
@@ -2284,6 +2322,8 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
                             MainWP_Sync::sync_init_empty_values( $website );
 
+                            $connection_step = 'post_add_sync';
+
                             MainWP_Sync::sync_information_array( $website, $information );
                         }
                 } else {
@@ -2299,6 +2339,36 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 }
             }
         }
+
+        $source_screen = 'manage_sites';
+        $flow_type     = ! empty( $_POST['bulk'] ) ? 'bulk' : 'single'; //phpcs:ignore -- NOSONAR -nonce ok.
+        if ( ! empty( $_POST['qsw_page'] ) ) { //phpcs:ignore -- NOSONAR -nonce ok.
+            $flow_type     = 'wizard';
+            $source_screen = 'onboarding_wizard';
+        }
+        if ( 'bulk' === $flow_type ) {
+            $source_screen = 'quick_add_modal';
+        }
+
+        $telem_info = array(
+            'flow_type'     => $flow_type,
+            'source_screen' => $source_screen,
+        );
+
+        if ( empty( $id ) ) {
+            $telem_info['error_message']  = $error;
+            $telem_info['error_category'] = $error_category;
+            $telem_info['error_code']     = $error_code;
+
+            if ( ! empty( $connection_step ) ) {
+                $telem_info['connection_step'] = $connection_step;
+            }
+            if ( is_array( $output ) && ! empty( $output['http_status'] ) ) {
+                $telem_info['http_status'] = $output['http_status'];
+            }
+        }
+
+        do_action( 'mainwp_after_add_site', array( $message, $error, $id, $existed_id ), $website, $params, $output, $telem_info );
 
         return array( $message, $error, $id, $existed_id );
     }

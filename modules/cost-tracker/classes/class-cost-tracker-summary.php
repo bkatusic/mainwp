@@ -353,21 +353,47 @@ class Cost_Tracker_Summary {
      * Render the summary costs content.
      */
     public static function render_summary_body() {
-        $screen     = get_current_screen();
-        $costs_data = Cost_Tracker_DB::get_instance()->get_summary_data( array( 'sum_data' => 'all' ) );
+        $screen      = get_current_screen();
+        $costs_data  = Cost_Tracker_DB::get_instance()->get_summary_data( array( 'sum_data' => 'all' ) );
+        $costs       = Cost_Tracker_DB::get_instance()->get_cost_tracker_by( 'all' );
+        $costs_count = count( $costs );
         ?>
         <div class="mainwp-primary-content-wrap">
-        <div class="ui segment" style="padding-top:0;padding-bottom:0;">
-
-        <?php MainWP_Overview::render_layout_selection(); ?>
-
-        <div id="mainwp-message-zone" class="ui message" style="display:none;"></div>
-        <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'cost-summany-widgets' ) ) : ?>
-                <div class="ui info message">
-                    <i class="close icon mainwp-notice-dismiss" notice-id="cost-summany-widgets"></i>
-                    <?php printf( esc_html__( 'To hide or show a widget, click the Cog (%1$s) icon.', 'mainwp' ), '<i class="cog icon"></i>' ); ?>
-                </div>
+            <?php if ( 0 == $costs_count ) : ?>
+            <?php MainWP_Overview::render_layout_selection(); ?>
             <?php endif; ?>
+            <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-cost-summany-welcome-message' ) && 0 == $costs_count ) : ?>
+            <div class="ui segment" style="margin-bottom:0px;">
+                <div class="ui icon message mainwp-welcome-message" style="margin-bottom:0px;">
+                    <em data-emoji=":wave:" class="big"></em>
+                    <div class="content">
+                        <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-cost-summany-welcome-message" style="float:right;cursor:pointer;"></i>
+                        <div class="ui massive header"><?php esc_html_e( 'Welcome to Cost Tracker', 'mainwp' ); ?></div>
+                        <p><?php esc_html_e( 'Track and forecast your agency\'s expenses across all sites and subscriptions.', 'mainwp' ); ?></p>
+                        <p><?php printf( esc_html__( 'Start by %1$sadding your first cost%2$s or %3$screating custom cost categories%4$s.', 'mainwp' ), '<a href="admin.php?page=CostTrackerAdd">', '</a>', '<a href="admin.php?page=CostTrackerSettings">', '</a>' ); ?></p>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+            <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'cost-summany-widgets' ) ) : ?>
+            <div class="ui segment" style="margin-bottom:0px;">
+                <div class="ui message" style="margin-bottom:0px;">
+                    <i class="close icon mainwp-notice-dismiss" notice-id="cost-summany-widgets"></i>
+                    <?php printf( esc_html__( '%1$s Tip: You can drag and drop widgets to reorder your dashboard or use the Page Settings (%2$s) to show/hide widgets.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<i class="cog fitted icon"></i>' ); ?>
+                </div>
+            </div>
+            <?php endif; ?>
+            <?php if ( 0 < $costs_count && 3 >= $costs_count ) : ?>
+                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'cost-summany-low-data-info' ) ) : ?>
+                <div class="ui segment" style="margin-bottom:0px;">
+                    <div class="ui info message" style="margin-bottom:0px;">
+                        <i class="close icon mainwp-notice-dismiss" notice-id="cost-summany-low-data-info"></i>
+                        <?php esc_html_e( 'Keep building your cost history. Add more expenses to unlock trend insights.', 'mainwp' ); ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+            <?php endif; ?>
+            <div id="mainwp-message-zone" class="ui message" style="display:none;"></div>
         </div>
             <?php
             /**
@@ -380,6 +406,14 @@ class Cost_Tracker_Summary {
             do_action( 'mainwp_before_overview_widgets', 'costsummary' );
             ?>
             <div id="mainwp-grid-wrapper" class="gridster">
+                <div id="mainwp-widgets-placeholder" class="ui page dimmer">
+                    <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
+                </div>
+                <script>
+                jQuery( document ).ready( function () {
+                    jQuery('#mainwp-widgets-placeholder').dimmer('show');
+                });
+                </script>
                 <?php
                 MainWP_UI::do_widget_boxes(
                     $screen->id,
@@ -411,7 +445,7 @@ class Cost_Tracker_Summary {
                         return false;
                     };
                     jQuery('#reset-costs-summary-widgets-settings').on('click', function () {
-                        mainwp_confirm(__('Are you sure.'), function(){
+                        mainwp_confirm(__('Are you sure?'), function(){
                             jQuery('.mainwp_hide_wpmenu_checkboxes input[name="mainwp_show_widgets[]"]').prop('checked', true);
                             jQuery('input[name=reset_module_cost_tracker_summary_widgets_settings]').attr('value', 1);
                             jQuery('#submit-cost-summary-widgets-settings').click();
@@ -444,7 +478,7 @@ class Cost_Tracker_Summary {
                     do_action( 'mainwp_module_cost_tracker_summary_screen_options_top' );
                     ?>
                     <form method="POST" action="" name="mainwp_module_cost_tracker_summary_screen_options_form" id="mainwp-module-log-overview-screen-options-form">
-                        <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                        <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                         <input type="hidden" name="module_cost_tracker_summay_options_nonce" value="<?php echo esc_attr( wp_create_nonce( 'module_cost_tracker_summay_options_nonce' ) ); ?>" />
                         <?php static::render_screen_options( false ); ?>
                         <?php

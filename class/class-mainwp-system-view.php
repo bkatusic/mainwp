@@ -498,8 +498,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
      * @uses  \MainWP\Dashboard\MainWP_Utility::show_mainwp_message()
      */
     public static function render_browser_extensions_notice() {
-        $is_demo = MainWP_Demo_Handle::is_demo_mode();
-        if ( MainWP_DB::instance()->get_websites_count() > 4 && ! $is_demo && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_browser_extensions_notice' ) ) {
+        if ( MainWP_DB::instance()->get_websites_count() > 4 && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_browser_extensions_notice' ) ) {
             ?>
             <div class="ui info message" style="margin-bottom: 0; border-radius: 0;">
                 <h3><?php esc_html_e( 'Track Updates and Non-MainWP Changes from Your Browser!', 'mainwp' ); ?></h3>
@@ -508,7 +507,6 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
                 <br/>
                 <div>
                     <a href="https://chrome.google.com/webstore/detail/mainwp-browser-extension/kjlehednpnfgplekjminjpocdechbnge" target="_blank" class="ui green tiny button"><i class="chrome icon"></i> <?php echo esc_html__( 'Get Chrome Extension', 'mainwp' ); ?></a>
-                    <a href="https://addons.mozilla.org/en-US/firefox/addon/mainwp-browser-extension/" target="_blank" class="ui green tiny button"><i class="firefox icon"></i> <?php echo esc_html__( 'Get Firefox Extension', 'mainwp' ); ?></a>
                     <a href="https://mainwp.com/mainwp-browser-extension/" target="_blank" class="ui tiny button"><?php echo esc_html__( 'Read More', 'mainwp' ); // NOSONAR - noopener - open safe. ?></a>
                 </div>
                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp_browser_extensions_notice"></i>
@@ -523,7 +521,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
      * @uses  \MainWP\Dashboard\MainWP_Utility::show_mainwp_message()
      */
     public static function render_secure_priv_key_connection() {
-        if ( MainWP_DB::instance()->get_websites_count() > 0 && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_secure_priv_key_notice' ) ) {
+        if ( MainWP_DB::instance()->get_websites_count() > 0 && ! static::check_keys_encrypted() && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_secure_priv_key_notice' ) ) {
             ?>
             <div class="ui attention message">
                 <h3><?php esc_html_e( 'New Security Feature: OpenSSL Key Encryption', 'mainwp' ); ?></h3>
@@ -534,6 +532,28 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             <?php
         }
     }
+
+    /**
+     * Method check_keys_encrypted().
+     *
+     * @return bool Keys encrypted or not.
+     */
+    public static function check_keys_encrypted() {
+        if ( get_option( 'mainwp_keys_is_encrypted' ) ) {
+            return true;
+        }
+        $websites = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_websites_for_current_user( false, null, 'wp.url', false, false, null, true ) );
+        while ( $websites && ( $website = MainWP_DB::fetch_object( $websites ) ) ) {
+            // try to decrypt priv key.
+            $de_privkey = MainWP_Encrypt_Data_Lib::instance()->decrypt_privkey( base64_decode( $website->privkey ), $website->id );  // phpcs:ignore -- NOSONAR - base64_encode trust.
+            if ( ! empty( $de_privkey ) ) {
+                update_option( 'mainwp_keys_is_encrypted', 1 );
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Renders wp_mail warning.
@@ -983,7 +1003,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             if ( isset( $_GET['page'] ) && 'ManageClients' === $_GET['page'] && isset( $_GET['client_id'] ) && ! empty( $_GET['client_id'] ) ) {
                 $class_string .= ' mainwp-individual-client-overview ';
             }
-            if ( isset( $_GET['page'] ) && ( 'CostTrackerSettings' === $_GET['page'] || 'ServerInformation' === $_GET['page'] || 'ServerInformationCron' === $_GET['page'] || 'ErrorLog' === $_GET['page'] || 'ActionLogs' === $_GET['page'] || 'PluginPrivacy' === $_GET['page'] || 'Settings' === $_GET['page'] || 'SettingsAdvanced' === $_GET['page'] || 'SettingsMonitors' === $_GET['page'] || 'SettingsEmail' === $_GET['page'] || 'MainWPTools' === $_GET['page'] || 'SettingsInsights' === $_GET['page'] || 'SettingsApiBackups' === $_GET['page'] ) ) {
+            if ( isset( $_GET['page'] ) && ( 'CostTrackerSettings' === $_GET['page'] || 'ServerInformation' === $_GET['page'] || 'ServerInformationCron' === $_GET['page'] || 'ErrorLog' === $_GET['page'] || 'ActionLogs' === $_GET['page'] || 'PluginPrivacy' === $_GET['page'] || 'Settings' === $_GET['page'] || 'SettingsAdvanced' === $_GET['page'] || 'SettingsMonitors' === $_GET['page'] || 'SettingsEmail' === $_GET['page'] || 'MainWPTools' === $_GET['page'] || 'SettingsInsights' === $_GET['page'] || 'SettingsApiBackups' === $_GET['page'] || 'MonitoringSettings' === $_GET['page'] ) ) {
                 $class_string .= ' mainwp-individual-site-view ';
             }
             if ( isset( $_GET['page'] ) && 'CostTrackerAdd' !== $_GET['page'] && ( ( isset( $_GET['id'] ) && ! empty( $_GET['id'] ) ) || ( isset( $_GET['dashboard'] ) && ! empty( $_GET['dashboard'] ) ) || ( isset( $_GET['updateid'] ) && ! empty( $_GET['updateid'] ) ) || ( isset( $_GET['monitor_wpid'] ) && ! empty( $_GET['monitor_wpid'] ) ) || ( isset( $_GET['emailsettingsid'] ) && ! empty( $_GET['emailsettingsid'] ) ) || ( isset( $_GET['scanid'] ) && ! empty( $_GET['scanid'] ) ) ) ) {
@@ -1226,7 +1246,16 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             return;
         }
 
-        $websites = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_websites_for_current_user() );
+        $wpsite_fields = array( 'id', 'name', 'url', 'plugins' );
+        $sync_fields   = array( 'sync_errors', 'totalsize' );
+        $websites      = MainWP_DB::instance()->query(
+            MainWP_DB::instance()->get_sql_websites_for_current_user_by_params(
+                array(
+                    'select_wp_fields'   => $wpsite_fields,
+                    'select_sync_fields' => $sync_fields,
+                )
+            )
+        );
 
         if ( empty( $websites ) ) {
             return;
@@ -1261,6 +1290,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             return;
         }
 
+        $items_list_id = 'sync-sites-status';
         ?>
         <div class="ui modal" id="mainwp-install-check-modal" noti-slug="<?php echo esc_html( $check_slug ); ?>">
         <i class="mainwp-modal-close close icon"></i>
@@ -1268,7 +1298,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             <div class="scrolling content mainwp-modal-content">
                 <div class="ui message" id="mainwp-message-zone-install" style="display:none;"></div>
                 <div class="ui message blue"><?php printf( esc_html__( 'We have detected the following sites do not have the %s plugin installed. This plugin is required to be installed on your Child Sites for the Extension to work on those sites. Please select sites where you want to install it and click the Install Plugin button. Uncheck any site you don\'t want to add the plugin to or cancel to skip this step. After the installation process, resync your sites to see sites with the newly installed plugin.', 'mainwp' ), esc_html( $plugin_name ) ); ?></div>
-                <div class="ui middle aligned divided list" id="sync-sites-status">
+                <div class="ui middle aligned divided list" id="<?php echo esc_attr( $items_list_id ); ?>">
                     <?php foreach ( $missing_installed as $siteid => $site_name ) : ?>
                         <div class="item siteBulkInstall" siteid="<?php echo intval( $siteid ); ?>" status="">
                             <div class="right floated content">
@@ -1307,7 +1337,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
                         let noti_id = jQuery('#mainwp-install-check-modal').attr('noti-slug');
                         mainwp_notice_dismiss(noti_id, 1);
                         setTimeout(function () {
-                            window.location.href = location.href;
+                            mainwp_forceReload();
                         }, 1000);
                     },
                 }).modal('show');

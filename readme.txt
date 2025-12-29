@@ -5,9 +5,9 @@ Author: mainwp
 Author URI: https://mainwp.com
 Plugin URI: https://mainwp.com
 Requires at least: 6.2
-Tested up to: 6.8.2
+Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 5.4.0.20
+Stable tag: 6.0-er.1
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -127,7 +127,7 @@ Think of it as the word "Main" followed by the letters "WP" (pronounced as "doub
 *But don't worry if you pronounce it differently – we answer to almost anything, including WP Main and WPMain!*
 
 = I have an idea for MainWP; how do I let you know? =
-Please follow the steps outlined in the [MainWP Feature Requests](https://feedback.mainwp.com/) so you can add your idea to the MainWP Community to be voted on.
+Please follow the steps outlined in the [MainWP Voice](https://voice.mainwp.com/) so you can add your idea to the MainWP Community to be voted on.
 
 = I have more questions. Do you have any other information? =
 Yes, we have a quick FAQ with many more questions and answers [here](https://mainwp.com/preinstall-faq/).
@@ -146,6 +146,47 @@ Yes, we have a quick FAQ with many more questions and answers [here](https://mai
 10. Dashboard Insights
 
 == Changelog ==
+
+= 5.4.1 - Maintenance Release - 12-10-2025 =
+
+* Fixed: Resolved an issue where the OpenSSL Key encryption information banner was incorrectly displayed to all MainWP Dashboard administrators.
+* Fixed: Addressed a problem that caused delayed Downtime notifications from the Monitoring system on specific hosting setups.
+* Added: Implemented `AND` logic for filtering Tags in the "Manage Sites" list, allowing more precise filtering of site groups.
+* Updated: Improved output-escaping compliance throughout the plugin to meet WordPress coding standards.
+* Updated: Improved the logic used to detect when the `WP REST API` is disabled on the Dashboard site, providing more reliable behavior across different configurations.
+
+* Added: Abilities API integration providing 62 standardized abilities for managing sites, updates, clients, and tags
+* Added: REST API v2 endpoints exposing Abilities API for programmatic access and MCP tool integration
+* Added: Batch processing system with automatic queuing for operations exceeding 200 sites
+* Added: Background cron handlers for reliable processing of large-scale sync, update, and site management operations
+* Added: Job status polling via `mainwp/get-batch-job-status-v1` ability for monitoring long-running batch operations
+* Added: Comprehensive test coverage for all abilities including authentication, permissions, and input validation
+* Dev: New `mainwp_abilities_batch_threshold` filter to customize batch operation threshold (default: 200 sites)
+* Dev: Abilities API categories: mainwp-sites (30 abilities), mainwp-updates (13 abilities), mainwp-clients (11 abilities), mainwp-tags (7 abilities), mainwp-batch (1 ability)
+
+= 5.4.0.23 - Maintenance Release - 10-7-2025 =
+
+* Fixed: Corrected the flag icon displayed for the Catalan (ca) locale. [(#839)](https://github.com/mainwp/mainwp/issues/839)
+* Updated: Implemented small improvements to enhance the reliability of automatic updates across different server environments.
+* Updated: Enabled REST API v2 requests over HTTP protocol on localhost setups to facilitate local development and testing.
+* Updated: Standardized translation and escaping functions to ensure more reliable and consistent text formatting throughout the Dashboard ([PR838](https://github.com/mainwp/mainwp/pull/481)) - thanks [DAnn2012](https://github.com/DAnn2012)
+
+= 5.4.0.22 - Maintenance Release - 9-23-2025 =
+
+* Fixed: An issue where site tags were duplicated in the "Manage Sites" table display.
+* Fixed: Multiple localization issues to improve translation accuracy and consistency across different languages. ([PR832, PR833, PR834](https://github.com/mainwp/mainwp/pulls)) - thanks [DAnn2012](https://github.com/DAnn2012)
+* Fixed: An issue with generating site screenshots that occurred under specific server configurations.
+* Updated: Team Control support for the Cost Tracker module to enhance permission management and user access controls.
+* Updated: Team Control support for the Insights module to improve role-based access and data visibility controls.
+* Updated: Error messaging in REST API v2 to provide clearer feedback when connections are disallowed over HTTP protocol for security reasons.
+* Dev: SSL certificate verification control in the REST API v2 availability check by introducing an `sslverify` option in the HTTP arguments of `check_rest_api_enabled()` to provide more flexible SSL handling options. ([PR836](https://github.com/mainwp/mainwp/pull/836)) - thanks [Alexis](https://github.com/sixela)
+* Removed: Deprecated HTTP check notification code that was no longer in use to clean up the codebase and improve performance.
+
+= 5.4.0.21 - Maintenance Release - 8-26-2025 =
+
+* Fixed: Resolved database table creation issues for `wp_mainwp_wp` and `wp_mainwp_api_keys` on installations running PHP 8.4. [(#827)](https://github.com/mainwp/mainwp/issues/827)
+* Fixed: Eliminated multiple "Undefined array key" PHP warnings that occurred on fresh WordPress installations running PHP 8.4.
+* Updated: Changed mShot API base URL from `s0.wordpress.com` to s0.wp.com` to eliminate unnecessary redirections and improve screenshot generation performance.
 
 = 5.4.0.20 - Maintenance Release - 8-19-2025 =
 

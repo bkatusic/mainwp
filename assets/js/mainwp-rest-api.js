@@ -7,7 +7,7 @@ let bulk_RestAPITaskRunning = false;
 
 jQuery(function($) {
     $('body').on('click', '.copy-to-clipboard', function () {
-        alert('Copied!');
+        $('#mainwp-api-key-copied-confirm-modal').modal('show');
     });
     // Trigger Manage Bulk Actions
     jQuery(document).on('click', '#mainwp-do-rest-api-bulk-actions', function () {
@@ -50,7 +50,7 @@ let mainwp_restapi_remove_keys_next = function () {
     if ((bulk_RestAPITotal > 0) && (bulk_RestAPIFinished == bulk_RestAPITotal)) { // NOSONAR - modified outside the function.
         setHtml('#mainwp-message-zone-apikeys', __("Process completed. Reloading page..."));
         setTimeout(function () {
-            window.location.href = location.href;
+            mainwp_forceReload();
         }, 3000);
     }
 }

@@ -312,15 +312,8 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                 </div>
             </div>
             <div class="ui segment" id="mainwp-3rd-party-api-backups">
-            <?php if ( Api_Backups_Utility::show_mainwp_message( 'mainwp-module-api-backups-info-message' ) ) : ?>
-                    <div class="ui info message">
-                        <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-module-api-backups-info-message"></i>
-                        <div><?php esc_html_e( 'This page will list the last backups created by the API Backups Extension for each Child Site that is setup with an API provider.', 'mainwp' ); ?></div>
-                    </div>
-                <?php endif; ?>
             <?php static::action_notifications(); ?>
             <?php static::render_api_backups_table( '3rd-party-api-backups' ); ?>
-
             </div>
             <?php
     }
@@ -354,9 +347,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                         </span>
                     </th>
                     <th scope="col"><?php esc_html_e( 'Site', 'mainwp' ); ?></th>
-                    <th scope="col" class="no-sort collapsing"><i class="sign in alternate icon"></i></th>
-                    <th scope="col"><?php esc_html_e( 'URL', 'mainwp' ); ?></th>
-                    <th scope="col"><?php esc_html_e( 'Provider', 'mainwp' ); ?></th>
+                    <th scope="col"><?php esc_html_e( 'API Provider', 'mainwp' ); ?></th>
                     <th scope="col"><?php esc_html_e( 'Last Manual Backup Date', 'mainwp' ); ?></th>
                     <th scope="col" class="no-sort collapsing"></th>
                 </tr>
@@ -403,14 +394,18 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                 </span>
                             <?php endif; ?>
                         </td>
-                        <td><a href="admin.php?page=ManageSitesApiBackups&id=<?php echo intval( $website->id ); ?>"><?php esc_html_e( $website->name, 'mainwp' ); ?></a> <span class="running"></span></td>
                         <td>
-                            <a href="<?php echo 'admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ); ?>&_opennonce=<?php echo esc_attr( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank">
-                                <i class="sign in alternate icon"></i>
-                            </a>
+                            <div>
+                                <a href="<?php echo 'admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ); ?>&_opennonce=<?php echo esc_attr( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank">
+                                    <i class="sign in alternate icon"></i>
+                                </a>
+                                <a href="admin.php?page=ManageSitesApiBackups&id=<?php echo intval( $website->id ); ?>"><?php esc_html_e( $website->name, 'mainwp' ); ?></a> <span class="running"></span>
+                            </div>
+                            <span class="ui small text">
+                                <a href="<?php echo esc_url( $website->url ); ?>" target="_blank" class="ui grey text"><?php echo esc_url( $website->url ); ?></a>
+                            </span>
                         </td>
-                        <td><a href="<?php echo esc_url( $website->url ); ?>" target="_blank"><?php echo esc_url( $website->url ); ?></a></td>
-                        <td><?php esc_html_e( $api_provider, 'mainwp' ); ?></td>
+                        <td><?php echo esc_html( $api_provider ); ?></td>
                         <td class="last-backup-date" ><?php echo ( $last_backup ) ? esc_html( $last_backup ) : esc_html__( 'Awaiting first backup', 'mainwp' ); ?></td>
                         <td class="collapsing not-selectable">
                             <i class="ui notched circle loading icon" style="display:none;"></i>
@@ -418,7 +413,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                 <a href="javascript:void(0)"><i class="ellipsis vertical icon"></i></a>
                                 <div class="menu">
                                     <?php if ( 'cPanel' === $api_provider ) : ?>
-                                        <a class="mainwp_3rd_party_api_<?php esc_attr_e( $api_provider_options ); ?>_action_full_backup item"
+                                        <a class="mainwp_3rd_party_api_<?php esc_attr_e( $api_provider_options, 'mainwp' ); ?>_action_full_backup item"
                                             website_id="<?php echo intval( $website->id ); ?>" href="javascript:void(0)">
                                             <?php esc_html_e( 'Backup', 'mainwp' ); ?>
                                         </a>
@@ -459,7 +454,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                             setTimeout(() => {
                                 jQuery('#mainwp-3rd-party-backups-table .ui.checkbox').checkbox();
                                 jQuery('.mainwp-api-backup-table .ui.dropdown').dropdown();
-                                mainwp_datatable_fix_menu_overflow();
+                                mainwp_datatable_fix_menu_overflow('#mainwp-3rd-party-backups-table');
                             }, 1000);
                         },
                         select: {
@@ -480,11 +475,10 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                             .to$().find('td.check-column .ui.checkbox' ).checkbox('set unchecked');
                         }
                     }).on( 'columns-reordered', function () {
-                        console.log('columns-reordered');
                         setTimeout(() => {
                             jQuery( '#mainwp-3rd-party-backups-table .ui.dropdown' ).dropdown();
                             jQuery( '#mainwp-3rd-party-backups-table .ui.checkbox' ).checkbox();
-                            mainwp_datatable_fix_menu_overflow();
+                            mainwp_datatable_fix_menu_overflow('#mainwp-3rd-party-backups-table');
                             mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
                         }, 1000);
                     });
@@ -534,45 +528,21 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
         }
 
         if ( empty( $backup_api ) ) {
+            $title   = esc_html__( 'No API Backup Solution has been chosen.', 'mainwp' );
+            $message = esc_html__( 'Please double check that you have set the API Key on the API Backups Settings page and have set the Instance ID on the Child Site -> Edit page.', 'mainwp' );
+            $icon    = '<em data-emoji=":closed_lock_with_key:" class="big"></em>';
+            \MainWP\Dashboard\MainWP_UI::render_empty_page_placeholder( $title, $message, $icon );
+        } else {
+            $columns = 'one';
+            if ( 'cpanel' === $backup_api || 'plesk' === $backup_api ) {
+                $columns = 'two';
+            }
             ?>
-                <div class="ui placeholder segment">
-                    <div class="ui icon header">
-                        <i class="key icon"></i>
-                    <?php
-                        printf(
-                            esc_html__(
-                                '%1$sNo API Backup Solution has been chosen.%2$s
-                    Please double check that you have set the %3$sAPI Key%4$s
-                    on the %5$s page%6$s
-                    and have set the %7$sInstance ID%8$s on the %9$s page.',
-                                'mainwp'
-                            ),
-                            '<em>',
-                            '</em> <br/><br>',
-                            '<em>',
-                            '</em>',
-                            '<a href="admin.php?page=SettingsApiBackups">API Backups Settings</a>',
-                            '</br>',
-                            '<em>',
-                            '</em>',
-                            '<a href="admin.php?page=managesites&id=' . intval( $website_id ) . '">Child Site -> Edit</a>'
-                        );
-                    ?>
-                    </div>
-                </div>
-            <?php } else { ?>
-
-                <?php
-                $columns = 'one';
-                if ( 'cpanel' === $backup_api || 'plesk' === $backup_api ) {
-                    $columns = 'two';
-                }
-                ?>
                 <div class="mainwp-sub-header">
                     <div class="ui grid">
                         <div class="ui <?php echo esc_html( $columns ); ?> column row">
                                 <div class="middle aligned column ui">
-                                    <?php if ( 'cpanel' === $backup_api ) : ?>
+                                <?php if ( 'cpanel' === $backup_api ) : ?>
                                         <div id="mainwp_api_cpanel_backup_tabs" class="ui top attached tabular menu">
                                             <div class="active item" data-tab="cpanel-native"><i class="fitted cpanel big icon"></i></div>
                                             <div class="item" data-tab="cpanel-wp-toolkit"><i class="fitted wordpress big icon"></i></div><?php //phpcs:ignore -- skip wordpress.?>
@@ -580,29 +550,29 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                     <?php endif; ?>
                                 </div>
                             <div class="right aligned middle aligned column">
-                                <?php if ( 'cpanel' === $backup_api ) : ?>
-                                    <button id="mainwp_3rd_party_api_<?php esc_attr_e( $backup_api ); ?>_action_create_full_backup" website_id="<?php echo intval( $website['id'] ); ?>" class="ui mini green button"><?php esc_html_e( 'Backup Files &amp; Database', 'mainwp' ); ?></button>
-                                    <button id="mainwp_3rd_party_api_<?php esc_attr_e( $backup_api ); ?>_action_create_wptk_backup" website_id="<?php echo intval( $website['id'] ); ?>" class="ui mini green button hidden"><?php esc_html_e( 'Backup Now', 'mainwp' ); ?></button>
+                            <?php if ( 'cpanel' === $backup_api ) : ?>
+                                    <button id="mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_create_full_backup" website_id="<?php echo intval( $website['id'] ); ?>" class="ui mini green button"><?php esc_html_e( 'Backup Files &amp; Database', 'mainwp' ); ?></button>
+                                    <button id="mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_create_wptk_backup" website_id="<?php echo intval( $website['id'] ); ?>" class="ui mini green button hidden"><?php esc_html_e( 'Backup Now', 'mainwp' ); ?></button>
                                 <?php else : ?>
-                                    <button id="mainwp_3rd_party_api_<?php esc_attr_e( $backup_api ); ?>_action_individual_create_backup" website_id="<?php echo intval( $website['id'] ); ?>" class="ui mini green button"><?php esc_html_e( 'Backup Now', 'mainwp' ); ?></button>
+                                    <button id="mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_individual_create_backup" website_id="<?php echo intval( $website['id'] ); ?>" class="ui mini green button"><?php esc_html_e( 'Backup Now', 'mainwp' ); ?></button>
                                 <?php endif; ?>
-                                <button id="mainwp_3rd_party_api_<?php esc_attr_e( $backup_api ); ?>_action_refresh_available_backups" website_id="<?php echo intval( $website['id'] ); ?>" class="ui mini green button"><?php esc_html_e( 'Refresh Available Backups', 'mainwp' ); ?></button>
+                                <button id="mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_refresh_available_backups" website_id="<?php echo intval( $website['id'] ); ?>" class="ui mini green button"><?php esc_html_e( 'Refresh Available Backups', 'mainwp' ); ?></button>
 
-                                <?php // Render DigitalOcean specific action buttons. ?>
-                                <?php
-                                if ( 'digitalocean' === $backup_api ) {
-                                    // Grab Linode instance id.
-                                    $digitalocean_droplet_id = Api_Backups_Helper::get_website_options(
-                                        $website,
-                                        array(
-                                            'mainwp_3rd_party_instance_id',
-                                        )
-                                    );
-                                    $droplet_id              = isset( $digitalocean_droplet_id['mainwp_3rd_party_instance_id'] ) ? $digitalocean_droplet_id['mainwp_3rd_party_instance_id'] : null;
-                                    ?>
+                            <?php // Render DigitalOcean specific action buttons. ?>
+                            <?php
+                            if ( 'digitalocean' === $backup_api ) {
+                                // Grab Linode instance id.
+                                $digitalocean_droplet_id = Api_Backups_Helper::get_website_options(
+                                    $website,
+                                    array(
+                                        'mainwp_3rd_party_instance_id',
+                                    )
+                                );
+                                $droplet_id              = isset( $digitalocean_droplet_id['mainwp_3rd_party_instance_id'] ) ? $digitalocean_droplet_id['mainwp_3rd_party_instance_id'] : null;
+                                ?>
                                         <a href="https://cloud.digitalocean.com/droplets/<?php echo esc_attr( $droplet_id ); ?>/snapshots" target="_blank" class="ui mini button">
                                             <i class="external icon"></i>
-                                        <?php esc_html_e( 'View on DigitalOcean', 'mainwp' ); ?>
+                                    <?php esc_html_e( 'View on DigitalOcean', 'mainwp' ); ?>
                                         </a>
                                     <?php } ?>
                                 <?php // Render Linode specific action buttons. ?>
@@ -617,7 +587,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                     );
                                     $instance_id        = isset( $linode_instance_id['mainwp_3rd_party_instance_id'] ) ? $linode_instance_id['mainwp_3rd_party_instance_id'] : null;
                                     ?>
-                                        <button id="mainwp_3rd_party_api_<?php esc_attr_e( $backup_api ); ?>_action_cancel_backups" website_id="<?php echo intval( $website['id'] ); ?>" class="ui mini button"><?php esc_html_e( 'Disable & Remove Backups on This Linode', 'mainwp' ); ?></button>
+                                        <button id="mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_cancel_backups" website_id="<?php echo intval( $website['id'] ); ?>" class="ui mini button"><?php esc_html_e( 'Disable & Remove Backups on This Linode', 'mainwp' ); ?></button>
                                         <a href="https://cloud.linode.com/linodes/<?php echo esc_attr( $instance_id ); ?>/backup" target="_blank" class="ui mini button">
                                             <i class="external icon"></i>
                                         <?php esc_html_e( 'View on Akamai (Linode)', 'mainwp' ); ?>
@@ -630,7 +600,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                     $site_options = Api_Backups_Helper::get_website_options( $website, array( 'mainwp_3rd_party_app_id' ) );
                                     $app_id       = isset( $site_options['mainwp_3rd_party_app_id'] ) ? $site_options['mainwp_3rd_party_app_id'] : null;
                                     ?>
-                                        <button id="mainwp_3rd_party_api_<?php esc_attr_e( $backup_api ); ?>_action_delete_backup" website_id="<?php echo intval( $website['id'] ); ?>" class="ui mini button"><?php esc_html_e( 'Delete 24hr Restore Point', 'mainwp' ); ?></button>
+                                        <button id="mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_delete_backup" website_id="<?php echo intval( $website['id'] ); ?>" class="ui mini button"><?php esc_html_e( 'Delete 24hr Restore Point', 'mainwp' ); ?></button>
                                         <a href="https://platform.cloudways.com/apps/<?php echo esc_attr( $app_id ); ?>/restore" target="_blank" class="ui mini button">
                                             <i class="external icon"></i>
                                         <?php esc_html_e( 'View on Cloudways', 'mainwp' ); ?>
@@ -738,8 +708,10 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-module-api-backups-info-message"></i>
                                 <div><?php esc_html_e( 'You can create up to 5 manual backups. Each manual backup will be stored for 14 days.', 'mainwp' ); ?></div>
                             </div>
-                        <?php endif; ?>
-                        <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%">
+                        <?php endif;
+                        $el_id_wp_1 = $website['id'];
+                        ?>
+                        <table id="mainwp-siteid-<?php echo intval( $el_id_wp_1 ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%">
                             <thead>
                             <tr>
                                 <th  scope="col"><?php esc_html_e( 'Backup Name', 'mainwp' ); ?></th>
@@ -757,7 +729,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                 $backup_date = Api_Backups_Utility::format_timestamp( intval( $backup->created_at / 1000 ) );
                                 ?>
                                 <tr>
-                                    <td class="collapsing"><?php esc_html_e( $backup->name ); ?></td>
+                                    <td class="collapsing"><?php echo esc_html( $backup->name ); ?></td>
                                     <td class="collapsing"><?php echo esc_html( $backup->note ); ?></td>
                                     <td class="collapsing"><?php echo esc_html( $backup->type ); ?></td>
                                     <td class="collapsing"><?php echo esc_html( $backup_date ); ?></td>
@@ -795,7 +767,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                             </tfoot>
                         </table>
                         <div class="ui divider hidden"></div>
-                        <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%">
+                        <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%"> <?php // NOSONAR - id ok. ?>
                             <thead>
                             <tr>
                                 <th scope="col" colspan="3">
@@ -833,8 +805,8 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                         ?>
 
                                         <tr>
-                                            <td class="collapsing"><?php esc_html_e( $created_date ); ?></td>
-                                            <td class="collapsing"><?php esc_html_e( $expiry_date ); ?></td>
+                                            <td class="collapsing"><?php echo esc_html( $created_date ); ?></td>
+                                            <td class="collapsing"><?php echo esc_html( $expiry_date ); ?></td>
                                             <td>
                                                 <a class="kinsta_download" href="<?php echo esc_attr( $backup->download_link ); ?>" target="_blank">
                                                     <button class="ui right labeled icon button">
@@ -846,8 +818,8 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                         </tr>
                                     <?php } else { ?>
                                         <tr class="disabled">
-                                            <td class="collapsing"><?php esc_html_e( $created_date ); ?></td>
-                                            <td class="collapsing"><?php esc_html_e( $expiry_date ); ?></td>
+                                            <td class="collapsing"><?php echo esc_html( $created_date ); ?></td>
+                                            <td class="collapsing"><?php echo esc_html( $expiry_date ); ?></td>
                                             <td>
                                                 <a class="kinsta_download" href="<?php echo esc_attr( $backup->download_link ); ?>" target="_blank">
                                                     <button class="ui right labeled icon button disabled">
@@ -880,7 +852,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                         $available_backups = array();
                     }
                     ?>
-                        <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%">
+                        <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%"> <?php // NOSONAR - id ok. ?>
                             <thead>
                             <tr>
                                 <th scope="col"><?php esc_html_e( 'Backup Name', 'mainwp' ); ?></th>
@@ -906,7 +878,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                 }
                                 ?>
                                 <tr>
-                                    <td class="collapsing"><?php esc_html_e( $backup->value->fileName->value ); ?></td>
+                                    <td class="collapsing"><?php echo esc_html( $backup->value->fileName->value ); ?></td>
                                     <td class="collapsing"><?php echo esc_html( $backup_date ); ?></td>
                                     <td></td>
                                     <td class="collapsing right aligned">
@@ -1008,7 +980,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                     }
                     ?>
                     <div class="ui bottom attached active tab" data-tab="cpanel-native">
-                            <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%">
+                            <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%"> <?php // NOSONAR - id ok. ?>
                                 <thead>
                                 <tr>
                                     <th scope="col" colspan="4">
@@ -1025,9 +997,9 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                 <tbody>
                                 <?php foreach ( $available_backups_automatic_list as $backup ) { ?>
                                     <tr>
-                                        <td><?php esc_html_e( $backup->backupID ); ?></td>
+                                        <td><?php echo esc_html( $backup->backupID ); ?></td>
                                         <td><?php esc_html_e( ucfirst( $backup->backupType ), 'mainwp' ); ?></td>
-                                        <td><?php echo esc_html_e( $backup->path ); ?></td>
+                                        <td><?php echo esc_html( $backup->path ); ?></td>
                                         <td>
                                             <a id="cpanel_automatic_backup_button" class="mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_restore_backup item"
                                                 website_id="<?php echo intval( $website['id'] ); ?>"
@@ -1054,7 +1026,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                 </tfoot>
                         </table>
                         <div class="ui divider hidden"></div>
-                        <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%">
+                        <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%"> <?php // NOSONAR - id ok. ?>
                                 <thead>
                                 <tr>
                                     <th scope="col" colspan="3">
@@ -1063,7 +1035,10 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                                 <?php esc_html_e( 'Manual Account Backups', 'mainwp' ); ?>
                                             </div>
                                             <div class="right aligned middle aligned column">
-                                                <button id="mainwp_3rd_party_api_<?php esc_attr_e( $backup_api ); ?>_action_individual_create_backup" website_id="<?php echo intval( $website['id'] ); ?>" class="ui primary elastic green button"><?php esc_html_e( 'Backup', 'mainwp' ); ?></button>
+                                                <?php
+                                                $el_id_cp_api = $backup_api;
+                                                ?>
+                                                <button id="mainwp_3rd_party_api_<?php echo esc_attr( $el_id_cp_api ); ?>_action_individual_create_backup" website_id="<?php echo intval( $website['id'] ); ?>" class="ui primary elastic green button"><?php esc_html_e( 'Backup', 'mainwp' ); ?></button>
                                             </div>
                                         </div>
                                     </th>
@@ -1071,7 +1046,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                 <tr>
                                     <th scope="col" ><?php esc_html_e( 'Backup Name', 'mainwp' ); ?></th>
                                     <th scope="col" ><?php esc_html_e( 'Date Created', 'mainwp' ); ?></th>
-                                    <th scope="col" ="no-sort collapsing"></th>
+                                    <th scope="col" class="no-sort collapsing"></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -1081,8 +1056,8 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                     $backup_date       = get_date_from_gmt( gmdate( 'Y-m-d H:i:s', $my_unix_timestamp ), get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) );
                                     ?>
                                     <tr>
-                                        <td class="collapsing"><?php esc_html_e( $backup->file_name ); ?></td>
-                                        <td class="collapsing"><?php esc_html_e( $backup_date ); ?></td>
+                                        <td class="collapsing"><?php echo esc_html( $backup->file_name ); ?></td>
+                                        <td class="collapsing"><?php echo esc_html( $backup_date ); ?></td>
                                         <td>
                                             <?php
                                                 $file_path = $backup->absolute_dir . '/';
@@ -1106,7 +1081,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                 </tfoot>
                             </table>
                         <div class="ui divider hidden"></div>
-                            <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%">
+                            <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%"> <?php // NOSONAR - id ok. ?>
                                 <thead>
                                 <tr>
                                     <th scope="col" colspan="3">
@@ -1115,7 +1090,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                                 <?php esc_html_e( 'Manual Database Backups', 'mainwp' ); ?>
                                             </div>
                                             <div class="right aligned middle aligned column">
-                                                <button id="mainwp_3rd_party_api_<?php esc_attr_e( $backup_api ); ?>_action_create_database_backup" website_id="<?php echo intval( $website['id'] ); ?>" class="ui primary elastic green button"><?php esc_html_e( 'Backup', 'mainwp' ); ?></button>
+                                                <button id="mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_create_database_backup" website_id="<?php echo intval( $website['id'] ); ?>" class="ui primary elastic green button"><?php esc_html_e( 'Backup', 'mainwp' ); ?></button>
                                             </div>
                                         </div>
                                     </th>
@@ -1133,8 +1108,8 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                     $backup_date       = get_date_from_gmt( gmdate( 'Y-m-d H:i:s', $my_unix_timestamp ), get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) );
                                     ?>
                                     <tr>
-                                        <td class="collapsing"><?php esc_html_e( $backup->file_name ); ?></td>
-                                        <td class="collapsing"><?php esc_html_e( $backup_date ); ?></td>
+                                        <td class="collapsing"><?php echo esc_html( $backup->file_name ); ?></td>
+                                        <td class="collapsing"><?php echo esc_html( $backup_date ); ?></td>
                                         <td>
                                             <a id="database_backup_button" class="mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_restore_database_backup item"
                                                 website_id="<?php echo intval( $website['id'] ); ?>"
@@ -1214,7 +1189,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                         $backup_date       = get_date_from_gmt( gmdate( 'Y-m-d H:i:s', $my_unix_timestamp ), get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) );
                                         ?>
                                         <tr>
-                                            <td class=""><?php esc_html_e( $backup->value->fileName->value ); ?></td>
+                                            <td class=""><?php echo esc_html( $backup->value->fileName->value ); ?></td>
                                             <td class=""><?php echo esc_html( $backup_date ); ?></td>
                                             <td></td>
                                             <td class="right aligned">
@@ -1265,31 +1240,12 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                     </tfoot>
                                 </table>
                         <?php else : // Display message if WP-Toolkit is not enabled. ?>
-                            <div class="ui placeholder segment">
-                                <div class="ui icon header">
-                                    <i class="key icon"></i>
-                                    <?php
-                                    printf(
-                                        esc_html__(
-                                            '%1$sThe WP-Toolkit API has not been enabled.%2$s
-                                        Please double check that you have set the cPanel %3$sAPI Key%4$s
-                                        on the %5$s page%6$s
-                                        and have enabled the %7$sWP Toolkit API%8$s on the %9$s page.',
-                                            'mainwp'
-                                        ),
-                                        '<em>',
-                                        '</em> <br/><br>',
-                                        '<em>',
-                                        '</em>',
-                                        '<a href="admin.php?page=SettingsApiBackups">API Backups Settings</a>',
-                                        '</br>',
-                                        '<em>',
-                                        '</em>',
-                                        '<a href="admin.php?page=managesites&id=' . intval( $website_id ) . '">Child Site -> Edit</a>'
-                                    );
-                                    ?>
-                                </div>
-                            </div>
+                            <?php
+                            $title   = esc_html__( 'The WP-Toolkit API has not been enabled.', 'mainwp' );
+                            $message = esc_html__( 'Please double check that you have set the cPanel API Key on the API Backups Settings page and have enabled the WP Toolkit API on the Child Site -> Edit page.', 'mainwp' );
+                            $icon    = '<em data-emoji=":closed_lock_with_key:" class="big"></em>';
+                            \MainWP\Dashboard\MainWP_UI::render_empty_page_placeholder( $title, $message, $icon );
+                            ?>
                         <?php endif; ?>
                     </div>
                 <?php } ?>
@@ -1307,7 +1263,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                         $available_backups_manual_list = array();
                     }
                     ?>
-                        <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%">
+                        <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%"> <?php // NOSONAR - id ok. ?>
                             <thead>
                             <tr>
                                 <th scope="col" ><?php esc_html_e( 'GridPane Backup Name', 'mainwp' ); ?></th>
@@ -1319,7 +1275,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                             <tbody>
                             <?php foreach ( $available_backups_automatic_list as $backup ) { ?>
                                 <tr>
-                                    <td><i class="ui notched circle loading icon" style="display:none;"></i> <?php esc_html_e( $backup ); ?></td>
+                                    <td><i class="ui notched circle loading icon" style="display:none;"></i> <?php echo esc_html( $backup ); ?></td>
                                     <td><?php esc_html_e( 'Automatic', 'mainwp' ); ?></td>
                                     <td></td>
                                     <td class="collapsing right aligned">
@@ -1342,7 +1298,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                             <?php } ?>
                             <?php foreach ( $available_backups_manual_list as $backup ) { ?>
                                 <tr>
-                                    <td><i class="ui notched circle loading icon" style="display:none;"></i> <?php esc_html_e( $backup ); ?></td>
+                                    <td><i class="ui notched circle loading icon" style="display:none;"></i> <?php echo esc_html( $backup ); ?></td>
                                     <td><?php esc_html_e( 'Manual', 'mainwp' ); ?></td>
                                     <td></td>
                                     <td class="collapsing right aligned">
@@ -1353,7 +1309,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                             href="javascript:void(0)">
                                             <i class="undo icon"></i>
                                         </a>
-                                        <a class="mainwp_3rd_party_api_<?php esc_attr_e( $backup_api ); ?>_action_delete_backup ui mini icon button"
+                                        <a class="mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_delete_backup ui mini icon button"
                                             website_id="<?php echo intval( $website['id'] ); ?>"
                                             backup_type="<?php echo esc_attr( 'manual' ); ?>"
                                             backup_name="<?php echo esc_attr( $backup ); ?>"
@@ -1386,7 +1342,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                     }
 
                     ?>
-                        <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%">
+                        <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%"> <?php // NOSONAR - id ok. ?>
                             <thead>
                             <tr>
                                 <th scope="col" ><?php esc_html_e( 'Cloudways Backup Type', 'mainwp' ); ?></th>
@@ -1431,7 +1387,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                         $available_backups_list = array();
                     }
                     ?>
-                        <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%">
+                        <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%"> <?php // NOSONAR - id ok. ?>
                             <thead>
                             <tr>
                                 <th scope="col" ><?php esc_html_e( 'Vultr Backup Label', 'mainwp' ); ?></th>
@@ -1483,7 +1439,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                             href="javascript:void(0)">
                                             <i class="undo icon"></i>
                                         </a>
-                                        <a class="mainwp_3rd_party_api_<?php esc_attr_e( $backup_api ); ?>_action_delete_backup ui mini icon button"
+                                        <a class="mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_delete_backup ui mini icon button"
                                             website_id="<?php echo intval( $website['id'] ); ?>"
                                             snapshot_id="<?php echo esc_attr( $backup->id ); ?>"
                                             href="javascript:void(0)">
@@ -1524,7 +1480,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                         $available_backups_snapshot_list = array();
                     }
                     ?>
-                        <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%">
+                        <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%"> <?php // NOSONAR - id ok. ?>
                             <thead>
                             <tr>
                                 <th scope="col" ><?php esc_html_e( 'Akamai (Linode) Backup Type', 'mainwp' ); ?></th>
@@ -1538,7 +1494,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                             <tbody>
                             <?php foreach ( $available_backups_automatic_list as $backup ) { ?>
                                 <tr>
-                                    <td><i class="ui notched circle loading icon" style="display:none;"></i> <?php esc_html_e( $backup->type ); ?></td>
+                                    <td><i class="ui notched circle loading icon" style="display:none;"></i> <?php echo esc_html( $backup->type ); ?></td>
                                     <td><?php echo esc_html( Api_Backups_Utility::format_timestamp( strtotime( $backup->created ) ) ); ?></td>
                                     <td class="operation_status"><?php echo esc_html( $backup->status ); ?></td>
                                     <td></td>
@@ -1557,7 +1513,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                             <?php foreach ( $available_backups_snapshot_list as $backup ) { ?>
                                 <?php if ( null !== $backup ) { ?>
                                     <tr>
-                                        <td><i class="ui notched circle loading icon" style="display:none;"></i> <?php esc_html_e( $backup->type ); ?></td>
+                                        <td><i class="ui notched circle loading icon" style="display:none;"></i> <?php echo esc_html( $backup->type ); ?></td>
                                         <td><?php echo esc_html( Api_Backups_Utility::format_timestamp( strtotime( $backup->created ) ) ); ?></td>
                                         <td><?php echo esc_html( $backup->status ); ?></td>
                                         <td></td>
@@ -1598,7 +1554,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                         $available_backups = array();
                     }
                     ?>
-                    <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%">
+                    <table id="mainwp-siteid-<?php echo intval( $website['id'] ); ?>-table" class="ui mainwp-api-backup-table table" style="width:100%"> <?php // NOSONAR - id ok. ?>
                         <thead>
                         <tr>
                             <th scope="col" ><?php esc_html_e( 'DigitalOcean Backup Label', 'mainwp' ); ?></th>
@@ -1611,7 +1567,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                         <tbody>
                         <?php foreach ( $available_backups as $backup ) { ?>
                             <tr>
-                                <td><i class="ui notched circle loading icon" style="display:none;"></i> <?php esc_html_e( $backup->name ); ?></td>
+                                <td><i class="ui notched circle loading icon" style="display:none;"></i> <?php echo esc_html( $backup->name ); ?></td>
                                 <td><?php echo intval( $backup->size_gigabytes ); ?>GB</td>
                                 <td><?php echo esc_html( Api_Backups_Utility::format_timestamp( strtotime( $backup->created_at ) ) ); ?></td>
                                 <td></td>
@@ -1622,7 +1578,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                         href="javascript:void(0)">
                                         <i class="undo icon"></i>
                                     </a>
-                                    <a class="mainwp_3rd_party_api_<?php esc_attr_e( $backup_api ); ?>_action_delete_backup ui mini icon button"
+                                    <a class="mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_delete_backup ui mini icon button"
                                         website_id="<?php echo intval( $website['id'] ); ?>"
                                         snapshot_id="<?php echo esc_attr( $backup->id ); ?>"
                                         href="javascript:void(0)">
@@ -1670,7 +1626,6 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                 }, 1000);
                             }
                         } ).on( 'columns-reordered', function () {
-                            console.log('columns-reordered');
                             setTimeout(() => {
                                 jQuery( '.mainwp-api-backup-table .ui.dropdown' ).dropdown();
                                 jQuery( '.mainwp-api-backup-table .ui.checkbox' ).checkbox();
@@ -1681,7 +1636,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                     } );
                 </script>
             <?php
-            } // END if.
+        } // END if.
     }
 
     /*********************************************************************************

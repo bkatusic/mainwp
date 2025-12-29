@@ -785,8 +785,8 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         ?>
         <div id="mainwp_pages_error"></div>
         <div id="mainwp-loading-pages-row" style="display: none;">
-            <div class="ui active inverted dimmer">
-                <div class="ui indeterminate large text loader"><?php esc_html_e( 'Loading Pages...', 'mainwp' ); ?></div>
+            <div class="ui active dimmer">
+                <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
             </div>
         </div>
         <?php
@@ -892,11 +892,10 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     } ],
                     "language" : { "emptyTable": "<?php esc_html_e( 'Use the search options to find the page you want to manage.', 'mainwp' ); ?>" },
                     "drawCallback": function( settings ) {
-                        console.log('drawCallback page');
                         setTimeout(() => { // to fix.
                             jQuery( '#mainwp_pages_wrap_table table .ui.dropdown' ).dropdown();
                             jQuery( '#mainwp_pages_wrap_table table .ui.checkbox' ).checkbox();
-                            mainwp_datatable_fix_menu_overflow();
+                            mainwp_datatable_fix_menu_overflow('#mainwp_pages_wrap_table');
                             mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
                         }, 1000);
                     },
@@ -918,11 +917,10 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         .to$().find('td.check-column .ui.checkbox' ).checkbox('set unchecked');
                     }
                 }).on( 'columns-reordered', function () {
-                    console.log('columns-reordered');
                     setTimeout(() => { // to fix.
                         jQuery( '#mainwp_pages_wrap_table table .ui.dropdown' ).dropdown();
                         jQuery( '#mainwp_pages_wrap_table table .ui.checkbox' ).checkbox();
-                        mainwp_datatable_fix_menu_overflow();
+                        mainwp_datatable_fix_menu_overflow('#mainwp_pages_wrap_table table');
                         mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
                     }, 1000);
                 });
@@ -1704,8 +1702,8 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 <a href="admin.php?page=PageBulkAdd" class="ui green button new-bulk-page"><?php esc_html_e( 'New Page', 'mainwp' ); ?></a>
             </div>
         </div>
-        <div class="ui active inverted dimmer" id="mainwp-posting-running">
-            <div class="ui indeterminate large text loader"><?php esc_html_e( 'Running ...', 'mainwp' ); ?></div>
+        <div class="ui active dimmer" id="mainwp-posting-running">
+            <div class="ui double text loader"><?php esc_html_e( 'Running ...', 'mainwp' ); ?></div>
         </div>
         <script type="text/javascript">
             jQuery( document ).ready( function () {
@@ -1713,7 +1711,7 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 jQuery( "#mainwp-posting-page-modal" ).modal( {
                     closable: true,
                     onHide: function() {
-                        location.href = 'admin.php?page=PageBulkManage';
+                        mainwp_forceReload('admin.php?page=PageBulkManage');
                     }
                 } ).modal( 'show' );
             } );

@@ -1,0 +1,326 @@
+<?php
+/**
+ * MainWP DeleteSitePlugins Ability Tests
+ *
+ * Tests for the mainwp/delete-site-plugins-v1 ability.
+ *
+ * @package MainWP\Dashboard\Tests
+ */
+
+namespace MainWP\Dashboard\Tests;
+
+/**
+ * Tests for mainwp/delete-site-plugins-v1 ability.
+ *
+ * @group abilities
+ * @group abilities-sites
+ */
+class Test_DeleteSitePlugins_Ability extends MainWP_Abilities_Test_Case {
+
+    /**
+     * Test that the ability is registered.
+     *
+     * @return void
+     */
+    public function test_ability_is_registered() {
+        $this->skip_if_no_abilities_api();
+
+        $ability = wp_get_ability( 'mainwp/delete-site-plugins-v1' );
+        $this->assertNotNull( $ability, 'Ability mainwp/delete-site-plugins-v1 should be registered.' );
+    }
+
+    /**
+     * Test successful execution with valid input.
+     *
+     * @return void
+     */
+    public function test_delete_site_plugins_returns_expected_structure() {
+        $this->skip_if_no_abilities_api();
+        $this->set_current_user_as_admin();
+
+        $site_id = $this->create_test_site( [
+            'name' => 'Test Site',
+            'url'  => 'https://test-delete-site-plugins.example.com/',
+        ] );
+
+        // Mock child site response to bypass OpenSSL signing with test keys.
+        $this->mock_child_site_response( $site_id, [
+            'plugin' => [
+                'hello-dolly/hello.php' => true,
+            ],
+        ] );
+
+        $result = $this->execute_ability( 'mainwp/delete-site-plugins-v1', [
+            'site_id_or_domain' => $site_id,
+            'plugins'           => ['hello-dolly/hello.php'],
+            'confirm'           => true,
+        ] );
+
+        $this->assertNotWPError( $result, 'Should return successful result.' );
+        $this->assertIsArray( $result );
+        $this->assertArrayHasKey('deleted', $result);
+        $this->assertArrayHasKey('errors', $result);
+        $this->assertIsArray($result['deleted']);
+    }
+
+    /**
+     * Test that unauthenticated users are denied.
+     *
+     * @return void
+     */
+    public function test_delete_site_plugins_requires_authentication() {
+        $this->skip_if_no_abilities_api();
+
+        wp_set_current_user( 0 );
+
+		// Expect the "doing it wrong" notice from WP_Ability::execute.
+		$this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+        $result = $this->execute_ability( 'mainwp/delete-site-plugins-v1', [
+            'site_id_or_domain' => 1,
+            'plugins'           => [ 'hello-dolly/hello.php' ],
+        ] );
+
+        $this->assertWPError( $result, 'Unauthenticated request should return WP_Error.' );
+        $this->assertEquals(
+            'ability_invalid_permissions',
+            $result->get_error_code(),
+            'Should return ability_invalid_permissions error code.'
+        );
+    }
+
+    /**
+     * Test that users without manage_options capability are denied.
+     *
+     * @return void
+     */
+    public function test_delete_site_plugins_requires_manage_options() {
+        $this->skip_if_no_abilities_api();
+
+        $this->set_current_user_as_subscriber();
+
+        $this->setExpectedIncorrectUsage( 'WP_Ability::execute' );
+
+        $result = $this->execute_ability( 'mainwp/delete-site-plugins-v1', [
+            'site_id_or_domain' => 1,
+            'plugins'           => [ 'hello-dolly/hello.php' ],
+        ] );
+
+        $this->assertWPError( $result, 'Subscriber should be denied.' );
+        $this->assertEquals(
+            'ability_invalid_permissions',
+            $result->get_error_code(),
+            'Should return ability_invalid_permissions error code.'
+        );
+    }
+
+    /**
+     * Test input validation rejects invalid values.
+     *
+     * @return void
+     */
+    public function test_delete_site_plugins_validates_input() {
+        $this->skip_if_no_abilities_api();
+        $this->set_current_user_as_admin();
+
+        $site_id = $this->create_test_site();
+
+        $result = $this->execute_ability( 'mainwp/delete-site-plugins-v1', [
+            'site_id_or_domain' => $site_id,
+        ] );
+
+        $this->assertWPError( $result, 'Invalid input should return WP_Error.' );
+    }
+
+    /**
+     * Test that delete-site-plugins requires confirmation.
+     *
+     * @return void
+     */
+    public function test_delete_site_plugins_requires_confirmation() {
+        $this->skip_if_no_abilities_api();
+        $this->set_current_user_as_admin();
+
+        $site_id = $this->create_test_site( [
+            'name' => 'Test Site Without Confirm',
+        ] );
+
+        $input = [
+            'site_id_or_domain' => $site_id,
+            'plugins'           => [ 'hello-dolly/hello.php' ],
+        ];
+
+        $result = $this->execute_ability( 'mainwp/delete-site-plugins-v1', $input );
+
+        $this->assertWPError( $result );
+        $this->assertEquals( 'mainwp_confirmation_required', $result->get_error_code() );
+    }
+
+    /**
+     * Test that delete-site-plugins dry_run returns preview.
+     *
+     * @return void
+     */
+    public function test_delete_site_plugins_dry_run_returns_preview() {
+        $this->skip_if_no_abilities_api();
+        $this->set_current_user_as_admin();
+
+        $site_id = $this->create_test_site( [
+            'name' => 'Test Site Dry Run',
+        ] );
+
+        $input = [
+            'site_id_or_domain' => $site_id,
+            'plugins'           => [ 'hello-dolly/hello.php' ],
+            'dry_run'           => true,
+        ];
+
+        $result = $this->execute_ability( 'mainwp/delete-site-plugins-v1', $input );
+
+        $this->assertNotWPError( $result );
+        $this->assertIsArray( $result );
+        $this->assertArrayHasKey( 'dry_run', $result );
+        $this->assertTrue( $result['dry_run'] );
+        $this->assertArrayHasKey( 'warnings', $result );
+        $this->assertIsArray( $result['warnings'] );
+        $this->assertArrayHasKey( 'would_affect', $result );
+        $this->assertArrayHasKey( 'count', $result );
+    }
+
+    /**
+     * Test that delete-site-plugins rejects both dry_run and confirm together.
+     *
+     * @return void
+     */
+    public function test_delete_site_plugins_rejects_dry_run_and_confirm_together() {
+        $this->skip_if_no_abilities_api();
+        $this->set_current_user_as_admin();
+
+        $site_id = $this->create_test_site();
+
+        $input = [
+            'site_id_or_domain' => $site_id,
+            'plugins'           => [ 'hello-dolly/hello.php' ],
+            'confirm'           => true,
+            'dry_run'           => true,
+        ];
+
+        $result = $this->execute_ability( 'mainwp/delete-site-plugins-v1', $input );
+
+        $this->assertWPError( $result );
+        $this->assertEquals( 'mainwp_invalid_input', $result->get_error_code() );
+    }
+
+    /**
+     * Test that dry-run populates warnings when targeting active plugins.
+     *
+     * @return void
+     */
+    public function test_delete_site_plugins_dry_run_warnings_active() {
+        $this->skip_if_no_abilities_api();
+        $this->set_current_user_as_admin();
+
+        $site_id = $this->create_test_site( [
+            'name' => 'Test Site With Active Plugin',
+            'url'  => 'https://test-delete-site-plugins-warnings.example.com/',
+        ] );
+
+        // Set plugins data with an active plugin.
+        $this->set_site_plugins( $site_id, [
+            'hello-dolly/hello.php' => [
+                'Name'    => 'Hello Dolly',
+                'Version' => '1.7.2',
+                'active'  => 1,
+                'slug'    => 'hello-dolly/hello.php',
+            ],
+            'akismet/akismet.php' => [
+                'Name'    => 'Akismet',
+                'Version' => '5.0',
+                'active'  => 0,
+                'slug'    => 'akismet/akismet.php',
+            ],
+        ] );
+
+        $result = $this->execute_ability( 'mainwp/delete-site-plugins-v1', [
+            'site_id_or_domain' => $site_id,
+            'plugins'           => [ 'hello-dolly/hello.php' ],
+            'dry_run'           => true,
+        ] );
+
+        $this->assertNotWPError( $result, 'Dry run should return successful result.' );
+        $this->assertIsArray( $result );
+        $this->assertTrue( $result['dry_run'] );
+        $this->assertArrayHasKey( 'warnings', $result );
+        $this->assertIsArray( $result['warnings'] );
+        $this->assertGreaterThan( 0, count( $result['warnings'] ), 'Warnings should contain at least one warning for active plugin.' );
+        $this->assertStringContainsString( 'hello-dolly/hello.php', $result['warnings'][0], 'Warning should mention the active plugin slug.' );
+    }
+
+    /**
+     * Test that dry-run returns empty warnings when targeting inactive plugins.
+     *
+     * @return void
+     */
+    public function test_delete_site_plugins_dry_run_no_warnings_inactive() {
+        $this->skip_if_no_abilities_api();
+        $this->set_current_user_as_admin();
+
+        $site_id = $this->create_test_site( [
+            'name' => 'Test Site With Inactive Plugin',
+            'url'  => 'https://test-delete-site-plugins-no-warnings.example.com/',
+        ] );
+
+        // Set plugins data with only inactive plugins.
+        $this->set_site_plugins( $site_id, [
+            'hello-dolly/hello.php' => [
+                'Name'    => 'Hello Dolly',
+                'Version' => '1.7.2',
+                'active'  => 0,
+                'slug'    => 'hello-dolly/hello.php',
+            ],
+        ] );
+
+        $result = $this->execute_ability( 'mainwp/delete-site-plugins-v1', [
+            'site_id_or_domain' => $site_id,
+            'plugins'           => [ 'hello-dolly/hello.php' ],
+            'dry_run'           => true,
+        ] );
+
+        $this->assertNotWPError( $result, 'Dry run should return successful result.' );
+        $this->assertIsArray( $result );
+        $this->assertTrue( $result['dry_run'] );
+        $this->assertArrayHasKey( 'warnings', $result );
+        $this->assertIsArray( $result['warnings'] );
+        $this->assertCount( 0, $result['warnings'], 'Warnings should be empty when targeting inactive plugins.' );
+    }
+
+    /**
+     * Test that outdated child plugin version returns error.
+     *
+     * @return void
+     */
+    public function test_delete_site_plugins_requires_minimum_child_version() {
+        $this->skip_if_no_abilities_api();
+        $this->set_current_user_as_admin();
+
+        // Create site with outdated child version (below 4.0.0 minimum).
+        $site_id = $this->create_test_site( [
+            'name'    => 'Test Site Outdated Child',
+            'url'     => 'https://test-delete-plugins-outdated.example.com/',
+            'version' => '3.0.0',
+        ] );
+
+        $result = $this->execute_ability( 'mainwp/delete-site-plugins-v1', [
+            'site_id_or_domain' => $site_id,
+            'plugins'           => [ 'hello-dolly/hello.php' ],
+            'confirm'           => true,
+        ] );
+
+        $this->assertWPError( $result, 'Outdated child version should return WP_Error.' );
+        $this->assertEquals(
+            'mainwp_child_outdated',
+            $result->get_error_code(),
+            'Should return mainwp_child_outdated error code.'
+        );
+    }
+}

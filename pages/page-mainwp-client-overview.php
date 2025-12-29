@@ -306,10 +306,14 @@ class MainWP_Client_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameL
         ?>
         <div class="mainwp-primary-content-wrap">
         <div id="mainwp-message-zone" class="ui message" style="display:none;"></div>
+        <?php
+            do_action( 'mainwp_module_log_render_db_update_notice' );
+            do_action( 'mainwp_module_log_render_db_size_notice' );
+        ?>
         <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'client-widgets' ) ) : ?>
-                <div class="ui info message">
+                <div class="ui message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="client-widgets"></i>
-                    <?php printf( esc_html__( 'To hide or show a widget, click the Cog (%1$s) icon.', 'mainwp' ), '<i class="cog icon"></i>' ); ?>
+                    <?php printf( esc_html__( '%1$s Tip: You can drag and drop widgets to reorder your dashboard or use the Page Settings (%2$s) to show/hide widgets.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<i class="cog fitted icon"></i>' ); ?>
                 </div>
             <?php endif; ?>
             <?php
@@ -323,6 +327,14 @@ class MainWP_Client_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameL
             do_action( 'mainwp_before_overview_widgets', 'clients' );
             ?>
             <div id="mainwp-grid-wrapper" class="gridster">
+                <div id="mainwp-widgets-placeholder" class="ui page dimmer">
+                    <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
+                </div>
+                <script>
+                    jQuery( document ).ready( function () {
+                        jQuery('#mainwp-widgets-placeholder').dimmer('show');
+                    });
+                </script>
                 <?php MainWP_UI::do_widget_boxes( $screen->id ); ?>
         </div>
             <?php
@@ -349,7 +361,7 @@ class MainWP_Client_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 return false;
             };
             jQuery('#reset-clients-overview-settings').on('click', function () {
-                mainwp_confirm(__('Are you sure.'), function(){
+                mainwp_confirm(__('Are you sure?'), function(){
                     jQuery('.mainwp_hide_wpmenu_checkboxes input[name="mainwp_show_widgets[]"]').prop('checked', true);
                     jQuery('input[name=reset_client_overview_settings]').attr('value', 1);
                     jQuery('#submit-client-overview-settings').click();
@@ -373,7 +385,7 @@ class MainWP_Client_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 do_action( 'mainwp_clients_overview_screen_options_top' );
                 ?>
                 <form method="POST" action="" name="mainwp_clients_overview_screen_options_form" id="mainwp-clients-overview-screen-options-form">
-                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                     <input type="hidden" name="wp_scr_options_nonce" value="<?php echo esc_attr( wp_create_nonce( 'MainWPClientsScrOptions' ) ); ?>" />
                     <?php static::render_screen_options( false ); ?>
                     <?php
@@ -421,7 +433,7 @@ class MainWP_Client_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameL
             'websites'           => esc_html__( 'Websites', 'mainwp' ),
             'recent_posts'       => esc_html__( 'Recent Posts', 'mainwp' ),
             'recent_pages'       => esc_html__( 'Recent Pages', 'mainwp' ),
-            'non_mainwp_changes' => esc_html__( 'Sites Changes', 'mainwp' ),
+            'non_mainwp_changes' => esc_html__( 'Network Activity', 'mainwp' ),
         );
 
         if ( isset( $_GET['client_id'] ) && ! empty( $_GET['client_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized

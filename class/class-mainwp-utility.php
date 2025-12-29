@@ -395,12 +395,40 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
      *
      * @param mixed $timestamp Timestamp to format.
      * @param mixed $with_tz_info Return date time with timezone infor.
+     * @param mixed $use_tzformat Input tz format, to support display tz child site format.
      *
      * @return string Formatted timestamp.
      */
-    public static function format_timezone( $timestamp, $with_tz_info = false ) {
-        $tzinfo      = '';
-        $wp_timezone = get_option( 'timezone_string' );
+    public static function format_timezone( $timestamp, $with_tz_info = false, $use_tzformat = false ) {
+        $tzinfo = '';
+        if ( false !== $use_tzformat ) {
+            if ( is_array( $use_tzformat ) && ( isset( $use_tzformat['timezone_string'] ) || isset( $use_tzformat['gmt_offset'] ) || isset( $use_tzformat['date_format'] ) || isset( $use_tzformat['time_format'] ) ) ) {
+                $wp_timezone = ! empty( $use_tzformat['timezone_string'] ) ? $use_tzformat['timezone_string'] : '';
+
+                $format = '';
+                if ( ! empty( $use_tzformat['date_format'] ) ) {
+                    $format .= $use_tzformat['date_format'] . ' ';
+                }
+                if ( ! empty( $use_tzformat['time_format'] ) ) {
+                    $format .= $use_tzformat['time_format'] . ' ';
+                }
+                $format = rtrim( $format );
+
+                if ( empty( $wp_timezone ) ) {
+                    $gmt = ! empty( $use_tzformat['gmt_offset'] ) ? $use_tzformat['gmt_offset'] : 0;
+                    return date_i18n( $format, $timestamp, $gmt );
+                }
+
+                $datetime = new \DateTime( '@' . $timestamp );
+                $datetime->setTimezone( new \DateTimeZone( $wp_timezone ) );
+
+                return $datetime->format( $format );
+            }
+            return '';
+        }
+
+        $wp_timezone = static::clean_wp_timezone_string( get_option( 'timezone_string' ) );
+
         if ( ! $wp_timezone ) {
             if ( $with_tz_info ) {
                 $tzinfo = ' ( UTC ' . get_option( 'gmt_offset' ) . ' )';
@@ -417,6 +445,26 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
 
         $format = get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) . $tzinfo;
         return $datetime->format( $format );
+    }
+
+    /**
+     * Method clean_wp_timezone_string().
+     *
+     * @param  mixed $raw
+     * @return string Clean tz string.
+     */
+    public static function clean_wp_timezone_string( $raw ) {
+        // If it's already a valid timezone, just return it.
+        if ( in_array( $raw, timezone_identifiers_list(), true ) ) {
+            return $raw;
+        }
+        // Try to find a valid timezone inside the messy string.
+        foreach ( timezone_identifiers_list() as $tz ) {
+            if ( strpos( $raw, $tz ) !== false ) {
+                return $tz;
+            }
+        }
+        return '';
     }
 
     /**
@@ -466,6 +514,127 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             $formatted_dura = gmdate( 'H\h i\m s\s', $original_sec );
         }
         return '<bdi>' . esc_html( $formatted_dura ) . '</bdi>';
+    }
+
+    /**
+     * Get UTC timestamp by date string.
+     *
+     * @param  string $dt_str date.
+     * @param  int    $add_days Add days.
+     *
+     * @return mixed Local timestamp.
+     */
+    public static function get_utc_timestamp_by_date( $dt_str, $add_days = 0 ) {
+
+        $tz  = wp_timezone(); // site timezone.
+        $day = new \DateTimeImmutable( $dt_str, $tz );
+
+        if ( is_numeric( $add_days ) && $add_days > 0 ) {
+            $day = $day->modify( '+' . $add_days . ' day' );
+        }
+
+        return $day->setTimezone( new \DateTimeZone( 'UTC' ) )->getTimestamp();
+    }
+
+
+    /**
+     * Converts a UTC timestamp (integer or float) to a local date string
+     * using the site's timezone (handles DST automatically).
+     *
+     * Supports:
+     * - Integer seconds timestamps (e.g. 1696930123)
+     * - Float seconds with microseconds (e.g. 1696930123.123456)
+     *
+     * Uses WordPress `wp_timezone()` to determine the local timezone.
+     *
+     * @since 6.0.0
+     *
+     * @param int|float|string $utc_time   UTC timestamp in seconds. Can be integer (seconds)
+     *                                     or float (seconds with microseconds).
+     * @param string           $format_str PHP date format string. Default 'Y-m-d'.
+     * @param int              $add_days   Optional. Number of days to add (can be negative). Default 0.
+     *
+     * @return string Formatted local date string, or empty string on invalid input.
+     *
+     * @example
+     * // From plain timestamp:
+     * echo MyClass::get_local_date_by_utc_timestamp(1696930123, 'Y-m-d H:i:s');
+     * // → "2023-10-10 15:35:23" (depending on site timezone)
+     *
+     * @example
+     * // From microtime (float seconds):
+     * echo MyClass::get_local_date_by_utc_timestamp(1696930123.123456, 'Y-m-d H:i:s.v');
+     * // → "2023-10-10 15:35:23.123" (microseconds preserved)
+     */
+    public static function get_local_date_by_utc_timestamp( $utc_time, $format_str = 'Y-m-d', $add_days = 0 ) {
+        if ( ! is_numeric( $utc_time ) ) {
+            return '';
+        }
+
+        $tz       = wp_timezone();
+        $utc_zone = new \DateTimeZone( 'UTC' );
+
+        // Detect float (has fractional seconds).
+        if ( is_float( $utc_time ) || strpos( (string) $utc_time, '.' ) !== false ) {
+            $dt_utc = \DateTimeImmutable::createFromFormat( 'U.u', sprintf( '%.6F', $utc_time ), $utc_zone );
+        } else {
+            $dt_utc = ( new \DateTimeImmutable( '@' . $utc_time ) )->setTimezone( $utc_zone );
+        }
+
+        if ( $add_days ) {
+            $dt_utc = $dt_utc->modify( sprintf( '%+d day', $add_days ) );
+        }
+
+        return $dt_utc->setTimezone( $tz )->format( $format_str );
+    }
+
+
+    /**
+     * Compute day/offset values and UTC datetime string for a local input time.
+     *
+     * - Automatically uses WordPress site timezone if none provided.
+     * - Converts the local datetime to UTC for MySQL compatibility.
+     * - Returns microsecond constants for daily grouping and offset adjustments.
+     *
+     * @param string      $from_date_local 'Y-m-d H:i:s' in local timezone.
+     * @param string|null $local_timezone Optional. PHP timezone ID (e.g. 'Asia/Ho_Chi_Minh').
+     * @return array {
+     *     @type int    $day_micros     Microseconds in one day (86400000000).
+     *     @type int    $offset_micro   Timezone offset in microseconds (e.g. +25200000000).
+     *     @type string $from_date_utc  UTC datetime string ('Y-m-d H:i:s') for MySQL.
+     *     @type string $local_timezone The timezone actually used.
+     * }
+     */
+    public static function get_time_context( $from_date_local, $local_timezone = null ) {
+        if ( empty( $local_timezone ) ) {
+            if ( function_exists( 'wp_timezone' ) ) {
+                $tz_obj         = wp_timezone();
+                $local_timezone = $tz_obj->getName();
+            } else {
+                $local_timezone = get_option( 'timezone_string' ) ?: 'UTC';
+            }
+        }
+
+        $MICRO           = 1000000;
+        $SECONDS_PER_DAY = 86400;
+        $day_micros      = $SECONDS_PER_DAY * $MICRO;
+
+        $tz = new \DateTimeZone( $local_timezone );
+
+        // 👇 End of local day instead of start.
+        $dt = new \DateTimeImmutable( $from_date_local . ' 23:59:59', $tz );
+
+        $offset_seconds = $tz->getOffset( $dt );
+        $offset_micro   = $offset_seconds * $MICRO;
+
+        $from_date_utc = $dt->setTimezone( new \DateTimeZone( 'UTC' ) )->format( 'Y-m-d H:i:s' );
+
+        return array(
+            'day_micros'     => $day_micros,
+            'offset_micro'   => $offset_micro,
+            'from_date_utc'  => $from_date_utc,
+            'local_timezone' => $local_timezone,
+        );
     }
 
 
@@ -1323,10 +1492,6 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                 $error = '';
                 try {
                     $information = MainWP_Connect::fetch_url_authed( $website, 'check_abandoned', array( 'which' => $which ) );
-                    if ( is_array( $information ) && isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-                        MainWP_Sync::sync_information_array( $website, $information['sync'] );
-                        unset( $information['sync'] );
-                    }
                 } catch ( MainWP_Exception $e ) {
                     $error = $e->getMessage();
                 }
@@ -1845,6 +2010,7 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         $last_two_chars = ! empty( $flag_language ) ? substr( $flag_language, -2 ) : '';
         // Convert to lowercase.
         $lowercase_last_two_chars = strtolower( $last_two_chars );
+        $lowercase_flag_language  = strtolower( $flag_language );
 
         // Get display name using the original language string.
         $display_language = function_exists( 'locale_get_display_name' ) ? locale_get_display_name( $language ) : $language;
@@ -1858,6 +2024,39 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         }
         if ( 'ab' === $lowercase_last_two_chars ) {
             $lowercase_last_two_chars = 'dz';
+        }
+
+        $stacked_flags = array(
+            'ca' => array(
+                'primary'   => 'es',
+                'secondary' => 'ad',
+            ),
+        );
+        // Only stack flags for explicit Catalan locales to avoid affecting Canada.
+        $stacked_flag_locales = array(
+            'ca' => array(
+                'ca',
+            ),
+        );
+
+        if ( isset( $stacked_flags[ $lowercase_last_two_chars ] ) ) {
+            $should_stack = true;
+            if ( isset( $stacked_flag_locales[ $lowercase_last_two_chars ] ) ) {
+                $should_stack = in_array( $lowercase_flag_language, $stacked_flag_locales[ $lowercase_last_two_chars ], true );
+            }
+
+            if ( $should_stack ) {
+                $primary_flag   = $stacked_flags[ $lowercase_last_two_chars ]['primary'];
+                $secondary_flag = $stacked_flags[ $lowercase_last_two_chars ]['secondary'];
+
+                echo '<span data-tooltip="' . esc_html__( 'Site Language: ', 'mainwp' ) . esc_attr( $display_language ) . '" data-position="left center" data-inverted="">';
+                echo '<span class="mainwp-flag-stack">';
+                echo '<i class="small ' . esc_attr( $primary_flag ) . ' flag mainwp-flag-stack__flag mainwp-flag-stack__flag--primary"></i>';
+                echo '<i class="small ' . esc_attr( $secondary_flag ) . ' flag mainwp-flag-stack__flag mainwp-flag-stack__flag--secondary"></i>';
+                echo '</span>';
+                echo '</span>';
+                return;
+            }
         }
 
         echo '<span data-tooltip="' . esc_html__( 'Site Language: ', 'mainwp' ) . esc_attr( $display_language ) . '" data-position="left center" data-inverted=""><i class="small ' . esc_attr( $lowercase_last_two_chars ) . ' flag"></i></span>';
@@ -1885,5 +2084,77 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             $tooltip = 'Indexing status unknown. Resync the site or check manually in WordPress Settings > Reading.';
         }
         echo '<span data-tooltip="' . $tooltip . '" data-position="left center" data-inverted=""><i class="' . $icon . ' icon"></i></span>';  //phpcs:ignore -- ok.
+    }
+
+    /**
+     * Returns the appropriate Fomantic UI color class based on number of updates
+     *
+     * @param int $update_count Number of available updates.
+     *
+     * @return string CSS class for the element
+     */
+    public static function mainwp_get_update_count_class( $update_count ) {
+        // Convert to integer using intval().
+        $update_count = intval( $update_count );
+
+        // Ensure count is not negative.
+        if ( 0 > $update_count ) {
+            $update_count = 0;
+        }
+
+        if ( 0 === $update_count ) {
+            return 'grey';
+        } elseif ( $update_count >= 1 && $update_count <= 3 ) {
+            return 'yellow';
+        } elseif ( $update_count >= 4 && $update_count <= 5 ) {
+            return 'orange';
+        } else {
+            return 'red';
+        }
+    }
+
+    /**
+     * Display site name and URL with optional WP Admin link.
+     *
+     * @param int|string $website_id Site ID.
+     * @param bool       $wp_admin   Whether to show WP Admin link.
+     * @return string HTML markup for site display.
+     */
+    public static function mainwp_display_site( $website_id = '', $wp_admin = true ) {
+        if ( empty( $website_id ) || ! static::ctype_digit( $website_id ) ) {
+            return '';
+        }
+
+        $website_id = intval( $website_id );
+        $website    = MainWP_DB::instance()->get_website_by_id( $website_id );
+        if ( ! $website ) {
+            return '';
+        }
+
+        $site_name = esc_html( stripslashes( $website->name ) );
+        $site_url  = esc_url( $website->url );
+        $nice_url  = esc_html( static::get_nice_url( $website->url ) );
+
+        $html = '<div class="mainwp-site-display">';
+
+        // WP Admin link (if enabled and user has permission).
+        if ( $wp_admin && \mainwp_current_user_can( 'dashboard', 'access_wpadmin_on_child_sites' ) ) {
+            $admin_url = MainWP_Site_Open::get_open_site_url( $website->id, '', false );
+            $html     .= '<a href="' . esc_url( $admin_url ) . '" class="open_newwindow_wpadmin" target="_blank" data-tooltip="' . esc_attr__( 'Go to WP Admin', 'mainwp' ) . '" data-position="top left" data-inverted=""><i class="sign in icon"></i></a> ';
+        } elseif ( $wp_admin ) {
+            $html .= '<i class="sign in icon"></i> ';
+        }
+
+        // Site name with dashboard link.
+        $html .= '<a href="' . esc_url( admin_url( 'admin.php?page=managesites&dashboard=' . intval( $website->id ) ) ) . '">' . $site_name . '</a>';
+
+        // Site URL.
+        $html .= '<div><span class="ui small text">';
+        $html .= '<a href="' . $site_url . '" class="mainwp-may-hide-referrer open_site_url ui grey text" target="_blank">' . $nice_url . '</a>';
+        $html .= '</span></div>';
+
+        $html .= '</div>';
+
+        return $html;
     }
 }

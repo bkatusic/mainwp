@@ -270,14 +270,14 @@ let managesites_update_pluginsthemes_next = function (pType) {
     let data = mainwp_secure_data({
         action: 'mainwp_upgradeplugintheme',
         websiteId: websiteId,
-        type: pType
+        type: pType,
+        bulkUpdate: mainwpVars.websitesTotal > 1 ? 1 : 0
     });
     managesites_update_pluginsthemes_next_int(websiteId, data, 0);
 };
 
 
 jQuery(document).on('click', '#managesites-backup-ignore', function () {
-    console.log(typeof managesitesContinueAfterBackup);
     if (managesitesContinueAfterBackup != undefined) {
         ignoredBackupBeforeUpdate = true;
         mainwpPopup('#managesites-backup-box').close();
@@ -399,7 +399,7 @@ jQuery(document).on('click', '#managesites-backup-all', function () {
     mainwpPopup('#managesites-backup-box').init({
         title: __("Full backup"), callback: function () {
             managesitesContinueAfterBackup = undefined;
-            window.location.href = location.href;
+            mainwp_forceReload();
         }
     });
     let sitesToBackup = mainwpPopup('#managesites-backup-box').getContentEl().find('.managesites-backup-site');
@@ -591,14 +591,14 @@ let managesites_wordpress_upgrade_all_loop_next = function () {
 let managesites_wordpress_upgrade_all_upgrade_next = function () {
     mainwpVars.currentThreads++;
     mainwpVars.websitesLeft--;
-	const regression_waiting_icon = render_html_regression_waiting_icon();
-	let waiting_icon = '<i class="sync alternate loading icon"></i>';
-	if (regression_waiting_icon && "" !== regression_waiting_icon) {
-		waiting_icon += regression_waiting_icon;
-	} 
+    const regression_waiting_icon = render_html_regression_waiting_icon();
+    let waiting_icon = '<i class="sync alternate loading icon"></i>';
+    if (regression_waiting_icon && "" !== regression_waiting_icon) {
+        waiting_icon += regression_waiting_icon;
+    }
 
     let websiteId = mainwpVars.websitesToUpgrade[mainwpVars.currentWebsite++];
-	dashboard_update_site_status(websiteId, waiting_icon);
+    dashboard_update_site_status(websiteId, waiting_icon);
 
     managesites_wordpress_upgrade_int(websiteId);
 };

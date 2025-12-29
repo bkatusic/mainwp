@@ -479,6 +479,10 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
 
             $translation_upgrades = json_decode( $website->translation_upgrades, true );
 
+            if ( ! empty( $website->ignored_trans_updates ) ) {
+                $translation_upgrades = array();
+            }
+
             $plugin_upgrades = json_decode( $website->plugin_upgrades, true );
             if ( $website->is_ignorePluginUpdates ) {
                 $plugin_upgrades = array();
@@ -824,6 +828,7 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         static::render_plugin_details_modal();
         MainWP_UI::render_modal_upload_icon();
         static::render_screen_options_modal();
+        static::render_changes_history_modal();
         static::render_footer();
         ?>
         <script type="text/javascript">
@@ -1820,7 +1825,6 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             mainwp_datatable_init_and_fix_recalc = function(selector){
                 jQuery(selector).each( function(e) {
                     if(jQuery(this).is(":visible")){
-                        console.log('visible ' + jQuery(this).attr('id'));
                         jQuery(this).css( 'display', 'table' );
                         jQuery(this).DataTable().destroy();
                         let tb = jQuery(this).DataTable({
@@ -1891,7 +1895,7 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
 
         $current_wpid = MainWP_System_Utility::get_current_wpid();
         if ( $current_wpid ) {
-            $sql = MainWP_DB::instance()->get_sql_website_by_id( $current_wpid, false, array( 'premium_upgrades', 'plugins_outdate_dismissed', 'themes_outdate_dismissed', 'plugins_outdate_info', 'themes_outdate_info', 'favi_icon' ) );
+            $sql = MainWP_DB::instance()->get_sql_website_by_id( $current_wpid, false, array( 'premium_upgrades', 'plugins_outdate_dismissed', 'themes_outdate_dismissed', 'ignored_wp_upgrades', 'ignored_trans_updates', 'plugins_outdate_info', 'themes_outdate_info', 'favi_icon', 'site_info' ) );
         } else {
             $staging_enabled = is_plugin_active( 'mainwp-staging-extension/mainwp-staging-extension.php' ) || is_plugin_active( 'mainwp-timecapsule-extension/mainwp-timecapsule-extension.php' );
             $is_staging      = 'no';
@@ -1902,14 +1906,15 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                 }
             }
             $params = array(
-                'connected' => 'yes',
+                'connected'   => 'yes',
+                'maybe_cache' => true,
             );
 
             $limit_sites = get_option( 'mainwp_manage_updates_limit_sites' );
             if ( ! empty( $limit_sites ) ) {
                 $params['limit_sites'] = $limit_sites;
             }
-            $sql = MainWP_DB::instance()->get_sql_websites_for_current_user( false, null, 'wp.url', false, false, null, false, array( 'wp_upgrades', 'ignored_wp_upgrades', 'premium_upgrades', 'rollback_updates_data', 'plugins_outdate_dismissed', 'themes_outdate_dismissed', 'plugins_outdate_info', 'themes_outdate_info', 'favi_icon' ), $is_staging, $params );
+            $sql = MainWP_DB::instance()->get_sql_websites_for_current_user( false, null, 'wp.url', false, false, null, false, array( 'wp_upgrades', 'ignored_wp_upgrades', 'ignored_trans_updates', 'premium_upgrades', 'rollback_updates_data', 'plugins_outdate_dismissed', 'themes_outdate_dismissed', 'plugins_outdate_info', 'themes_outdate_info', 'favi_icon', 'site_info' ), $is_staging, $params );
         }
         return MainWP_DB::instance()->query( $sql );
     }
@@ -2040,7 +2045,7 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                              *
                              * Updates actions top content.
                              *
-                             * @since 5.4.1
+                             * @since 5.5
                              */
                             do_action( 'mainwp_widget_updates_actions_top', $current_tab );
                             ?>
@@ -2127,7 +2132,7 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
     public static function render_updates_view_options( $site_view = '' ) {
         ?>
         <form method="post" action="" class="ui mini form" style="display:inline flow-root">
-        <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+        <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
             <div class="inline field">
                 <select class="ui mini dropdown" onchange="mainwp_siteview_onchange(this)" id="mainwp_select_options_siteview" name="select_mainwp_options_siteview">
                     <option value="1" class="item" <?php echo MAINWP_VIEW_PER_SITE === $site_view ? 'selected' : ''; ?>><?php esc_html_e( 'Show updates per Site', 'mainwp' ); ?></option>
@@ -2432,11 +2437,53 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             <?php
     }
 
-        /**
-         * Method render_screen_options_modal()
-         *
-         * Renders Page Settings Modal.
-         */
+    /**
+     * Method get_site_tz_info().
+     *
+     * @param object $website Website.
+     *
+     * @return string Timezone site info.
+     */
+    public static function get_site_tz_info( $website ) {
+        if ( is_object( $website ) && ! empty( $website->site_info ) ) {
+            $wp_info = ! empty( $website->site_info ) ? json_decode( $website->site_info, true ) : array();
+            if ( ! is_array( $wp_info ) ) {
+                $wp_info = array();
+            }
+            $use_tzformat = ! empty( $wp_info['format_datetime'] ) && is_array( $wp_info['format_datetime'] ) ? $wp_info['format_datetime'] : array();
+            $offs         = ! empty( $use_tzformat['gmt_offset'] ) ? intval( $use_tzformat['gmt_offset'] ) : 0;
+            return esc_html__( '- Timezone:', 'mainwp' ) . ' UTC' . ( $offs >= 0 ? '+' . $offs : $offs );
+        }
+        return '';
+    }
+
+    /**
+     * Method render_changes_history_modal()
+     */
+    public static function render_changes_history_modal() {
+        ?>
+        <div class="ui modal" id="mainwp-plugin-theme-history-changes-modal">
+            <i class="close icon"></i>
+            <div class="ui header">
+                <div class="main-text"><?php esc_html_e( 'History', 'mainwp' ); ?></div>
+                <div class="sub header" style="display:none;"></div>
+            </div>
+            <div class="scrolling content"></div>
+            <div class="actions">
+                <div class="ui two columns stackable grid">
+                    <div class="left aligned column col-left"></div>
+                    <div class="right aligned column col-right"></div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Method render_screen_options_modal()
+     *
+     * Renders Page Settings Modal.
+     */
     public static function render_screen_options_modal() { // phpcs:ignore -- NOSONAR - complex method.
 
             $snAutomaticDailyUpdate       = (int) get_option( 'mainwp_automaticDailyUpdate' );
@@ -2453,7 +2500,7 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             <div class="header"><?php esc_html_e( 'Page Settings', 'mainwp' ); ?></div>
             <div class="scrolling content ui form">
                 <form method="POST" action="" id="manage-updates-screen-options-form" name="manage-updates-screen-options-form">
-                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                     <input type="hidden" name="wp_nonce" value="<?php echo esc_attr( wp_create_nonce( 'UpdatesScrOptions' ) ); ?>" />
                     <div class="ui grid field">
                         <label class="six wide column middle aligned"><?php esc_html_e( 'Plugin advanced automatic updates', 'mainwp' ); ?></label>

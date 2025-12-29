@@ -90,7 +90,6 @@ class MainWP_Manage_Screenshots { // phpcs:ignore Generic.Classes.OpeningBraceSa
 
             <div class="row ui mini form manage-sites-screenshots-filter-top" id="mainwp-sites-filters-row" style="<?php echo esc_attr( $filters_row_style ); ?>">
                 <div class="thirteen wide middle aligned column ui grid">
-                <?php esc_html_e( 'Filter sites: ', 'mainwp' ); ?>
                     <div class="ui selection dropdown seg_is_not" id="mainwp_is_not_site">
                             <input type="hidden" value="<?php echo $is_not ? 'yes' : ''; ?>">
                             <i class="dropdown icon"></i>
@@ -147,8 +146,8 @@ class MainWP_Manage_Screenshots { // phpcs:ignore Generic.Classes.OpeningBraceSa
                                 <div class="item" data-value="noclients"><?php esc_html_e( 'No Client', 'mainwp' ); ?></div>
                             </div>
                         </div>
-                        <button onclick="mainwp_screenshots_sites_filter()" class="ui tiny green button"><?php esc_html_e( 'Filter Sites', 'mainwp' ); ?></button>
-                        <button onclick="mainwp_screenshots_sites_reset_filters()" class="ui tiny button"><?php esc_html_e( 'Reset Filters', 'mainwp' ); ?></button>
+                        <button onclick="mainwp_screenshots_sites_filter()" class="ui mini green basic button"><i class="filter icon"></i> <?php esc_html_e( 'Filter', 'mainwp' ); ?></button>
+                        <button onclick="mainwp_screenshots_sites_reset_filters()" class="ui mini button"><i class="times icon"></i> <?php esc_html_e( 'Reset', 'mainwp' ); ?></button>
                 </div>
                 <?php
                 MainWP_Manage_Sites_Filter_Segment::get_instance()->render_filters_segment();
@@ -170,7 +169,6 @@ class MainWP_Manage_Screenshots { // phpcs:ignore Generic.Classes.OpeningBraceSa
                     if ( 'yes' == isNot ){
                         params += '&isnot=yes';
                     }
-                    console.log(params);
                     window.location = 'admin.php?page=managesites' + params;
                     return false;
                 };
@@ -195,10 +193,12 @@ class MainWP_Manage_Screenshots { // phpcs:ignore Generic.Classes.OpeningBraceSa
                     }
                 } );
 
-                jQuery('#mainwp-sites-previews .image img').visibility({
-                    type       : 'image',
-                    transition : 'fade in',
-                    duration   : 1000
+                jQuery(document).ready(function(){
+                    jQuery('#mainwp-sites-previews .image img').visibility({
+                        type       : 'image',
+                        transition : 'fade in',
+                        duration   : 1000
+                    });
                 });
 
         </script>
@@ -379,7 +379,7 @@ class MainWP_Manage_Screenshots { // phpcs:ignore Generic.Classes.OpeningBraceSa
 
                         <div class="card" site-url="<?php echo esc_url( $website->url ); ?>">
                             <div class="image" data-tooltip="<?php echo esc_attr( $status_tooltip ); ?>" data-position="top center" data-inverted="">
-                                <img alt="<?php esc_attr_e( 'Website preview', 'mainwp' ); ?>" data-src="//s0.wp.com/mshots/v1/<?php echo esc_html( rawurlencode( $website->url ) ); ?>?w=900">
+                                <img alt="<?php esc_attr_e( 'Website preview', 'mainwp' ); ?>" data-src="<?php echo esc_attr( '//s0.wp.com/mshots/v1/' . rawurlencode( esc_url_raw( $website->url ) ) . '?w=900' ); ?>">
                             </div>
                             <div class="ui <?php echo esc_attr( $status_color ); ?> corner label">
                                 <i class="<?php echo esc_attr( $status_icon ); ?> icon"></i>
@@ -419,10 +419,12 @@ class MainWP_Manage_Screenshots { // phpcs:ignore Generic.Classes.OpeningBraceSa
             </div>
         </div>
         <script type="text/javascript">
-            jQuery('#mainwp-sites-previews .image img').visibility( {
-                type       : 'image',
-                transition : 'fade in',
-                duration   : 1000
+            jQuery(document).ready(function(){
+                jQuery('#mainwp-sites-previews .image img').visibility( {
+                    type       : 'image',
+                    transition : 'fade in',
+                    duration   : 1000
+                });
             });
 
             mainwp_manage_sites_screen_options = function () {
@@ -467,7 +469,7 @@ class MainWP_Manage_Screenshots { // phpcs:ignore Generic.Classes.OpeningBraceSa
             <div class="header"><?php esc_html_e( 'Page Settings', 'mainwp' ); ?></div>
             <div class="scrolling content ui form">
                 <form method="POST" action="" id="manage-sites-screen-options-form" name="manage_sites_screen_options_form">
-                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                     <input type="hidden" name="wp_nonce" value="<?php echo esc_attr( wp_create_nonce( 'SreenshotsSitesScrOptions' ) ); ?>" />
                     <div class="ui grid field">
                         <label class="top aligned six wide column" tabindex="0"><?php esc_html_e( 'Sites view mode', 'mainwp' ); ?></label>
@@ -528,7 +530,7 @@ class MainWP_Manage_Screenshots { // phpcs:ignore Generic.Classes.OpeningBraceSa
         <script type="text/javascript">
             jQuery( document ).ready( function () {
                 jQuery('#reset-managersites-settings').on( 'click', function () {
-                    mainwp_confirm(__( 'Are you sure.' ), function(){
+                    mainwp_confirm(__( 'Are you sure?' ), function(){
                         jQuery('#mainwp_sitesviewmode').dropdown( 'set selected', 'grid' );
                         jQuery('#submit-managersites-settings').click();
                     }, false, false, true );
@@ -612,10 +614,10 @@ class MainWP_Manage_Screenshots { // phpcs:ignore Generic.Classes.OpeningBraceSa
             if ( 'connected' === $site_status ) {
                 $where = 'wp_sync.sync_errors = ""';
                 if ( $is_not ) {
-                    $where = 'wp_sync.sync_errors != ""';
+                    $where = 'wp_sync.sync_errors <> ""';
                 }
             } elseif ( 'disconnected' === $site_status ) {
-                $where = 'wp_sync.sync_errors != ""';
+                $where = 'wp_sync.sync_errors <> ""';
                 if ( $is_not ) {
                     $where = 'wp_sync.sync_errors = ""';
                 }
@@ -714,6 +716,33 @@ class MainWP_Manage_Screenshots { // phpcs:ignore Generic.Classes.OpeningBraceSa
             'ignored_wp_upgrades',
         );
 
-        return MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_search_websites_for_current_user( $params ) );
+        $cache_group = MainWP_Cache_Helper::CGR_SITES;
+
+        $cache_key = MainWP_Cache_Helper::get_cache_key( 'sites_ids', $cache_group, $params );
+
+        $cache_ids = MainWP_Cache_Helper::instance()->get_cache(
+            $cache_key,
+            $cache_group
+        );
+
+        if ( '_get_cache_false' !== $cache_ids ) {
+            if ( empty( $cache_ids ) ) {
+                $params['_included_cache_ids'] = array( -1 ); // not found if get cached success but empty.
+            } else {
+                $params['_included_cache_ids'] = $cache_ids;
+            }
+        }
+
+        $websites = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_search_websites_for_current_user( $params ) );
+
+        $site_ids = array();
+        while ( $websites && ( $site = MainWP_DB::fetch_object( $websites ) ) ) {
+            $site_ids[] = $site->id;
+        }
+
+        // Set manage sites ids cache.
+        MainWP_Cache_Helper::add_cache( $cache_key, $cache_group, $site_ids );
+
+        return $websites;
     }
 }

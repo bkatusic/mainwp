@@ -383,7 +383,6 @@ let mainwp_newpost_updateCategories = function () {
         return;
     }
     executingUpdateCategories = true;
-    console.log('mainwp_newpost_updateCategories');
     let catsSelection = jQuery('#categorychecklist');
     if (catsSelection.length > 0) {
         let tab = jQuery('#select_sites_tab').val();
@@ -410,8 +409,6 @@ let mainwp_newpost_updateCategories = function () {
 
         let selected_categories = catsSelection.dropdown('get value');
 
-        console.log('selected cats:');
-        console.log(selected_categories);
 
         let data = mainwp_secure_data({
             action: 'mainwp_get_categories',
@@ -431,7 +428,6 @@ let mainwp_newpost_updateCategories = function () {
                     catsSelection.dropdown('refresh');
                     let arrVal = pSelectedCategories.split(",");
                     catsSelection.dropdown('set selected', arrVal);
-                    console.log('re-selected: ' + pSelectedCategories);
                     updateCategoriesPostFunc();
                 }
             };
@@ -567,12 +563,36 @@ window.mainwp_sites_filter_select = function (objInput) {
     }
 }
 
+window.mainwp_tags_filter_select = function (objInput) {
+    let filter = jQuery(objInput).val().toLowerCase();
+    let parent = jQuery(objInput).closest('.mainwp-search-options');
+    let tags = [];
+
+    tags = parent.find('a.item');
+
+    console.log(tags);
+
+    for (let id of tags) {
+        let currentElement = jQuery(id);
+        let value = currentElement.text().toLowerCase();
+        if (value.indexOf(filter) > -1) {
+            currentElement.show();
+        } else {
+            currentElement.hide();
+        }
+    }
+}
+
 jQuery(document).on('keyup', '#mainwp-select-sites-filter', function () {
     mainwp_sites_filter_select(this);
 });
 
 jQuery(document).on('keyup', '#mainwp-screenshots-sites-filter', function () {
     mainwp_sites_filter_select(this);
+});
+
+jQuery(document).on('keyup', '#mainwp-select-tags-filter', function () {
+    mainwp_tags_filter_select(this);
 });
 
 jQuery(function () {
@@ -584,7 +604,6 @@ jQuery(function () {
 window.mainwp_get_icon_start = function () {
     jQuery('.cached-icon-expired').attr('queue', 1);
     mainwpVars.bulkInstallTotal = jQuery('.cached-icon-expired[queue="1"]').length;
-    console.log(mainwpVars.bulkInstallTotal + ': expired cached icons');
     if (0 === mainwpVars.bulkInstallTotal) {
         return;
     }
@@ -620,7 +639,6 @@ let mainwp_get_icon_start_specific = function (itemIconProcess) {
         type: type
     });
     jQuery.post(ajaxurl, data, function (response) {
-        console.log(response + ': ' + slug);
         mainwp_get_icon_start_next();
     });
 }
@@ -647,7 +665,7 @@ jQuery(function () {
             allowMultiple: false,
             closable: true,
             onHide: function () {
-                window.location.href = location.href;
+                mainwp_forceReload();
             }
         }).modal('show');
 
@@ -705,7 +723,7 @@ let mainwp_upload_custom_icon = function (iconObj) {
                     mainwp_set_message_zone('#mainwp-message-zone-upload');
                 }
                 setTimeout(function () {
-                    window.location.href = location.href;
+                    mainwp_forceReload();
                 }, 3000);
             } else if (response.error) {
                 feedback('mainwp-message-zone-upload', response.error, 'red');
@@ -722,6 +740,93 @@ let mainwp_upload_custom_icon = function (iconObj) {
         dataType: 'json'
     });
 
+};
+
+/**
+ * Initialize button state based on site selection checkboxes.
+ * Disables specified buttons until at least one site/tag(group)/client is selected.
+ * 
+ * @param {Array|string} buttonIds - Array of button IDs or single button ID string
+ * @param {string} containerSelector - Optional container selector (default: '#mainwp-select-sites')
+ */
+let mainwp_init_button_site_selection_dependency = function(buttonIds, containerSelector) {
+	containerSelector = containerSelector || '#mainwp-select-sites';
+	
+	// Convert single button ID to array
+	if (typeof buttonIds === 'string') {
+		buttonIds = [buttonIds];
+	}
+	
+	// Function to check if any checkbox is selected
+	let checkSelectionState = function() {
+		let hasSelection = false;
+		
+		// Check all three types of checkboxes
+		let selectors = [
+			'input[name="selected_sites[]"]:checked',
+			'input[name="selected_groups[]"]:checked',
+			'input[name="selected_clients[]"]:checked'
+		];
+		
+		jQuery.each(selectors, function(index, selector) {
+			if (jQuery(containerSelector + ' ' + selector).length > 0) {
+				hasSelection = true;
+				return false; // break the loop
+			}
+		});
+		
+		// Enable or disable buttons based on selection state
+		jQuery.each(buttonIds, function(index, buttonId) {
+			let $button = jQuery('#' + buttonId);
+			let $wrapper = jQuery('#' + buttonId + '_wrapper');
+			
+			if ($button.length > 0) {
+				if (hasSelection) {
+					// Enable button
+					$button.removeClass('disabled').css('pointer-events', '');
+					// Remove wrapper tooltip if exists
+					if ($wrapper.length > 0) {
+						$wrapper.removeAttr('data-tooltip');
+					}
+				} else {
+					// Disable button
+					$button.addClass('disabled').css('pointer-events', 'none');
+					// Add wrapper tooltip if exists
+					if ($wrapper.length > 0) {
+						$wrapper.attr('data-tooltip', 'Select at least one site, client or tag.').attr('data-inverted', '').attr('data-position', 'bottom center');
+					}
+				}
+			}
+		});
+	};
+	
+	// Initialize buttons as disabled with tooltip wrapper
+	jQuery.each(buttonIds, function(index, buttonId) {
+		let $button = jQuery('#' + buttonId);
+		if ($button.length > 0) {
+			// Wrap button in a span for tooltip (if not already wrapped)
+			if ($button.parent().attr('id') !== buttonId + '_wrapper') {
+				$button.wrap('<span id="' + buttonId + '_wrapper"></span>');
+			}
+			let $wrapper = jQuery('#' + buttonId + '_wrapper');
+			
+			// Disable button and add tooltip to wrapper
+			$button.addClass('disabled');
+			$wrapper.attr('data-tooltip', 'Select at least one site, client or tag.').attr('data-inverted', '').attr('data-position', 'bottom center');
+		}
+	});
+	
+	// Use event delegation to handle checkbox changes (including dynamically loaded ones)
+	jQuery(document).on('change', containerSelector + ' input[name="selected_sites[]"], ' + 
+	                              containerSelector + ' input[name="selected_groups[]"], ' + 
+	                              containerSelector + ' input[name="selected_clients[]"]', function() {
+		checkSelectionState();
+	});
+	
+	// Also check on page load in case checkboxes are pre-selected
+	jQuery(document).ready(function() {
+		checkSelectionState();
+	});
 };
 
 let mainwp_upload_custom_types_icon = function (iconObj, uploadAct, iconItemId, iconFileSlug, deleteIcon, callback_uploaded) {
@@ -778,7 +883,7 @@ let mainwp_guidedtours_onchange = function (me) {
     });
     jQuery.post(ajaxurl, data, function () {
         setTimeout(() => {
-            window.location.href = location.href;
+             mainwp_forceReload();
         }, 1000);
     });
 }
@@ -790,6 +895,8 @@ let mainwp_help_modal_content_onclick = function (hide, isToolsPage) {
     let enab_video = jQuery('#mainwp-guided-video-check').checkbox('is checked') ? 1 : 0;
     let enab_chatbase = jQuery('#mainwp-guided-chatbase-check').checkbox('is checked') ? 1 : 0;
 
+    const me = jQuery('#mainwp-update-permissions-button');
+
     let data = mainwp_secure_data({
         action: 'mainwp_help_modal_content_update',
         enable_tour: enab_tour,
@@ -797,23 +904,33 @@ let mainwp_help_modal_content_onclick = function (hide, isToolsPage) {
         enable_chatbase: enab_chatbase,
     });
 
+    jQuery(me).html('<i class="notched circle loading icon"></i> Saving...').addClass('disabled');
+
     jQuery.post(ajaxurl, data, function () {
         if (typeof isToolsPage !== "undefined" && isToolsPage) {
-            location.href = 'admin.php?page=MainWPTools';
+            mainwp_forceReload('admin.php?page=MainWPTools');
         } else {
-            jQuery('#revoke-third-party-perms').fadeIn('100');
-            jQuery('#mainwp-help-modal-content').fadeIn('100');
-            jQuery('#mainwp-help-modal-consent-content').fadeOut('100');
+            if ( jQuery('#mainwp-guided-chatbase-option').is(':checked') ) {
+                jQuery('#mainwp-start-chat-card').removeClass('mainwp-disabled-link');
+            } else {
+                jQuery('#mainwp-start-chat-card').addClass('mainwp-disabled-link');
+                jQuery('#mainwp-chatbase-chat-screen').fadeIn('100').find('iframe').attr('src', '');
+            }
 
-            if (enab_tour) {
-                jQuery('#mainwp-start-tour-card').fadeIn('100');
+            if ( jQuery('#mainwp-guided-tours-option').is(':checked') ) {
+                jQuery('#mainwp-start-tour-card').removeClass('mainwp-disabled-link');
+            } else {
+                jQuery('#mainwp-start-tour-card').addClass('mainwp-disabled-link');
             }
-            if (enab_chatbase) {
-                jQuery('#mainwp-start-chat-card').fadeIn('100');
+
+            if ( jQuery('#mainwp-guided-video-option').is(':checked') ) {
+                jQuery('#mainwp-start-video-card').removeClass('mainwp-disabled-link');
+            } else {
+                jQuery('#mainwp-start-video-card').addClass('mainwp-disabled-link');
+                jQuery('#mainwp-chatbase-video-screen').fadeIn('100').find('iframe').attr('src', '');
             }
-            if (enab_video) {
-                jQuery('#mainwp-start-video-card').fadeIn('100');
-            }
+
+            jQuery(me).html('Update Permissions').removeClass('disabled');
         }
     });
 }

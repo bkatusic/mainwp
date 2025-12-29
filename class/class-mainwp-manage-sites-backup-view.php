@@ -102,7 +102,7 @@ class MainWP_Manage_Sites_Backup_View { // phpcs:ignore Generic.Classes.OpeningB
 
         <div class="ui modal" id="managesite-backup-status-box">
             <div class="header">
-                <?php echo esc_html_e( 'Backup ', 'mainwp' ); ?><?php echo esc_html( stripslashes( $website->name ) ); ?>
+                <?php esc_html_e( 'Backup ', 'mainwp' ); ?><?php echo esc_html( stripslashes( $website->name ) ); ?>
             </div>
             <div class="scrolling content mainwp-modal-content">
             </div>
@@ -152,7 +152,7 @@ class MainWP_Manage_Sites_Backup_View { // phpcs:ignore Generic.Classes.OpeningB
         ?>
             <h3 class="ui dividing header"><?php esc_html_e( 'Backup Options', 'mainwp' ); ?></h3>
             <form method="POST" action="" class="ui form">
-                <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                 <input type="hidden" name="site_id" id="backup_site_id" value="<?php echo intval( $website->id ); ?>"/>
                 <input type="hidden" name="backup_site_full_size" id="backup_site_full_size" value="<?php echo esc_attr( $website->totalsize ); ?>"/>
                 <input type="hidden" name="backup_site_db_size" id="backup_site_db_size" value="<?php echo esc_attr( $website->dbsize ); ?>"/>

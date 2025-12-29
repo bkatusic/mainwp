@@ -93,7 +93,7 @@ class MainWP_Security_Issues { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     </td>
                     <td></td>
                 </tr>
-                
+
                 <tr>
                     <td>
                         <span id="php_reporting_loading"><i class="notched circle big loading icon"></i></span>
@@ -189,7 +189,6 @@ class MainWP_Security_Issues { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     </td>
                     <td>
                         <span id="sec_outdated_plugins_fix" style="display: none"><a href="admin.php?page=managesites&updateid=<?php echo intval( $website->id ); ?>" class="ui mini basic button"><?php esc_html_e( 'Manage Updates', 'mainwp' ); ?></a></span>
-                        <span id="sec_outdated_plugins_unfix" style="display: none"></span>
                     </td>
                 </tr>
 
@@ -210,7 +209,6 @@ class MainWP_Security_Issues { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     </td>
                     <td>
                         <span id="sec_inactive_plugins_fix" style="display: none"><a href="admin.php?page=PluginsManage" class="ui mini basic button"><?php esc_html_e( 'Manage Plugins', 'mainwp' ); ?></a></span>
-                        <span id="sec_inactive_plugins_unfix" style="display: none"></span>
                     </td>
                 </tr>
 
@@ -231,7 +229,6 @@ class MainWP_Security_Issues { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     </td>
                     <td>
                         <span id="sec_outdated_themes_fix" style="display: none"><a href="admin.php?page=managesites&updateid=<?php echo intval( $website->id ); ?>" class="ui mini basic button"><?php esc_html_e( 'Manage Updates', 'mainwp' ); ?></a></span>
-                        <span id="sec_outdated_themes_unfix" style="display: none"></span>
                     </td>
                 </tr>
 
@@ -252,14 +249,13 @@ class MainWP_Security_Issues { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     </td>
                     <td>
                         <span id="sec_inactive_themes_fix" style="display: none"><a href="admin.php?page=ThemesManage" class="ui mini basic button"><?php esc_html_e( 'Manage Themes', 'mainwp' ); ?></a></span>
-                        <span id="sec_inactive_themes_unfix" style="display: none"></span>
                     </td>
                 </tr>
 
             </tbody>
         </table>
-        
-        
+
+
         <input type="hidden" id="securityIssueSite" value="<?php echo intval( $website->id ); ?>"/>
         <div id="wp_upgrades">
             <div updated="-1" site_id="<?php echo intval( $website->id ); ?>" site_name="<?php echo esc_attr( $website->name ); ?>" ></div>
@@ -316,7 +312,6 @@ class MainWP_Security_Issues { // phpcs:ignore Generic.Classes.OpeningBraceSameL
      *
      * @uses \MainWP\Dashboard\MainWP_Connect::fetch_url_authed()
      * @uses \MainWP\Dashboard\MainWP_DB::get_website_by_id()
-     * @uses \MainWP\Dashboard\MainWP_Sync::sync_information_array()
      * @uses \MainWP\Dashboard\MainWP_System_Utility::can_edit_website()
      */
     public static function fix_security_issue() { // phpcs:ignore -- NOSONAR - complex.
@@ -375,11 +370,6 @@ class MainWP_Security_Issues { // phpcs:ignore Generic.Classes.OpeningBraceSameL
         }
 
         $information = MainWP_Connect::fetch_url_authed( $website, 'securityFix', $post_data );
-        if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-            MainWP_Sync::sync_information_array( $website, $information['sync'] );
-            unset( $information['sync'] );
-        }
-
         return $information;
     }
 
@@ -390,7 +380,6 @@ class MainWP_Security_Issues { // phpcs:ignore Generic.Classes.OpeningBraceSameL
      *
      * @uses \MainWP\Dashboard\MainWP_Connect::fetch_url_authed()
      * @uses \MainWP\Dashboard\MainWP_DB::get_website_by_id()
-     * @uses \MainWP\Dashboard\MainWP_Sync::sync_information_array()
      * @uses \MainWP\Dashboard\MainWP_System_Utility::can_edit_website()
      */
     public static function unfix_security_issue() {
@@ -411,11 +400,6 @@ class MainWP_Security_Issues { // phpcs:ignore Generic.Classes.OpeningBraceSameL
         $feature = isset( $_REQUEST['feature'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['feature'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.NonceVerification.Recommended
 
         $information = MainWP_Connect::fetch_url_authed( $website, 'securityUnFix', array( 'feature' => $feature ) );
-        if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-            MainWP_Sync::sync_information_array( $website, $information['sync'] );
-            unset( $information['sync'] );
-        }
-
         return $information;
     }
 }

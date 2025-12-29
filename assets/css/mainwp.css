@@ -1,3 +1,10 @@
+.mainwp-ui a.mainwp-disabled-link {
+    pointer-events: none;
+    cursor: not-allowed;
+    opacity: 0.5;
+    text-decoration: none;
+}
+
 /* 22px - 24px */
 .mainwp-ui h1 {
     font-size: clamp(1.96rem, 0.47vi + 1.86rem, 2.29rem);
@@ -102,6 +109,30 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
     margin-top: 0.15rem;
 }
 
+/* QSW */
+.mainwp-ui-setup::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 75%;
+  right: 0;
+  bottom: 0;
+  background-image: url('../images/mainwp-icon.svg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.05;
+  z-index: -1;
+}
+.mainwp-ui-setup .mainwp-quick-setup-wizard-steps-content .ui.segment {
+    background: none !important;
+}
+
+#mainwp-qsw-exit-links {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+}
+
 /* Content Wrap */
 
 .mainwp-content-wrap {
@@ -116,6 +147,7 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
 .mainwp-ui.toplevel_page_mainwp_tab.mainwp-ui-leftmenu .mainwp-content-wrap,
 .mainwp-ui.mainwp_page_Settings .mainwp-content-wrap,
 .mainwp-ui.mainwp_page_SettingsAdvanced .mainwp-content-wrap,
+.mainwp-ui.mainwp_page_MonitoringSettings .mainwp-content-wrap,
 .mainwp-ui.mainwp_page_SettingsEmail .mainwp-content-wrap,
 .mainwp-ui.mainwp_page_MainWPTools .mainwp-content-wrap,
 .mainwp-ui.mainwp_page_SettingsInsights .mainwp-content-wrap,
@@ -136,6 +168,10 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
 .mainwp-individual-client-overview .mainwp-primary-content-wrap,
 .mainwp_page_InsightsOverview .mainwp-primary-content-wrap {
     padding: 0px;
+}
+
+.hidden-menu-item{
+    display: none !important;
 }
 
 /* Header */
@@ -185,8 +221,17 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
     border-bottom: 1px solid #dadada;
 }
 
-.mainwp-sub-header #mainwp-sites-bulk-actions-menu.ui.selection.dropdown {
-    min-width: 20em;
+.mainwp-sub-header #mainwp-sites-bulk-actions-menu.ui.selection.dropdown,
+.mainwp-ui #mainwp-manage-plugins #mainwp-plugins-bulk-actions-wapper .ui.dropdown,
+.mainwp-ui #mainwp-manage-themes #mainwp-themes-bulk-actions-wapper .ui.dropdown {
+    min-width: 20em !important;
+}
+
+.mainwp-ui .mainwp-actions-bar .ui.mini.form .ui.dropdown,
+.mainwp-ui .mainwp-actions-bar.ui.mini.form .ui.dropdown,
+.mainwp-ui .mainwp-sub-header .ui.mini.form .ui.dropdown,
+.mainwp-ui .mainwp-sub-header.ui.mini.form .ui.dropdown {
+  font-size: 0.78571429rem;
 }
 
 /* Page Navigation */
@@ -260,7 +305,6 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
 }
 
 .mainwp-ui .ui.pagination.menu .item {
-    padding: 0;
     border: none;
     margin: 0;
     text-align: center;
@@ -269,7 +313,6 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
 .mainwp-ui .ui.pagination.menu .item:hover,
 .mainwp-ui .ui.pagination.menu .item.active {
     background: #7fb100;
-    padding: 0;
     border-radius: 0;
 }
 
@@ -317,6 +360,21 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
     overflow-y: auto;
     overflow-x: hidden;
     padding-top: 25px;
+}
+
+#mainwp-support-menu {
+    text-align: center;
+    padding: 0.92857143em;
+}
+
+#mainwp-support-menu a#mainwp-help-menu-item {
+    color: #ffffff !important;
+}
+
+#mainwp-support-menu .icon {
+    margin: 0px !important;
+    font-size: 1.71428571em !important;
+    color: #ffffff !important;
 }
 
 #mainwp-version-label {
@@ -426,15 +484,6 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
     margin-top: 5px;
 }
 
-.mainwp-main-mobile-navigation-container {
-    background-color: #1c1d1b;
-    display: none;
-}
-
-.mainwp-main-mobile-navigation-container .item.active {
-    background: rgba(255, 255, 255, 0.08) !important;
-}
-
 .mainwp-ui #mainwp-main-navigation-container.hoverli {
     background-color: #1c1d1b !important;
 }
@@ -442,6 +491,7 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
 .mainwp-ui.toplevel_page_mainwp_tab #mainwp-main-navigation-container,
 .mainwp-ui.mainwp_page_Settings #mainwp-main-navigation-container,
 .mainwp-ui.mainwp_page_SettingsAdvanced #mainwp-main-navigation-container,
+.mainwp-ui.mainwp_page_MonitoringSettings #mainwp-main-navigation-container,
 .mainwp-ui.mainwp_page_SettingsEmail #mainwp-main-navigation-container,
 .mainwp-ui.mainwp_page_MainWPTools #mainwp-main-navigation-container,
 .mainwp-ui.mainwp_page_SettingsInsights #mainwp-main-navigation-container,
@@ -460,6 +510,7 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
 .mainwp-ui.toplevel_page_mainwp_tab #mainwp-second-level-navigation,
 .mainwp-ui.mainwp_page_Settings #mainwp-second-level-navigation,
 .mainwp-ui.mainwp_page_SettingsAdvanced #mainwp-second-level-navigation,
+.mainwp-ui.mainwp_page_MonitoringSettings #mainwp-second-level-navigation,
 .mainwp-ui.mainwp_page_SettingsEmail #mainwp-second-level-navigation,
 .mainwp-ui.mainwp_page_MainWPTools #mainwp-second-level-navigation,
 .mainwp-ui.mainwp_page_SettingsInsights #mainwp-second-level-navigation,
@@ -477,6 +528,7 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
 .mainwp-ui.mainwp-hidden-second-level-navigation #mainwp-collapse-second-level-navigation,
 .mainwp-ui.mainwp_page_Settings #mainwp-collapse-second-level-navigation,
 .mainwp-ui.mainwp_page_SettingsAdvanced #mainwp-collapse-second-level-navigation,
+.mainwp-ui.mainwp_page_MonitoringSettings #mainwp-collapse-second-level-navigation,
 .mainwp-ui.mainwp_page_SettingsEmail #mainwp-collapse-second-level-navigation,
 .mainwp-ui.mainwp_page_MainWPTools #mainwp-collapse-second-level-navigation,
 .mainwp-ui.mainwp_page_SettingsInsights #mainwp-collapse-second-level-navigation,
@@ -492,6 +544,28 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
 
 #mainwp-main-menu .icon {
     color: #fff !important;
+}
+
+#mainwp-main-menu .icon.left.floated {
+    float: left !important;
+    margin-right: 1em !important;
+}
+
+/* Steps */
+
+.mainwp-ui .ui.steps .step.completed > .icon::before,
+.mainwp-ui .ui.ordered.steps .step.completed::before {
+    background: #7fb100;
+    border-color: #7fb100 !important;
+}
+.mainwp-ui .ui.ordered.steps .step.completed::after {
+    background: #7fb100!important;
+    border-color: #7fb100 !important;
+    color: #1c1d1b !important;
+}
+.ui.circular.steps .step.active::before,
+.ui.circular.steps .step.completed::before {
+    border-color: #7fb100 !important;
 }
 
 /* Widgets */
@@ -522,6 +596,10 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
     overflow-x: hidden;
     overflow-y: auto;
     padding: 1em !important;
+}
+
+.mainwp-widget .mainwp-scrolly-overflow .ui.tab.active {
+    height: 100%;
 }
 
 .mainwp-widget .mainwp-widget-footer {
@@ -557,11 +635,6 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
 
 .mainwp-empty-widget-placeholder img.mainwp-no-results-placeholder {
     margin-bottom: 2rem;
-}
-
-/* Forms - Import Sites */
-.mainwp-managesites-import-rows:nth-of-type(odd) {
-    background-color: rgba(0, 0, 0, .04);
 }
 
 
@@ -625,15 +698,69 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
     overflow: visible !important;
 }
 
-/* Tables */
-
-.mainwp-ui table.dataTable thead>tr>th span.dt-column-order {
-    right: 0px !important;
+#mainwp-sites-filters-row .mainwp-tags-filter-action {
+    display: inline-flex;
+    align-items: stretch;
+    flex: 0 1 auto;
+    margin: 0;
 }
 
-.mainwp-ui table.dataTable.dtr-inline.collapsed>tbody>tr>td.dtr-control::before,
-.mainwp-ui table.dataTable.dtr-inline.collapsed>tbody>tr>th.dtr-control::before {
-    background-color: rgba(0, 0, 0, 0.3);
+#mainwp-sites-filters-row .mainwp-tags-filter-action .ui.selection.dropdown {
+    min-width: 120px;
+    max-width: 260px;
+    width: auto !important;
+    margin: 0;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+#mainwp-sites-filters-row .mainwp-tags-filter-action .ui.dropdown.button {
+    margin: 0;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-left: none !important;
+}
+
+/* Tables */
+/*
+.mainwp-ui table.dataTable thead>tr>th span.dt-column-order {
+    position: relative !important;
+    left: 8px !important;
+    right: 0px !important;
+}
+*/
+.mainwp-ui table.dataTable thead > tr > th .dt-column-header {
+    justify-content: start !important;
+    flex-direction: row !important;
+    gap: 0.5rem !important;
+}
+
+.mainwp-ui table.dataTable thead > tr > th .dt-column-header .dt-column-title {
+    flex-grow: 0 !important;
+}
+
+.mainwp-ui table.dataTable.dtr-inline.collapsed>tbody>tr>td.dtr-control:before,
+.mainwp-ui table.dataTable.dtr-inline.collapsed>tbody>tr>th.dtr-control:before {
+  background-color: none !important;
+  border: none !important;
+  content: "\f0da";
+  font-family: "icons", sans-serif;
+  margin-right: 0.5rem !important;
+}
+
+.mainwp-ui table.dataTable > tbody > tr.child span.dtr-title {
+    font-weight: 600 !important;
+    min-width: 50% !important;
+    text-align: left !important;
+}
+
+.mainwp-ui table.dataTable > tbody > tr.child span.dtr-data {
+    min-width: 50% !important;
+    text-align: right !important;
+}
+
+.mainwp-ui table.dataTable >tbody > tr.child ul.dtr-details > li {
+    border-bottom: 0px solid #000000 !important;
 }
 
 
@@ -656,6 +783,34 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
 }
 
 /* Manage Sites Table */
+
+.mainwp-flag-stack {
+    position: relative;
+    display: inline-block;
+    width: 2.2em;
+    height: 1.5em;
+    vertical-align: middle;
+}
+
+.mainwp-flag-stack__flag {
+    position: absolute;
+    display: inline-block;
+    transform: scale(0.88);
+}
+
+.mainwp-flag-stack__flag--primary {
+    top: -0.24em;
+    left: -0.36em;
+    transform-origin: top left;
+    z-index: 1;
+}
+
+.mainwp-flag-stack__flag--secondary {
+    right: -0.08em;
+    bottom: -0.04em;
+    transform-origin: bottom right;
+    z-index: 2;
+}
 
 table.mainwp-manage-wpsites-table {
     margin: 0;
@@ -728,6 +883,17 @@ table.mainwp-manage-wpsites-table .error a {
 
 #mainwp-manage-updates table tr.active table td {
     background: #f9ffea !important;
+}
+
+.mainwp-ui .master-checkbox.title .dropdown.dropdown-trigger.icon,
+.mainwp-ui .main-master-checkbox.title .accordion-trigger .icon,
+.mainwp-ui .master-checkbox.title .accordion-trigger .icon {
+    transform: rotate(-90deg);
+}
+.mainwp-ui .master-checkbox.active.title .dropdown.dropdown-trigger.icon,
+.mainwp-ui .main-master-checkbox.active.title .accordion-trigger .icon,
+.mainwp-ui .master-checkbox.active.title .accordion-trigger .icon {
+    transform: rotate(0deg);
 }
 
 /* Manaage Plugins & Themes */
@@ -1068,10 +1234,6 @@ table.mainwp-manage-wpsites-table .error a {
     margin-top: 0 !important;
 }
 
-.mainwp-browse-plugins>form {
-    float: left;
-}
-
 body.show-upload-plugin .hide-if-upload,
 body.show-upload-theme .hide-if-upload {
     display: none !important;
@@ -1234,6 +1396,14 @@ body.show-upload-theme .mainwp-content-wrap .mainwp-upload-theme {
     box-sizing: border-box !important;
 }
 
+.mainwp-quick-setup .ui.segments > .ui.segment {
+    border: none !important;
+}
+
+.mainwp-quick-setup .ui.segments > .ui.segment:last-child {
+    box-shadow: none !important;
+}
+
 .mainwp-quick-setup .ui.divider {
     margin: 0 !important;
     height: 1rem !important;
@@ -1277,13 +1447,6 @@ body.show-upload-theme .mainwp-content-wrap .mainwp-upload-theme {
 .indicator-accordion-sorting.ascending .up.icon,
 .indicator-accordion-sorting.descending .down.icon {
     display: inline-block;
-}
-
-
-th .sort.icon,
-th .up.icon,
-th .down.icon {
-    float: right;
 }
 
 .trigger-handle-arrow .icon {
@@ -1413,6 +1576,13 @@ th .down.icon {
 #mainwp-posting-running,
 #mainwp-publish-dimmer {
     height: 100vh;
+    width: 100% !important
+}
+
+.mainwp-ui .ui.dimmer:has(#mainwp-posting-post-modal),
+.mainwp-ui .ui.dimmer:has(#mainwp-posting-page-modal) {
+    margin-top: 0 !important;
+    margin-left: 0 !important;
 }
 
 #plugin-information-footer {
@@ -1477,9 +1647,8 @@ th .down.icon {
     bottom: 1.25rem !important;
     left: 1.25rem !important;
 }
-.master-checkbox.title .dropdown.dropdown-trigger.icon{
-    transform: rotate(-90deg);
-}
-.master-checkbox.active.title .dropdown.dropdown-trigger.icon{
-    transform: rotate(0deg);
+
+#change-history-according-wrapper .ui.accordion .title {
+  border-bottom: 1px solid #ddd;
+  display: flex;
 }

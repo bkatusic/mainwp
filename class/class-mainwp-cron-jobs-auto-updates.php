@@ -127,6 +127,8 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
 
         $autoupdates_websites = MainWP_Auto_Updates_DB::instance()->get_websites_to_continue_updates( $sites_limit, $lasttime_start, false, true ); // included disconnected sites.
 
+        MainWP_Logger::instance()->log_events( 'debug-updates-crons', 'Auto updates :: found :: ' . ( ! empty( $autoupdates_websites ) ? count( $autoupdates_websites ) : 0 ) );
+
         if ( empty( $autoupdates_websites ) ) { // not found automatic sites to updates.
             $this->finished_auto_updates();
             MainWP_Logger::instance()->info( 'Automatic updates finished' );
@@ -149,8 +151,8 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
             $sync_before = apply_filters( 'mainwp_auto_updates_sync_data_before_run', true );
             foreach ( $autoupdates_websites as $website ) {
                 if ( ! empty( $website->sync_errors ) ) {
-                    if ( ! $sync_before || ! MainWP_Sync::sync_site( $website, false, true ) ) {
-                        $this->finished_site_auto_updates( $website );  // to skip.
+                    if ( ! MainWP_Sync::sync_site( $website, false, true ) ) {
+                        $this->finished_site_auto_updates( $website );  // to skip sync error sites.
                     }
                 } elseif ( $sync_before && ! MainWP_Sync::sync_site( $website, false, true ) ) {
                     $this->finished_site_auto_updates( $website );  // to skip.
@@ -164,6 +166,8 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
             MainWP_Logger::instance()->log_update_check( 'Automatic updates found [count=' . count( $autoupdates_websites ) . ']' . $log_lastsstart );
             unset( $autoupdates_websites );
         }
+
+        MainWP_Logger::instance()->log_events( 'debug-updates-crons', 'Auto updates :: running :: count :: ' . count( $websites ) );
 
         $count_processed_now = 0;
 
@@ -215,6 +219,7 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
                     'trans_update_check',
                     'premium_upgrades',
                     'ignored_wp_upgrades',
+                    'ignored_trans_updates',
                     'bulk_wp_upgrades',
                     'bulk_plugin_upgrades',
                     'bulk_theme_upgrades',
@@ -676,10 +681,6 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
                         * @since 4.1
                         */
                         do_action( 'mainwp_after_plugin_theme_translation_update', $information, 'plugin', implode( ',', $slugs ), $website );
-
-                        if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-                            MainWP_Sync::sync_information_array( $website, $information['sync'] );
-                        }
                     } catch ( \Exception $e ) {
                         // ok.
                     }
@@ -749,10 +750,6 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
                                 'list' => urldecode( implode( ',', $slugs ) ),
                             )
                         );
-
-                        if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-                            MainWP_Sync::sync_information_array( $website, $information['sync'] );
-                        }
                     } catch ( \Exception $e ) {
                         // ok.
                     }
@@ -831,9 +828,6 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
                                 'list' => urldecode( implode( ',', $slugs ) ),
                             )
                         );
-                        if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-                            MainWP_Sync::sync_information_array( $website, $information['sync'] );
-                        }
                     } catch ( \Exception $e ) {
                         // ok.
                     }
@@ -890,6 +884,8 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
                 }
             }
         }
+
+        MainWP_Logger::instance()->log_events( 'debug-updates-crons', 'Auto updates :: processed count :: ' . $count_processed_now );
 
         if ( ! empty( $finished_updates_sites ) ) {
             foreach ( $finished_updates_sites as $websiteId ) {
