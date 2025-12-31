@@ -2157,4 +2157,74 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
 
         return $html;
     }
+
+    /**
+     * Generate a sortable BIGINT for WordPress versions.
+     * Newer versions produce larger numbers.
+     * Ordering matches WP core version_compare().
+     *
+     * @param string $version Version value.
+     */
+    public function wp_versions_order_num( $version ) {
+
+        $v = strtolower( trim( $version ) );
+
+        // 1) Normalize WordPress aliases.
+        $v = str_replace(
+            array( '-alpha', '-beta', '-rc' ),
+            array( '-a', '-b', '-rc' ),
+            $v
+        );
+
+        // nightly / dev / trunk → dev.
+        if ( preg_match( '/-(nightly|dev|trunk)/', $v ) ) {
+            $v = preg_replace( '/-.+$/', '-dev', $v );
+        }
+
+        // unknown tags → dev.
+        if ( preg_match( '/-[a-z]+/', $v ) && ! preg_match( '/-(a|b|rc|dev)/', $v ) ) {
+            $v = preg_replace( '/-.+$/', '-dev', $v );
+        }
+
+        // 2) Extract numeric base version.
+        $base  = explode( '-', $v, 2 )[0];
+        $parts = array_map( 'intval', explode( '.', $base ) );
+
+        if ( count( $parts ) < 4 ) {
+            $parts = array_pad( $parts, 4, 0 );
+        }
+
+        $versionNum =
+        ( $parts[0] << 24 ) |
+        ( $parts[1] << 16 ) |
+        ( $parts[2] << 8 ) |
+        $parts[3];
+
+        // 3) Release channel rank (lower = newer).
+        $rank = 1; // stable.
+        if ( strpos( $v, '-rc' ) !== false ) {
+            $rank = 2;
+        } elseif ( strpos( $v, '-b' ) !== false ) {
+            $rank = 3;
+        } elseif ( strpos( $v, '-a' ) !== false ) {
+            $rank = 4;
+        } elseif ( strpos( $v, '-dev' ) !== false ) {
+            $rank = 5;
+        }
+
+        // 4) Prerelease / build number.
+        $build = 0;
+        if ( preg_match( '/rc(\d+)/', $v, $m ) ) {
+            $build = (int) $m[1];
+        } elseif ( preg_match( '/b(\d+)/', $v, $m ) ) {
+            $build = (int) $m[1];
+        } elseif ( preg_match( '/a(\d+)/', $v, $m ) ) {
+            $build = (int) $m[1];
+        }
+
+        // 5) Compose sortable BIGINT.
+        return ( $versionNum << 32 )
+        | ( $rank << 29 )
+        | min( $build, ( 1 << 29 ) - 1 );
+    }
 }

@@ -331,7 +331,8 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             MainWP_DB::instance()->update_website_option( $pWebsite, 'phpversion', $phpversion );
         }
         if ( ! empty( $wpversion ) ) { // to support sorting by wpversion.
-            MainWP_DB::instance()->update_website_option( $pWebsite, 'wpversion', $wpversion );
+            $ver_num = MainWP_Utility::instance()->wp_versions_order_num( $wpversion );
+            MainWP_DB::instance()->update_website_option( $pWebsite, 'wpversion_order_num', $ver_num );
         }
 
         if ( isset( $information['directories'] ) && is_array( $information['directories'] ) ) {

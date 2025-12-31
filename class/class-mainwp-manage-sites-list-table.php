@@ -782,7 +782,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                 } elseif ( 'phpversion' === $req_orderby ) {
                     $orderby = ' INET_ATON( SUBSTRING_INDEX( CONCAT( SUBSTRING_INDEX(wp_optionview.phpversion, "-", 1), ".0.0.0.0" ), ".", 4) ) ' . ( 'asc' === $req_order ? 'asc' : 'desc' );
                 } elseif ( 'wpcore_version' === $req_orderby ) {
-                    $orderby = ' INET_ATON( SUBSTRING_INDEX( CONCAT( SUBSTRING_INDEX(wp_optionview.wpversion, "-", 1), ".0.0.0.0" ), ".", 4) ) ' . ( 'asc' === $req_order ? 'asc' : 'desc' );
+                    $orderby = ' wp_optionview.wpversion_order_num ' . ( 'asc' === $req_order ? 'asc' : 'desc' );
                 } elseif ( 'ip' === $req_orderby ) {
                     // Sort by Server IP (string sort covers both IPv4 and IPv6).
                     $orderby = ' wp.ip ' . ( 'asc' === $req_order ? 'asc' : 'desc' );
@@ -1057,7 +1057,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
         $totalRecords = $this->get_total_sites_by_pramas( $total_params );
 
         if ( 'wpcore_version' === $req_orderby ) {
-            $extra_view[] = 'wpversion';
+            $extra_view[] = 'wpversion_order_num';
         }
 
         $params['extra_view']    = $extra_view;
