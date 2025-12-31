@@ -830,6 +830,15 @@ class MainWP_Uptime_Monitoring_Connect { // phpcs:ignore Generic.Classes.Opening
             $status = static::DOWN;
         }
 
+        if ( static::DOWN === $status && ! $set_retry ) {
+            $max_retries = static::get_apply_setting( 'maxretries', (int) $monitor->maxretries, $global_settings, -1, 0 );
+            if ( $max_retries > 0 && $monitor->retries < $max_retries ) {
+                $status = static::PENDING; // to retry.
+                $down_count++;
+                MainWP_DB_Uptime_Monitoring::instance()->update_monitor_increase_retry( $monitor_id );
+            }
+        }
+
         if ( ! empty( $error ) ) {
             $heart_msg .= " {$error}";
         }
@@ -925,6 +934,11 @@ class MainWP_Uptime_Monitoring_Connect { // phpcs:ignore Generic.Classes.Opening
         $debug .= ' :: [time=' . $db_datetime . ']';
 
         MainWP_Logger::instance()->log_uptime_check( $debug );
+
+        if ( 301 === (int) $http_code && $importance ) {
+            // advanced debug.
+            MainWP_Logger::instance()->log_uptime_notice( 'Uptime monitor 301 status :: [http_code=' . $http_code . '] :: [monitor_url=' . $mo_url . '] :: [monitor_id=' . $monitor->monitor_id . '] :: [siteid=' . $monitor->wpid . '] :: [monitor_method=' . $monitor->method . ']' );
+        }
 
         if ( empty( $data ) ) {
             MainWP_Logger::instance()->log_uptime_check( '[data=EMPTY]' );

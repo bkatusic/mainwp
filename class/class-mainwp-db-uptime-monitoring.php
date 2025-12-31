@@ -621,6 +621,21 @@ KEY idx_wpid (wpid)";
     }
 
     /**
+     * Update site monitor increase retries.
+     *
+     * @param array $data data.
+     *
+     * @return bool Database query results or false.
+     */
+    public function update_monitor_increase_retry( $monitor_id ) {
+        if ( empty( $monitor_id ) ) {
+            return false;
+        }
+        $table_monitors = esc_sql( $this->table_name( 'monitors' ) );
+        return $this->wpdb->query( $this->wpdb->prepare( 'UPDATE ' . $table_monitors . ' SET retries = retries + 1 WHERE monitor_id=%d', $monitor_id ) );
+    }
+
+    /**
      * Get child site monitor by id via SQL.
      *
      * @param array $params params.

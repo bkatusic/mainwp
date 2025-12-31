@@ -489,15 +489,19 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
             <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-monitor-general" default-indi-value="<?php echo $individual ? -1 : 1; ?>" <?php echo $disableGeneralSitesMonitoring ? 'style="display:none"' : ''; ?> hide-element="uptime-monitoring">
                 <label class="six wide column middle aligned">
                 <?php
+
                 if ( $individual ) {
-                    MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_edit_monitor_maxretries', (int) $mo_settings['maxretries'] );
+                    $show_indi = -1 === (int) $mo_settings['maxretries'] ? 0 : 1;
                 } else {
-                    MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_edit_monitor_maxretries_global', (int) $mo_settings['maxretries'] );
+                    $show_indi = 1 === (int) $mo_settings['maxretries'] ? 0 : 1;
                 }
+
+                MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $show_indi );
+
                 esc_html_e( 'Down Confirmation Check', 'mainwp' );
                 ?>
                 </label>
-                <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Select Down Confirmation Check.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                <div class="ten wide column">
                     <select name="mainwp_edit_monitor_maxretries" id="mainwp_edit_monitor_maxretries" class="ui dropdown settings-field-value-change-handler">
                         <?php
                         if ( $individual ) {
@@ -505,9 +509,10 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                                 <option value="-1" <?php echo -1 === (int) $mo_settings['maxretries'] ? 'selected' : ''; ?>><?php esc_html_e( 'Use global setting', 'mainwp' ); ?></option>
                             <?php
                         }
+                        $maxretries_val = ! empty( $mo_settings['maxretries'] ) && 1 <= intval( $mo_settings['maxretries'] ) ? intval( $mo_settings['maxretries'] ) : 1;
                         ?>
-                        <option value="1" <?php echo 1 === (int) $mo_settings['maxretries'] ? 'selected' : ''; ?>><?php esc_html_e( 'Enable', 'mainwp' ); ?></option>
-                        <option value="0" <?php echo 0 === (int) $mo_settings['maxretries'] ? 'selected' : ''; ?>><?php esc_html_e( 'Disable', 'mainwp' ); ?></option>
+                        <option value="<?php echo intval( $maxretries_val ); ?>" <?php echo 0 < (int) $maxretries_val ? 'selected' : ''; ?>><?php esc_html_e( 'Enable', 'mainwp' ); ?></option>
+                        <option value="0" <?php echo 0 === $maxretries_val ? 'selected' : ''; ?>><?php esc_html_e( 'Disable', 'mainwp' ); ?></option>
                     </select>
                 </div>
             </div>
