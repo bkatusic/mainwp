@@ -371,9 +371,14 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
                 $join = ' JOIN ' . $this->get_tag_view() . ' wp_tagview ON gr.id = wp_tagview.id ';
             }
         }
-        $table_group = esc_sql( $this->table_name( 'group' ) );
+        $table_group    = esc_sql( $this->table_name( 'group' ) );
         $table_wp_group = esc_sql( $this->table_name( 'wp_group' ) );
-        return $this->wpdb->get_results( "SELECT gr.* " . esc_sql( $select ) . ", COUNT(DISTINCT(wpgr.wpid)) as count_sites FROM `{$table_group}` gr LEFT JOIN `{$table_wp_group}` wpgr ON gr.id = wpgr.groupid " . esc_sql( $join ) . " WHERE 1 " . esc_sql( $where ) . " GROUP BY gr.id ORDER BY gr.name " . esc_sql( $limit ), OBJECT_K );
+        $select_sql     = $select ? $select : '';
+        $join_sql       = $join ? $join : '';
+        $where_sql      = $where ? $where : '';
+        $limit_sql      = $limit ? $limit : '';
+        $query          = "SELECT gr.* {$select_sql}, COUNT(DISTINCT(wpgr.wpid)) as count_sites FROM `{$table_group}` gr LEFT JOIN `{$table_wp_group}` wpgr ON gr.id = wpgr.groupid {$join_sql} WHERE 1 {$where_sql} GROUP BY gr.id ORDER BY gr.name {$limit_sql}";
+        return $this->wpdb->get_results( $query, OBJECT_K );
     }
 
     /**
