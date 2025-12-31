@@ -155,7 +155,7 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
   is_staging tinyint(1) NOT NULL DEFAULT 0,
   client_id int(11) NOT NULL DEFAULT 0,
   `suspended` tinyint(1) NOT NULL DEFAULT 0,
-  KEY idx_wp_staging_name_id(is_staging, name(191), id),
+  KEY idx_wp_staging_name_id (is_staging, name(191), id),
   KEY idx_userid (userid),
   KEY idx_client_id (client_id),
   KEY idx_url (url(191))";
