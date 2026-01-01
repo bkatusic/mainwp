@@ -5382,3 +5382,127 @@ function mainwp_forceReload(targetUrl) {
     // Navigate to URL (force reload from server)
     window.location.href = url;
 }
+
+class TablePersistentState {
+  constructor(table, options = {}) {
+    if (!table || !(table instanceof HTMLElement)) {
+      throw new Error('TablePersistentState requires a table element');
+    }
+
+    this.table = table;
+    this.tableId = table.id;
+    this.headers = table.querySelectorAll(
+      options.headerSelector || '.handle-cols-sorting'
+    );
+
+    this.options = {
+      storage: options.storage !== false, // default true
+      storagePrefix: options.storagePrefix || 'mainwp_tables_sort_state',
+      onPersist: options.onPersist || null,
+      defaultSort: options.defaultSort || null, // { column, direction }
+    };
+
+    this.init();
+  }
+
+  /* ---------- Storage ---------- */
+
+  get storageKey() {
+    return `${this.options.storagePrefix}:${this.tableId}`;
+  }
+
+  saveState(column, direction) {
+    if (!this.options.storage || !this.tableId) return;
+
+    localStorage.setItem(
+      this.storageKey,
+      JSON.stringify({ column, direction })
+    );
+  }
+
+  loadState() {
+    if (!this.options.storage || !this.tableId) return null;
+
+    try {
+      return JSON.parse(localStorage.getItem(this.storageKey));
+    } catch {
+      return null;
+    }
+  }
+
+  /* ---------- UI helpers ---------- */
+
+  clearIndicators() {
+    this.headers.forEach(th => {
+      th.classList.remove('sorted-asc', 'sorted-desc');
+      th.removeAttribute('aria-sort');
+    });
+  }
+
+  applyIndicator(th, direction) {
+    th.classList.add(direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
+    th.setAttribute('aria-sort', direction);
+  }
+
+  toggleDirection(current) {
+    return current === 'asc' ? 'desc' : 'asc';
+  }
+
+  /* ---------- Sorting flow ---------- */
+
+  persistState(column, direction, th = null, persist = true, isrestore = false ) {
+    if (th) {
+      this.clearIndicators();
+      this.applyIndicator(th, direction);
+    }
+
+    if (persist) {
+      this.saveState(column, direction);
+    }
+
+    if (typeof this.options.onPersist === 'function') {
+      this.options.onPersist({
+        table: this.table,
+        column,
+        direction,
+        isrestore
+      });
+    }
+  }
+
+  /* ---------- Init ---------- */
+
+  restore() {
+    const saved = this.loadState() || this.options.defaultSort;
+    if (!saved) return;
+
+    const th = this.table.querySelector(
+      `[data-key="${saved.column}"]`
+    );
+
+    if (th) {
+      this.persistState(saved.column, saved.direction, th, false, true );
+    }
+  }
+
+  bindEvents() {
+    this.headers.forEach(th => {
+      th.addEventListener('click', () => {
+        const column = th.dataset.key;
+        const isAsc = th.classList.contains('sorted-asc');
+        const direction = this.toggleDirection(isAsc ? 'asc' : 'desc');
+
+        this.persistState(column, direction, th);
+      });
+    });
+  }
+
+  init() {
+    if (!this.tableId && this.options.storage) {
+      console.warn('TablePersistentState: table has no id, storage disabled');
+    }
+
+    this.restore();
+    this.bindEvents();
+  }
+}

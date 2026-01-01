@@ -51,18 +51,18 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
     public static function render_plugins_updates( $websites, $total_plugin_upgrades, $userExtension, $allPlugins, $pluginsInfo, $trustedPlugins ) { // phpcs:ignore -- NOSONAR - complex.
         ?>
         <?php if ( 0 < $total_plugin_upgrades ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox" id="mainwp-plugins-updates-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox mainwp-js-persistent-table" id="mainwp-plugins-updates-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
-                    <th scope="col" class="eight wide indicator-accordion-sorting handle-accordion-sorting">
+                    <th scope="col" class="eight wide indicator-accordion-sorting handle-accordion-sorting" data-key="plugin">
                     <div class="ui main-master checkbox ">
                         <input type="checkbox" name=""><label><?php esc_html_e( 'Plugin', 'mainwp' ); ?></label>
                     </div>
                     <?php MainWP_UI::render_sorting_icons(); ?>
                     </th>
-                    <th scope="col" class="two wide indicator-accordion-sorting handle-accordion-sorting"><?php echo intval( $total_plugin_upgrades ) . ' ' . esc_html( _n( 'Update', 'Updates', $total_plugin_upgrades, 'mainwp' ) ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                    <th scope="col" class="two wide indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Trusted', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="two wide indicator-accordion-sorting " data-key="update"><?php echo intval( $total_plugin_upgrades ) . ' ' . esc_html( _n( 'Update', 'Updates', $total_plugin_upgrades, 'mainwp' ) ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="two wide indicator-accordion-sorting handle-accordion-sorting" data-key="trusted"><?php esc_html_e( 'Trusted', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                     <th scope="col" class="four wide no-sort right aligned"><?php MainWP_UI::render_show_all_updates_button(); ?></th>
                 </tr>
             </thead>
@@ -254,18 +254,18 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
         $updates_table_helper = new MainWP_Updates_Table_Helper( $userExtension->site_view, 'theme' );
         ?>
         <?php if ( 0 < $total_theme_upgrades ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox" id="mainwp-themes-updates-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox mainwp-js-persistent-table" id="mainwp-themes-updates-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
-                    <th scope="col" class="eight wide handle-accordion-sorting indicator-accordion-sorting">
+                    <th scope="col" class="eight wide handle-accordion-sorting indicator-accordion-sorting" data-key="theme">
                         <div class="ui main-master checkbox ">
                             <input type="checkbox" name=""><label><?php esc_html_e( 'Theme', 'mainwp' ); ?></label>
                         </div>
                         <?php MainWP_UI::render_sorting_icons(); ?>
                     </th>
-                    <th scope="col" class="two wide handle-accordion-sorting indicator-accordion-sorting"><?php echo intval( $total_theme_upgrades ) . ' ' . esc_html( _n( 'Update', 'Updates', $total_theme_upgrades, 'mainwp' ) ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                    <th scope="col" class="two wide handle-accordion-sorting indicator-accordion-sorting"><?php esc_html_e( 'Trusted', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="two wide handle-accordion-sorting indicator-accordion-sorting" data-key="update"><?php echo intval( $total_theme_upgrades ) . ' ' . esc_html( _n( 'Update', 'Updates', $total_theme_upgrades, 'mainwp' ) ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="two wide handle-accordion-sorting indicator-accordion-sorting" data-key="trusted"><?php esc_html_e( 'Trusted', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                     <th scope="col" class="four wide no-sort right aligned"><?php MainWP_UI::render_show_all_updates_button(); ?></th>
                 </tr>
             </thead>
@@ -451,17 +451,17 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
         ?>
 
         <?php if ( 0 < $total_translation_upgrades ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox" id="mainwp-translations-sites-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox mainwp-js-persistent-table" id="mainwp-translations-sites-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
-                    <th scope="col" class="eight wide indicator-accordion-sorting handle-accordion-sorting">
+                    <th scope="col" class="eight wide indicator-accordion-sorting handle-accordion-sorting" data-key="translation">
                         <div class="ui main-master checkbox ">
                             <input type="checkbox" name=""><label><?php esc_html_e( 'Translation', 'mainwp' ); ?></label>
                         </div>
                         <?php MainWP_UI::render_sorting_icons(); ?>
                     </th>
-                    <th scope="col" class="two wide indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="two wide indicator-accordion-sorting handle-accordion-sorting" data-key="trusted"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                     <th scope="col" class="six wide right aligned"><?php MainWP_UI::render_show_all_updates_button(); ?></th>
                 </tr>
             </thead>
@@ -581,13 +581,13 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
         $count_abandoned = count( $allPluginsOutdate );
         ?>
         <?php if ( 0 < $count_abandoned ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table" id="mainwp-abandoned-plugins-items-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table mainwp-js-persistent-table" id="mainwp-abandoned-plugins-items-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
                     <th scope="col" class="no-sort"></th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Plugin', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="plugin"><?php esc_html_e( 'Plugin', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="abandoned"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                     <th scope="col" class="collapsing no-sort"><?php MainWP_UI::render_show_all_updates_button(); ?></th>
                 </tr>
             </thead>
@@ -707,12 +707,12 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
         $count_abandoned = count( $allThemesOutdate );
         ?>
         <?php if ( 0 < $count_abandoned ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table" id="mainwp-themes-updates-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table mainwp-js-persistent-table" id="mainwp-themes-updates-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
-                    <th scope="col" scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Theme', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="theme"><?php esc_html_e( 'Theme', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="abandoned"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                     <th scope="col" class="collapsing no-sort">
                         <?php MainWP_UI::render_show_all_updates_button(); ?>
                     </th>

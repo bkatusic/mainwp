@@ -1812,7 +1812,7 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         $table_features = apply_filters( 'mainwp_updates_table_features', $table_features );
         ?>
         <script type="text/javascript">
-            jQuery( document ).ready( function () {
+            jQuery( document ).ready( function ($) {
                 jQuery( '#mainwp-manage-updates .ui.accordion' ).accordion( {
                     "exclusive": <?php echo esc_html( $table_features['exclusive'] ); ?>,
                     "duration": <?php echo esc_html( $table_features['duration'] ); ?>,
@@ -1820,6 +1820,28 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                         //mainwp_datatable_init_and_fix_recalc('table.mainwp-manage-updates-item-table');
                     }
                 } );
+
+                $('table.mainwp-js-persistent-table').each(function () {
+                    const table = this; // DOM element
+                    new TablePersistentState(table, {
+                        headerSelector: '.handle-accordion-sorting',
+                        onPersist:function( { table, column, direction, isrestore } ){
+                            if(isrestore){
+                                const $th = $(table).find(
+                                    `.handle-accordion-sorting[data-key="${column}"]` // header column must have data-key property.
+                                );
+                                if (!$th) return;
+                                setTimeout(function () {// to fix binding delay issue.
+                                    $($th).trigger('click');
+                                    if(direction === 'desc'){
+                                        $($th).trigger('click');
+                                    }
+                                }, 500);
+                            }
+                        }
+                    });
+                });
+
             } );
 
             mainwp_datatable_init_and_fix_recalc = function(selector){
@@ -1839,6 +1861,8 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                     }
                 });
             }
+
+
 
             jQuery( document ).on( 'click', '.trigger-all-accordion', function() {
                 if ( jQuery( this ).hasClass( 'active' ) ) {
