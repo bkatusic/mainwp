@@ -736,6 +736,11 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
                     }
                 });
 
+                if($( '#mainwp-module-log-filter-ranges').length && 'custom' === $( '#mainwp-module-log-filter-ranges').dropdown('get value') && dateRanges?.custom?.start !== undefined ){
+                    $('#mainwp-module-log-filter-dtsstart').calendar('set date', dateRanges['custom']['start']);
+                    $('#mainwp-module-log-filter-dtsstop').calendar('set date', dateRanges['custom']['end']);
+                }
+
                 mainwp_module_log_manage_events_filter = function() {
                     let range = jQuery( '#mainwp-module-log-filter-ranges').dropdown('get value');
                     let group = jQuery( '#mainwp-module-log-filter-groups').dropdown('get value');
