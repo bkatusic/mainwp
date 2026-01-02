@@ -537,15 +537,15 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     $fail_list_id = 'mainwp_managesites_import_fail_logging';
                     ?>
                     <input type="hidden" id="mainwp_managesites_do_managesites_import" value="1"/>
-                    <input type="hidden" id="<?php esc_attr( $hd_id1 ); ?>" value="1"/>
-                    <input type="hidden" id="<?php esc_attr( $hd_id2 ); ?>" value="<?php echo esc_attr( count( $import_data ) ); ?>"/>
+                    <input type="hidden" id="<?php echo esc_attr( $hd_id1 ); ?>" value="1"/>
+                    <input type="hidden" id="<?php echo esc_attr( $hd_id2 ); ?>" value="<?php echo esc_attr( count( $import_data ) ); ?>"/>
 
-                    <div class="mainwp_managesites_import_listing" id="<?php esc_attr( $list_id ); ?>">
+                    <div class="mainwp_managesites_import_listing" id="<?php echo esc_attr( $list_id ); ?>">
                         <span class="log ui small text">
                             <?php echo esc_html( $header_line ) . '<br/>'; ?>
                         </span>
                     </div>
-                    <div class="mainwp_managesites_import_listing" id="<?php esc_attr( $fail_list_id ); ?>" style="display: none;">
+                    <div class="mainwp_managesites_import_listing" id="<?php echo esc_attr( $fail_list_id ); ?>" style="display: none;">
                         <?php echo esc_html( $header_line ); ?>
                     </div>
                     <?php
