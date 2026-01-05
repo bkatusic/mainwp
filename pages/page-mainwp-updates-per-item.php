@@ -79,7 +79,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
                     <tr class="ui title master-checkbox">
                         <td class="accordion-trigger"><i class="icon dropdown"></i></td>
                         <td class="middle aligned">
-                            <div class="ui master checkbox">
+                            <div class="ui middle aligned fitted master checkbox">
                                 <input type="checkbox" name="">
                             </div>
                             &nbsp;&nbsp;<?php echo MainWP_System_Utility::get_plugin_icon( $pluginsInfo[ $slug ]['slug'] ); // phpcs:ignore WordPress.Security.EscapeOutput ?>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -278,10 +278,11 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
                     ?>
                     <tr class="ui title master-checkbox">
                         <td class="accordion-trigger"><i class="icon dropdown"></i></td>
-                        <td>
-                        <div class="ui master checkbox">
-                            <input type="checkbox" name=""><label><?php echo MainWP_System_Utility::get_theme_icon( $slug ); // phpcs:ignore WordPress.Security.EscapeOutput ?>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo esc_html( $themesInfo[ $slug ]['name'] ); ?></label>
-                        </div>
+                        <td class="middle aligned">
+                            <div class="ui middle aligned fitted master checkbox">
+                                <input type="checkbox" name="">
+                            </div>
+                            &nbsp;&nbsp;<?php echo MainWP_System_Utility::get_theme_icon( $slug ); // phpcs:ignore WordPress.Security.EscapeOutput ?>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo esc_html( $themesInfo[ $slug ]['name'] ); ?>
                         </td>
                         <td sort-value="<?php echo intval( $cnt ); ?>"><?php echo intval( $cnt ); ?> <?php echo esc_html( _n( 'Update', 'Updates', $cnt, 'mainwp' ) ); ?></td>
                         <td sort-value="<?php echo esc_attr( $trusted ); ?>"><?php echo $trusted ? '<span class="ui tiny green label">Trusted</span>' : '<span class="ui tiny grey label">Not Trusted</span>'; ?></td>
@@ -520,11 +521,13 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
                                         }
                                         ?>
                                         <tr site_id="<?php echo esc_attr( $website->id ); ?>" site_name="<?php echo esc_attr( rawurlencode( stripslashes( $website->name ) ) ); ?>" updated="0">
-                                            <td>
-                                            <div class="ui child checkbox">
-                                                <input type="checkbox" name="">
-                                            </div>
-                                            <?php MainWP_Updates::render_site_link_dashboard( $website ); ?>
+                                            <td class="middle aligned">
+                                                <div class="ui child checkbox middle aligned fitted">
+                                                    <input type="checkbox" name="">
+                                                </div>
+                                                <span class="ui middle aligned fitted" >
+                                                    <?php MainWP_Updates::render_site_link_dashboard( $website ); ?>
+                                                </span>
                                             </td>
                                             <td><strong class="mainwp-768-show"><?php esc_html_e( 'Version:', 'mainwp' ); ?></strong> <?php echo esc_html( $translation_upgrade['version'] ); ?></td>
                                             <?php
