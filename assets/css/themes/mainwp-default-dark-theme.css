@@ -1067,8 +1067,8 @@
   color: var(--mainwp-text-secondary) !important;
 }
 
-.mainwp-ui.mainwp-custom-theme div.dt-container .dt-paging .dt-paging-button.disabled, 
-.mainwp-ui.mainwp-custom-theme div.dt-container .dt-paging .dt-paging-button.disabled:hover, 
+.mainwp-ui.mainwp-custom-theme div.dt-container .dt-paging .dt-paging-button.disabled,
+.mainwp-ui.mainwp-custom-theme div.dt-container .dt-paging .dt-paging-button.disabled:hover,
 .mainwp-ui.mainwp-custom-theme div.dt-container .dt-paging .dt-paging-button.disabled:active {
   color: var(--mainwp-text-secondary) !important;
 }
@@ -1526,7 +1526,6 @@ body.mainwp-ui.mainwp-custom-theme,
   background-color: var(--mainwp-element-background);
   border: 1px solid var(--mainwp-border) !important;
   padding: var(--mainwp-area-padding) !important;
-  margin-top: calc(1em + 58px) !important;
   margin-left: 1em !important;
   margin-right: 1em !important;
   border-radius: var(--area-radius) !important;
