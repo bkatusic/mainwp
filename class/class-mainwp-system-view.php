@@ -1174,7 +1174,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
                 'page'     => 'Extensions-Mainwp-Ithemes-Security-Extension',
                 'slug'     => 'better-wp-security/better-wp-security.php',
                 'slug_pro' => 'ithemes-security-pro/ithemes-security-pro.php',
-                'name'     => 'iThemes Security',
+                'name'     => 'Solid Security Integration',
             ),
             array(
                 'page' => 'Extensions-Mainwp-Updraftplus-Extension',
