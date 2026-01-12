@@ -2287,22 +2287,23 @@ let mainwp_createuser = function () {
     if (cont) {
         mainwp_set_message_zone('#mainwp-message-zone', '<i class="notched circle loading icon"></i> ' + __('Creating the user. Please wait...'), '', true);
         jQuery('#bulk_add_createuser').attr('disabled', 'disabled');
+        const is_send_password = jQuery('#send_password').is(':checked') ? 1 : 0;
         //Add user via ajax!!
         let data = mainwp_secure_data({
-            action: 'mainwp_bulkadduser',
-            'select_by': jQuery('#select_by').val(),
-            'selected_groups[]': selected_groups,
-            'selected_sites[]': selected_sites,
-            'selected_clients[]': selected_clients,
-            'user_login': jQuery('#user_login').val(),
-            'email': jQuery('#email').val(),
-            'url': jQuery('#url').val(),
-            'first_name': jQuery('#first_name').val(),
-            'last_name': jQuery('#last_name').val(),
-            'pass1': jQuery('#password').val(),
-            'pass2': jQuery('#password').val(),
-            'send_password': jQuery('#send_password').attr('checked'),
-            'role': jQuery('#role').val()
+            action: "mainwp_bulkadduser",
+            select_by: jQuery("#select_by").val(),
+            "selected_groups[]": selected_groups,
+            "selected_sites[]": selected_sites,
+            "selected_clients[]": selected_clients,
+            user_login: jQuery("#user_login").val(),
+            email: jQuery("#email").val(),
+            url: jQuery("#url").val(),
+            first_name: jQuery("#first_name").val(),
+            last_name: jQuery("#last_name").val(),
+            pass1: jQuery("#password").val(),
+            pass2: jQuery("#password").val(),
+            send_password: is_send_password,
+            role: jQuery("#role").val(),
         });
 
         jQuery.post(ajaxurl, data, function (response) {
