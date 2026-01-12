@@ -287,16 +287,51 @@ class Log_Install extends MainWP_Install {
         $is_db_ver_with_archive = version_compare( $currentVersion, '1.0.1.8', '>=' );
         if ( ! empty( $currentVersion ) && version_compare( $currentVersion, '1.0.1.40', '<' ) ) { // NOSONAR - non-ip.
 
-            // to save microsecords.
-            if ( $is_db_ver_with_archive ) {
-                $this->wpdb->query( 'UPDATE ' . $this->table_name( 'wp_logs' ) . ' SET created = ROUND(created * 1000000)' ); //phpcs:ignore -- ok.
-            }
-
             $this->wpdb->query( 'ALTER TABLE ' . $this->table_name( 'wp_logs' ) . ' MODIFY COLUMN created BIGINT(20) UNSIGNED NOT NULL' ); //phpcs:ignore -- ok.
 
+            // to save microsecords.
             if ( $is_db_ver_with_archive ) {
-                $this->wpdb->query( 'UPDATE ' . $this->table_name( 'wp_logs_archive' ) . ' SET created = ROUND(created * 1000000)' ); //phpcs:ignore -- ok.
-                $this->wpdb->query( 'ALTER TABLE ' . $this->table_name( 'wp_logs_archive' ) . ' MODIFY COLUMN created BIGINT(20) UNSIGNED NOT NULL' ); //phpcs:ignore -- ok.
+                $table = $this->table_name( 'wp_logs' );
+                $limit = 1000;
+                do {
+                    // Update a safe batch.
+                    $updated = $this->wpdb->query(
+                        $this->wpdb->prepare(
+                            "
+                            UPDATE {$table}
+                            SET created = created * 1000000
+                            WHERE created < %d
+                            LIMIT %d
+                            ",
+                            10000000000,
+                            $limit
+                        )
+                    );
+                    usleep( 100000 ); // 100ms.
+                } while ( $updated > 0 );
+            }
+
+            $this->wpdb->query( 'ALTER TABLE ' . $this->table_name( 'wp_logs_archive' ) . ' MODIFY COLUMN created BIGINT(20) UNSIGNED NOT NULL' ); //phpcs:ignore -- ok.
+
+            if ( $is_db_ver_with_archive ) {
+                $table = $this->table_name( 'wp_logs_archive' );
+                $limit = 1000;
+                do {
+                    // Update a safe batch.
+                    $updated = $this->wpdb->query(
+                        $this->wpdb->prepare(
+                            "
+                            UPDATE {$table}
+                            SET created = created * 1000000
+                            WHERE created < %d
+                            LIMIT %d
+                            ",
+                            10000000000,
+                            $limit
+                        )
+                    );
+                    usleep( 100000 ); // 100ms.
+                } while ( $updated > 0 );
             }
         }
 
