@@ -54,19 +54,19 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
         ?>
         <?php if ( 0 < $total_wp_upgrades ) : ?>
-            <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox" id="mainwp-wordpress-updates-groups-table"> <!-- Per Group table -->
+            <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox mainwp-js-persistent-table" id="mainwp-wordpress-updates-groups-table"> <!-- Per Group table -->
                 <thead>
                     <tr>
                         <th scope="col" class="collapsing no-sort trigger-all-accordion">
                             <span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span>
                         </th>
-                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting">
+                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="tag">
                             <div class="ui main-master checkbox ">
                                 <input type="checkbox" name=""><label><?php esc_html_e( 'Tag', 'mainwp' ); ?></label>
                             </div>
                             <?php MainWP_UI::render_sorting_icons(); ?>
                         </th>
-                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="updates"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                         <th scope="col" class="no-sort"></th>
                     </tr>
                 </thead>
@@ -221,19 +221,19 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
         $user_can_see_client  = \mainwp_current_user_can( 'dashboard', 'manage_clients' );
         ?>
         <?php if ( 0 < $total_plugin_upgrades ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox" id="mainwp-plugins-updates-groups-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox mainwp-js-persistent-table" id="mainwp-plugins-updates-groups-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion">
                         <span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span>
                     </th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting">
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="tag">
                         <div class="ui main-master checkbox ">
                             <input type="checkbox" name=""><label><?php esc_html_e( 'Tag', 'mainwp' ); ?></label>
                         </div>
                         <?php MainWP_UI::render_sorting_icons(); ?>
                     </th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="updates"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                     <th scope="col" class="no-sort"><?php MainWP_UI::render_show_all_updates_button(); ?></th>
                 </tr>
             </thead>
@@ -264,14 +264,14 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     </tr>
                     <tr class="main-child-checkbox content" row-uid="uid_plugin_updates_<?php echo esc_attr( $group_id ); ?>">
                         <td colspan="4">
-                            <table id="mainwp-wordpress-updates-sites-inner-table" class="ui grey table mainwp-per-group-table mainwp-manage-updates-table">
+                            <table id="mainwp-wordpress-updates-sites-inner-table" class="ui grey table mainwp-per-group-table mainwp-manage-updates-table mainwp-js-persistent-table">
                                 <thead class="mainwp-768-hide">
                                     <tr>
                                         <th scope="col" class="collapsing no-sort"></th>
-                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Website', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="website"><?php esc_html_e( 'Website', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="updates"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                                         <?php if ( $user_can_see_client ) { ?>
-                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php echo esc_html__( 'Client', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="client"><?php echo esc_html__( 'Client', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                                         <?php } ?>
                                         <th scope="col" class="collapsing no-sort"></th>
                                     </tr>
@@ -472,17 +472,17 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
         $user_can_see_client  = \mainwp_current_user_can( 'dashboard', 'manage_clients' );
         ?>
         <?php if ( 0 < $total_theme_upgrades ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox" id="mainwp-themes-updates-groups-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox mainwp-js-persistent-table" id="mainwp-themes-updates-groups-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting">
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="tag">
                         <div class="ui main-master checkbox ">
                             <input type="checkbox" name=""><label><?php esc_html_e( 'Tag', 'mainwp' ); ?></label>
                         </div>
                         <?php MainWP_UI::render_sorting_icons(); ?>
                     </th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="updates"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                     <th scope="col" class="no-sort right aligned"><?php MainWP_UI::render_show_all_updates_button(); ?></th>
                 </tr>
             </thead>
@@ -513,14 +513,14 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     </tr>
                     <tr class="title main-child-checkbox content" row-uid="uid_theme_updates_<?php echo esc_attr( $group_id ); ?>">
                         <td colspan="4">
-                            <table id="mainwp-wordpress-updates-sites-inner-table" class="ui grey table mainwp-per-group-table mainwp-manage-updates-table">
+                            <table id="mainwp-wordpress-updates-sites-inner-table" class="ui grey table mainwp-per-group-table mainwp-manage-updates-table mainwp-js-persistent-table">
                                 <thead class="mainwp-768-hide">
                                     <tr>
                                         <th scope="col" class="collapsing no-sort"></th>
-                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Website', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="website"><?php esc_html_e( 'Website', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="updates"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                                         <?php if ( $user_can_see_client ) { ?>
-                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php echo esc_html__( 'Client', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="client"><?php echo esc_html__( 'Client', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                                         <?php } ?>
                                         <th scope="col" class="collapsing no-sort"></th>
                                     </tr>
@@ -716,17 +716,17 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
         ?>
         <?php if ( 0 < $total_translation_upgrades ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox" id="mainwp-translations-groups-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox mainwp-js-persistent-table" id="mainwp-translations-groups-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting">
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="tag">
                         <div class="ui main-master checkbox">
                             <input type="checkbox" name=""><label><?php esc_html_e( 'Tag', 'mainwp' ); ?></label>
                         </div>
                         <?php MainWP_UI::render_sorting_icons(); ?>
                     </th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="updates"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                     <th scope="col"><?php MainWP_UI::render_show_all_updates_button(); ?></th>
                 </tr>
             </thead>
@@ -755,14 +755,14 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     </tr>
                     <tr class="content main-child-checkbox">
                         <td colspan="4">
-                            <table class="ui grey table mainwp-per-group-table mainwp-manage-updates-table" id="mainwp-translations-sites-table">
+                            <table class="ui grey table mainwp-per-group-table mainwp-manage-updates-table mainwp-js-persistent-table" id="mainwp-translations-sites-table">
                                 <thead class="mainwp-768-hide">
                                     <tr>
                                         <th scope="col" class="collapsing no-sort"></th>
-                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Website', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="website"><?php esc_html_e( 'Website', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="updates"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                                         <?php if ( $user_can_see_client ) { ?>
-                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php echo esc_html__( 'Client', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                                        <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="client"><?php echo esc_html__( 'Client', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                                         <?php } ?>
                                         <th scope="col" ></th>
                                     </tr>
@@ -890,12 +890,12 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
         $count_abandoned = count( $allPluginsOutdate );
         ?>
         <?php if ( 0 < $count_abandoned ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table" id="mainwp-abandoned-plugins-groups-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table mainwp-js-persistent-table" id="mainwp-abandoned-plugins-groups-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Tag', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="tag"><?php esc_html_e( 'Tag', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="abandoned"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                 </tr>
             </thead>
             <tbody class="ui accordion">
@@ -911,13 +911,13 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 </tr>
                 <tr class="content" row-uid="uid_plugins_outdate_<?php echo esc_attr( $group_id ); ?>">
                     <td colspan="3">
-                        <table class="ui grey table mainwp-per-group-table mainwp-manage-updates-table" id="mainwp-abandoned-plugins-sites-table">
+                        <table class="ui grey table mainwp-per-group-table mainwp-manage-updates-table mainwp-js-persistent-table" id="mainwp-abandoned-plugins-sites-table">
                             <thead class="mainwp-768-hide">
                                 <tr>
                                 <th scope="col" class="collapsing no-sort"></th>
-                                <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Website', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                                <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php echo esc_html__( 'Client', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                                <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                                <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="website"><?php esc_html_e( 'Website', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                                <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="client"><?php echo esc_html__( 'Client', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                                <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="abandoned"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                                 </tr>
                             </thead>
                             <tbody class="accordion">
@@ -1048,12 +1048,12 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
         $count_abandoned = count( $allThemesOutdate );
         ?>
         <?php if ( 0 < $count_abandoned ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table" id="mainwp-abandoned-themes-groups-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table mainwp-js-persistent-table" id="mainwp-abandoned-themes-groups-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Tag', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="tag"><?php esc_html_e( 'Tag', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="abandoned"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                 </tr>
             </thead>
             <tbody class="ui accordion">
@@ -1069,13 +1069,13 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 </tr>
                 <tr class="content" row-uid="uid_themes_outdate_<?php echo esc_attr( $group_id ); ?>">
                     <td colspan="3">
-                        <table class="ui grey table manage-updates-item-table mainwp-manage-updates-table mainwp-per-group-table" id="mainwp-abandoned-themes-sites-table">
+                        <table class="ui grey table manage-updates-item-table mainwp-manage-updates-table mainwp-per-group-table mainwp-js-persistent-table" id="mainwp-abandoned-themes-sites-table">
                             <thead class="mainwp-768-hide">
                                 <tr>
                                     <th scope="col" class="collapsing no-sort"></th>
-                                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Website', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php echo esc_html__( 'Client', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="website"><?php esc_html_e( 'Website', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="client"><?php echo esc_html__( 'Client', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="abandoned"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                                 </tr>
                             </thead>
                             <tbody class="accordion">

@@ -796,7 +796,7 @@ class Log_Insights_Page { //phpcs:ignore -- NOSONAR - multi methods.
         <div class="mainwp-sub-header" id="module-logs-widgets-layout-row">
             <div class="ui two column grid">
                 <div class="column">
-                    <a href="admin.php?page=SettingsInsights" class="ui mini green button"><?php esc_html_e( 'Manage Insights Settings', 'mainwp' ); ?></a>
+                    <a href="admin.php?page=SettingsInsights" class="ui mini green button"><?php esc_html_e( 'Manage Network Activity Settings', 'mainwp' ); ?></a>
                 </div>
                 <div class="right aligned column">
                     <?php MainWP_Ui_Manage_Widgets_Layout::render_edit_layout( $screen->id ); ?>

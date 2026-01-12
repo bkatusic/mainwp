@@ -299,7 +299,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     <?php if ( isset( $priv_extension['privacy'] ) && ( 2 === $priv_extension['privacy'] || 1 === (int) $priv_extension['privacy'] ) ) { ?>
                     <input
                         type="hidden"
-                        id="<?php echo esc_attr( $priv_extension['slug'] ); ?>"
+                        id="<?php echo esc_attr( $priv_extension['slug'] ); // NOSONAR - id ok. ?>"
                         name="<?php echo esc_attr( $priv_extension['slug'] ); ?>"
                         base-slug="<?php echo esc_attr( $item_slug ); ?>"
                         privacy="<?php echo esc_attr( $priv_extension['privacy'] ); ?>"
@@ -315,7 +315,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                         ?>
                     <input
                         type="hidden"
-                        id="<?php echo esc_attr( $priv_extension['slug'] ); ?>"
+                        id="<?php echo esc_attr( $priv_extension['slug'] ); // NOSONAR - - id ok.  ?>"
                         name="<?php echo esc_attr( $priv_extension['slug'] ); ?>"
                         base-slug="<?php echo esc_attr( $item_slug ); ?>"
                         privacy="<?php echo esc_attr( $priv_extension['privacy'] ); ?>"
@@ -327,7 +327,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                         ?>
                         <input
                             type="hidden"
-                            id="<?php echo esc_attr( $priv_extension['slug'] ); ?>"
+                            id="<?php echo esc_attr( $priv_extension['slug'] ); // NOSONAR - - id ok. ?>"
                             name="<?php echo esc_attr( $priv_extension['slug'] ); ?>"
                             base-slug="<?php echo esc_attr( $item_slug ); ?>"
                             extension_title="<?php echo esc_attr( MainWP_Extensions_Handler::polish_string_name( $priv_extension['title'] ) ); ?>"
@@ -1119,6 +1119,26 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 'integration_owner'    => '',
                 'integration_owner_pp' => '',
             ),
+            'mainwp-early-access-extension'         =>
+            array(
+                'type'                 => 'free',
+                'model'                => 'extension',
+                'slug'                 => 'mainwp-early-access-extension',
+                'title'                => 'MainWP Early Access Extension',
+                'desc'                 => 'The MainWP Early Access Extension lets you safely opt into pre-release versions of MainWP plugins and add-ons, so you can test new features early, provide feedback, and stay ahead.',
+                'link'                 => 'https://mainwp.com/add-on/early-access/',
+                'changelog_url'        => 'https://mainwp.com/changelog/mainwp-early-access-extension/',
+                'img'                  => $folder_url . 'early-access.png',
+                'product_id'           => 'MainWP Early Access Extension',
+                'product_item_id'      => 0,
+                'catalog_id'           => '1318737',
+                'group'                => array( 'development' ),
+                'privacy'              => 0,
+                'integration'          => '',
+                'integration_url'      => '',
+                'integration_owner'    => '',
+                'integration_owner_pp' => '',
+            ),
             'mainwp-favorites-extension'              =>
             array(
                 'type'                 => 'pro',
@@ -1446,8 +1466,8 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 'type'                 => 'pro',
                 'model'                => 'integration',
                 'slug'                 => 'mainwp-ithemes-security-extension',
-                'title'                => 'MainWP iThemes Security Extension',
-                'desc'                 => 'The iThemes Security Extension combines the power of your MainWP Dashboard with the popular iThemes Security Plugin. It allows you to manage iThemes Security plugin settings directly from your dashboard. Requires MainWP Dashboard plugin.',
+                'title'                => 'MainWP Solid Security Integration Extension',
+                'desc'                 => 'The Solid Security Integration Extension combines the power of your MainWP Dashboard with the popular Solid Security Integration Plugin. It allows you to manage Solid Security Integration plugin settings directly from your dashboard. Requires MainWP Dashboard plugin.',
                 'link'                 => 'https://mainwp.com/extension/ithemes-security/',
                 'changelog_url'        => 'https://mainwp.com/changelog/mainwp-ithemes-security-extension/',
                 'img'                  => $folder_url . 'ithemes.png',
@@ -1456,7 +1476,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 'catalog_id'           => '113355',
                 'group'                => array( 'security' ),
                 'privacy'              => 2,
-                'integration'          => 'iThemes Security Plugin',
+                'integration'          => 'Solid Security Integration Plugin',
                 'integration_url'      => 'https://ithemes.com/',
                 'integration_owner'    => 'Liquid Web, LLC',
                 'integration_owner_pp' => 'https://www.liquidweb.com/about-us/policies/privacy-policy/',

@@ -476,11 +476,9 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                         ++$row;
                     }
                     $header_line = trim( $header_line );
-
                     ?>
                     <input type="hidden" id="mainwp_managesites_do_import" value="1"/>
                     <input type="hidden" id="mainwp_managesites_total_import" value="<?php echo esc_attr( $row ); ?>"/>
-
                     <div class="mainwp_managesites_import_listing" id="mainwp_managesites_import_logging">
                         <span class="log ui medium text"><?php echo esc_html( $header_line ) . '<br/>'; ?></span>
                     </div>
@@ -531,17 +529,23 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                         $line = trim( implode( ',', $val_import ) )
                         ?>
                         <input type="hidden" id="mainwp_managesites_import_csv_line_<?php echo esc_attr( $key_import + 1 ); ?>" value="" encoded-data="<?php echo esc_attr( wp_json_encode( $val_import ) ); ?>" original="<?php echo esc_attr( $line ); ?>" />
-                    <?php } ?>
+                        <?php
+                    }
+                    $hd_id1       = 'mainwp_managesites_do_import';
+                    $hd_id2       = 'mainwp_managesites_total_import';
+                    $list_id      = 'mainwp_managesites_import_logging';
+                    $fail_list_id = 'mainwp_managesites_import_fail_logging';
+                    ?>
                     <input type="hidden" id="mainwp_managesites_do_managesites_import" value="1"/>
-                    <input type="hidden" id="mainwp_managesites_do_import" value="1"/>
-                    <input type="hidden" id="mainwp_managesites_total_import" value="<?php echo esc_attr( count( $import_data ) ); ?>"/>
+                    <input type="hidden" id="<?php echo esc_attr( $hd_id1 ); ?>" value="1"/>
+                    <input type="hidden" id="<?php echo esc_attr( $hd_id2 ); ?>" value="<?php echo esc_attr( count( $import_data ) ); ?>"/>
 
-                    <div class="mainwp_managesites_import_listing" id="mainwp_managesites_import_logging">
+                    <div class="mainwp_managesites_import_listing" id="<?php echo esc_attr( $list_id ); ?>">
                         <span class="log ui small text">
                             <?php echo esc_html( $header_line ) . '<br/>'; ?>
                         </span>
                     </div>
-                    <div class="mainwp_managesites_import_listing" id="mainwp_managesites_import_fail_logging" style="display: none;">
+                    <div class="mainwp_managesites_import_listing" id="<?php echo esc_attr( $fail_list_id ); ?>" style="display: none;">
                         <?php echo esc_html( $header_line ); ?>
                     </div>
                     <?php
@@ -1906,6 +1910,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                         if ( empty( $alg ) && is_object( $website ) ) {
                             MainWP_DB::instance()->update_website_option( $website, 'signature_algo', 9999 ); // use global.
                             $website = MainWP_DB::instance()->get_website_by_id( $website->id );
+                            MainWP_Stack_Helper::stack_push( 'sync_before_reconnect' );
                             $success = MainWP_Sync::sync_site( $website, true );
                         }
                     }
@@ -1997,7 +2002,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                         if ( ! empty( $information['regverify'] ) ) {
                             MainWP_DB::instance()->update_website_option( $website, 'register_verify_key', $information['regverify'] );
                         }
-
+                        MainWP_Stack_Helper::stack_push( 'sync_reconnect' );
                         MainWP_Sync::sync_information_array( $website, $information );
                         $success = true;
                     } else {
@@ -2098,6 +2103,11 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
         $id         = 0;
         $existed_id = 0;
 
+        $error_category  = 'unknown';
+        $error_code      = '';
+        $http_status     = '';
+        $connection_step = '';
+
         if ( $website ) {
             $error = esc_html__( 'The site is already connected to your MainWP Dashboard', 'mainwp' );
             if ( is_array( $website ) && ! empty( $website[0] ) && is_object( $website[0] ) ) {
@@ -2105,6 +2115,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
             } elseif ( is_object( $website ) && property_exists( $website, 'id' ) ) {
                 $existed_id = $website->id;
             }
+            $error_category = 'already_connected';
         } else {
             try {
                 if ( MainWP_Connect_Lib::is_use_fallback_sec_lib( $website ) ) {
@@ -2142,6 +2153,8 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
                 MainWP_Logger::instance()->debug( ' :: register site :: ' . $url );
 
+                $connection_step = 'handshake';
+
                 $information = MainWP_Connect::fetch_url_not_authed(
                     $url,
                     $params['wpadmin'],
@@ -2163,10 +2176,22 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
                 if ( isset( $information['error'] ) && '' !== $information['error'] ) {
                     $error = MainWP_Utility::esc_content( $information['error'] );
+                    if ( is_array( $output ) ) {
+                        if ( ! empty( $output['error_category'] ) ) {
+                            $error_category = $output['error_category'];
+                        }
+                        if ( ! empty( $output['connection_step'] ) ) {
+                            $connection_step = $output['connection_step'];
+                        }
+                        if ( ! empty( $output['error_code'] ) ) {
+                            $error_code = $output['error_code'];
+                        }
+                    }
                 } elseif ( isset( $information['register'] ) && 'OK' === $information['register'] ) {
-                    $groupids   = array();
-                    $groupnames = array();
-                    $tmpArr     = array();
+                    $connection_step = 'save_site';
+                    $groupids        = array();
+                    $groupnames      = array();
+                    $tmpArr          = array();
                     if ( isset( $params['groupids'] ) && is_array( $params['groupids'] ) ) {
                         foreach ( $params['groupids'] as $group ) {
                             if ( is_numeric( $group ) ) {
@@ -2297,6 +2322,8 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
                             MainWP_Sync::sync_init_empty_values( $website );
 
+                            $connection_step = 'post_add_sync';
+
                             MainWP_Sync::sync_information_array( $website, $information );
                         }
                 } else {
@@ -2312,6 +2339,36 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 }
             }
         }
+
+        $source_screen = 'manage_sites';
+        $flow_type     = ! empty( $_POST['bulk'] ) ? 'bulk' : 'single'; //phpcs:ignore -- NOSONAR -nonce ok.
+        if ( ! empty( $_POST['qsw_page'] ) ) { //phpcs:ignore -- NOSONAR -nonce ok.
+            $flow_type     = 'wizard';
+            $source_screen = 'onboarding_wizard';
+        }
+        if ( 'bulk' === $flow_type ) {
+            $source_screen = 'quick_add_modal';
+        }
+
+        $telem_info = array(
+            'flow_type'     => $flow_type,
+            'source_screen' => $source_screen,
+        );
+
+        if ( empty( $id ) ) {
+            $telem_info['error_message']  = $error;
+            $telem_info['error_category'] = $error_category;
+            $telem_info['error_code']     = $error_code;
+
+            if ( ! empty( $connection_step ) ) {
+                $telem_info['connection_step'] = $connection_step;
+            }
+            if ( is_array( $output ) && ! empty( $output['http_status'] ) ) {
+                $telem_info['http_status'] = $output['http_status'];
+            }
+        }
+
+        do_action( 'mainwp_after_add_site', array( $message, $error, $id, $existed_id ), $website, $params, $output, $telem_info );
 
         return array( $message, $error, $id, $existed_id );
     }

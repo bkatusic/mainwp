@@ -27,15 +27,47 @@ class MainWP_Monitoring_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSa
      * @uses  \MainWP\Dashboard\MainWP_Utility::update_option()
      */
     public static function handle_settings_post() { // phpcs:ignore -- NOSONAR - complex.
-        if ( isset( $_POST['submit'] ) && isset( $_POST['wp_nonce'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_nonce'] ), 'Settings' ) && MainWP_System_Utility::is_admin() ) {
-            // global uptime monitoring settings.
-            MainWP_Uptime_Monitoring_Edit::instance()->handle_save_settings();
-            MainWP_Utility::update_option( 'mainwp_disableSitesHealthMonitoring', ( ! isset( $_POST['mainwp_disable_sitesHealthMonitoring'] ) ? 1 : 0 ) );
-            $val = isset( $_POST['mainwp_site_healthThreshold'] ) ? intval( $_POST['mainwp_site_healthThreshold'] ) : 80;
-            MainWP_Utility::update_option( 'mainwp_sitehealthThreshold', $val );
-            return true;
+        // Check if form was submitted and nonce is present.
+        if ( ! isset( $_POST['submit'] ) || ! isset( $_POST['wp_nonce'] ) ) {
+            return false;
         }
-        return false;
+
+        // Verify nonce and admin permissions.
+        $nonce          = sanitize_key( $_POST['wp_nonce'] );
+        $is_valid_nonce = wp_verify_nonce( $nonce, 'MonitoringSettings' );
+
+        if ( ! $is_valid_nonce || ! MainWP_System_Utility::is_admin() ) {
+            return false;
+        }
+
+        // Save global uptime monitoring settings.
+        MainWP_Uptime_Monitoring_Edit::instance()->handle_save_settings();
+
+        // Save Site Health Monitoring setting.
+        $disable_health = isset( $_POST['mainwp_disable_sitesHealthMonitoring'] ) ? 0 : 1;
+        MainWP_Utility::update_option( 'mainwp_disableSitesHealthMonitoring', $disable_health );
+
+        // Save Site Health Threshold with validation.
+        $threshold = isset( $_POST['mainwp_site_healthThreshold'] ) ? intval( $_POST['mainwp_site_healthThreshold'] ) : 80;
+
+        // Validate threshold value - only allow 80 or 100.
+        $allowed_thresholds = array( 80, 100 );
+        if ( ! in_array( $threshold, $allowed_thresholds, true ) ) {
+            $threshold = 80; // Default to 80 if invalid value.
+        }
+
+        MainWP_Utility::update_option( 'mainwp_sitehealthThreshold', $threshold );
+
+        /**
+         * Action: mainwp_after_save_monitoring_settings
+         *
+         * Fires after monitoring settings are saved.
+         *
+         * @since 4.1
+         */
+        do_action( 'mainwp_after_save_monitoring_settings', $_POST );
+
+        return true;
     }
 
 

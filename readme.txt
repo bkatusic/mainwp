@@ -5,9 +5,9 @@ Author: mainwp
 Author URI: https://mainwp.com
 Plugin URI: https://mainwp.com
 Requires at least: 6.2
-Tested up to: 6.8.3
+Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 6.0
+Stable tag: 6.0-er.1
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -147,7 +147,13 @@ Yes, we have a quick FAQ with many more questions and answers [here](https://mai
 
 == Changelog ==
 
-= 5.4.1 - Feature Release - 12-14-2025 =
+= 5.4.1 - Maintenance Release - 12-10-2025 =
+
+* Fixed: Resolved an issue where the OpenSSL Key encryption information banner was incorrectly displayed to all MainWP Dashboard administrators.
+* Fixed: Addressed a problem that caused delayed Downtime notifications from the Monitoring system on specific hosting setups.
+* Added: Implemented `AND` logic for filtering Tags in the "Manage Sites" list, allowing more precise filtering of site groups.
+* Updated: Improved output-escaping compliance throughout the plugin to meet WordPress coding standards.
+* Updated: Improved the logic used to detect when the `WP REST API` is disabled on the Dashboard site, providing more reliable behavior across different configurations.
 
 * Added: Abilities API integration providing 62 standardized abilities for managing sites, updates, clients, and tags
 * Added: REST API v2 endpoints exposing Abilities API for programmatic access and MCP tool integration

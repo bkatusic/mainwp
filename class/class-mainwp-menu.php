@@ -884,10 +884,10 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             closable: false,
                             position : 'top left',
                         }).popup('show');
-                        
+
                         jQuery('.mainwp-help-popup .mainwp-notice-dismiss').on('click', function (e) {
                             jQuery('.mainwp-help-popup').removeClass('visible').addClass('hidden').hide();
-                            
+
                         });
                     });
                     </script>
@@ -1286,6 +1286,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         <div class="content menu">
                             <a class="item" href="admin.php?page=Settings"><?php esc_html_e( 'General Settings', 'mainwp' ); ?></a>
                             <a class="item" href="admin.php?page=SettingsAdvanced"><?php esc_html_e( 'Advanced Settings', 'mainwp' ); ?></a>
+                            <a class="item" href="admin.php?page=MonitoringSettings"><?php esc_html_e( 'Monitoring Settings', 'mainwp' ); ?></a>
                             <a class="item" href="admin.php?page=SettingsEmail"><?php esc_html_e( 'Email Settings', 'mainwp' ); ?></a>
                             <a class="item" href="admin.php?page=MainWPTools"><?php esc_html_e( 'Tools', 'mainwp' ); ?></a>
                         </div>
@@ -1300,6 +1301,9 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             <a class="item" href="admin.php?page=ActionLogs"><?php esc_html_e( 'Custom Event Monitor', 'mainwp' ); ?></a>
                             <a class="item" href="admin.php?page=PluginPrivacy"><?php esc_html_e( 'Plugin Privacy', 'mainwp' ); ?></a>
                         </div>
+                    </div>
+                    <div class="item">
+                        <a id="mainwp-help-menu-item2" title="<?php esc_attr_e( 'Help', 'mainwp' ); ?>" class="item" href="#" style="opacity:0.3;"><?php esc_html_e( 'Quick Help', 'mainwp' ); ?></a>
                     </div>
                 </div>
                 <?php

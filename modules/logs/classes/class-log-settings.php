@@ -77,6 +77,9 @@ class Log_Settings {
     public function admin_init() {
         //phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         if ( isset( $_POST['mainwp_module_log_settings_nonce'] ) && wp_verify_nonce( wp_unslash( $_POST['mainwp_module_log_settings_nonce'] ), 'logs_settings_nonce' ) ) {
+
+            $old_settings = MainWP_Settings::get_all_settings_values();
+
             $old_enable = is_array( $this->options ) && ! empty( $this->options['enabled'] ) && ! empty( $this->options['auto_archive'] ) ? true : false;
 
             $this->options['enabled']          = isset( $_POST['mainwp_module_log_enabled'] ) && ! empty( $_POST['mainwp_module_log_enabled'] ) ? 1 : 0;
@@ -122,6 +125,20 @@ class Log_Settings {
                 }
             }
             MainWP_Utility::update_option( 'mainwp_module_log_settings_logs_selection_data', wp_json_encode( $logs_data ) );
+
+            $new_settings = MainWP_Settings::get_all_settings_values();
+
+            /**
+            * Action: mainwp_after_save_settings
+            *
+            * Fires after save settings.
+            *
+            * @since 6.0
+            *
+            * @param array $new_settings The new settings.
+            * @param array $old_settings The old settings.
+            */
+            do_action( 'mainwp_after_save_settings', $new_settings, $old_settings );
 
         }
     }

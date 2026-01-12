@@ -432,8 +432,12 @@ class MainWP_System_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         $user = wp_get_current_user();
 
         $update_selected_mainwp_themes = false;
+        $should_redirect               = false; // Redirect status.
 
         if ( isset( $_GET['page'] ) && 'MainWPTools' === $_GET['page'] && isset( $_POST['wp_nonce'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_nonce'] ), 'MainWPTools' ) ) {
+
+            $old_settings = MainWP_Settings::get_all_settings_values();
+
             if ( isset( $_POST['mainwp_restore_info_messages'] ) && ! empty( $_POST['mainwp_restore_info_messages'] ) ) {
                 delete_user_option( $user->ID, 'mainwp_notice_saved_status' );
             }
@@ -449,10 +453,28 @@ class MainWP_System_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
             if ( isset( $_POST['mainwp_settings_custom_theme'] ) ) {
                 $update_selected_mainwp_themes = true;
             }
+
+            $new_settings = MainWP_Settings::get_all_settings_values();
+
+            /**
+            * Action: mainwp_after_save_settings
+            *
+            * Fires after save settings.
+            *
+            * @since 6.0
+            *
+            * @param array $new_settings The new settings.
+            * @param array $old_settings The old settings.
+            */
+            do_action( 'mainwp_after_save_settings', $new_settings, $old_settings );
+            $should_redirect = true;
+            set_transient( 'mainwp_settings_saved', 1, 30 );
         }
 
         if ( isset( $_POST['wp_scr_options_nonce'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_scr_options_nonce'] ), 'MainWPSelectThemes' ) ) {
             $update_selected_mainwp_themes = true;
+            $should_redirect               = true;
+            set_transient( 'mainwp_settings_saved', 1, 30 );
         }
 
         if ( $update_selected_mainwp_themes && isset( $_POST['mainwp_settings_custom_theme'] ) ) {
@@ -558,6 +580,13 @@ class MainWP_System_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                 update_user_option( $user->ID, 'mainwp_widgets_sorted_mainwp_page_manageclients', false, true );
             }
         }
+
+        // Redirect after save settings and redirect to the same page.
+        if ( $should_redirect ) {
+            $page = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : 'MainWPTools';
+            wp_safe_redirect( admin_url( 'admin.php?page=' . $page ) );
+            exit();
+        }
     }
 
     /**
@@ -607,7 +636,10 @@ class MainWP_System_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
 
         if ( isset( $_POST['submit'] ) && isset( $_POST['wp_nonce'] ) ) {
             $this->include_pluggable();
-            if ( wp_verify_nonce( sanitize_key( $_POST['wp_nonce'] ), 'Settings' ) ) {
+            $nonce = sanitize_key( $_POST['wp_nonce'] );
+            // Check for both 'Settings' or 'MonitoringSettings' nonces.
+            $is_valid_nonce = wp_verify_nonce( $nonce, 'Settings' ) || wp_verify_nonce( $nonce, 'MonitoringSettings' );
+            if ( $is_valid_nonce ) {
                 $updated  = MainWP_Settings::handle_settings_post();
                 $updated |= MainWP_Backup_Handler::handle_settings_post();
                 $updated |= MainWP_Monitoring_Handler::handle_settings_post();
@@ -615,7 +647,13 @@ class MainWP_System_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                 if ( $updated ) {
                     $msg = '&message=saved';
                 }
-                wp_safe_redirect( admin_url( 'admin.php?page=Settings' . $msg ) );
+
+                // Redirect to the correct page based on the nonce.
+                $url_page = 'admin.php?page=Settings' . $msg;
+                if ( wp_verify_nonce( $nonce, 'MonitoringSettings' ) ) {
+                    $url_page = 'admin.php?page=MonitoringSettings' . $msg;
+                }
+                wp_safe_redirect( admin_url( $url_page ) );
                 exit();
             }
         }
@@ -640,6 +678,20 @@ class MainWP_System_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                     exit;
                 }
             }
+        }
+
+        // Redirect current page after reset and save overview settings.
+        if ( isset( $_GET['page'] ) && isset( $_POST['reset_overview_settings'] ) && ( isset( $_POST['reset_overview_which_settings'] ) && 'overview_settings' === $_POST['reset_overview_which_settings'] ) ) {
+            $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+            $url  = 'admin.php?page=' . $page;
+
+            $dashboard_id = isset( $_GET['dashboard'] ) ? absint( $_GET['dashboard'] ) : 0;
+            if ( ! empty( $dashboard_id ) ) {
+                $url .= '&dashboard=' . $dashboard_id;
+            }
+
+            wp_safe_redirect( admin_url( $url ) );
+            exit;
         }
     }
 
@@ -951,6 +1003,10 @@ class MainWP_System_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
      */
     public function pre_check_update_custom( $transient ) {
         if ( ! isset( $transient->checked ) ) {
+            return $transient;
+        }
+
+        if ( defined( 'MAINWP_PLUGIN_UPGRADING' ) && true === MAINWP_PLUGIN_UPGRADING ) {
             return $transient;
         }
 

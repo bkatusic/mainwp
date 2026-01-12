@@ -248,9 +248,9 @@ class MainWP_Manage_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                         <input type="checkbox" name="sites" class="mainwp-site-checkbox" value="<?php echo esc_attr( $website->id ); ?>" id="<?php echo 'site-' . esc_attr( $website->id ); ?>" >
                     </div>
                 </td>
-                <td><?php echo MainWP_Utility::mainwp_display_site( $website->id ); ?></td>
-                <td><?php echo MainWP_System_Utility::get_site_tags_belong( (array) $website ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
-                <td>
+                <td class="not-selectable"><?php echo MainWP_Utility::mainwp_display_site( $website->id ); ?></td>
+                <td class="not-selectable"><?php echo MainWP_System_Utility::get_site_tags_belong( (array) $website ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
+                <td class="not-selectable">
                     <?php if ( ! empty( $website->client_name ) ) : ?>
                     <a href="<?php echo 'admin.php?page=ManageClients&client_id=' . intval( $website->client_id ); ?>">
                         <?php echo esc_html( $website->client_name ); ?>
@@ -487,7 +487,8 @@ class MainWP_Manage_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                     </div>
                     <div class="field">
                         <label><?php esc_html_e( 'Select tag color', 'mainwp' ); ?></label>
-                        <input type="color" name="mainwp-new-tag-color mainwp-color-picker-input" class="mainwp-color-picker-input" id="mainwp-new-tag-color" value="" />
+                            <?php $el_id_new_tg_1 = 'mainwp-new-tag-color'; ?>
+                        <input type="color" name="mainwp-new-tag-color mainwp-color-picker-input" class="mainwp-color-picker-input" id="<?php echo esc_attr( $el_id_new_tg_1 ); ?>" value="" />
                     </div>
                 </div>
             </div>

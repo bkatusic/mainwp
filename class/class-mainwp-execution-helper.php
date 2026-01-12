@@ -98,15 +98,22 @@ class MainWP_Execution_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSame
      *
      * Get the execution time value.
      *
+     * @param  bool $ret_microseconds
+     *
      * @since 5.5.
      *
-     * @return float execution time.
+     * @updated 6.0
+     *
+     * @return int|float execution time.
      */
-    public static function get_run_time() {
+    public static function get_run_time( $ret_microseconds = false ) {
         if ( empty( static::$exec_start ) ) {
             return 0;
         }
         $rtime = microtime( true ) - static::$exec_start; // seconds.
+        if ( $ret_microseconds ) {
+            return round( $rtime * 1000000, 4 );
+        }
         return round( $rtime, 4 );
     }
 }

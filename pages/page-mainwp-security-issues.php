@@ -312,7 +312,6 @@ class MainWP_Security_Issues { // phpcs:ignore Generic.Classes.OpeningBraceSameL
      *
      * @uses \MainWP\Dashboard\MainWP_Connect::fetch_url_authed()
      * @uses \MainWP\Dashboard\MainWP_DB::get_website_by_id()
-     * @uses \MainWP\Dashboard\MainWP_Sync::sync_information_array()
      * @uses \MainWP\Dashboard\MainWP_System_Utility::can_edit_website()
      */
     public static function fix_security_issue() { // phpcs:ignore -- NOSONAR - complex.
@@ -371,11 +370,6 @@ class MainWP_Security_Issues { // phpcs:ignore Generic.Classes.OpeningBraceSameL
         }
 
         $information = MainWP_Connect::fetch_url_authed( $website, 'securityFix', $post_data );
-        if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-            MainWP_Sync::sync_information_array( $website, $information['sync'] );
-            unset( $information['sync'] );
-        }
-
         return $information;
     }
 
@@ -386,7 +380,6 @@ class MainWP_Security_Issues { // phpcs:ignore Generic.Classes.OpeningBraceSameL
      *
      * @uses \MainWP\Dashboard\MainWP_Connect::fetch_url_authed()
      * @uses \MainWP\Dashboard\MainWP_DB::get_website_by_id()
-     * @uses \MainWP\Dashboard\MainWP_Sync::sync_information_array()
      * @uses \MainWP\Dashboard\MainWP_System_Utility::can_edit_website()
      */
     public static function unfix_security_issue() {
@@ -407,11 +400,6 @@ class MainWP_Security_Issues { // phpcs:ignore Generic.Classes.OpeningBraceSameL
         $feature = isset( $_REQUEST['feature'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['feature'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized,WordPress.Security.NonceVerification.Recommended
 
         $information = MainWP_Connect::fetch_url_authed( $website, 'securityUnFix', array( 'feature' => $feature ) );
-        if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-            MainWP_Sync::sync_information_array( $website, $information['sync'] );
-            unset( $information['sync'] );
-        }
-
         return $information;
     }
 }

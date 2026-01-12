@@ -1417,7 +1417,7 @@ class MainWP_Monitoring_Sites_List_Table extends MainWP_Manage_Sites_List_Table 
 
                 $uptime_status = MainWP_DB_Uptime_Monitoring::instance()->get_uptime_monitor_stat_hourly_by( $website['monitor_id'], 'last24', $last24_time );
 
-                $disabled = ( ! $glo_active && ( -1 === (int) $website['active'] ) ) || 0 === (int) $website['active'] ? true : false;
+                $disabled = ( ! $glo_active && ( ! isset( $website['active'] ) || -1 === (int) $website['active'] ) ) || ! isset( $website['active'] ) || 0 === (int) $website['active'];
 
                 foreach ( $columns as $column_name => $column_display_name ) {
                     ob_start();
@@ -1522,15 +1522,20 @@ class MainWP_Monitoring_Sites_List_Table extends MainWP_Manage_Sites_List_Table 
         <?php else : ?>
             <a href="<?php MainWP_Site_Open::get_open_site_url( $website['id'] ); ?>" class="open_newwindow_wpadmin" target="_blank"><i class="sign in icon"></i></a>
         <?php endif; ?>
-        <?php if ( empty( $website['issub'] ) ) { // primary monitor. ?>
-            <a href="<?php echo 'admin.php?page=managesites&dashboard=' . intval( $website['id'] ); ?>"><?php echo esc_html( stripslashes( $website['name'] ) ); ?></a><i class="ui active inline loader tiny" style="display:none"></i><span id="site-status-<?php echo esc_attr( $website['id'] ); ?>" class="status hidden"></span>
+        <?php if ( empty( $website['issub'] ) ) { // primary monitor.
+            $mo_st_id = $website['id'];
+            ?>
+            <a href="<?php echo 'admin.php?page=managesites&dashboard=' . intval( $website['id'] ); ?>"><?php echo esc_html( stripslashes( $website['name'] ) ); ?></a><i class="ui active inline loader tiny" style="display:none"></i>
+            <span id="site-status-<?php echo esc_attr( $mo_st_id ); ?>" class="status hidden"></span>
             <br/>
             <span class="ui small text"><a href="<?php echo esc_url( $website['url'] ); ?>" class="mainwp-may-hide-referrer open_site_url" target="_blank"><?php echo esc_html( MainWP_Utility::get_nice_url( $website['url'] ) ); ?></a></span>
             <?php
         } else {
-            $subpage = $website['url'] . $website['suburl'];
+            $subpage   = $website['url'] . $website['suburl'];
+            $sub_st_id = $website['id'];
             ?>
-            <a href="admin.php?page=managesites&monitor_wpid=<?php echo intval( $website['id'] ); ?>&monitor_id=<?php echo intval( $website['monitor_id'] ); ?>"><?php echo esc_html( $subpage ); ?></a><i class="ui active inline loader tiny" style="display:none"></i><span id="site-status-<?php echo esc_attr( $website['id'] ); ?>" class="status hidden"></span>
+            <a href="admin.php?page=managesites&monitor_wpid=<?php echo intval( $website['id'] ); ?>&monitor_id=<?php echo intval( $website['monitor_id'] ); ?>"><?php echo esc_html( $subpage ); ?></a><i class="ui active inline loader tiny" style="display:none"></i>
+            <span id="site-status-<?php echo esc_attr( $sub_st_id ); ?>" class="status hidden"></span>
             <br/>
             <span class="ui small text"><a href="<?php echo esc_url( $subpage ); ?>" class="mainwp-may-hide-referrer open_site_url" target="_blank"><?php echo esc_html( MainWP_Utility::get_nice_url( $subpage ) ); ?></a></span>
         <?php } ?>

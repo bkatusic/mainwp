@@ -9,7 +9,7 @@ jQuery(function ($) {
         jQuery('.mainwp-popup-tooltip').popup()
     }
 
-    jQuery(document).on('click', '#mainwp-help-menu-item', function () {
+    jQuery(document).on('click', '#mainwp-help-menu-item, #mainwp-help-menu-item2', function () {
         jQuery('#mainwp-help-modal').modal({
             inverted: true,
             blurring: false,
@@ -1027,7 +1027,8 @@ let dashboard_update_next = function (pAction) {
     let data = mainwp_secure_data({
         action: ('checknow' == pAction ? 'mainwp_checksites' : 'mainwp_syncsites'),
         wp_id: websiteId,
-        isGlobalSync: globalSync
+        isGlobalSync: globalSync,
+        bulkSync: mainwpVars.websitesTotal > 1 ? 1 : 0
     });
 
 
@@ -2120,7 +2121,7 @@ let managesites_remove = function (obj) {
     let name = jQuery(obj).attr('site-name');
     let id = jQuery(obj).attr('site-id');
 
-    let msg = sprintf(__('Are you sure you want to remove %1 from your MainWP Dashboard?', name));
+    let msg = __('Are you sure you want to remove', 'mainwp') + ' ' + name + ' ' + __('from your MainWP Dashboard?', 'mainwp');
 
     mainwp_confirm(msg, function () {
         jQuery('tr#child-site-' + id).html('<td colspan="999"><i class="notched circle loading icon"></i> ' + 'Removing and deactivating the MainWP Child plugin! Please wait...' + '</td>');
@@ -2286,22 +2287,23 @@ let mainwp_createuser = function () {
     if (cont) {
         mainwp_set_message_zone('#mainwp-message-zone', '<i class="notched circle loading icon"></i> ' + __('Creating the user. Please wait...'), '', true);
         jQuery('#bulk_add_createuser').attr('disabled', 'disabled');
+        const is_send_password = jQuery('#send_password').is(':checked') ? 1 : 0;
         //Add user via ajax!!
         let data = mainwp_secure_data({
-            action: 'mainwp_bulkadduser',
-            'select_by': jQuery('#select_by').val(),
-            'selected_groups[]': selected_groups,
-            'selected_sites[]': selected_sites,
-            'selected_clients[]': selected_clients,
-            'user_login': jQuery('#user_login').val(),
-            'email': jQuery('#email').val(),
-            'url': jQuery('#url').val(),
-            'first_name': jQuery('#first_name').val(),
-            'last_name': jQuery('#last_name').val(),
-            'pass1': jQuery('#password').val(),
-            'pass2': jQuery('#password').val(),
-            'send_password': jQuery('#send_password').attr('checked'),
-            'role': jQuery('#role').val()
+            action: "mainwp_bulkadduser",
+            select_by: jQuery("#select_by").val(),
+            "selected_groups[]": selected_groups,
+            "selected_sites[]": selected_sites,
+            "selected_clients[]": selected_clients,
+            user_login: jQuery("#user_login").val(),
+            email: jQuery("#email").val(),
+            url: jQuery("#url").val(),
+            first_name: jQuery("#first_name").val(),
+            last_name: jQuery("#last_name").val(),
+            pass1: jQuery("#password").val(),
+            pass2: jQuery("#password").val(),
+            send_password: is_send_password,
+            role: jQuery("#role").val(),
         });
 
         jQuery.post(ajaxurl, data, function (response) {
@@ -5380,4 +5382,128 @@ function mainwp_forceReload(targetUrl) {
     const url = targetUrl || window.location.href;
     // Navigate to URL (force reload from server)
     window.location.href = url;
+}
+
+class TablePersistentState {
+  constructor(table, options = {}) {
+    if (!table || !(table instanceof HTMLElement)) {
+      throw new Error('TablePersistentState requires a table element');
+    }
+
+    this.table = table;
+    this.tableId = table.id;
+    this.headers = table.querySelectorAll(
+      options.headerSelector || '.handle-cols-sorting'
+    );
+
+    this.options = {
+      storage: options.storage !== false, // default true
+      storagePrefix: options.storagePrefix || 'mainwp_tables_sort_state',
+      onPersist: options.onPersist || null,
+      defaultSort: options.defaultSort || null, // { column, direction }
+    };
+
+    this.init();
+  }
+
+  /* ---------- Storage ---------- */
+
+  get storageKey() {
+    return `${this.options.storagePrefix}:${this.tableId}`;
+  }
+
+  saveState(column, direction) {
+    if (!this.options.storage || !this.tableId) return;
+
+    localStorage.setItem(
+      this.storageKey,
+      JSON.stringify({ column, direction })
+    );
+  }
+
+  loadState() {
+    if (!this.options.storage || !this.tableId) return null;
+
+    try {
+      return JSON.parse(localStorage.getItem(this.storageKey));
+    } catch {
+      return null;
+    }
+  }
+
+  /* ---------- UI helpers ---------- */
+
+  clearIndicators() {
+    this.headers.forEach(th => {
+      th.classList.remove('sorted-asc', 'sorted-desc');
+      th.removeAttribute('aria-sort');
+    });
+  }
+
+  applyIndicator(th, direction) {
+    th.classList.add(direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
+    th.setAttribute('aria-sort', direction);
+  }
+
+  toggleDirection(current) {
+    return current === 'asc' ? 'desc' : 'asc';
+  }
+
+  /* ---------- Sorting flow ---------- */
+
+  persistState(column, direction, th = null, persist = true, isrestore = false ) {
+    if (th) {
+      this.clearIndicators();
+      this.applyIndicator(th, direction);
+    }
+
+    if (persist) {
+      this.saveState(column, direction);
+    }
+
+    if (typeof this.options.onPersist === 'function') {
+      this.options.onPersist({
+        table: this.table,
+        column,
+        direction,
+        isrestore
+      });
+    }
+  }
+
+  /* ---------- Init ---------- */
+
+  restore() {
+    const saved = this.loadState() || this.options.defaultSort;
+    if (!saved) return;
+
+    const th = this.table.querySelector(
+      `[data-key="${saved.column}"]`
+    );
+
+    if (th) {
+      this.persistState(saved.column, saved.direction, th, false, true );
+    }
+  }
+
+  bindEvents() {
+    this.headers.forEach(th => {
+      th.addEventListener('click', () => {
+        const column = th.dataset.key;
+        const isAsc = th.classList.contains('sorted-asc');
+        const direction = this.toggleDirection(isAsc ? 'asc' : 'desc');
+
+        this.persistState(column, direction, th);
+      });
+    });
+  }
+
+  init() {
+    if (!this.tableId && this.options.storage) {
+      console.warn('TablePersistentState: table has no id, storage disabled');
+    }
+
+    this.restore();
+    this.bindEvents();
+  }
 }

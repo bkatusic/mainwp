@@ -77,6 +77,11 @@ class MainWP_System_Cron_Jobs { // phpcs:ignore Generic.Classes.OpeningBraceSame
         add_action( 'mainwp_cronuptimemonitoringcheck_action', array( MainWP_Uptime_Monitoring_Schedule::instance(), 'cron_uptime_check' ) );
         add_action( 'mainwp_cron_perform_general_process', array( $this, 'cron_perform_general_process' ) );
 
+        // API Setting tools.
+        add_action( 'mainwp_cron_disconnect_batch', array( \MainWP_Rest_Settings_Controller::instance(), 'process_disconnect_batch' ) );
+        add_action( 'mainwp_cron_renew_connection_batch', array( \MainWP_Rest_Settings_Controller::instance(), 'process_renew_connection_batch' ) );
+        add_action( 'mainwp_cron_destroy_session_batch', array( \MainWP_Rest_Settings_Controller::instance(), 'process_destroy_session_batch' ) );
+
         // phpcs:ignore -- required for dashboard's minutely scheduled jobs.
         add_filter( 'cron_schedules', array( $this, 'get_cron_schedules' ), 9 );
 
@@ -424,7 +429,6 @@ class MainWP_System_Cron_Jobs { // phpcs:ignore Generic.Classes.OpeningBraceSame
      * @uses \MainWP\Dashboard\MainWP_Notification_Settings::get_default_emails_fields()
      * @uses \MainWP\Dashboard\MainWP_Sync::sync_site()
      * @uses \MainWP\Dashboard\MainWP_Sync::get_wp_icon()
-     * @uses \MainWP\Dashboard\MainWP_Sync::sync_information_array()
      * @uses \MainWP\Dashboard\MainWP_System_Utility::get_wp_file_system()
      * @uses \MainWP\Dashboard\MainWP_System_Utility::get_mainwp_specific_dir()
      * @uses  \MainWP\Dashboard\MainWP_Utility::get_timestamp()

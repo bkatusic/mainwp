@@ -1003,7 +1003,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             if ( isset( $_GET['page'] ) && 'ManageClients' === $_GET['page'] && isset( $_GET['client_id'] ) && ! empty( $_GET['client_id'] ) ) {
                 $class_string .= ' mainwp-individual-client-overview ';
             }
-            if ( isset( $_GET['page'] ) && ( 'CostTrackerSettings' === $_GET['page'] || 'ServerInformation' === $_GET['page'] || 'ServerInformationCron' === $_GET['page'] || 'ErrorLog' === $_GET['page'] || 'ActionLogs' === $_GET['page'] || 'PluginPrivacy' === $_GET['page'] || 'Settings' === $_GET['page'] || 'SettingsAdvanced' === $_GET['page'] || 'SettingsMonitors' === $_GET['page'] || 'SettingsEmail' === $_GET['page'] || 'MainWPTools' === $_GET['page'] || 'SettingsInsights' === $_GET['page'] || 'SettingsApiBackups' === $_GET['page'] ) ) {
+            if ( isset( $_GET['page'] ) && ( 'CostTrackerSettings' === $_GET['page'] || 'ServerInformation' === $_GET['page'] || 'ServerInformationCron' === $_GET['page'] || 'ErrorLog' === $_GET['page'] || 'ActionLogs' === $_GET['page'] || 'PluginPrivacy' === $_GET['page'] || 'Settings' === $_GET['page'] || 'SettingsAdvanced' === $_GET['page'] || 'SettingsMonitors' === $_GET['page'] || 'SettingsEmail' === $_GET['page'] || 'MainWPTools' === $_GET['page'] || 'SettingsInsights' === $_GET['page'] || 'SettingsApiBackups' === $_GET['page'] || 'MonitoringSettings' === $_GET['page'] ) ) {
                 $class_string .= ' mainwp-individual-site-view ';
             }
             if ( isset( $_GET['page'] ) && 'CostTrackerAdd' !== $_GET['page'] && ( ( isset( $_GET['id'] ) && ! empty( $_GET['id'] ) ) || ( isset( $_GET['dashboard'] ) && ! empty( $_GET['dashboard'] ) ) || ( isset( $_GET['updateid'] ) && ! empty( $_GET['updateid'] ) ) || ( isset( $_GET['monitor_wpid'] ) && ! empty( $_GET['monitor_wpid'] ) ) || ( isset( $_GET['emailsettingsid'] ) && ! empty( $_GET['emailsettingsid'] ) ) || ( isset( $_GET['scanid'] ) && ! empty( $_GET['scanid'] ) ) ) ) {
@@ -1174,7 +1174,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
                 'page'     => 'Extensions-Mainwp-Ithemes-Security-Extension',
                 'slug'     => 'better-wp-security/better-wp-security.php',
                 'slug_pro' => 'ithemes-security-pro/ithemes-security-pro.php',
-                'name'     => 'iThemes Security',
+                'name'     => 'Solid Security Integration',
             ),
             array(
                 'page' => 'Extensions-Mainwp-Updraftplus-Extension',
@@ -1290,6 +1290,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             return;
         }
 
+        $items_list_id = 'sync-sites-status';
         ?>
         <div class="ui modal" id="mainwp-install-check-modal" noti-slug="<?php echo esc_html( $check_slug ); ?>">
         <i class="mainwp-modal-close close icon"></i>
@@ -1297,7 +1298,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             <div class="scrolling content mainwp-modal-content">
                 <div class="ui message" id="mainwp-message-zone-install" style="display:none;"></div>
                 <div class="ui message blue"><?php printf( esc_html__( 'We have detected the following sites do not have the %s plugin installed. This plugin is required to be installed on your Child Sites for the Extension to work on those sites. Please select sites where you want to install it and click the Install Plugin button. Uncheck any site you don\'t want to add the plugin to or cancel to skip this step. After the installation process, resync your sites to see sites with the newly installed plugin.', 'mainwp' ), esc_html( $plugin_name ) ); ?></div>
-                <div class="ui middle aligned divided list" id="sync-sites-status">
+                <div class="ui middle aligned divided list" id="<?php echo esc_attr( $items_list_id ); ?>">
                     <?php foreach ( $missing_installed as $siteid => $site_name ) : ?>
                         <div class="item siteBulkInstall" siteid="<?php echo intval( $siteid ); ?>" status="">
                             <div class="right floated content">
