@@ -433,6 +433,11 @@ class MainWP_System_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         }
 
         $user  = wp_get_current_user();
+
+        if ( ! $user || ! $user->ID || $user->ID <= 0 ) {
+            wp_die( esc_html__( 'Authentication required', 'mainwp' ) );
+        }
+
         $theme = sanitize_text_field( wp_unslash( $_GET['mainwp_quick_theme_change'] ) );
 
         $allowed_themes = array( 'default', 'default-dark' );

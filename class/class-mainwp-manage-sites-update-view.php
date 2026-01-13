@@ -338,8 +338,8 @@ class MainWP_Manage_Sites_Update_View { // phpcs:ignore Generic.Classes.OpeningB
             <table style="width:100% !important;" class="ui tablet stackable table mainwp-manage-updates-table not-default-init" id="mainwp-wordpress-updates-table">
                 <thead>
                     <tr>
-                        <th scope="col" ><?php esc_html_e( 'Detected Version', 'mainwp' ); ?></th>
-                        <th scope="col right aligned collapsing" ><?php esc_html_e( 'New Version', 'mainwp' ); ?></th>
+                        <th scope="col"><?php esc_html_e( 'Detected Version', 'mainwp' ); ?></th>
+                        <th scope="col" class="right aligned collapsing"><?php esc_html_e( 'New Version', 'mainwp' ); ?></th>
                         <th scope="col"></th>
                     </tr>
                 </thead>

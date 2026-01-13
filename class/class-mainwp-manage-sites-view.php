@@ -1855,7 +1855,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
             jQuery( document ).ready( function() {
                 jQuery( '#mainwp-emails-settings-table' ).DataTable( {
                     "stateSave":  true,
-                    "search": false,
+                    "searching": false,
                     "paging":   false,
                     "ordering": true,
                     "columnDefs": [ { "orderable": false, "targets": [ 4 ] } ],

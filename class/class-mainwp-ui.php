@@ -1332,6 +1332,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
         $current_user  = get_current_user_id();
         $custom_theme  = MainWP_Settings::get_instance()->get_current_user_theme();
         if ( false === $custom_theme ) {
+            $compat_theme = null;
             // to compatible with Custom Dashboard extension settings.
             $compat_settings = get_option( 'mainwp_custom_dashboard_settings' );
             if ( is_array( $compat_settings ) && isset( $compat_settings['theme'] ) ) {
