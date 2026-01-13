@@ -335,15 +335,15 @@ class MainWP_Manage_Sites_Update_View { // phpcs:ignore Generic.Classes.OpeningB
         $user_can_update_wp = \mainwp_current_user_can( 'dashboard', 'update_wordpress' );
         ?>
         <div class="ui <?php echo 'WordPress' === $active_tab ? 'active' : ''; ?> tab" data-tab="wordpress">
-            <table style="width:100% !important;" class="ui tablet stackable table" id="mainwp-wordpress-updates-table mainwp-manage-updates-table">
-                    <thead>
-                        <tr>
-                            <th scope="col" ><?php esc_html_e( 'Version', 'mainwp' ); ?></th>
-                            <th scope="col" ><?php esc_html_e( 'New Version', 'mainwp' ); ?></th>
-                            <th scope="col" ></th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            <table style="width:100% !important;" class="ui tablet stackable table mainwp-manage-updates-table not-default-init" id="mainwp-wordpress-updates-table">
+                <thead>
+                    <tr>
+                        <th scope="col"><?php esc_html_e( 'Detected Version', 'mainwp' ); ?></th>
+                        <th scope="col" class="right aligned collapsing"><?php esc_html_e( 'New Version', 'mainwp' ); ?></th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
                     <?php
 
                     $decodedIgnoredCores = ! empty( $userExtension->ignored_wp_upgrades ) ? json_decode( $userExtension->ignored_wp_upgrades, true ) : array();
@@ -389,7 +389,7 @@ class MainWP_Manage_Sites_Update_View { // phpcs:ignore Generic.Classes.OpeningB
                                                         <a href="javascript:void(0)" onClick="return updatesoverview_upgrade_ignore_all_version( <?php echo intval( $website->id ); ?>, this )" class="item"><?php esc_html_e( 'Ignore all versions', 'mainwp' ); ?></a>
                                                     </div>
                                                 </div>
-                                                <a href="javascript:void(0)" data-tooltip="<?php esc_attr_e( 'Update', 'mainwp' ) . ' ' . esc_attr( $website->name ); ?>" data-inverted="" data-position="left center" class="ui green button mini" onClick="return updatesoverview_upgrade(<?php echo intval( $website->id ); ?>, this )"><?php esc_html_e( 'Update', 'mainwp' ); ?></a>
+                                                 <a href="javascript:void(0)" class="ui green button mini" onClick="return updatesoverview_upgrade(<?php echo intval( $website->id ); ?>, this )"><?php esc_html_e( 'Update', 'mainwp' ); ?></a>
 
                                             <input type="hidden" id="wp-updated-<?php echo intval( $website->id ); ?>" value="<?php echo ! empty( $wp_upgrades ) ? '0' : '1'; ?>" />
                                             <?php
@@ -402,13 +402,6 @@ class MainWP_Manage_Sites_Update_View { // phpcs:ignore Generic.Classes.OpeningB
                         <?php endif; ?>
                     <?php endif; ?>
                     </tbody>
-                    <thead>
-                        <tr>
-                            <th scope="col" ><?php esc_html_e( 'Version', 'mainwp' ); ?></th>
-                            <th scope="col" ><?php esc_html_e( 'New Version', 'mainwp' ); ?></th>
-                            <th scope="col" ></th>
-                        </tr>
-                    </thead>
                 </table>
             </div>
         <?php
@@ -492,7 +485,7 @@ class MainWP_Manage_Sites_Update_View { // phpcs:ignore Generic.Classes.OpeningB
                 $offs_info    = esc_html__( '- Timezone:', 'mainwp' ) . ' UTC' . ( $offs >= 0 ? '+' . $offs : $offs );
 
                 ?>
-                <table id="mainwp-updates-plugins-table" style="width:100% !important;" class="  ui tablet stackable table mainwp-updates-list mainwp-manage-updates-table">
+                <table id="mainwp-updates-plugins-table" style="width:100% !important;" class="ui tablet stackable table mainwp-updates-list mainwp-manage-updates-table">
                     <thead class="master-checkbox">
                         <tr>
                         <?php $updates_table_helper->print_column_headers(); ?>
@@ -672,7 +665,7 @@ class MainWP_Manage_Sites_Update_View { // phpcs:ignore Generic.Classes.OpeningB
                 $offs_info    = esc_html__( '- Timezone:', 'mainwp' ) . ' UTC' . ( $offs >= 0 ? '+' . $offs : $offs );
 
                 ?>
-                <table id="mainwp-updates-themes-table" style="width:100% !important;" class="  ui tablet stackable table mainwp-updates-list mainwp-manage-updates-table">
+                <table id="mainwp-updates-themes-table" style="width:100% !important;" class="ui tablet stackable table mainwp-updates-list mainwp-manage-updates-table">
                     <thead class="master-checkbox full-width" >
                         <tr>
                         <?php $updates_table_helper->print_column_headers(); ?>
@@ -988,7 +981,7 @@ class MainWP_Manage_Sites_Update_View { // phpcs:ignore Generic.Classes.OpeningB
 
         ?>
         <div class="ui <?php echo 'abandoned-themes' === $active_tab ? 'active' : ''; ?> tab" data-tab="abandoned-themes">
-            <table style="width:100% !important;"  class="  ui tablet stackable table mainwp-manage-updates-table" id="mainwp-abandoned-themes-table">
+            <table style="width:100% !important;"  class="ui tablet stackable table mainwp-manage-updates-table" id="mainwp-abandoned-themes-table">
                 <thead>
                     <tr>
                         <th scope="col"><?php esc_html_e( 'Theme', 'mainwp' ); ?></th>

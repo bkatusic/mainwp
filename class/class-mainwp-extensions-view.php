@@ -149,7 +149,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 <?php } else { ?>
                     
 
-                    <div class="mainwp-sub-header">
+                    <div class="mainwp-actions-bar">
                         <div class="ui stackable grid">
                             <div class="eight wide column" data-tooltip="<?php esc_attr_e( 'Extensions are purpose-built add-ons that expand your Dashboard\'s functionality without relying on external services. Integrations are add-ons that connect MainWP with third-party tools, bringing their power directly into your Dashboard.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
                                 <div class="ui mini stackable buttons">

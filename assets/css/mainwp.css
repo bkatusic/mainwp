@@ -735,6 +735,10 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
     gap: 0.5rem !important;
 }
 
+.mainwp-ui table.dataTable thead > tr > th.right.aligned .dt-column-header {
+    justify-content: end !important;
+}
+
 .mainwp-ui table.dataTable thead > tr > th .dt-column-header .dt-column-title {
     flex-grow: 0 !important;
 }

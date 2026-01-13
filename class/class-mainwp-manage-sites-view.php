@@ -1834,15 +1834,6 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                         </tr>
                     <?php } ?>
                 </tbody>
-                <tfoot>
-                    <tr>
-                        <th scope="col" class="collapsing"><?php esc_html_e( 'Status', 'mainwp' ); ?></th>
-                        <th scope="col" ><?php esc_html_e( 'Email', 'mainwp' ); ?></th>
-                        <th scope="col" ><?php esc_html_e( 'Description', 'mainwp' ); ?></th>
-                        <th scope="col" ><?php echo $text_recipients; //phpcs:ignore -- ok. ?></th>
-                        <th scope="col" >&nbsp;</th>
-                    </tr>
-                </tfoot>
             </table>
             <?php
             /**
@@ -1864,6 +1855,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
             jQuery( document ).ready( function() {
                 jQuery( '#mainwp-emails-settings-table' ).DataTable( {
                     "stateSave":  true,
+                    "searching": false,
                     "paging":   false,
                     "ordering": true,
                     "columnDefs": [ { "orderable": false, "targets": [ 4 ] } ],

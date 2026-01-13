@@ -29,7 +29,7 @@ class MainWP_System { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
      *
      * @var string Current plugin version.
      */
-    public static $version = '6.0-er.1'; // NOSONAR.
+    public static $version = '6.0-er.2'; // NOSONAR.
 
     /**
      * Private static variable to hold the single instance of the class.
@@ -875,6 +875,7 @@ class MainWP_System { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
             'maximumInstallUpdateRequests'     => ( get_option( 'mainwp_maximumInstallUpdateRequests' ) === false ) ? 3 : get_option( 'mainwp_maximumInstallUpdateRequests' ),
             'maximumUptimeMonitoringRequests'  => (int) get_option( 'mainwp_maximum_uptime_monitoring_requests', 10 ),
             '_wpnonce'                         => wp_create_nonce( 'mainwp-admin-nonce' ),
+            'quickThemeChangeNonce'            => wp_create_nonce( 'mainwp_quick_theme_change' ),
             'demoMode'                         => MainWP_Demo_Handle::is_demo_mode() ? 1 : 0,
             'roll_ui_icon'                     => MainWP_Updates_Helper::get_roll_icon( '', true ),
             'admin_url_base'                   => admin_url(),

@@ -221,6 +221,8 @@ class MainWP_System_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
             return;
         }
 
+        $this->handle_quick_theme_change();
+
         global $pagenow;
 
         if ( 'plugins.php' === $pagenow && isset( $_GET['do'] ) && 'checkUpgrade' === $_GET['do'] && ( ( time() - $this->upgradeVersionInfo->updated ) > 30 ) ) { // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -230,8 +232,6 @@ class MainWP_System_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
             exit;
         }
     }
-
-
 
     /**
      * Method hook_get_sql_websites_for_current_user()
@@ -418,6 +418,40 @@ class MainWP_System_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         }
     }
 
+    /**
+     * Method handle_quick_theme_change()
+     *
+     * Handle quick theme switching via URL parameter.
+     */
+    public function handle_quick_theme_change() {
+        if ( ! isset( $_GET['mainwp_quick_theme_change'] ) || ! isset( $_GET['_wpnonce'] ) ) {
+            return;
+        }
+
+        if ( ! wp_verify_nonce( sanitize_key( $_GET['_wpnonce'] ), 'mainwp_quick_theme_change' ) ) {
+            wp_die( esc_html__( 'Security check failed', 'mainwp' ) );
+        }
+
+        $user  = wp_get_current_user();
+
+        if ( ! $user || ! $user->ID || $user->ID <= 0 ) {
+            wp_die( esc_html__( 'Authentication required', 'mainwp' ) );
+        }
+
+        $theme = sanitize_text_field( wp_unslash( $_GET['mainwp_quick_theme_change'] ) );
+
+        $allowed_themes = array( 'default', 'default-dark' );
+        if ( ! in_array( $theme, $allowed_themes, true ) ) {
+            wp_die( esc_html__( 'Invalid theme selection', 'mainwp' ) );
+        }
+
+        update_user_option( $user->ID, 'mainwp_selected_theme', $theme );
+        set_transient( 'mainwp_settings_saved', 1, 30 );
+
+        $redirect_url = remove_query_arg( array( 'mainwp_quick_theme_change', '_wpnonce' ) );
+        wp_safe_redirect( $redirect_url );
+        exit;
+    }
 
     /**
      * Method handle_mainwp_tools_settings()

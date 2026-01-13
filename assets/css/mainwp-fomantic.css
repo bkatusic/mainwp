@@ -212,6 +212,10 @@
     vertical-align: baseline;
 }
 
+.mainwp-ui .mainwp-manage-updates-table .ui.checkbox {
+    vertical-align: middle !important;
+}
+
 .mainwp-ui .mainwp-main-content .ui.checkbox:not(.slider, .toggle) .box::after,
 .mainwp-ui .mainwp-main-content .ui.checkbox:not(.slider, .toggle) label::after,
 .mainwp-ui #mainwp-manage-sites-content .ui.checkbox:not(.slider, .toggle) .box::after,
@@ -382,6 +386,11 @@
 .mainwp-ui table.dataTable.ui.table td.dt-type-numeric,
 .mainwp-ui table.dataTable.ui.table td.dt-type-date {
     text-align: left;
+}
+
+.mainwp-ui table.dataTable.ui.table td.right.aligned.dt-type-numeric,
+.mainwp-ui table.dataTable.ui.table td.right.aligned.dt-type-date {
+    text-align: right !important;
 }
 
 .mainwp-ui-page [data-tooltip][data-inverted]::before {

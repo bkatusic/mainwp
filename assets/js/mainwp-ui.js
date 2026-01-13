@@ -953,3 +953,19 @@ let mainwp_help_modal_start_content_onclick = function (tour_id, video_id, show_
         jQuery('#mainwp-start-tour-button').fadeIn('100');
     }
 }
+
+jQuery(document).on('click', '#mainwp-select-light-theme-button', function(e) {
+    e.preventDefault();
+    const url = new URL(window.location.href);
+    url.searchParams.set('mainwp_quick_theme_change', 'default');
+    url.searchParams.set('_wpnonce', mainwpParams.quickThemeChangeNonce);
+    window.location.href = url.toString();
+});
+
+jQuery(document).on('click', '#mainwp-select-dark-theme-button', function(e) {
+    e.preventDefault();
+    const url = new URL(window.location.href);
+    url.searchParams.set('mainwp_quick_theme_change', 'default-dark');
+    url.searchParams.set('_wpnonce', mainwpParams.quickThemeChangeNonce);
+    window.location.href = url.toString();
+});

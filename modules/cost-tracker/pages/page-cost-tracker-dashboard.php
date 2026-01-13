@@ -1141,7 +1141,7 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
      */
     public function render_actions_bar() {
         ?>
-        <div class="mainwp-actions-bar">
+        <div class="mainwp-sub-header">
             <div class="ui two columns grid">
                 <div class="column ui mini form">
                     <select class="ui dropdown" id="mwp_cost_tracker_bulk_action">

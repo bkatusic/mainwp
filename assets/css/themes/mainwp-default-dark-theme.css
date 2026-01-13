@@ -856,7 +856,7 @@
   border: none !important;
   box-shadow: none !important;
   color: var(--mainwp-text);
-  border-radius: 0.28571429rem !important;
+  border-radius: var(--area-radius) !important;
 }
 
 .mainwp-ui.mainwp-custom-theme table.dataTable thead > tr > th.dt-orderable-asc:hover,
@@ -907,11 +907,17 @@
 .mainwp-ui.mainwp-custom-theme .ui.table:not(.day, .hour, .minute, .compact) > tbody > tr.positive > td {
   background-color: #7fb10010 !important;
 }
+.mainwp-ui.mainwp-custom-theme .ui.table > thead > tr:first-child > th:first-child {
+  border-radius: var(--area-radius) 0 0 0 !important;
+}
+.mainwp-ui.mainwp-custom-theme .ui.table > thead > tr:last-child > th:last-child {
+  border-radius: 0 var(--area-radius) 0 0 !important;
+}
 .mainwp-ui.mainwp-custom-theme .ui.table > tbody > tr:last-child > td:first-child {
-  border-radius: 0 0 0 0.28571429rem !important;
+  border-radius: 0 0 0 var(--area-radius) !important;
 }
 .mainwp-ui.mainwp-custom-theme .ui.table > tbody > tr:last-child > td:last-child {
-  border-radius: 0 0 0.28571429rem !important;
+  border-radius: 0 0 var(--area-radius) 0 !important;
 }
 
 .mainwp-ui table.dataTable thead tr th.check-column {
@@ -1532,21 +1538,19 @@ body.mainwp-ui.mainwp-custom-theme,
   -webkit-border-radius: var(--area-radius) !important;
 }
 
-.mainwp-ui.mainwp-custom-theme .mainwp-sub-submenu ~ .mainwp-sub-header,
-.mainwp-ui.mainwp-custom-theme .mainwp-sub-submenu ~ .mainwp-actions-bar,
-.mainwp-ui.mainwp-custom-theme .mainwp-sub-submenu ~ .ui.tab .mainwp-actions-bar,
-.mainwp-ui.mainwp-custom-theme #mainwp-updraftplus-extension .mainwp-actions-bar,
-.mainwp-ui.mainwp-custom-theme .mainwp_page_Extensions-Mainwp-Backwpup-Extension .mainwp-actions-bar,
-.mainwp-ui.mainwp-custom-theme .mainwp-main-content .mainwp-sub-header,
-.mainwp-ui.mainwp-custom-theme .mainwp-main-content .mainwp-actions-bar,
-.mainwp-ui.mainwp-custom-theme #mainwp-site-mode-wrap .mainwp-sub-header,
-.mainwp-ui.mainwp-custom-theme #mainwp-site-mode-wrap .mainwp-actions-bar,
-.mainwp-ui.mainwp-custom-theme #mainwp-article-uploader-import .mainwp-actions-bar,
-.mainwp-ui.mainwp-custom-theme .mainwp_wfc_tabs_content .mainwp-actions-bar,
-.mainwp-ui.mainwp-custom-theme.mainwp_page_InsightsOverview #mainwp-module-log-overview-sub-header,
-.mainwp-ui.mainwp-custom-theme #mainwp-module-cost-tracker-list-sub-header {
-  margin-top: 1em !important;
+.mainwp-ui.mainwp-custom-theme .mainwp-actions-bar {
+  margin-top: 1rem !important;
 }
+
+.mainwp-ui.mainwp-custom-theme .mainwp-sub-header {
+  margin-top: calc( 58px + 1rem ) !important;
+}
+
+.mainwp-ui.mainwp-custom-theme.mainwp-individual-site-view .mainwp-sub-header {
+  margin-top: 0 !important;
+}
+
+
 
 .mainwp-ui.mainwp-custom-theme #mainwp-plugins-content .ui.secondary.segment {
   background-color: var(--mainwp-base-background-secondary) !important;
@@ -1556,9 +1560,15 @@ body.mainwp-ui.mainwp-custom-theme,
 
 /* Invert Dimmer and Loader */
 
-.mainwp-ui.mainwp-custom-theme .ui.dimmer,
-.mainwp-ui.mainwp-custom-theme .ui.inverted.dimmer {
+.mainwp-ui.mainwp-custom-theme .ui.dimmer:not(.modals),
+.mainwp-ui.mainwp-custom-theme .ui.inverted.dimmer:not(.modals) {
   background-color: var(--mainwp-element-background-secondary) !important;
+}
+
+.mainwp-ui.mainwp-custom-theme .ui.dimmer.modals,
+.mainwp-ui.mainwp-custom-theme .ui.inverted.dimmer.modals {
+  background-color: #20222095 !important;
+  backdrop-filter: blur(5px) !important;
 }
 
 .mainwp-ui.mainwp-custom-theme .ui.loader:after {

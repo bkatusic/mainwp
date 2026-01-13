@@ -433,7 +433,6 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
     public static function render_layout_selection() { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAfterBrace -- NOSONAR - complexity.
         $screen = get_current_screen();
         ?>
-        <div class="ui divider hidden"></div>
         <div class="mainwp-sub-header" id="mainwp-manage-widgets-layout-row">
             <div class="ui stackable two column grid">
                 <div class="column">
