@@ -1330,6 +1330,21 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
         $sidebar_pages = apply_filters( 'mainwp_sidbar_pages', $sidebar_pages ); // deprecated filter.
         $sidebar_pages = apply_filters( 'mainwp_sidebar_pages', $sidebar_pages );
         $current_user  = get_current_user_id();
+        $custom_theme  = MainWP_Settings::get_instance()->get_current_user_theme();
+        if ( false === $custom_theme ) {
+            // to compatible with Custom Dashboard extension settings.
+            $compat_settings = get_option( 'mainwp_custom_dashboard_settings' );
+            if ( is_array( $compat_settings ) && isset( $compat_settings['theme'] ) ) {
+                $compat_theme = $compat_settings['theme'];
+            }
+            if ( null !== $compat_theme ) {
+                $custom_theme = $compat_theme;
+            }
+        }
+        $themes_files = MainWP_Settings::get_instance()->get_custom_themes_files();
+        if ( empty( $themes_files ) ) {
+            $themes_files = array();
+        }
 
         // phpcs:disable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $page = isset( $_GET['page'] ) ? wp_unslash( $_GET['page'] ) : '';
@@ -1406,9 +1421,19 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
         <a class="ui button icon" id="mainwp-sites-sidebar" aria-label="<?php esc_attr_e( 'Open sites shortcuts sidebar', 'mainwp' ); ?>">
             <i class="globe icon"></i>
         </a>
-        <div id="mainwp-select-theme-button" class="ui button icon mainwp-selecte-theme-button" aria-label="<?php esc_attr_e( 'Select MainWP theme', 'mainwp' ); ?>" custom-theme="default" data-inverted="" data-position="bottom right" data-tooltip="<?php esc_html_e( 'Select MainWP theme', 'mainwp' ); ?>">
-            <i class="palette icon"></i>
-        </div>
+        <?php if ( 'default-dark' === $custom_theme && empty( $themes_files) ) : ?>
+            <a id="mainwp-select-light-theme-button" class="ui button icon" aria-label="<?php esc_attr_e( 'Select MainWP Light theme', 'mainwp' ); ?>" data-inverted="" data-position="bottom right" data-tooltip="<?php esc_html_e( 'Switch to Light mode', 'mainwp' ); ?>">
+                <i class="sun icon"></i>
+            </a>
+        <?php elseif ( 'default' === $custom_theme && empty( $themes_files) ) : ?>
+            <a id="mainwp-select-dark-theme-button" class="ui button icon" aria-label="<?php esc_attr_e( 'Select MainWP Dark theme', 'mainwp' ); ?>" data-inverted="" data-position="bottom right" data-tooltip="<?php esc_html_e( 'Switch to Dark mode', 'mainwp' ); ?>">
+                <i class="moon icon"></i>
+            </a>
+        <?php else : ?>
+            <a id="mainwp-select-theme-button" class="ui button icon mainwp-selecte-theme-button" aria-label="<?php esc_attr_e( 'Select MainWP theme', 'mainwp' ); ?>" custom-theme="default" data-inverted="" data-position="bottom right" data-tooltip="<?php esc_html_e( 'Select MainWP theme', 'mainwp' ); ?>">
+                <i class="palette icon"></i>
+            </a>
+        <?php endif; ?>
 
         <?php
         /**

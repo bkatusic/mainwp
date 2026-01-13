@@ -204,7 +204,7 @@ class MainWP_Security_Issues_Widget { // phpcs:ignore Generic.Classes.OpeningBra
                             <div class="ui right pointing dropdown">
                                 <i class="ellipsis vertical icon"></i>
                                 <div class="menu">
-                                    <a href="admin.php?page=managesites&scanid=<?php echo esc_attr( $website->id ); ?>" class="item"><?php esc_html_e( 'See Details', 'mainwp' ); ?></a>
+                                    <a href="admin.php?page=managesites&scanid=<?php echo esc_attr( $website->id ); ?>" class="item"><?php esc_html_e( 'Details', 'mainwp' ); ?></a>
                                 </div>
                             </div>
                         </div>

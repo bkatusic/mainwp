@@ -284,11 +284,11 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             'wpcore_update'  => '<i class="icon wordpress"></i>', // phpcs:ignore -- Prevent modify WP icon.
             'plugin_update'  => '<i class="plug icon"></i>',
             'theme_update'   => '<i class="tint icon"></i>',
-            'wpcore_version' => esc_html__( 'WP Version', 'mainwp' ),
+            'wpcore_version' => esc_html__( 'Core', 'mainwp' ),
             'security'       => esc_html__( 'Security', 'mainwp' ),
             'language'       => esc_html__( 'Language', 'mainwp' ),
             'ip'             => esc_html__( 'Server IP', 'mainwp' ),
-            'index'          => esc_html__( 'Indexable', 'mainwp' ),
+            'index'          => esc_html__( 'Index', 'mainwp' ),
             'uptime'         => esc_html__( 'Uptime', 'mainwp' ),
             'last_sync'      => esc_html__( 'Last Sync', 'mainwp' ),
             'backup'         => esc_html__( 'Backups', 'mainwp' ),
@@ -1948,7 +1948,13 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                             <i class="sync alternate icon"></i> <?php echo intval( $total_theme_upgrades ); ?>
                         </a>
                     <?php } elseif ( 'wpcore_version' === $column_name ) { ?>
-                        <?php echo ! empty( $website_info['wpversion'] ) ? esc_html( $website_info['wpversion'] ) : ''; ?>
+                        <?php if ( ! empty( $website_info['wpversion'] ) ) : ?>
+                            <?php if ( $total_wp_upgrades > 0 && is_array( $wp_upgrades ) && ! empty( $wp_upgrades['new'] ) ) : ?>
+                                <a class="ui grey text" href="admin.php?page=managesites&updateid=<?php echo intval( $website['id'] ); ?>&tab=wordpress-updates"><i class="small red sync alternate icon"></i> <?php echo esc_html( $website_info['wpversion'] ); ?> <i class="tiny grey chevron right icon"></i> <?php echo esc_html( $wp_upgrades['new'] ); ?></a>
+                            <?php else : ?>
+                                <span class="ui grey text"><?php echo esc_html( $website_info['wpversion'] ); ?></span>
+                            <?php endif; ?>
+                        <?php endif; ?>
                     <?php } elseif ( 'security' === $column_name ) { ?>
                         <?php if ( ! empty( $website['securityIssues'] ) && '[]' !== $website['securityIssues'] ) : ?>
                             <?php if ( 0 < $website['securityIssues'] ) : ?>
