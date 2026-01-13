@@ -1538,21 +1538,19 @@ body.mainwp-ui.mainwp-custom-theme,
   -webkit-border-radius: var(--area-radius) !important;
 }
 
-.mainwp-ui.mainwp-custom-theme .mainwp-sub-header {
-  margin-top: calc( 58px + 1rem ) !important;
+.mainwp-ui.mainwp-custom-theme .mainwp-actions-bar {
+  margin-top: 1rem !important;
 }
 
-.mainwp-ui.mainwp-custom-theme #mainwp-manage-widgets-layout-row.mainwp-sub-header {
-  margin-top: 0 !important;
+.mainwp-ui.mainwp-custom-theme .mainwp-sub-header {
+  margin-top: calc( 58px + 1rem ) !important;
 }
 
 .mainwp-ui.mainwp-custom-theme.mainwp-individual-site-view .mainwp-sub-header {
   margin-top: 0 !important;
 }
 
-.mainwp-ui.mainwp-custom-theme .mainwp-actions-bar {
-  margin-top: 1rem !important;
-}
+
 
 .mainwp-ui.mainwp-custom-theme #mainwp-plugins-content .ui.secondary.segment {
   background-color: var(--mainwp-base-background-secondary) !important;

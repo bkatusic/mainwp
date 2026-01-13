@@ -751,7 +751,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
      */
     public static function render_table_top() {
         ?>
-        <div class="mainwp-actions-bar">
+        <div class="mainwp-sub-header">
             <div class="ui grid">
                 <div class="equal width row ui mini form">
                     <div class="middle aligned column">
