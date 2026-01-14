@@ -7,7 +7,7 @@ Plugin URI: https://mainwp.com
 Requires at least: 6.2
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 5.4.1
+Stable tag: 5.4.1.1
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -146,6 +146,11 @@ Yes, we have a quick FAQ with many more questions and answers [here](https://mai
 10. Dashboard Insights
 
 == Changelog ==
+
+= 5.4.1.1 - Maintenance Release - 1-14-2026 =
+
+* Fixed: Resolved an issue where post categories would not load on the "Add New Bulk Post" screen.
+
 
 = 5.4.1 - Maintenance Release - 12-10-2025 =
 
