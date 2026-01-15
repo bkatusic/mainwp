@@ -1264,6 +1264,9 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         if ( ! $request_update ) {
             $information = static::fetch_url( $website, $website->url, $postdata, $checkConstraints, $website->verify_certificate, $pRetryFailed, $website->http_user, $website->http_pass, $website->ssl_version, $others, $output );
             if ( ! empty( $output ) ) {
+                if ( ! is_array( $information ) ) {
+                    $information = array();
+                }
                 $information['fetch_url_output'] = $output;
             }
             /**
