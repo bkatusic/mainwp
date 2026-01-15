@@ -641,7 +641,11 @@ let managesites_wordpress_upgrade_int = function (websiteId) {
         return function (response) {
             if (response.error) {
                 websitesUpdateError++;
-                dashboard_update_site_status(pWebsiteId, '<i class="red times icon"></i>' + ' ' + mainwp_links_visit_site_and_admin('', websiteId), true);
+                let errIcon = '<i class="red times icon"></i>';
+                if (response?.error?.errorCode == 'SUSPENDED_SITE') {
+                    errIcon = '<span data-inverted="" data-position="left center" data-tooltip="' + __('Suspended site.') + '"><i class="pause yellow icon"></i></span>';
+                }
+                dashboard_update_site_status(pWebsiteId, errIcon + ' ' + mainwp_links_visit_site_and_admin('', websiteId), true);
             } else {
                 dashboard_update_site_status(pWebsiteId, '<i class="green check icon"></i>' + ' ' + mainwp_links_visit_site_and_admin('', websiteId));
             }

@@ -45,7 +45,7 @@ class MainWP_Updates_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameL
             $website = MainWP_DB::instance()->get_website_by_id( $id );
 
             if ( MainWP_System_Utility::is_suspended_site( $website ) ) {
-                throw new MainWP_Exception( 'ERROR', '<i class="pause circular yellow inverted icon"></i> ' . esc_html__( 'Suspended site.', 'mainwp' ) ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+                throw new MainWP_Exception( 'ERROR', '<i class="pause circular yellow inverted icon"></i> ' . esc_html__( 'Suspended site.', 'mainwp' ), 'SUSPENDED_SITE' ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
             }
 
             $information = static::upgrade_website( $website );

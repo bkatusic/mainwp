@@ -101,7 +101,11 @@ let updatesoverview_upgrade = function (id, obj) {
                     if (response.error.extra) {
                         err_msg = response.error.extra + ' ';
                     }
-                    jQuery('.mainwp-wordpress-update[site_id="' + pId + '"] > td:last-child').html('<span data-inverted="" data-position="left center" data-tooltip="' + err_msg + '"><i class="red times icon"></i></span>');
+                    let errIcon = '<i class="pause yellow icon"></i>';
+                    if (response?.error?.errorCode == 'SUSPENDED_SITE') {
+                        errIcon = '<span data-inverted="" data-position="left center" data-tooltip="' + __('Suspended site.') + '">' + errIcon + '</span>';
+                    }
+                    jQuery('.mainwp-wordpress-update[site_id="' + pId + '"] > td:last-child').html('<span data-inverted="" data-position="left center" data-tooltip="' + err_msg + '">' + errIcon + '</span>');
                 } else {
 
                     jQuery('.mainwp-wordpress-update[site_id="' + pId + '"] > td:last-child').html(response.result);
@@ -318,8 +322,12 @@ let updatesoverview_wordpress_upgrade_int = function (websiteId, bulkMode) {
                 if (response.error.extra) {
                     err_msg = response.error.extra + ' ';
                 }
+                let errIcon = '<i class="red times icon"></i>';
+                if (response?.error?.errorCode == 'SUSPENDED_SITE') {
+                    errIcon = '<i class="pause yellow icon"></i>';
+                }
                 if (pBulkMode)
-                    updatesoverview_wordpress_upgrade_all_update_site_status(pWebsiteId, '<span data-inverted="" data-position="left center" data-tooltip="' + err_msg + '"><i class="red times icon"></i></span>');
+                    updatesoverview_wordpress_upgrade_all_update_site_status(pWebsiteId, '<span data-inverted="" data-position="left center" data-tooltip="' + err_msg + '">' + errIcon + '</span>');
             } else if (pBulkMode) {
                 updatesoverview_wordpress_upgrade_all_update_site_status(pWebsiteId, response.result);
             }
@@ -1942,6 +1950,8 @@ let updatesoverview_upgrade_int_flow = function (params) { // NOSONAR - complex.
     let pErrorMessage = params['pErrorMessage'];
     let pTransSlugToUpgrade = params['pTransSlugToUpgrade'];
     let pTransDone = params['pTransDone'];
+    let bulkErrorCode = params['bulkErrorCode'];
+
     if (!pThemeDone) {
         let data = mainwp_secure_data({
             action: 'mainwp_upgradeplugintheme',
@@ -1958,9 +1968,14 @@ let updatesoverview_upgrade_int_flow = function (params) { // NOSONAR - complex.
             success: function (pWebsiteId, pSlug, pPluginSlugToUpgrade, pWordpressUpgrade, pPluginDone, pUpgradeDone, pErrorMessage, pTransSlugToUpgrade, pTransDone) { // NOSONAR - compatible.
                 return function (response) { // NOSONAR - complex ok.
                     let slugParts = pSlug.split(',');
-                    if (response?.error?.errorCode == 'SUSPENDED_SITE') {
+                    let bulkErrorCode = response?.error?.errorCode ?? '';
+                    if (bulkErrorCode == 'SUSPENDED_SITE') {
                         let msgUI = '<span data-inverted="" data-position="left center" data-tooltip="' + __('Suspended site.') + '"><i class="pause yellow icon"></i></span>';
                         updatesoverview_upgrade_all_update_site_bold(pWebsiteId, false, msgUI);
+                        pPluginDone = true;
+                        pUpgradeDone = true;
+                        pTransDone = true;
+                        mainwpVars.errorCount++;
                     } else {
                         for (let sid of slugParts) {
                             let result;
@@ -1998,28 +2013,30 @@ let updatesoverview_upgrade_int_flow = function (params) { // NOSONAR - complex.
                         }
                         updatesoverview_upgrade_all_update_site_bold(pWebsiteId, 'theme');
 
-                        //If all done: continue, else delay 400ms to not stress the server
-                        let fnc = function () {
-                            let params = {
-                                'pWebsiteId': pWebsiteId,
-                                'pThemeSlugToUpgrade': pSlug,
-                                'pPluginSlugToUpgrade': pPluginSlugToUpgrade,
-                                'pWordpressUpgrade': pWordpressUpgrade,
-                                'pThemeDone': true,
-                                'pPluginDone': pPluginDone,
-                                'pUpgradeDone': pUpgradeDone,
-                                'pErrorMessage': pErrorMessage,
-                                'pTransSlugToUpgrade': pTransSlugToUpgrade,
-                                'pTransDone': pTransDone
-                            };
-                            updatesoverview_upgrade_int_loop_flow(params);
-                        };
-
-                        if (pPluginDone && pUpgradeDone && pTransDone)
-                            fnc();
-                        else
-                            setTimeout(fnc, 400);
                     }
+
+                    //If all done: continue, else delay 400ms to not stress the server
+                    let fnc = function () {
+                        let params = {
+                            'pWebsiteId': pWebsiteId,
+                            'pThemeSlugToUpgrade': pSlug,
+                            'pPluginSlugToUpgrade': pPluginSlugToUpgrade,
+                            'pWordpressUpgrade': pWordpressUpgrade,
+                            'pThemeDone': true,
+                            'pPluginDone': pPluginDone,
+                            'pUpgradeDone': pUpgradeDone,
+                            'pErrorMessage': pErrorMessage,
+                            'pTransSlugToUpgrade': pTransSlugToUpgrade,
+                            'pTransDone': pTransDone,
+                            'bulkErrorCode': bulkErrorCode
+                        };
+                        updatesoverview_upgrade_int_loop_flow(params);
+                    };
+
+                    if (pPluginDone && pUpgradeDone && pTransDone)
+                        fnc();
+                    else
+                        setTimeout(fnc, 400);
                 }
             }(pWebsiteId, pThemeSlugToUpgrade, pPluginSlugToUpgrade, pWordpressUpgrade, pPluginDone, pUpgradeDone, pErrorMessage, pTransSlugToUpgrade, pTransDone),
             tryCount: 0,
@@ -2077,9 +2094,17 @@ let updatesoverview_upgrade_int_flow = function (params) { // NOSONAR - complex.
             data: data,
             success: function (pWebsiteId, pThemeSlugToUpgrade, pSlug, pWordpressUpgrade, pThemeDone, pUpgradeDone, pErrorMessage, pTransSlugToUpgrade, pTransDone) { // NOSONAR - compatible.
                 return function (response) { // NOSONAR - complex ok.
-                    if (response?.error?.errorCode == 'SUSPENDED_SITE') {
+                    bulkErrorCode = response?.error?.errorCode ?? '';
+                    if (bulkErrorCode == 'SUSPENDED_SITE') {
                         let msgUI = '<span data-inverted="" data-position="left center" data-tooltip="' + __('Suspended site.') + '"><i class="pause yellow icon"></i></span>';
                         updatesoverview_upgrade_all_update_site_bold(pWebsiteId, false, msgUI);
+
+                        pThemeDone = true;
+                        pUpgradeDone = true;
+                        pTransDone = true;
+
+                        mainwpVars.errorCount++;
+
                     } else {
                         let slugParts = pSlug.split(',');
                         for (let sid of slugParts) {
@@ -2109,28 +2134,30 @@ let updatesoverview_upgrade_int_flow = function (params) { // NOSONAR - complex.
                         }
                         updatesoverview_upgrade_all_update_site_bold(pWebsiteId, 'plugin');
 
-                        //If all done: continue, else delay 400ms to not stress the server
-                        let fnc = function () {
-                            let params = {
-                                'pWebsiteId': pWebsiteId,
-                                'pThemeSlugToUpgrade': pThemeSlugToUpgrade,
-                                'pPluginSlugToUpgrade': pSlug,
-                                'pWordpressUpgrade': pWordpressUpgrade,
-                                'pThemeDone': pThemeDone,
-                                'pPluginDone': true,
-                                'pUpgradeDone': pUpgradeDone,
-                                'pErrorMessage': pErrorMessage,
-                                'pTransSlugToUpgrade': pTransSlugToUpgrade,
-                                'pTransDone': pTransDone
-                            };
-                            updatesoverview_upgrade_int_loop_flow(params);
-                        };
-
-                        if (pThemeDone && pUpgradeDone && pTransDone)
-                            fnc();
-                        else
-                            setTimeout(fnc, 400);
                     }
+
+                    //If all done: continue, else delay 400ms to not stress the server
+                    let fnc = function () {
+                        let params = {
+                            'pWebsiteId': pWebsiteId,
+                            'pThemeSlugToUpgrade': pThemeSlugToUpgrade,
+                            'pPluginSlugToUpgrade': pSlug,
+                            'pWordpressUpgrade': pWordpressUpgrade,
+                            'pThemeDone': pThemeDone,
+                            'pPluginDone': true,
+                            'pUpgradeDone': pUpgradeDone,
+                            'pErrorMessage': pErrorMessage,
+                            'pTransSlugToUpgrade': pTransSlugToUpgrade,
+                            'pTransDone': pTransDone,
+                            'bulkErrorCode': bulkErrorCode
+                        };
+                        updatesoverview_upgrade_int_loop_flow(params);
+                    };
+
+                    if (pThemeDone && pUpgradeDone && pTransDone)
+                        fnc();
+                    else
+                        setTimeout(fnc, 400);
                 }
             }(pWebsiteId, pThemeSlugToUpgrade, pPluginSlugToUpgrade, pWordpressUpgrade, pThemeDone, pUpgradeDone, pErrorMessage, pTransSlugToUpgrade, pTransDone),
             tryCount: 0,
@@ -2185,9 +2212,17 @@ let updatesoverview_upgrade_int_flow = function (params) { // NOSONAR - complex.
             data: data,
             success: function (WebsiteId, pThemeSlugToUpgrade, pPluginSlugToUpgrade, pWordpressUpgrade, pThemeDone, pPluginDone, pErrorMessage, pTransSlugToUpgrade, pTransDone) { // NOSONAR - compatible.
                 return function (response) {
-                    if (response?.error?.errorCode == 'SUSPENDED_SITE') {
+                    let bulkErrorCode = response?.error?.errorCode ?? '';
+                    if (bulkErrorCode == 'SUSPENDED_SITE') {
                         let msgUI = '<span data-inverted="" data-position="left center" data-tooltip="' + __('Suspended site.') + '"><i class="pause yellow icon"></i></span>';
                         updatesoverview_upgrade_all_update_site_bold(pWebsiteId, false, msgUI);
+
+                        pThemeDone = true;
+                        pPluginDone = true;
+                        pTransDone = true;
+
+                        mainwpVars.errorCount++;
+
                     } else {
                         let result;
                         let websiteHolder = jQuery('div[site_id="' + pWebsiteId + '"]');
@@ -2199,28 +2234,31 @@ let updatesoverview_upgrade_int_flow = function (params) { // NOSONAR - complex.
                         }
                         updatesoverview_upgrade_all_update_site_bold(pWebsiteId, 'wordpress');
 
-                        //If all done: continue, else delay 400ms to not stress the server
-                        let fnc = function () {
-                            let params = {
-                                'pWebsiteId': pWebsiteId,
-                                'pThemeSlugToUpgrade': pThemeSlugToUpgrade,
-                                'pPluginSlugToUpgrade': pPluginSlugToUpgrade,
-                                'pWordpressUpgrade': pWordpressUpgrade,
-                                'pThemeDone': pThemeDone,
-                                'pPluginDone': pPluginDone,
-                                'pUpgradeDone': true,
-                                'pErrorMessage': pErrorMessage,
-                                'pTransSlugToUpgrade': pTransSlugToUpgrade,
-                                'pTransDone': pTransDone
-                            };
-                            updatesoverview_upgrade_int_loop_flow(params);
-                        };
-
-                        if (pThemeDone && pPluginDone && pTransDone)
-                            fnc();
-                        else
-                            setTimeout(fnc, 400);
                     }
+
+                    //If all done: continue, else delay 400ms to not stress the server
+                    let fnc = function () {
+                        let params = {
+                            'pWebsiteId': pWebsiteId,
+                            'pThemeSlugToUpgrade': pThemeSlugToUpgrade,
+                            'pPluginSlugToUpgrade': pPluginSlugToUpgrade,
+                            'pWordpressUpgrade': pWordpressUpgrade,
+                            'pThemeDone': pThemeDone,
+                            'pPluginDone': pPluginDone,
+                            'pUpgradeDone': true,
+                            'pErrorMessage': pErrorMessage,
+                            'pTransSlugToUpgrade': pTransSlugToUpgrade,
+                            'pTransDone': pTransDone,
+                            'bulkErrorCode': bulkErrorCode
+                        };
+                        updatesoverview_upgrade_int_loop_flow(params);
+                    };
+
+                    if (pThemeDone && pPluginDone && pTransDone)
+                        fnc();
+                    else
+                        setTimeout(fnc, 400);
+
                 }
             }(pWebsiteId, pThemeSlugToUpgrade, pPluginSlugToUpgrade, pWordpressUpgrade, pThemeDone, pPluginDone, pErrorMessage, pTransSlugToUpgrade, pTransDone),
             tryCount: 0,
@@ -2279,9 +2317,17 @@ let updatesoverview_upgrade_int_flow = function (params) { // NOSONAR - complex.
             data: data,
             success: function (pWebsiteId, pThemeSlugToUpgrade, pPluginSlugToUpgrade, pWordpressUpgrade, pThemeDone, pUpgradeDone, pErrorMessage, pSlug) { // NOSONAR - compatible.
                 return function (response) { // NOSONAR -complex.
-                    if (response?.error?.errorCode == 'SUSPENDED_SITE') {
+                    let bulkErrorCode = response?.error?.errorCode ?? '';
+                    if (bulkErrorCode == 'SUSPENDED_SITE') {
                         let msgUI = '<span data-inverted="" data-position="left center" data-tooltip="' + __('Suspended site.') + '"><i class="pause yellow icon"></i></span>';
                         updatesoverview_upgrade_all_update_site_bold(pWebsiteId, false, msgUI);
+
+                        pThemeDone = true;
+                        pPluginDone = true;
+                        pUpgradeDone = true;
+
+                        mainwpVars.errorCount++;
+
                     } else {
                         let slugParts = pSlug.split(',');
                         for (let sid of slugParts) {
@@ -2307,28 +2353,30 @@ let updatesoverview_upgrade_int_flow = function (params) { // NOSONAR - complex.
 
                         updatesoverview_upgrade_all_update_site_bold(pWebsiteId, 'translation');
 
-                        //If all done: continue, else delay 400ms to not stress the server
-                        let fnc = function () {
-                            let params = {
-                                'pWebsiteId': pWebsiteId,
-                                'pThemeSlugToUpgrade': pSlug,
-                                'pPluginSlugToUpgrade': pPluginSlugToUpgrade,
-                                'pWordpressUpgrade': pWordpressUpgrade,
-                                'pThemeDone': pThemeDone,
-                                'pPluginDone': pPluginDone,
-                                'pUpgradeDone': pUpgradeDone,
-                                'pErrorMessage': pErrorMessage,
-                                'pTransSlugToUpgrade': pSlug,
-                                'pTransDone': true
-                            };
-                            updatesoverview_upgrade_int_loop_flow(params);
-                        };
-
-                        if (pThemeDone && pUpgradeDone && pPluginDone)
-                            fnc();
-                        else
-                            setTimeout(fnc, 400);
                     }
+
+                    //If all done: continue, else delay 400ms to not stress the server
+                    let fnc = function () {
+                        let params = {
+                            'pWebsiteId': pWebsiteId,
+                            'pThemeSlugToUpgrade': pSlug,
+                            'pPluginSlugToUpgrade': pPluginSlugToUpgrade,
+                            'pWordpressUpgrade': pWordpressUpgrade,
+                            'pThemeDone': pThemeDone,
+                            'pPluginDone': pPluginDone,
+                            'pUpgradeDone': pUpgradeDone,
+                            'pErrorMessage': pErrorMessage,
+                            'pTransSlugToUpgrade': pSlug,
+                            'pTransDone': true,
+                            'bulkErrorCode': bulkErrorCode
+                        };
+                        updatesoverview_upgrade_int_loop_flow(params);
+                    };
+
+                    if (pThemeDone && pUpgradeDone && pPluginDone)
+                        fnc();
+                    else
+                        setTimeout(fnc, 400);
                 }
             }(pWebsiteId, pThemeSlugToUpgrade, pPluginSlugToUpgrade, pWordpressUpgrade, pThemeDone, pUpgradeDone, pErrorMessage, pTransSlugToUpgrade),
             tryCount: 0,
@@ -2372,7 +2420,12 @@ let updatesoverview_upgrade_int_flow = function (params) { // NOSONAR - complex.
             dataType: 'json'
         });
     } else {
-        if ((pErrorMessage != undefined) && (pErrorMessage != '')) {
+        if ( bulkErrorCode === 'SUSPENDED_SITE' ) {
+            let _icon = '<i class="pause yellow icon"></i>';
+            let _error = __('Suspended site.');
+            updatesoverview_upgrade_all_update_site_status(pWebsiteId, '<span class="mainwp-html-popup" data-position="left center" data-html="">' + _icon + '</span>');
+            mainwp_init_html_popup('.updatesoverview-upgrade-status-wp[siteid="' + pWebsiteId + '"] .mainwp-html-popup', _error);
+        } else if ((pErrorMessage != undefined) && (pErrorMessage != '')) {
             mainwpVars.errorCount++;
 
             let rollErrors = mainwp_get_actions_errors_msg('updateall', pWebsiteId, 'roll');
