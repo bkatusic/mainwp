@@ -76,6 +76,13 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
     /** Run the export_sites method that exports the Child Sites .csv file */
     public function admin_init() {
         MainWP_Post_Handler::instance()->add_action( 'mainwp_rest_api_remove_keys', array( $this, 'ajax_rest_api_remove_keys' ) );
+
+        // Page: Application Passwords.
+        MainWP_Post_Handler::instance()->add_action( 'mainwp_application_password_create', array( &$this, 'ajax_application_password_create' ) );
+        MainWP_Post_Handler::instance()->add_action( 'mainwp_application_password_delete', array( &$this, 'ajax_application_password_delete' ) );
+        MainWP_Post_Handler::instance()->add_action( 'mainwp_application_password_delete_multiple', array( &$this, 'ajax_application_password_delete_multiple' ) );
+        MainWP_Post_Handler::instance()->add_action( 'mainwp_application_password_delete_all', array( &$this, 'ajax_application_password_delete_all' ) );
+
         $this->handle_rest_api_add_new();
         $this->handle_rest_api_edit();
     }
@@ -109,6 +116,19 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                 array(
                     static::get_class_name(),
                     'render_rest_api_setings',
+                )
+            );
+        }
+        if ( ! MainWP_Menu::is_disable_menu_item( 3, 'ApplicationPasswords' ) ) {
+            add_submenu_page(
+                'mainwp_tab',
+                esc_html__( 'Application Passwords', 'mainwp' ),
+                ' <div class="mainwp-hidden">' . esc_html__( 'Application Passwords', 'mainwp' ) . '</div>',
+                'read',
+                'ApplicationPasswords',
+                array(
+                    static::get_class_name(),
+                    'render_application_passwords',
                 )
             );
         }
@@ -198,6 +218,14 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                 'parent_key' => 'RESTAPI',
                 'href'       => 'admin.php?page=AddApiKeys',
                 'slug'       => 'AddApiKeys',
+                'right'      => '',
+            ),
+
+            array(
+                'title'      => esc_html__( 'Application Passwords', 'mainwp' ),
+                'parent_key' => 'RESTAPI',
+                'href'       => 'admin.php?page=ApplicationPasswords',
+                'slug'       => 'ApplicationPasswords',
                 'right'      => '',
             ),
         );
@@ -437,6 +465,14 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             );
         }
 
+        if ( ! MainWP_Menu::is_disable_menu_item( 3, 'ApplicationPasswords' ) ) {
+            $renderItems[] = array(
+                'title'  => esc_html__( 'Application Passwords', 'mainwp' ),
+                'href'   => 'admin.php?page=ApplicationPasswords',
+                'active' => ( 'Application Passwords' === $shownPage ) ? true : false,
+            );
+        }
+
         if ( isset( static::$subPages ) && is_array( static::$subPages ) ) {
             foreach ( static::$subPages as $subPage ) {
                 if ( MainWP_Menu::is_disable_menu_item( 3, 'RESTAPI' . $subPage['slug'] ) ) {
@@ -473,7 +509,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
 
         if ( ! empty( $all_keys ) ) {
         ?>
-    
+
         <table id="mainwp-rest-api-keys-table" class="ui unstackable single linetable">
             <thead>
                 <tr>
@@ -1345,5 +1381,318 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             </div>
             <?php
         }
+    }
+
+    /**
+     * Render application password table top.
+     */
+    public static function render_application_passwords_table_top() {
+        ?>
+        <div class="mainwp-actions-bar">
+            <div class="ui grid">
+                <div class="equal width row ui mini form">
+                    <div class="middle aligned column">
+                        <div id="mainwp-application-passwords-bulk-actions-menu" class="ui selection dropdown">
+                            <div class="default text"><?php esc_html_e( 'Bulk actions', 'mainwp' ); ?></div>
+                            <i class="dropdown icon"></i>
+                            <div class="menu">
+                                <div class="item" data-value="delete"><?php esc_html_e( 'Delete', 'mainwp' ); ?></div>
+                            </div>
+                        </div>
+                        <button class="ui mini basic button"
+                            id="mainwp-do-application-passwords-bulk-actions"><?php esc_html_e( 'Apply', 'mainwp' ); ?></button>
+                    </div>
+                    <div class="right aligned middle aligned column">
+                        <button type="button" class="ui mini green button"
+                            id="mainwp-create-application-password-button"><?php esc_html_e( 'Create New Application Password', 'mainwp' ); ?></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render Application Passwords page.
+     */
+    public static function render_application_passwords() {
+        if ( ! \mainwp_current_user_can( 'dashboard', 'manage_dashboard_restapi' ) ) {
+            \mainwp_do_not_have_permissions( esc_html__( 'manage dashboard REST API', 'mainwp' ) );
+            return;
+        }
+
+        $page_title = 'Application Passwords';
+        $user_id    = get_current_user_id();
+        $passwords  = MainWP_Application_Passwords::get_user_application_passwords( $user_id );
+
+        static::render_header( $page_title );
+        static::render_application_passwords_table_top();
+        ?>
+        <div id="rest-application-passwords-settings" class="ui segment">
+            <h2 class="ui dividing header">
+                <?php esc_html_e( 'Application Passwords', 'mainwp' ); ?>
+                <div class="sub header">
+                    <?php esc_html_e( 'Application passwords allow authentication via non-interactive systems, such as XML-RPC or the REST API, without providing your actual password. Application passwords can be easily revoked. They cannot be used for traditional logins to your website.', 'mainwp' ); ?>
+                </div>
+            </h2>
+
+            <div id="mainwp-message-zone-app-passwords" style="display:none;"></div>
+            <div class="content active application-passwords-list-table-wrapper">
+                <table id="mainwp-application-password-table" class="ui unstackable single line table">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="no-sort collapsing check-column">
+                                <span class="ui checkbox">
+                                    <input aria-label="<?php esc_attr_e( 'Select all Application Passwords', 'mainwp' ); ?>"
+                                        id="application-password-select-all-top" type="checkbox" />
+                                </span>
+                            </th>
+                            <th scope="col" class="collapsing"><?php esc_html_e( 'Name', 'mainwp' ); ?></th>
+                            <th scope="col"><?php esc_html_e( 'Created', 'mainwp' ); ?></th>
+                            <th scope="col" class="collapsing"><?php esc_html_e( 'Last Used', 'mainwp' ); ?></th>
+                            <th scope="col" class="no-sort collapsing"><?php esc_html_e( 'Last IP', 'mainwp' ); ?></th>
+                            <th scope="col" class="collapsing"><?php esc_html_e( 'Revoke', 'mainwp' ); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody id="mainwp-application-password-table-body" class="mainwp-application-password-body-table-manage">
+                        <?php
+                        if ( ! empty( $passwords ) ) {
+                            foreach ( $passwords as $item ) {
+                                ?>
+                                <tr data-uuid="<?php echo esc_attr( $item['uuid'] ); ?>">
+                                    <td class="check-column">
+                                        <div class="ui checkbox">
+                                            <input type="checkbox"
+                                                aria-label="<?php echo esc_attr( sprintf( __( 'Select %s', 'mainwp' ), $item['name'] ) ); ?>"
+                                                value="<?php echo esc_attr( $item['uuid'] ); ?>" name="" />
+                                        </div>
+                                    </td>
+                                    <td><?php echo esc_html( $item['name'] ); ?></td>
+                                    <td data-order="<?php echo esc_attr( $item['created'] ); ?>">
+                                        <?php echo esc_html( MainWP_Utility::format_timestamp( $item['created'] ) ); ?>
+                                    </td>
+                                    <td data-order="<?php echo ! empty( $item['last_used'] ) ? esc_attr( $item['last_used'] ) : 0; ?>">
+                                        <?php
+                                        if ( ! empty( $item['last_used'] ) ) {
+                                            echo '<span data-tooltip="' . esc_attr( MainWP_Utility::format_timestamp( $item['last_used'] ) ) . '" data-position="left center" data-inverted="">' . esc_html( MainWP_Utility::time_elapsed_string( $item['last_used'] ) ) . '</span>';
+                                        } else {
+                                            echo '&mdash;';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php echo ! empty( $item['last_ip'] ) ? esc_html( $item['last_ip'] ) : '&mdash;'; ?>
+                                    </td>
+                                    <td class="right aligned">
+                                        <button type="button" class="ui mini red button mainwp-revoke-application-password"
+                                            data-uuid="<?php echo esc_attr( $item['uuid'] ); ?>"
+                                            aria-label="<?php echo esc_attr( sprintf( __( 'Revoke "%s"', 'mainwp' ), $item['name'] ) ); ?>">
+                                            <?php esc_html_e( 'Revoke', 'mainwp' ); ?>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <?php
+                            }
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Create Application Password Modal -->
+        <?php static::create_application_password_modal(); ?>
+
+        <!-- Success Modal -->
+        <?php static::success_application_password_modal(); ?>
+
+        <script type="text/javascript">
+            jQuery(document).ready(function ($) {
+                window.mainwp_app_passwords_table = $('#mainwp-application-password-table').DataTable({
+                    "pageLength": 10,
+                    "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                    "stateSave": true,
+                    "order": [[2, 'desc']],
+                    "columnDefs": [{
+                        "targets": 'no-sort',
+                        "orderable": false
+                    }],
+                    "preDrawCallback": function () {
+                        $('#mainwp-application-password-table .ui.checkbox').checkbox();
+                        mainwp_table_check_columns_init();
+                    }
+                });
+            });
+        </script>
+        <?php
+        static::render_footer();
+    }
+
+    /**
+     * Render create application password modal.
+     */
+    public static function create_application_password_modal() {
+        ?>
+        <div class="ui modal" id="mainwp-create-application-password-modal">
+            <div class="header"><?php esc_html_e( 'Create New Application Password', 'mainwp' ); ?></div>
+            <div class="content">
+                <div class="ui form">
+                    <div class="field">
+                        <label for="mainwp-app-password-name-input"><?php esc_html_e( 'Application Name', 'mainwp' ); ?></label>
+                        <input type="text" name="app_password_name" id="mainwp-app-password-name-input"
+                            placeholder="<?php esc_attr_e( 'Application Password Name', 'mainwp' ); ?>" />
+                        <p class="description">
+                            <?php esc_html_e( 'Enter a name to help you identify this application password.', 'mainwp' ); ?>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="actions">
+                <div class="ui cancel button"><?php esc_html_e( 'Cancel', 'mainwp' ); ?></div>
+                <div class="ui green ok button" id="mainwp-create-app-password-submit">
+                    <?php esc_html_e( 'Create', 'mainwp' ); ?>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render success application password modal.
+     */
+    public static function success_application_password_modal() {
+        ?>
+        <div class="ui modal" id="mainwp-application-password-success-modal">
+            <div class="header"><?php esc_html_e( 'Application Password Created', 'mainwp' ); ?></div>
+            <div class="content">
+                <div class="ui success message">
+                    <div class="header">
+                        <?php esc_html_e( 'Your new password for', 'mainwp' ); ?> <strong id="app-pass-success-name"></strong>
+                        <?php esc_html_e( 'is:', 'mainwp' ); ?>
+                    </div>
+                    <div class="ui segment" style="margin-top: 15px;">
+                        <div class="ui fluid action input">
+                            <input type="text" id="app-pass-success-value" readonly="readonly"
+                                style="font-family: monospace; font-size: 16px; letter-spacing: 2px;" />
+                            <button class="ui teal button copy-app-password"
+                                data-tooltip="<?php esc_attr_e( 'Copy to clipboard', 'mainwp' ); ?>" data-position="top center"
+                                data-inverted="">
+                                <i class="copy icon"></i> <?php esc_html_e( 'Copy', 'mainwp' ); ?>
+                            </button>
+                        </div>
+                    </div>
+                    <p style="margin-top: 15px;">
+                        <i class="exclamation triangle icon"></i>
+                        <?php esc_html_e( 'Be sure to save this in a safe location. You will not be able to retrieve it.', 'mainwp' ); ?>
+                    </p>
+                </div>
+            </div>
+            <div class="actions">
+                <div class="ui green ok button"><?php esc_html_e( 'Done', 'mainwp' ); ?></div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * AJAX handler for creating application password.
+     */
+    public function ajax_application_password_create() {
+        MainWP_Post_Handler::instance()->check_security( 'mainwp_application_password_create' );
+
+        $name = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : ''; // phpcs:ignore -- WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- ok.
+
+        if ( empty( $name ) ) {
+            wp_send_json_error( array( 'message' => __( 'Application name is required.', 'mainwp' ) ) );
+        }
+
+        $user_id = get_current_user_id();
+        $result  = MainWP_Application_Passwords::create_new_application_password( $user_id, array( 'name' => $name ) );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+        }
+
+        list( $password, $item ) = $result;
+
+        // Format password with spaces for better readability.
+        $formatted_password = MainWP_Application_Passwords::chunk_password( $password );
+
+        wp_send_json_success(
+            array(
+                'password' => $formatted_password,
+                'item'     => $item,
+            )
+        );
+    }
+
+    /**
+     * AJAX handler for deleting application password.
+     */
+    public function ajax_application_password_delete() {
+        MainWP_Post_Handler::instance()->check_security( 'mainwp_application_password_delete' );
+
+        $uuid = isset( $_POST['uuid'] ) ? sanitize_text_field( wp_unslash( $_POST['uuid'] ) ) : ''; // phpcs:ignore -- WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- ok.
+
+        if ( empty( $uuid ) ) {
+            wp_send_json_error( array( 'message' => __( 'UUID is required.', 'mainwp' ) ) );
+        }
+
+        $user_id = get_current_user_id();
+        $result  = MainWP_Application_Passwords::delete_application_password( $user_id, $uuid );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+        }
+
+        wp_send_json_success( array( 'deleted' => true ) );
+    }
+
+    /**
+     * AJAX handler for deleting multiple application passwords.
+     */
+    public function ajax_application_password_delete_multiple() {
+        MainWP_Post_Handler::instance()->check_security( 'mainwp_application_password_delete_multiple' );
+
+        $uuids = isset( $_POST['uuids'] ) && is_array( $_POST['uuids'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['uuids'] ) ) : array();  // phpcs:ignore -- WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- ok.
+
+        if ( empty( $uuids ) ) {
+            wp_send_json_error( array( 'message' => __( 'No passwords selected.', 'mainwp' ) ) );
+        }
+
+        $user_id = get_current_user_id();
+        $deleted = 0;
+        $errors  = array();
+
+        foreach ( $uuids as $uuid ) {
+            $result = MainWP_Application_Passwords::delete_application_password( $user_id, $uuid );
+            if ( is_wp_error( $result ) ) {
+                $errors[] = $result->get_error_message();
+            } else {
+                ++$deleted;
+            }
+        }
+
+        if ( ! empty( $errors ) ) {
+            wp_send_json_error( array( 'message' => implode( ', ', $errors ) ) );
+        }
+
+        wp_send_json_success( array( 'deleted' => $deleted ) );
+    }
+
+    /**
+     * AJAX handler for deleting all application passwords.
+     */
+    public function ajax_application_password_delete_all() {
+        MainWP_Post_Handler::instance()->check_security( 'mainwp_application_password_delete_all' );
+
+        $user_id = get_current_user_id();
+        $result  = MainWP_Application_Passwords::delete_all_application_passwords( $user_id );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+        }
+
+        wp_send_json_success( array( 'deleted' => $result ) );
     }
 }
