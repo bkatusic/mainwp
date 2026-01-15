@@ -693,7 +693,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         static::render_table_top();
         if ( ! static::check_rest_api_enabled() ) {
             ?>
-            <div class="ui message yellow"><?php printf( esc_html__( 'It seems the WordPress REST API is currently disabled on your site. MainWP REST API requires the WordPress REST API to function properly. Please enable it to ensure smooth operation. Need help? %sClick here for a guide%s.', 'mainwp' ), '<a href="https://mainwp.com/kb/wordpress-rest-api-does-not-respond/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?></div>
+            <div class="ui message yellow"><?php printf( esc_html__( 'It seems the WordPress REST API is currently disabled on your site. MainWP REST API requires the WordPress REST API to function properly. Please enable it to ensure smooth operation. Need help? %sClick here for a guide%s.', 'mainwp' ), '<a href="https://docs.mainwp.com/troubleshooting/wordpress-rest-api-does-not-respond" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?></div>
             <?php
         }
         ?>
@@ -1323,11 +1323,11 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             ?>
             <p><?php esc_html_e( 'If you need help with the MainWP REST API, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-rest-api/" target="_blank">REST API</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-rest-api/#how-to-enable-rest-api" target="_blank">Enable REST API</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-rest-api/#rest-api-permissions" target="_blank">REST API Permissions</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-rest-api/#how-to-disable-rest-api" target="_blank">Disable REST API</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-rest-api/#how-to-delete-rest-api-keys" target="_blank">Delete REST API Key</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/mainwp-rest-api" target="_blank">REST API</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/mainwp-rest-api#enable-rest-api" target="_blank">Enable REST API</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/mainwp-rest-api#rest-api-permissions" target="_blank">REST API Permissions</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/mainwp-rest-api#disable-rest-api" target="_blank">Disable REST API</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/mainwp-rest-api#delete-rest-api-keys" target="_blank">Delete REST API Key</a></div> <?php // NOSONAR -- compatible with help. ?>
                 <?php
                 /**
                  * Action: mainwp_rest_api_help_item

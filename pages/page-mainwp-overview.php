@@ -459,12 +459,12 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             ?>
             <p><?php esc_html_e( 'If you need help with your MainWP Dashboard, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/" target="_blank">Understanding MainWP Dashboard UI</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/#navigation" target="_blank">MainWP Navigation</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/#page-settings" target="_blank">Page Settings</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/#widgetized-page-layout" target="_blank">Widgetized Page Layout</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/#tables" target="_blank">MainWP Tables</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/#individual-site-mode" target="_blank">Individual Child Site Mode</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface" target="_blank">Understanding MainWP Dashboard UI</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface#navigation" target="_blank">MainWP Navigation</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface#page-settings" target="_blank">Page Settings</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface#widgetized-pages" target="_blank">Widgetized Page Layout</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface#tables" target="_blank">MainWP Tables</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface#individual-site-mode" target="_blank">Individual Child Site Mode</a></div>
                 <?php
                 /**
                  * Action: mainwp_overview_help_item

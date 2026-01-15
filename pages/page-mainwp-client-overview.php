@@ -522,13 +522,13 @@ class MainWP_Client_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameL
             ?>
             <p><?php esc_html_e( 'If you need help with your MainWP Dashboard, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-clients/" target="_blank">Manage Clients</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-clients/#create-a-new-client" target="_blank">Create a new Client</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-clients/#update-a-client" target="_blank">Update a Client</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-clients/#delete-a-client" target="_blank">Delete a Client</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-clients/#customize-the-manage-clients-table" target="_blank">Customize the Manage Clients table</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-clients/#client-card" target="_blank">Client Card (View Client)</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-clients/#client-fields" target="_blank">Client Fields</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/clients/manage-clients" target="_blank">Manage Clients</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/clients/manage-clients#create-a-new-client" target="_blank">Create a new Client</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/clients/manage-clients#update-a-client" target="_blank">Update a Client</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/clients/manage-clients#update-a-client" target="_blank">Delete a Client</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/clients/manage-clients#customize-the-manage-clients-table" target="_blank">Customize the Manage Clients table</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/clients/manage-clients#client-card" target="_blank">Client Card (View Client)</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/clients/manage-clients#client-fields" target="_blank">Client Fields</a></div> <?php // NOSONAR - noopener - open safe. ?>
                 <?php
                 /**
                  * Action: mainwp_clients_overview_help_item

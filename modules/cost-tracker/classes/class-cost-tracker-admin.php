@@ -944,13 +944,13 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
             ?>
             <p><?php esc_html_e( 'If you need help with the Cost Tracker module, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-cost-tracker/" target="_blank">Cost Tracker</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-cost-tracker/#manage-costs-page" target="_blank">Manage Costs</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-cost-tracker/#adding-a-new-cost-to-track" target="_blank">Adding a New Cost to track</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-cost-tracker/#edit-an-item" target="_blank">Edit Costs</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-cost-tracker/#delete-an-item" target="_blank">Delete Costs</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-cost-tracker/#settings-page" target="_blank">Cost Tracker Settings</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-cost-tracker/#cost-tracker-pro-extension" target="_blank">Cost Tracker Pro Extension</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/add-ons/client/cost-tracker-extension#cost-tracker" target="_blank">Cost Tracker</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/add-ons/client/cost-tracker-extension#manage-costs-page" target="_blank">Manage Costs</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/add-ons/client/cost-tracker-extension#adding-a-new-cost-to-track" target="_blank">Adding a New Cost to track</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/add-ons/client/cost-tracker-extension#edit-an-item" target="_blank">Edit Costs</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/add-ons/client/cost-tracker-extension#delete-an-item" target="_blank">Delete Costs</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/add-ons/client/cost-tracker-extension#settings-page" target="_blank">Cost Tracker Settings</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/add-ons/client/cost-tracker-extension#cost-tracker-pro-extension" target="_blank">Cost Tracker Pro Extension</a></div> <?php // NOSONAR -- compatible with help. ?>
                 <?php
                 /**
                  * Action: mainwp_module_cost_tracker_help_item

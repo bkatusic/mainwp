@@ -1434,7 +1434,7 @@ let mainwp_site_overview_reconnect = function (pElement) {
             if (response.substring(0, 5) == 'ERROR') {
                 let error;
                 if (response.length == 5) {
-                    error = 'Undefined error! Please try again. If the process keeps failing, please review <a href="https://mainwp.com/kb/">MainWP Knowledgebase</a>, and if you still have issues, please let us know in the <a href="https://community.mainwp.com/c/community-support/5">MainWP Community</a>.'; // NOSONAR - noopener - open safe.
+                    error = 'Undefined error! Please try again. If the process keeps failing, please review <a href="https://docs.mainwp.com/">MainWP Knowledgebase</a>, and if you still have issues, please let us know in the <a href="https://community.mainwp.com/c/community-support/5">MainWP Community</a>.'; // NOSONAR - noopener - open safe.
                     feedback('mainwp-message-zone', error, 'red');
                 } else {
                     error = response.substring(6);
@@ -1495,7 +1495,7 @@ let mainwp_reconnect_with_pw = function (siteid) {
         if (response.substring(0, 5) == 'ERROR') {
             let error;
             if (response.length == 5) {
-                error = 'Undefined error! Please try again. If the process keeps failing, please review this <a href="https://mainwp.com/kb/potential-issues/">Knowledgebase document</a>, and if you still have issues, please let us know in the <a href="https://community.mainwp.com/c/community-support/5">MainWP Community</a>.'; // NOSONAR - noopener - open safe.
+                error = 'Undefined error! Please try again. If the process keeps failing, please review this <a href="https://docs.mainwp.com/troubleshooting/potential-issues">Knowledgebase document</a>, and if you still have issues, please let us know in the <a href="https://community.mainwp.com/c/community-support/5">MainWP Community</a>.'; // NOSONAR - noopener - open safe.
                 mainwp_set_message_zone('#mainwp-message-zone-reconnect', error, 'red');
             } else {
                 error = response.substring(6);
@@ -1531,7 +1531,7 @@ let mainwp_managesites_reconnect = function (pElement) {
             if (response.substring(0, 5) == 'ERROR') {
                 let error;
                 if (response.length == 5) {
-                    error = 'Undefined error! Please try again. If the process keeps failing, please review this <a href="https://mainwp.com/kb/potential-issues/">Knowledgebase document</a>, and if you still have issues, please let us know in the <a href="https://community.mainwp.com/c/community-support/5">MainWP Community</a>.'; // NOSONAR - noopener - open safe.
+                    error = 'Undefined error! Please try again. If the process keeps failing, please review this <a href="https://docs.mainwp.com/troubleshooting/potential-issues">Knowledgebase document</a>, and if you still have issues, please let us know in the <a href="https://community.mainwp.com/c/community-support/5">MainWP Community</a>.'; // NOSONAR - noopener - open safe.
                     feedback('mainwp-message-zone', error, 'red');
                 } else {
                     error = response.substring(6);
@@ -1568,7 +1568,7 @@ let mainwp_managesites_cards_reconnect = function (element) {
             if (response.substring(0, 5) == 'ERROR') {
                 let error;
                 if (response.length == 5) {
-                    error = 'Undefined error! Please try again. If the process keeps failing, please review this <a href="https://mainwp.com/kb/potential-issues/">Knowledgebase document</a>, and if you still have issues, please let us know in the <a href="https://community.mainwp.com/c/community-support/5">MainWP Community</a>.'; // NOSONAR - noopener - open safe.
+                    error = 'Undefined error! Please try again. If the process keeps failing, please review this <a href="https://docs.mainwp.com/troubleshooting/potential-issues">Knowledgebase document</a>, and if you still have issues, please let us know in the <a href="https://community.mainwp.com/c/community-support/5">MainWP Community</a>.'; // NOSONAR - noopener - open safe.
                     feedback('mainwp-message-zone', error, 'red');
                 } else {
                     error = response.substring(6);
@@ -1646,12 +1646,12 @@ let mainwp_managesites_add = function () {
         jQuery('#mainwp-response-data-container').attr('resp-data', resp_data);
 
         if (response == 'HTTPERROR') {
-            errors.push(__('This site can not be reached! Please use the Test Connection feature and see if the positive response will be returned. For additional help, please review this <a href="https://kb.mainwp.com/docs/potential-issues/">Knowledgebase document</a>, and if you still have issues, please let us know in the <a href="https://managers.mainwp.com/c/community-support/5">MainWP Community</a>.')); // NOSONAR - noopener - open safe.
+            errors.push(__('This site can not be reached! Please use the Test Connection feature and see if the positive response will be returned. For additional help, please review this <a href="https://docs.mainwp.com/troubleshooting/potential-issues/">Knowledgebase document</a>, and if you still have issues, please let us know in the <a href="https://managers.mainwp.com/c/community-support/5">MainWP Community</a>.')); // NOSONAR - noopener - open safe.
         } else if (response == 'NOMAINWP') {
             errors.push(mainwp_js_get_error_not_detected_connect());
         } else if (response.substring(0, 5) == 'ERROR') {
             if (response.length == 5) {
-                errors.push(__('Undefined error occurred. Please try again. If the issue does not resolve, please review this <a href="https://kb.mainwp.com/docs/potential-issues/">Knowledgebase document</a>, and if you still have issues, please let us know in the <a href="https://managers.mainwp.com/c/community-support/5">MainWP Community</a>.')); // NOSONAR - noopener - open safe.
+                errors.push(__('Undefined error occurred. Please try again. If the issue does not resolve, please review this <a href="https://docs.mainwp.com/troubleshooting/potential-issues/">Knowledgebase document</a>, and if you still have issues, please let us know in the <a href="https://managers.mainwp.com/c/community-support/5">MainWP Community</a>.')); // NOSONAR - noopener - open safe.
             } else {
                 errors.push(__('Error detected: ') + response.substring(6));
             }
@@ -2631,25 +2631,25 @@ let mainwp_install_bulk_you_know_msg = function (type, total) { // NOSONAR - com
     if (mainwpParams.installedBulkSettingsManager && mainwpParams.installedBulkSettingsManager == 1) {
         if (type == 'plugin') {
             if (total == 1)
-                msg = __('Would you like to use the Bulk Settings Manager with this plugin? Check out the %1Documentation%2.', '<a href="https://mainwp.com/kb/bulk-settings-manager-extension/" target="_blank">', '</a>'); // NOSONAR - noopener - open safe.
+                msg = __('Would you like to use the Bulk Settings Manager with this plugin? Check out the %1Documentation%2.', '<a href="https://docs.mainwp.com/add-ons/administrative/bulk-settings-manager-extension" target="_blank">', '</a>'); // NOSONAR - noopener - open safe.
             else
-                msg = __('Would you like to use the Bulk Settings Manager with these plugins? Check out the %1Documentation%2.', '<a href="https://mainwp.com/kb/bulk-settings-manager-extension/" target="_blank">', '</a>'); // NOSONAR - noopener - open safe.
+                msg = __('Would you like to use the Bulk Settings Manager with these plugins? Check out the %1Documentation%2.', '<a href="https://docs.mainwp.com/add-ons/administrative/bulk-settings-manager-extension" target="_blank">', '</a>'); // NOSONAR - noopener - open safe.
         } else if (type == 'theme') {
             if (total == 1)
-                msg = __('Would you like to use the Bulk Settings Manager with this theme? Check out the %1Documentation%2.', '<a href="https://mainwp.com/kb/bulk-settings-manager-extension/" target="_blank">', '</a>'); // NOSONAR - noopener - open safe.
+                msg = __('Would you like to use the Bulk Settings Manager with this theme? Check out the %1Documentation%2.', '<a href="https://docs.mainwp.com/add-ons/administrative/bulk-settings-manager-extension" target="_blank">', '</a>'); // NOSONAR - noopener - open safe.
             else
-                msg = __('Would you like to use the Bulk Settings Manager with these themes? Check out the %1Documentation%2.', '<a href="https://mainwp.com/kb/bulk-settings-manager-extension/" target="_blank">', '</a>'); // NOSONAR - noopener - open safe.
+                msg = __('Would you like to use the Bulk Settings Manager with these themes? Check out the %1Documentation%2.', '<a href="https://docs.mainwp.com/add-ons/administrative/bulk-settings-manager-extension" target="_blank">', '</a>'); // NOSONAR - noopener - open safe.
         }
     } else if (type == 'plugin') {
         if (total == 1)
-            msg = __('Did you know with the %1 you can control the settings of this plugin directly from your MainWP Dashboard?', '<a href="https://mainwp.com/extension/bulk-settings-manager/" target="_blank">Bulk Settings Extension</a>'); // NOSONAR - noopener - open safe.
+            msg = __('Did you know with the %1 you can control the settings of this plugin directly from your MainWP Dashboard?', '<a href="https://mainwp.com/add-on/bulk-settings-manager/" target="_blank">Bulk Settings Extension</a>'); // NOSONAR - noopener - open safe.
         else
-            msg = __('Did you know with the %1 you can control the settings of these plugins directly from your MainWP Dashboard?', '<a href="https://mainwp.com/extension/bulk-settings-manager/" target="_blank">Bulk Settings Extension</a>'); // NOSONAR - noopener - open safe.
+            msg = __('Did you know with the %1 you can control the settings of these plugins directly from your MainWP Dashboard?', '<a href="https://mainwp.com/add-on/bulk-settings-manager/" target="_blank">Bulk Settings Extension</a>'); // NOSONAR - noopener - open safe.
     } else if (type == 'theme') {
         if (total == 1)
-            msg = __('Did you know with the %1 you can control the settings of this theme directly from your MainWP Dashboard?', '<a href="https://mainwp.com/extension/bulk-settings-manager/" target="_blank">Bulk Settings Extension</a>'); // NOSONAR - noopener - open safe.
+            msg = __('Did you know with the %1 you can control the settings of this theme directly from your MainWP Dashboard?', '<a href="https://mainwp.com/add-on/bulk-settings-manager/" target="_blank">Bulk Settings Extension</a>'); // NOSONAR - noopener - open safe.
         else
-            msg = __('Did you know with the %1 you can control the settings of these themes directly from your MainWP Dashboard?', '<a href="https://mainwp.com/extension/bulk-settings-manager/" target="_blank">Bulk Settings Extension</a>'); // NOSONAR - noopener - open safe.
+            msg = __('Did you know with the %1 you can control the settings of these themes directly from your MainWP Dashboard?', '<a href="https://mainwp.com/add-on/bulk-settings-manager/" target="_blank">Bulk Settings Extension</a>'); // NOSONAR - noopener - open safe.
     }
     return msg;
 }

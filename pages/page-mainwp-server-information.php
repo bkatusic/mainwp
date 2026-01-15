@@ -431,12 +431,6 @@ class MainWP_Server_Information { // phpcs:ignore Generic.Classes.OpeningBraceSa
         do_action( 'mainwp_before_server_info_table' );
         ?>
         <div class="ui segment">
-        <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-server-info-info-message' ) ) : ?>
-            <div class="ui info message">
-                <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-server-info-info-message"></i>
-                <?php printf( esc_html__( 'Check your system configuration and make sure your MainWP Dashboard passes all system requirements.  If you need help with resolving specific errors, please review this %1$shelp document%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/resolving-system-requirement-issues/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
-            </div>
-        <?php endif; ?>
         <?php
         if ( function_exists( 'curl_version' ) && ! MainWP_Server_Information_Handler::curlssl_compare( 'OpenSSL/1.1.0', '>=' ) ) {
             echo "<div class='ui yellow message'>" . sprintf( esc_html__( 'Your host needs to update OpenSSL to at least version 1.1.0 which is already over 4 years old and contains patches for over 60 vulnerabilities.%1$sThese range from Denial of Service to Remote Code Execution. %2$sClick here for more information.%3$s', 'mainwp' ), '<br/>', '<a href="https://community.letsencrypt.org/t/openssl-client-compatibility-changes-for-let-s-encrypt-certificates/143816" target="_blank">', '</a>' ) . '</div>';
@@ -1056,7 +1050,7 @@ class MainWP_Server_Information { // phpcs:ignore Generic.Classes.OpeningBraceSa
         <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-cron-info-message' ) ) : ?>
             <div class="ui info message">
                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-cron-info-message"></i>
-                <?php printf( esc_html__( 'Make sure scheduled actions are working correctly.  If scheduled actions do not run normally, please review this %1$shelp document%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/scheduled-events-not-occurring/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
+                <?php printf( esc_html__( 'Make sure scheduled actions are working correctly. If scheduled actions do not run normally, please review this %1$shelp document%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/customization/disable-wp-cron" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
             </div>
         <?php endif; ?>
         <table class="ui single line unstackable table" id="mainwp-cron-jobs-table">
@@ -1765,7 +1759,6 @@ class MainWP_Server_Information { // phpcs:ignore Generic.Classes.OpeningBraceSa
                     <div><?php echo esc_html__( 'Enable a specific logging system.', 'mainwp' ); ?></div>
                     <p><?php echo esc_html__( 'Each specific log type changes only the type of information logged. It does not change the log view.', 'mainwp' ); ?></p>
                     <p><?php echo esc_html__( 'After disabling the Action Log, logs will still be visible. To remove records, click the Delete Logs button.', 'mainwp' ); ?></p>
-                    <p><?php printf( esc_html__( 'For additional help, please review this %1$shelp document%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/action-logs/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?></p>
                 </div>
             <?php endif; ?>
         <?php

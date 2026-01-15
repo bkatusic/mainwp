@@ -313,7 +313,7 @@ class MainWP_Manage_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                 <div class="ui message info">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp_groups_info"></i>
                         <div><?php esc_html_e( 'Use tags to organize and quickly filter your connected sites. You can apply multiple tags to one site.', 'mainwp' ); ?></div>
-                        <div><?php printf( esc_html__( 'for more information check the %1$sKnowledgebase %2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/manage-child-site-groups/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?></div>
+                        <div><?php printf( esc_html__( 'for more information check the %1$sKnowledgebase %2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/management/manage-child-sites#manage-child-site-tags" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?></div>
                 </div>
                 <?php } ?>
                 <?php
@@ -817,7 +817,7 @@ class MainWP_Manage_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             ?>
             <p><?php esc_html_e( 'If you need help with managing tags, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-child-sites/#manage-child-site-tags" target="_blank">Manage Tags</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/management/manage-child-sites#manage-child-site-tags" target="_blank">Manage Tags</a></div>
             <?php
             /**
              * Action: mainwp_tags_help_item

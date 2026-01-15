@@ -460,7 +460,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-manage-users-info-message' ) ) : ?>
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-manage-users-info-message"></i>
-                            <?php printf( esc_html__( 'Manage existing users on your child sites.  Here you can Delete, Edit or Change Role for existing users.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/manage-users/" target="_blank">', '</a>' ); ?>
+                            <?php printf( esc_html__( 'Manage existing users on your child sites.  Here you can Delete, Edit or Change Role for existing users.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/users/manage-users/" target="_blank">', '</a>' ); ?>
                         </div>
                     <?php endif; ?>
                     <div class="ui message" id="mainwp-message-zone" style="display:none"></div>
@@ -1763,7 +1763,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-import-users-info-message' ) ) : ?>
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-import-users-info-message"></i>
-                    <?php printf( esc_html__( 'Use the form to bulk import users.  You can download the sample CSV file to see how to fomat the import file properly.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/import-users/" target="_blank">', '</a>' ); ?>
+                    <?php printf( esc_html__( 'Use the form to bulk import users.  You can download the sample CSV file to see how to fomat the import file properly.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/users/manage-users#import-users-via-csv/" target="_blank">', '</a>' ); ?>
                 </div>
             <?php endif; ?>
 
@@ -2366,11 +2366,11 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             ?>
             <p><?php esc_html_e( 'If you need help with managing users, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-users/" target="_blank">Manage Users</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-users/#create-a-new-user" target="_blank">Create a New User</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-users/#edit-existing-users" target="_blank">Edit an Existing User</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-users/#bulk-update-admin-passwords" target="_blank">Bulk Update Administrator Passwords</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-users/#delete-users" target="_blank">Delete User(s)</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/users/manage-users" target="_blank">Manage Users</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/users/manage-users#create-a-new-user" target="_blank">Create a New User</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/users/manage-users#edit-existing-users" target="_blank">Edit an Existing User</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/users/manage-users#bulk-update-admin-passwords" target="_blank">Bulk Update Administrator Passwords</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/users/manage-users#delete-users" target="_blank">Delete User(s)</a></div>
                 <?php
                 /**
                  * Action: mainwp_users_help_item
