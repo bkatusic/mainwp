@@ -481,7 +481,7 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                                 <div class="item"><?php echo esc_html__( 'To Activate or Delete a specific plugin, you must search only for Inactive plugin on your child sites. If you search for Active or both Active and Inactive, the Activate and Delete actions will be disabled.', 'mainwp' ); ?></div>
                                 <div class="item"><?php echo esc_html__( 'To Deactivate a specific plugin, you must search only for Active plugins on your child sites. If you search for Inactive or both Active and Inactive, the Deactivate action will be disabled.', 'mainwp' ); ?></div>
                             </div>
-                            <div><?php printf( esc_html__( 'For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/managing-plugins-with-mainwp/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?></div>
+                            <div><?php printf( esc_html__( 'For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/plugins/managing-plugins-with-mainwp" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?></div>
                         </div>
                     <?php endif; ?>
                     <div id="mainwp-message-zone" class="ui message" style="display:none"></div>
@@ -1965,7 +1965,7 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-install-plugins-info-message"></i>
                     <div class="header"><?php esc_html_e( 'Install plugins on your child sites', 'mainwp' ); ?></div>
-                    <?php printf( esc_html__( 'You can install plugins from the WordPress.org repository or by uploading a ZIP file. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/install-plugins/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
+                    <?php printf( esc_html__( 'You can install plugins from the WordPress.org repository or by uploading a ZIP file. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/plugins/managing-plugins-with-mainwp#install-plugins" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
                 </div>
                 <?php endif; ?>
             <div id="mainwp-message-zone" class="ui message" style="display:none;"></div>
@@ -2568,7 +2568,7 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-ignored-plugins-info-message' ) ) : ?>
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-ignored-plugins-info-message"></i>
-                    <?php printf( esc_html__( 'Manage plugins you have told your MainWP Dashboard to ignore updates on global or per site level.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/ignore-plugin-updates/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
+                    <?php printf( esc_html__( 'Manage plugins you have told your MainWP Dashboard to ignore updates on global or per site level.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/updates/manage-updates#ignore-plugin-updates" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
                 </div>
             <?php endif; ?>
             <?php
@@ -2854,7 +2854,7 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-ignored-abandoned-plugins-info-message' ) ) : ?>
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-ignored-abandoned-plugins-info-message"></i>
-                    <?php printf( esc_html__( 'Manage abandoned plugins you have told your MainWP Dashboard to ignore on global or per site level.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/abandoned-plugins/" target="_blank">', '</a> <i class="external alternate icon"></i> ' ); ?>
+                    <?php printf( esc_html__( 'Manage abandoned plugins you have told your MainWP Dashboard to ignore on global or per site level.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/plugins/managing-plugins-with-mainwp" target="_blank">', '</a> <i class="external alternate icon"></i> ' ); ?>
                 </div>
             <?php endif; ?>
             <?php
@@ -3089,12 +3089,11 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             ?>
             <p><?php esc_html_e( 'If you need help with managing plugins, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/managing-plugins-with-mainwp/" target="_blank">Managing Plugins with MainWP</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/managing-plugins-with-mainwp/#install-plugins" target="_blank">Install Plugins</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/managing-plugins-with-mainwp/#activate-plugins" target="_blank">Activate Plugins</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/managing-plugins-with-mainwp/#delete-plugins" target="_blank">Delete Plugins</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/managing-plugins-with-mainwp/#update-plugins" target="_blank">Update Plugins</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/managing-plugins-with-mainwp/#plugins-auto-updates" target="_blank">Plugins Auto Updates</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/plugins/managing-plugins-with-mainwp" target="_blank">Managing Plugins with MainWP</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/plugins/managing-plugins-with-mainwp#install-plugins" target="_blank">Install Plugins</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/plugins/managing-plugins-with-mainwp#activate-plugins" target="_blank">Activate Plugins</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/plugins/managing-plugins-with-mainwp#delete-plugins" target="_blank">Delete Plugins</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/plugins/managing-plugins-with-mainwp#update-plugins" target="_blank">Update Plugins</a></div>
                 <?php
                 /**
                  * Action: mainwp_plugins_help_item

@@ -614,12 +614,12 @@ class MainWP_Extensions { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.C
                 $html .= '<div class="ui message info">' . esc_html__( 'You have access to all our Free and third-party Add-ons on WP.org and any that you have registered for, but you DO NOT need to install them. ', 'mainwp' );
                 $html .= '<br />';
                 $html .= esc_html__( 'To avoid information overload, we highly recommend adding Add-ons one at a time and as you need them. Skip any add-on you do not want to install at this time. ', 'mainwp' );
-                $html .= sprintf( esc_html__( 'After installing all your selected Add-ons, close the modal by clicking the Close button and %1$sactivate Add-ons API license%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/activate-extensions-api/" target="_blank">', '</a> <i class="external alternate icon"></i>' ) . '</div>'; // NOSONAR - noopener - open safe.
+                $html .= sprintf( esc_html__( 'After installing all your selected Add-ons, close the modal by clicking the Close button and %1$sactivate Add-ons API license%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/dashboard/overview/manage-extensions#activate-add-ons" target="_blank">', '</a> <i class="external alternate icon"></i>' ) . '</div>'; // NOSONAR - noopener - open safe.
             } else {
                 $html .= '<div class="ui message info">' . esc_html__( 'You have access to the MainWP Pro plan, which gives you access to all MainWP-created add-on, but you DO NOT need to install all of them.', 'mainwp' );
                 $html .= '<br />';
                 $html .= esc_html__( 'To avoid information overload, we highly recommend adding Add-ons one at a time and as you need them. Skip any add-on you do not want to install at this time. ', 'mainwp' );
-                $html .= sprintf( esc_html__( 'After installing all your selected Add-ons, close the modal by clicking the Close button and %1$sactivate Add-ons API license%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/activate-extensions-api/" target="_blank">', '</a> <i class="external alternate icon"></i>' ) . '</div>'; // NOSONAR - noopener - open safe.
+                $html .= sprintf( esc_html__( 'After installing all your selected Add-ons, close the modal by clicking the Close button and %1$sactivate Add-ons API license%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/dashboard/overview/manage-extensions#activate-add-ons" target="_blank">', '</a> <i class="external alternate icon"></i>' ) . '</div>'; // NOSONAR - noopener - open safe.
             }
 
             $html .= '<div id="mainwp-bulk-activating-extensions-status" class="ui message" style="display:none;"></div>';
@@ -788,12 +788,12 @@ class MainWP_Extensions { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.C
             ?>
             <p><?php esc_html_e( 'If you need help with your MainWP Add-ons, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-extensions/" target="_blank"><i class="fa fa-book"></i> What are the MainWP Add-ons</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-extensions/#order-extensions" target="_blank"><i class="fa fa-book"></i> Order Add-on(s)</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-extensions/#install-extensions" target="_blank"><i class="fa fa-book"></i> Install Add-on(s)</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-extensions/#activate-extensions" target="_blank"><i class="fa fa-book"></i> Activate Add-on(s) API</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-extensions/#update-extensions" target="_blank"><i class="fa fa-book"></i> Updating Add-on(s)</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-extensions/#remove-unneeded-extensions" target="_blank"><i class="fa fa-book"></i> Remove Add-on(s)</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/manage-extensions" target="_blank"><i class="fa fa-book"></i> What are the MainWP Add-ons</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/manage-extensions#order-add-ons" target="_blank"><i class="fa fa-book"></i> Order Add-on(s)</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/manage-extensions#install-add-ons" target="_blank"><i class="fa fa-book"></i> Install Add-on(s)</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/manage-extensions#activate-add-ons" target="_blank"><i class="fa fa-book"></i> Activate Add-on(s) API</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/manage-extensions#update-add-ons" target="_blank"><i class="fa fa-book"></i> Updating Add-on(s)</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/manage-extensions#remove-unneeded-add-ons" target="_blank"><i class="fa fa-book"></i> Remove Add-on(s)</a></div> <?php // NOSONAR - noopener - open safe. ?>
             </div>
             <?php
             /**

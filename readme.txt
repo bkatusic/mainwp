@@ -83,9 +83,9 @@ You can even install your MainWP Dashboard on a WordPress site located on your l
 
 3. Once installed then Activate the plugin through the Plugins menu in WordPress.
 
-4. Add your first Child Site to the MainWP Dashboard - [Documentation](https://mainwp.com/kb/set-up-the-mainwp-plugin/add-site-to-your-dashboard/)
+4. Add your first Child Site to the MainWP Dashboard - [Documentation](https://docs.mainwp.com/getting-started/get-started-with-mainwp#add-a-site-to-your-dashboard)
 
-5. Set your MainWP Settings - [Documentation](https://mainwp.com/kb/set-up-the-mainwp-plugin/mainwp-dashboard-settings/)
+5. Set your MainWP Settings - [Documentation](https://docs.mainwp.com/sites/management/mainwp-dashboard-settings#mainwp-dashboard-settings)
 
 == Frequently Asked Questions ==
 

@@ -880,7 +880,7 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                         <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-add-client-info-message' ) ) : ?>
                             <div class="ui info message">
                                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-add-client-info-message"></i>
-                                <?php printf( esc_html__( 'Use the provided form to create a new client on your child site. For additional help, please check this %1$shelp documentation %2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/create-a-new-client/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
+                                <?php printf( esc_html__( 'Use the provided form to create a new client on your child site. For additional help, please check this %1$shelp documentation %2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/clients/manage-clients#create-a-new-client" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
                             </div>
                         <?php endif; ?>
                         <div class="ui message" id="mainwp-message-zone-client" style="display:none;"></div>

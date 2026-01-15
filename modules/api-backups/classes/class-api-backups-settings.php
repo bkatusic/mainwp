@@ -174,7 +174,7 @@ class Api_Backups_Settings {
                                         'This feature allows you to trigger and restore backups only for sites hosted on supported providers via their API. Backups cannot be created for sites hosted elsewhere or stored on these services if your site is not hosted with them. Check this %1$shelp document%2$s to see all available services & the endpoints that MainWP currently supports.',
                                         'mainwp'
                                     ),
-                                    '<a href="https://mainwp.com/kb/api-backups-extension/" target="_blank">', // NOSONAR - noopener - open safe.
+                                    '<a href="https://docs.mainwp.com/sites/backups/manage-backups#api-backups" target="_blank">', // NOSONAR - noopener - open safe.
                                     '</a> <i class="external alternate icon"></i>'
                                 );
                                 ?>

@@ -492,7 +492,7 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                 <p><?php esc_html_e( 'Thank you for choosing MainWP for managing your WordPress sites. This quick setup wizard will help you configure the basic settings.', 'mainwp' ); ?></p>
             </div>
             <div class="ui padded segment">
-                <a href="https://mainwp.com/kb/get-started-with-mainwp/" target="_blank" class="ui big icon green button"><i class="youtube icon"></i> <?php esc_html_e( 'Walkthrough', 'mainwp' ); ?></a>
+                <a href="https://docs.mainwp.com/getting-started/get-started-with-mainwp" target="_blank" class="ui big icon green button"><i class="youtube icon"></i> <?php esc_html_e( 'Walkthrough', 'mainwp' ); ?></a>
             </div>
         </div>
         <div class="ui hidden divider"></div>
@@ -543,7 +543,7 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                     <?php
                     echo sprintf(
                         esc_html__( 'These checks ensure MainWP can connect to your child sites. If any check fails, %1$slearn how to resolve the issue%2$s.', 'mainwp' ),
-                        '<a href="https://mainwp.com/kb/resolve-system-requirement-issues/" target="_blank">',
+                        '<a href="https://docs.mainwp.com/advanced/miscellaneous/mainwp-system-requirements" target="_blank">',
                         '</a>'
                     );
                     ?>
@@ -566,7 +566,7 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                                 <div class="ui fluid input">
                                     <input type="text" name="mwp_setup_openssl_lib_location" value="<?php echo esc_attr( $openssl_loc ); ?>">
                                 </div>
-                                <div><em><?php esc_html_e( 'Due to bug with PHP on some servers, enter the openssl.cnf file location so MainWP Dashboard can connect to your child sites. If your openssl.cnf file is saved to a different path from what is entered above please enter your exact path. ', 'mainwp' ); ?><?php printf( esc_html__( '%1$sClick here%2$s to see how to find the OpenSSL.cnf file.', 'mainwp' ), '<a href="https://kb.mainwp.com/docs/how-to-find-the-openssl-cnf-file/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?></em></div>
+                                <div><em><?php esc_html_e( 'Due to bug with PHP on some servers, enter the openssl.cnf file location so MainWP Dashboard can connect to your child sites. If your openssl.cnf file is saved to a different path from what is entered above please enter your exact path. ', 'mainwp' ); ?><?php printf( esc_html__( '%1$sClick here%2$s to see how to find the OpenSSL.cnf file.', 'mainwp' ), '<a href="https://docs.mainwp.com/troubleshooting/potential-issues#openssl-library-error-invalid-request" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?></em></div>
                             </div>
                         </div>
                     </div>
