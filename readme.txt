@@ -147,6 +147,11 @@ Yes, we have a quick FAQ with many more questions and answers [here](https://mai
 
 == Changelog ==
 
+= 5.4.1.1 - Maintenance Release - 1-14-2026 =
+
+* Fixed: Resolved an issue where post categories would not load on the "Add New Bulk Post" screen.
+
+
 = 5.4.1 - Maintenance Release - 12-10-2025 =
 
 * Fixed: Resolved an issue where the OpenSSL Key encryption information banner was incorrectly displayed to all MainWP Dashboard administrators.
