@@ -1413,6 +1413,10 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                             $details_link     = self_admin_url( 'plugin-install.php?tab=plugin-information&wpplugin=' . intval( $site_id ) . '&plugin=' . rawurlencode( $plugin_directory ) . '&section=changelog' );
 
                             $el_id_ite_1 = $item_id;
+
+                            $compatible_php = isset( $plugin_upgrade['wp_compatible'] ) ? $plugin_upgrade['wp_compatible'] : true;
+                            $compatible_wp  = isset( $plugin_upgrade['php_compatible'] ) ? $plugin_upgrade['php_compatible'] : true;
+
                             ?>
                             <div class="ui very compact stackable grid mainwp-manage-plugin-item-website" plugin-slug="<?php echo esc_attr( rawurlencode( $plugin_slug ) ); ?>" plugin-name="<?php echo esc_html( $plugin_title ); ?>" site-id="<?php echo intval( $site_id ); ?>" site-name="<?php echo esc_attr( $site_name ); ?>" site-url="<?php echo esc_attr( $site_url ); ?>" tz-info="<?php echo esc_attr( $offs_info ); ?>"  id="<?php echo esc_attr( $el_id_ite_1 ); ?>">
                             <div class="one wide center aligned middle aligned column"></div>
@@ -1462,11 +1466,19 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                                     <?php if ( ! $child_plugin ) : ?>
                                         <?php if ( $actived ) { ?>
                                             <?php if ( ! $plugin_mu && \mainwp_current_user_can( 'dashboard', 'activate_deactivate_plugins' ) ) { ?>
-                                            <a href="#" class="mainwp-manage-plugin-deactivate ui button" data-position="top right" data-tooltip="<?php echo esc_attr__( 'Deactivate ', 'mainwp' ) . esc_html( $plugin_title ) . ' ' . esc_attr__( 'plugin on this child site.', 'mainwp' ); ?>" data-inverted=""><?php esc_html_e( 'Deactivate', 'mainwp' ); ?></a>
-                                        <?php } ?>
-                                    <?php } else { ?>
-                                            <?php if ( \mainwp_current_user_can( 'dashboard', 'activate_deactivate_plugins' ) ) { ?>
-                                                <a href="#" class="mainwp-manage-plugin-activate ui green button" data-position="top right" data-tooltip="<?php echo esc_attr__( 'Activate ', 'mainwp' ) . esc_html( wp_strip_all_tags( $plugin_title ) ) . ' ' . esc_attr__( 'plugin on this child site.', 'mainwp' ); ?>" data-inverted=""><?php esc_html_e( 'Activate', 'mainwp' ); ?></a>
+                                                <a href="#" class="mainwp-manage-plugin-deactivate ui button" data-position="top right" data-tooltip="<?php echo esc_attr__( 'Deactivate ', 'mainwp' ) . esc_html( $plugin_title ) . ' ' . esc_attr__( 'plugin on this child site.', 'mainwp' ); ?>" data-inverted=""><?php esc_html_e( 'Deactivate', 'mainwp' ); ?></a>
+                                            <?php } ?>
+                                        <?php } else { ?>
+                                                <?php if ( \mainwp_current_user_can( 'dashboard', 'activate_deactivate_plugins' ) ) { ?>
+                                                    <?php
+                                                    if ( $compatible_php && $compatible_wp ) {
+                                                        ?>
+                                                        <a href="#" class="mainwp-manage-plugin-activate ui green button" data-position="top right" data-tooltip="<?php echo esc_attr__( 'Activate ', 'mainwp' ) . esc_html( wp_strip_all_tags( $plugin_title ) ) . ' ' . esc_attr__( 'plugin on this child site.', 'mainwp' ); ?>" data-inverted=""><?php esc_html_e( 'Activate', 'mainwp' ); ?></a>
+                                                        <?php
+                                                    } else {
+                                                        static::render_incompatible_active( $compatible_php, $compatible_wp );
+                                                        ?>
+                                                    <?php } ?>
                                             <?php } ?>
                                     <?php } ?>
                                         <?php if ( ! $plugin_mu && \mainwp_current_user_can( 'dashboard', 'delete_plugins' ) ) { ?>
@@ -1736,6 +1748,10 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                                 $item_id = preg_replace( '/[[:space:]]+/', '_', $item_id );
 
                                 $el_id_ite_2 = $item_id;
+
+                                $compatible_php = isset( $upgradeInfo['wp_compatible'] ) ? $upgradeInfo['wp_compatible'] : true;
+                                $compatible_wp  = isset( $upgradeInfo['php_compatible'] ) ? $upgradeInfo['php_compatible'] : true;
+
                                 ?>
                             <div class="ui stackable grid very compact mainwp-manage-plugin-item-website" plugin-slug="<?php echo esc_attr( rawurlencode( $plugin_slug ) ); ?>" plugin-name="<?php echo esc_html( wp_strip_all_tags( $pluginsName[ $slug_ver ] ) ); ?>" site-id="<?php echo intval( $site_id ); ?>" site-name="<?php echo esc_attr( $site_name ); ?>" site-url="<?php echo esc_attr( $site_url ); ?>" tz-info="<?php echo esc_attr( $offs_info ); ?>" id="<?php echo esc_html( $el_id_ite_2 ); ?>">
                             <div class="one wide left aligned middle aligned column"></div>
@@ -1790,7 +1806,16 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                                         <?php } ?>
                                         <?php } else { ?>
                                             <?php if ( \mainwp_current_user_can( 'dashboard', 'activate_deactivate_plugins' ) ) { ?>
-                                                <a href="#" class="mainwp-manage-plugin-activate ui green button <?php echo $is_demo ? 'disabled' : ''; ?>" ><?php esc_html_e( 'Activate', 'mainwp' ); ?></a>
+                                                <?php
+                                                if ( $compatible_php && $compatible_wp ) {
+                                                    ?>
+                                                        <a href="#" class="mainwp-manage-plugin-activate ui green button <?php echo $is_demo ? 'disabled' : ''; ?>" ><?php esc_html_e( 'Activate', 'mainwp' ); ?></a>
+                                                    <?php
+                                                } else {
+                                                    static::render_incompatible_active( $compatible_php, $compatible_wp );
+                                                    ?>
+                                                    <?php } ?>
+
                                             <?php } ?>
                                         <?php } ?>
                                             <?php if ( ! $plugin_mu && \mainwp_current_user_can( 'dashboard', 'delete_plugins' ) ) { ?>
@@ -1800,8 +1825,8 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                                 </div>
                             </div>
                         </div>
-                        <?php
-                        }
+                                <?php
+                            }
                     endforeach;
                         ?>
                         <span style="display:none" class="lastest-version-hidden" lastest-version="<?php echo esc_html( $lastest_version ); ?>"></span>
@@ -1863,6 +1888,28 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
              * @since 4.1
              */
             do_action( 'mainwp_after_plugins_table' );
+    }
+
+    /**
+     * Method render_incompatible_active().
+     *
+     * @param  mixed $compatible_php Compatible php.
+     * @param  mixed $compatible_wp Compatible wp.     *
+     * @param  mixed $echo_content Print content or not.
+     *
+     * @return string Message
+     */
+    public static function render_incompatible_active( $compatible_php, $compatible_wp, $echo_content = true ) {
+        $msg = MainWP_Updates_Per_Item::get_incompatible_message( $compatible_php, $compatible_wp );
+        if ( ! empty( $msg ) ) {
+            $html = '<span class="ui button basic disabled" data-tooltip="' . esc_attr( $msg ) . '" data-position="left center" data-inverted="">' . esc_html__( 'Cannot Activate', 'mainwp' ) . '</span>';
+            if ( $echo_content ) {
+                echo $html; //phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            } else {
+                return $html;
+            }
+        }
+        return '';
     }
 
 
@@ -2056,7 +2103,7 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         $allow_install = apply_filters( 'file_mod_allowed', true, 'mainwp_install_plugin' );
         if ( $allow_install ) {
             ?>
-           <input type="button" value="<?php esc_attr_e( 'Complete Installation', 'mainwp' ); ?>" class="ui green big fluid button" id="mainwp_plugin_bulk_install_btn" bulk-action="install" name="bulk-install">
+            <input type="button" value="<?php esc_attr_e( 'Complete Installation', 'mainwp' ); ?>" class="ui green big fluid button" id="mainwp_plugin_bulk_install_btn" bulk-action="install" name="bulk-install">
             <?php
         }
         ?>
@@ -2075,7 +2122,7 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             mainwp_init_button_site_selection_dependency( 'mainwp_plugin_bulk_install_btn' );
         } );
     </script>
-    <?php
+        <?php
     }
 
     /**

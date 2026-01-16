@@ -389,7 +389,7 @@ class MainWP_Manage_Sites_Update_View { // phpcs:ignore Generic.Classes.OpeningB
                                                         <a href="javascript:void(0)" onClick="return updatesoverview_upgrade_ignore_all_version( <?php echo intval( $website->id ); ?>, this )" class="item"><?php esc_html_e( 'Ignore all versions', 'mainwp' ); ?></a>
                                                     </div>
                                                 </div>
-                                                 <a href="javascript:void(0)" class="ui green button mini" onClick="return updatesoverview_upgrade(<?php echo intval( $website->id ); ?>, this )"><?php esc_html_e( 'Update', 'mainwp' ); ?></a>
+                                                <a href="javascript:void(0)" class="ui green button mini" onClick="return updatesoverview_upgrade(<?php echo intval( $website->id ); ?>, this )"><?php esc_html_e( 'Update', 'mainwp' ); ?></a>
 
                                             <input type="hidden" id="wp-updated-<?php echo intval( $website->id ); ?>" value="<?php echo ! empty( $wp_upgrades ) ? '0' : '1'; ?>" />
                                             <?php
@@ -512,6 +512,9 @@ class MainWP_Manage_Sites_Update_View { // phpcs:ignore Generic.Classes.OpeningB
                             $others['roll_info'] = $msg;
                         }
 
+                        $compatible_php = isset( $plugin_upgrade['wp_compatible'] ) ? $plugin_upgrade['wp_compatible'] : true;
+                        $compatible_wp  = isset( $plugin_upgrade['php_compatible'] ) ? $plugin_upgrade['php_compatible'] : true;
+
                         ?>
                         <tr plugin_slug="<?php echo esc_attr( $plugin_name ); ?>" plugin_name="<?php echo esc_attr( $plugin_upgrade['Name'] ); ?>" last-version="<?php echo esc_js( rawurlencode( $last_version ) ); ?>" premium="<?php echo isset( $plugin_upgrade['premium'] ) && ! empty( $plugin_upgrade['premium'] ) ? 1 : 0; ?>" updated="0">
                             <?php
@@ -531,9 +534,17 @@ class MainWP_Manage_Sites_Update_View { // phpcs:ignore Generic.Classes.OpeningB
                                     </div>
                                 </div>
                                 <?php endif; ?>
-                                <?php if ( $user_can_update_plugins ) : ?>
+                                <?php
+                                if ( $user_can_update_plugins ) :
+                                    if ( $compatible_php && $compatible_wp ) {
+                                        ?>
                                     <a href="javascript:void(0)" class="ui green mini button" onClick="return updatesoverview_upgrade_plugin( <?php echo intval( $website->id ); ?>, '<?php echo esc_js( $plugin_name ); ?>' )"><?php esc_html_e( 'Update', 'mainwp' ); ?></a>
-                                <?php endif; ?>
+                                        <?php
+                                    } else {
+                                        MainWP_Updates_Per_Item::render_incompatible_message( $compatible_php, $compatible_wp );
+                                    }
+                                    ?>
+                                    <?php endif; ?>
                             </td>
                             <?php endif; ?>
                         </tr>

@@ -298,6 +298,9 @@ class MainWP_Updates_Per_Site { // phpcs:ignore Generic.Classes.OpeningBraceSame
                                             $others['roll_info'] = $msg;
                                         }
 
+                                        $compatible_php = isset( $plugin_upgrade['wp_compatible'] ) ? $plugin_upgrade['wp_compatible'] : true;
+                                        $compatible_wp  = isset( $plugin_upgrade['php_compatible'] ) ? $plugin_upgrade['php_compatible'] : true;
+
                                         ?>
                                         <tr plugin_slug="<?php echo esc_attr( $plugin_name ); ?>" plugin_name="<?php echo esc_attr( $plugin_upgrade['Name'] ); ?>" last-version="<?php echo esc_attr( rawurlencode( $last_version ) ); ?>" site_name="<?php echo esc_attr( stripslashes( $website->name ) ); ?>" premium="<?php echo isset( $plugin_upgrade['premium'] ) && ! empty( $plugin_upgrade['premium'] ) ? 1 : 0; ?>" updated="0">
                                             <?php
@@ -317,8 +320,16 @@ class MainWP_Updates_Per_Site { // phpcs:ignore Generic.Classes.OpeningBraceSame
                                                         </div>
                                                     </div>
                                                 <?php endif; ?>
-                                                <?php if ( MainWP_Updates::user_can_update_plugins() ) : ?>
+                                                <?php
+                                                if ( MainWP_Updates::user_can_update_plugins() ) :
+                                                    if ( $compatible_php && $compatible_wp ) {
+                                                        ?>
                                                     <a href="javascript:void(0)" class="mainwp-update-now-button ui green mini button" onClick="return updatesoverview_upgrade_plugin( <?php echo esc_attr( $website->id ); ?>, '<?php echo esc_js( $plugin_name ); ?>' )"><?php esc_html_e( 'Update', 'mainwp' ); ?></a>
+                                                        <?php
+                                                    } else {
+                                                        MainWP_Updates_Per_Item::render_incompatible_message( $compatible_php, $compatible_wp );
+                                                    }
+                                                    ?>
                                                 <?php endif; ?>
                                             </td>
                                             <?php endif; ?>

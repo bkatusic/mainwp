@@ -396,6 +396,9 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
                                                             $others['roll_info'] = $msg;
                                                         }
 
+                                                        $compatible_php = isset( $plugin_upgrade['wp_compatible'] ) ? $plugin_upgrade['wp_compatible'] : true;
+                                                        $compatible_wp  = isset( $plugin_upgrade['php_compatible'] ) ? $plugin_upgrade['php_compatible'] : true;
+
                                                         ?>
                                                         <tr class="mainwp-plugin-update" plugin_slug="<?php echo esc_attr( $plugin_name ); ?>" plugin_name="<?php echo esc_attr( $plugin_upgrade['Name'] ); ?>" version="<?php echo esc_attr( rawurlencode( $plugin_upgrade['Version'] ) ); ?>" site_name="<?php echo esc_attr( stripslashes( $website->name ) ); ?>" premium="<?php echo isset( $plugin_upgrade['premium'] ) && ! empty( $plugin_upgrade['premium'] ) ? 1 : 0; ?>" updated="0">
                                                             <?php
@@ -415,9 +418,17 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
                                                                         </div>
                                                                     </div>
                                                                 <?php endif; ?>
-                                                                <?php if ( MainWP_Updates::user_can_update_plugins() ) : ?>
+                                                                <?php
+                                                                if ( MainWP_Updates::user_can_update_plugins() ) :
+                                                                    if ( $compatible_php && $compatible_wp ) {
+                                                                        ?>
                                                                     <a href="javascript:void(0)" class="mainwp-update-now-button ui mini green button" onClick="return updatesoverview_plugins_upgrade( '<?php echo esc_js( $plugin_name ); ?>', <?php echo intval( $website->id ); ?> )"><?php esc_html_e( 'Update', 'mainwp' ); ?></a>
-                                                                <?php endif; ?>
+                                                                        <?php
+                                                                    } else {
+                                                                        MainWP_Updates_Per_Item::render_incompatible_message( $compatible_php, $compatible_wp );
+                                                                    }
+                                                                    ?>
+                                                                    <?php endif; ?>
                                                             </td>
                                                             <?php endif; ?>
                                                         </tr>
