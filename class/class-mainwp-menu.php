@@ -1320,6 +1320,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
 
         MainWP_Utility::array_sort_existed_keys( $submenu_items, 5 ); //phpcs:ignore Squiz.PHP.CommentedOutCode.Found -- 5 => 'leftsub_order_level2'.
 
+        $idx = 0;
         foreach ( $submenu_items as $sub_item ) {
             $title        = $sub_item[0];
             $href         = $sub_item[1];
@@ -1400,12 +1401,19 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             if ( empty( $right ) || ( ! empty( $right ) && \mainwp_current_user_can( $right_group, $right ) ) ) {
                 $menu_itemid = $slug; // compatible.
                 $menu_itemid = 'managesites' === $slug && ! empty( $id ) ? $id : $menu_itemid;
+
+                // Fix duplicate ID issue caused by empty id="" (kept for backward compatibility).
+                if ( empty( $menu_itemid ) ) {
+                    $menu_itemid = ! empty( $title ) ? sanitize_title( $title ) : 'left-menu-item';
+                    $menu_itemid = 'left-menu-item-' . hash( 'crc32b', $menu_itemid . '-' . $idx );
+                }
                 ?>
                 <a class="item <?php echo $level2_active ? 'active level-two-active' : ''; ?> <?php echo esc_attr( $item_classes ); ?>" href="<?php echo esc_url( $href ); ?>" id="<?php echo esc_attr( $menu_itemid ); ?>" <?php echo $_blank ? 'target="_blank"' : ''; ?>>
                     <?php echo $before_title . $title; //phpcs:ignore -- requires escaped. ?>
                 </a>
                 <?php
             }
+            ++$idx;
         }
     }
 
