@@ -1388,15 +1388,14 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
      */
     public static function render_application_passwords_table_top() {
         ?>
-        <div class="mainwp-actions-bar">
+        <div class="mainwp-sub-header">
             <div class="ui grid">
                 <div class="equal width row ui mini form">
                     <div class="middle aligned column">
-                        <button class="ui mini grey basic button disabled" id="mainwp-do-application-passwords-bulk-actions"><?php esc_html_e( 'Revoke Selected Application Passwords', 'mainwp' ); ?></button>
+                        <button type="button" class="ui mini green button" id="mainwp-create-application-password-button"><?php esc_html_e( 'Add Application Password', 'mainwp' ); ?></button>
                     </div>
                     <div class="right aligned middle aligned column">
-                        <button type="button" class="ui mini green button"
-                            id="mainwp-create-application-password-button"><?php esc_html_e( 'Create New Application Password', 'mainwp' ); ?></button>
+                        <button class="ui mini grey basic button disabled" id="mainwp-do-application-passwords-bulk-actions"><?php esc_html_e( 'Revoke Selected Application Passwords', 'mainwp' ); ?></button>
                     </div>
                 </div>
             </div>
@@ -1421,6 +1420,27 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         static::render_application_passwords_table_top();
         ?>
         <div id="rest-application-passwords-settings" class="ui segment">
+            <?php if ( ! empty( $passwords ) ) : ?>
+                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-app-passwords-welcome-message' ) ) : ?>
+                    <div class="ui icon message mainwp-welcome-message" style="margin-bottom:0;">
+                    <em data-emoji=":wave:" class="big"></em>
+                    <div class="content">
+                        <div class="ui massive header"><?php esc_html_e( 'Get started with MainWP Abilities API / MCP', 'mainwp' ); ?></div>
+                        <p><?php esc_html_e( 'You haven\'t created any Application Passwords. MainWP Abilities API / MCP uses WordPress Application Passwords (not the MainWP API Key).', 'mainwp' ); ?></p>
+                        <p><?php esc_html_e( 'Create a new Application Password (recommended: name it after the client/tool), then use it as the credential when connecting.', 'mainwp' ); ?></p>
+                    </div>
+                    <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-app-passwords-welcome-message"></i>
+                </div>
+                <?php endif; ?>
+            <?php else : ?>
+                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-app-passwords-info-message' ) ) : ?>
+                    <div class="ui info message">
+                        <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-app-passwords-info-message"></i>
+                        <?php printf( esc_html__( '%sMainWP Abilities API%s / MCP uses WordPress Application Passwords so you can grant tool access without sharing your account password. Create a dedicated Application Password (for example "MCP Client") and revoke it whenever you no longer need it. This does not affect your regular login password.', 'mainwp' ), '<a href="https://docs.mainwp.com/api-reference/abilities-api/overview" target="_blank">', '</a>' ); ?>
+                    </div>
+                <?php endif; ?>
+            <?php endif; ?>
+
             <div id="mainwp-message-zone-app-passwords" style="display:none;"></div>
             <div class="content active application-passwords-list-table-wrapper">
                 <table id="mainwp-application-password-table" class="ui unstackable single line table">
@@ -1518,18 +1538,15 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
      */
     public static function create_application_password_modal() {
         ?>
-        <div class="ui modal" id="mainwp-create-application-password-modal">
-            <div class="header"><?php esc_html_e( 'Create New Application Password', 'mainwp' ); ?></div>
+        <div class="ui small modal" id="mainwp-create-application-password-modal">
+            <div class="header"><?php esc_html_e( 'Add Application Password', 'mainwp' ); ?></div>
             <div class="content">
                 <div class="ui form">
                     <div class="field">
-                        <label for="mainwp-app-password-name-input"><?php esc_html_e( 'New Application Password Name', 'mainwp' ); ?></label>
-                        <input type="text" name="app_password_name" id="mainwp-app-password-name-input"
-                            placeholder="<?php esc_attr_e( 'Application Password Name', 'mainwp' ); ?>" />
+                        <label for="mainwp-app-password-name-input"><?php esc_html_e( 'Application Password Name', 'mainwp' ); ?></label>
+                        <input type="text" name="app_password_name" id="mainwp-app-password-name-input" placeholder="<?php esc_attr_e( 'e.g. MCP Client', 'mainwp' ); ?>" />
+                        <span class="ui small text"><?php esc_html_e( 'Enter a name to help you identify this application password.', 'mainwp' ); ?></span>
                     </div>
-                    <p class="description">
-                        <?php esc_html_e( 'Enter a name to help you identify this application password.', 'mainwp' ); ?>
-                    </p>
                 </div>
             </div>
             <div class="actions">
@@ -1547,25 +1564,23 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
      */
     public static function success_application_password_modal() {
         ?>
-        <div class="ui modal" id="mainwp-application-password-success-modal">
+        <div class="ui small modal" id="mainwp-application-password-success-modal">
             <div class="header">
-                <span class="ui small text"<?php esc_html_e( 'Application Password Created', 'mainwp' ); ?></span></div>
+                <strong id="app-pass-success-name"></strong> <?php esc_html_e( 'Application Password Created', 'mainwp' ); ?>
+            </div>
             <div class="content">
                 <div class="ui message info">
                     <?php esc_html_e( 'Be sure to save this in a safe location. You will not be able to retrieve it.', 'mainwp' ); ?>
                 </div>
-                <div class="ui header">
-                    <?php esc_html_e( 'Your new password for', 'mainwp' ); ?> <strong id="app-pass-success-name"></strong>
-                    <?php esc_html_e( 'is:', 'mainwp' ); ?>
-                </div>
-                <div class="ui fluid action input">
-                    <input type="text" id="app-pass-success-value" readonly="readonly"
-                        style="font-family: monospace; font-size: 16px; letter-spacing: 2px;" />
-                    <button class="ui teal button copy-app-password"
-                        data-tooltip="<?php esc_attr_e( 'Copy to clipboard', 'mainwp' ); ?>" data-position="top center"
-                        data-inverted="">
-                        <i class="copy icon"></i> <?php esc_html_e( 'Copy', 'mainwp' ); ?>
-                    </button>
+                <?php esc_html_e( 'Your new password for is:', 'mainwp' ); ?>
+                <div class="ui grid">
+                    <div class="thirteen wide middle aligned column">
+                        <div class="ui fluid input"><input type="text" id="app-pass-success-value" readonly="readonly" style="font-family: monospace; font-size: 16px; letter-spacing: 2px;" /></div>                    </div>
+                    <div class="three wide middle aligned column">
+                        <button class="ui green basic fluid button copy-app-password" data-tooltip="<?php esc_attr_e( 'Copy to clipboard', 'mainwp' ); ?>" data-position="top center" data-inverted="">
+                            <i class="copy icon"></i> <?php esc_html_e( 'Copy', 'mainwp' ); ?>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="actions">

@@ -217,7 +217,7 @@ const init_application_passwords = ($) => {
             <td data-order="0">&mdash;</td>
             <td>&mdash;</td>
             <td class="right aligned">
-                <button type="button" class="ui mini red button mainwp-revoke-application-password" data-uuid="${item.uuid
+                <button type="button" class="ui mini grey basic button mainwp-revoke-application-password" data-uuid="${item.uuid
             }">
                     ${__("Revoke")}
                 </button>
