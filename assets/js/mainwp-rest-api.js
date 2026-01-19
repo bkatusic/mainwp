@@ -459,17 +459,20 @@ const init_application_passwords = ($) => {
     });
 
     /**
+     * Select checkboxes and disable/enable bulk actions
+     */
+    $('.mainwp-application-password-checkbox').on('change', function(){
+        const all_checked = $('.mainwp-application-password-checkbox').is(':checked');
+        if (all_checked > 0){
+            $("#mainwp-do-application-passwords-bulk-actions").removeClass('disabled');
+        }else{
+            $("#mainwp-do-application-passwords-bulk-actions").addClass('disabled');
+        }
+    });
+    /**
      * Bulk actions
      */
     $("#mainwp-do-application-passwords-bulk-actions").on("click", () => {
-        const action = $(
-            "#mainwp-application-passwords-bulk-actions-menu"
-        ).dropdown("get value");
-
-        if (!action) {
-            return false;
-        }
-
         const selected = [];
         app_pass_tbody
             .find('.check-column input[type="checkbox"]:checked')
@@ -488,20 +491,17 @@ const init_application_passwords = ($) => {
             return false;
         }
 
-        if (action === "delete") {
-            if (
-                !confirm(
-                    __(
-                        "Are you sure you want to revoke the selected passwords? This action cannot be undone."
-                    )
+        if (
+            !confirm(
+                __(
+                    "Are you sure you want to revoke the selected passwords? This action cannot be undone."
                 )
-            ) {
-                return false;
-            }
-
-            revoke_multiple_passwords(selected);
+            )
+        ) {
+            return false;
         }
 
+        revoke_multiple_passwords(selected);
         return false;
     });
 

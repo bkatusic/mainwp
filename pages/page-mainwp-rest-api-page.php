@@ -508,7 +508,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         }
 
         if ( ! empty( $all_keys ) ) {
-        ?>
+            ?>
 
         <table id="mainwp-rest-api-keys-table" class="ui unstackable single linetable">
             <thead>
@@ -615,7 +615,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
     /** Render REST API SubPage */
     public static function render_api_keys_v2_table() { // phpcs:ignore -- NOSONAR - complex.
         $all_keys_v2 = MainWP_DB::instance()->get_rest_api_keys();
-        $el_id_cb_1 = 'cb-select-all-top';
+        $el_id_cb_1  = 'cb-select-all-top';
         ?>
         <table id="mainwp-rest-api-keys-v2-table" class="ui unstackable single line table">
             <thead>
@@ -678,7 +678,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                             <?php
                         }
                     }
-                ?>
+                    ?>
             </tbody>
         </table>
         <script type="text/javascript">
@@ -1392,15 +1392,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             <div class="ui grid">
                 <div class="equal width row ui mini form">
                     <div class="middle aligned column">
-                        <div id="mainwp-application-passwords-bulk-actions-menu" class="ui selection dropdown">
-                            <div class="default text"><?php esc_html_e( 'Bulk actions', 'mainwp' ); ?></div>
-                            <i class="dropdown icon"></i>
-                            <div class="menu">
-                                <div class="item" data-value="delete"><?php esc_html_e( 'Delete', 'mainwp' ); ?></div>
-                            </div>
-                        </div>
-                        <button class="ui mini basic button"
-                            id="mainwp-do-application-passwords-bulk-actions"><?php esc_html_e( 'Apply', 'mainwp' ); ?></button>
+                        <button class="ui mini grey basic button disabled" id="mainwp-do-application-passwords-bulk-actions"><?php esc_html_e( 'Revoke Selected Application Passwords', 'mainwp' ); ?></button>
                     </div>
                     <div class="right aligned middle aligned column">
                         <button type="button" class="ui mini green button"
@@ -1429,13 +1421,6 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         static::render_application_passwords_table_top();
         ?>
         <div id="rest-application-passwords-settings" class="ui segment">
-            <h2 class="ui dividing header">
-                <?php esc_html_e( 'Application Passwords', 'mainwp' ); ?>
-                <div class="sub header">
-                    <?php esc_html_e( 'Application passwords allow authentication via non-interactive systems, such as XML-RPC or the REST API, without providing your actual password. Application passwords can be easily revoked. They cannot be used for traditional logins to your website.', 'mainwp' ); ?>
-                </div>
-            </h2>
-
             <div id="mainwp-message-zone-app-passwords" style="display:none;"></div>
             <div class="content active application-passwords-list-table-wrapper">
                 <table id="mainwp-application-password-table" class="ui unstackable single line table">
@@ -1450,8 +1435,8 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                             <th scope="col" class="collapsing"><?php esc_html_e( 'Name', 'mainwp' ); ?></th>
                             <th scope="col"><?php esc_html_e( 'Created', 'mainwp' ); ?></th>
                             <th scope="col" class="collapsing"><?php esc_html_e( 'Last Used', 'mainwp' ); ?></th>
-                            <th scope="col" class="no-sort collapsing"><?php esc_html_e( 'Last IP', 'mainwp' ); ?></th>
-                            <th scope="col" class="collapsing"><?php esc_html_e( 'Revoke', 'mainwp' ); ?></th>
+                            <th scope="col" class="collapsing"><?php esc_html_e( 'Last IP', 'mainwp' ); ?></th>
+                            <th scope="col" class="no-sort  collapsing"></th>
                         </tr>
                     </thead>
                     <tbody id="mainwp-application-password-table-body" class="mainwp-application-password-body-table-manage">
@@ -1459,10 +1444,10 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                         if ( ! empty( $passwords ) ) {
                             foreach ( $passwords as $item ) {
                                 ?>
-                                <tr data-uuid="<?php echo esc_attr( $item['uuid'] ); ?>">
+                                <tr data-uuid="<?php echo esc_attr( $item['uuid'] ); ?>" class="mainwp-application-password-row">
                                     <td class="check-column">
                                         <div class="ui checkbox">
-                                            <input type="checkbox"
+                                            <input type="checkbox" class="mainwp-application-password-checkbox"
                                                 aria-label="<?php echo esc_attr( sprintf( __( 'Select %s', 'mainwp' ), $item['name'] ) ); ?>"
                                                 value="<?php echo esc_attr( $item['uuid'] ); ?>" name="" />
                                         </div>
@@ -1484,7 +1469,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                                         <?php echo ! empty( $item['last_ip'] ) ? esc_html( $item['last_ip'] ) : '&mdash;'; ?>
                                     </td>
                                     <td class="right aligned">
-                                        <button type="button" class="ui mini red button mainwp-revoke-application-password"
+                                        <button type="button" class="ui mini button mainwp-revoke-application-password"
                                             data-uuid="<?php echo esc_attr( $item['uuid'] ); ?>"
                                             aria-label="<?php echo esc_attr( sprintf( __( 'Revoke "%s"', 'mainwp' ), $item['name'] ) ); ?>">
                                             <?php esc_html_e( 'Revoke', 'mainwp' ); ?>
@@ -1538,20 +1523,20 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             <div class="content">
                 <div class="ui form">
                     <div class="field">
-                        <label for="mainwp-app-password-name-input"><?php esc_html_e( 'Application Name', 'mainwp' ); ?></label>
+                        <label for="mainwp-app-password-name-input"><?php esc_html_e( 'New Application Password Name', 'mainwp' ); ?></label>
                         <input type="text" name="app_password_name" id="mainwp-app-password-name-input"
                             placeholder="<?php esc_attr_e( 'Application Password Name', 'mainwp' ); ?>" />
-                        <p class="description">
-                            <?php esc_html_e( 'Enter a name to help you identify this application password.', 'mainwp' ); ?>
-                        </p>
                     </div>
+                    <p class="description">
+                        <?php esc_html_e( 'Enter a name to help you identify this application password.', 'mainwp' ); ?>
+                    </p>
                 </div>
             </div>
             <div class="actions">
-                <div class="ui cancel button"><?php esc_html_e( 'Cancel', 'mainwp' ); ?></div>
-                <div class="ui green ok button" id="mainwp-create-app-password-submit">
+                <button class="ui green ok button" id="mainwp-create-app-password-submit">
                     <?php esc_html_e( 'Create', 'mainwp' ); ?>
-                </div>
+                </button>
+                <button class="ui cancel button"><?php esc_html_e( 'Cancel', 'mainwp' ); ?></button>
             </div>
         </div>
         <?php
@@ -1563,28 +1548,24 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
     public static function success_application_password_modal() {
         ?>
         <div class="ui modal" id="mainwp-application-password-success-modal">
-            <div class="header"><?php esc_html_e( 'Application Password Created', 'mainwp' ); ?></div>
+            <div class="header">
+                <span class="ui small text"<?php esc_html_e( 'Application Password Created', 'mainwp' ); ?></span></div>
             <div class="content">
-                <div class="ui success message">
-                    <div class="header">
-                        <?php esc_html_e( 'Your new password for', 'mainwp' ); ?> <strong id="app-pass-success-name"></strong>
-                        <?php esc_html_e( 'is:', 'mainwp' ); ?>
-                    </div>
-                    <div class="ui segment" style="margin-top: 15px;">
-                        <div class="ui fluid action input">
-                            <input type="text" id="app-pass-success-value" readonly="readonly"
-                                style="font-family: monospace; font-size: 16px; letter-spacing: 2px;" />
-                            <button class="ui teal button copy-app-password"
-                                data-tooltip="<?php esc_attr_e( 'Copy to clipboard', 'mainwp' ); ?>" data-position="top center"
-                                data-inverted="">
-                                <i class="copy icon"></i> <?php esc_html_e( 'Copy', 'mainwp' ); ?>
-                            </button>
-                        </div>
-                    </div>
-                    <p style="margin-top: 15px;">
-                        <i class="exclamation triangle icon"></i>
-                        <?php esc_html_e( 'Be sure to save this in a safe location. You will not be able to retrieve it.', 'mainwp' ); ?>
-                    </p>
+                <div class="ui message info">
+                    <?php esc_html_e( 'Be sure to save this in a safe location. You will not be able to retrieve it.', 'mainwp' ); ?>
+                </div>
+                <div class="ui header">
+                    <?php esc_html_e( 'Your new password for', 'mainwp' ); ?> <strong id="app-pass-success-name"></strong>
+                    <?php esc_html_e( 'is:', 'mainwp' ); ?>
+                </div>
+                <div class="ui fluid action input">
+                    <input type="text" id="app-pass-success-value" readonly="readonly"
+                        style="font-family: monospace; font-size: 16px; letter-spacing: 2px;" />
+                    <button class="ui teal button copy-app-password"
+                        data-tooltip="<?php esc_attr_e( 'Copy to clipboard', 'mainwp' ); ?>" data-position="top center"
+                        data-inverted="">
+                        <i class="copy icon"></i> <?php esc_html_e( 'Copy', 'mainwp' ); ?>
+                    </button>
                 </div>
             </div>
             <div class="actions">
