@@ -664,7 +664,7 @@
   color: #fff !important;
 }
 
-.mainwp-ui.mainwp-custom-theme #mainwp-main-menu {
+.mainwp-ui.mainwp-custom-theme .mainwp-main-navigation-menu {
   background-color: var(--grey-dark-alt) !important;
 }
 

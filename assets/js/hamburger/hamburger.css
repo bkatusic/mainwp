@@ -104,31 +104,32 @@ By @betoayesa.
 	}
 
 	.hamburger.active .hamburger-patty {
-		display: none;
+		display: none ;
 	}
 
-	#mainwp-main-menu .item:not(.header){
-		display:none;
+    .mainwp-main-navigation-menu .item:not(.header){
+		display:none !important;
 	}
 
-	#mainwp-main-menu.open .item{
-		display:block;
+	.mainwp-main-navigation-menu.open .item{
+		display:block !important;
 	}
 
-	#mainwp-main-menu.open {
-		height:inherit
+	.mainwp-main-navigation-menu.open {
+		height:inherit !important;
 	}
-        
-        #mainwp-main-menu.open {
-		height:inherit
+
+    .mainwp-main-navigation-menu.open {
+		height:inherit !important;
 	}
-        
-        .mainwp-nav-menu #mainwp-main-menu .item-wp-admin{
-            position: inherit !important;
-        }        
-        #mainwp-top-header {
-            position: inherit !important;
-        }
+
+    .mainwp-nav-menu .mainwp-main-navigation-menu .item-wp-admin{
+        position: inherit !important;
+    }
+
+    #mainwp-top-header {
+        position: inherit !important;
+    }
 }
 
 

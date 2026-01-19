@@ -833,7 +833,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 </div>
             </div>
             <div id="mainwp-second-level-navigation">
-                <div id="mainwp-main-menu" class="ui inverted vertical accordion menu">
+                <div id="mainwp-main-menu" class="mainwp-main-navigation-menu ui inverted vertical accordion menu">
                     <?php
                     $bar_active_item_key = '';
 
@@ -1020,7 +1020,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     mainwp_left_bar_showhide_init();
 
                     // click on menu with-sub icon.
-                    jQuery( '#mainwp-main-navigation-container #mainwp-main-menu a.title.with-sub .icon' ).on( "click", function ( event ) {
+                    jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu a.title.with-sub .icon' ).on( "click", function ( event ) {
                         let pr = jQuery( this ).closest( '.item' );
                         let title = jQuery( this ).closest( '.title' );
                         let active = jQuery( title ).hasClass( 'active' );
@@ -1037,7 +1037,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         return false;
                     } );
 
-                    jQuery( '#mainwp-main-navigation-container #mainwp-main-menu a.title.with-sub' ).on( "click", function ( event ) {
+                    jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu a.title.with-sub' ).on( "click", function ( event ) {
                         let pr = jQuery( this ).closest( '.item' );
                         let active = jQuery( this ).hasClass( 'active' );
 
@@ -1054,12 +1054,12 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
 
                     mainwp_menu_collapse = function() {
                         // remove current active.
-                        jQuery( '#mainwp-main-navigation-container #mainwp-main-menu a.title.active').removeClass('active');
-                        jQuery( '#mainwp-main-navigation-container #mainwp-main-menu .item').removeClass('active');
-                        jQuery( '#mainwp-main-navigation-container #mainwp-main-menu .content.menu.active').removeClass('active');
+                        jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu a.title.active').removeClass('active');
+                        jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu .item').removeClass('active');
+                        jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu .content.menu.active').removeClass('active');
                     };
 
-                    jQuery('.mainwp-main-mobile-navigation-container #mainwp-main-menu').accordion();
+                    jQuery('.mainwp-main-mobile-navigation-container .mainwp-main-navigation-menu').accordion();
 
                 } );
             </script>
@@ -1087,7 +1087,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 do_action( 'before_mainwp_menu' );
                 ?>
 
-                <div id="mainwp-main-menu"  class="test-menu ui inverted vertical accordion menu">
+                <div id="mainwp-main-menu-mobile"  class="mainwp-main-navigation-menu test-menu ui inverted vertical accordion menu">
                     <div class="hamburger">
                         <span class="hamburger-bun"></span>
                         <span class="hamburger-patty"></span>

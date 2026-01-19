@@ -125,7 +125,7 @@
 		margin-left: 0 !important;
 	}
 
-	#mainwp-main-menu.ui.menu {
+    .mainwp-main-navigation-menu.ui.menu {
 		min-height: 0;
 	}
 }
@@ -540,7 +540,7 @@
 		padding-right: 15px !important;
 	}
 
-	#mainwp-main-menu.ui.menu {
+    .mainwp-main-navigation-menu.ui.menu {
 		min-height: 0;
 	}
 
