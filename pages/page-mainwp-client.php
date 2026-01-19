@@ -1656,7 +1656,7 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
             <?php endif; ?>
         </h2>
         <div class="ui form">
-            <input type="hidden" name="nonce_client_id" id="nonce_client_id" value="<?php echo esc_attr( wp_create_nonce( 'editing-client-' . $client_id ) ); ?>">
+            <input type="hidden" name="nonce_client_id" value="<?php echo esc_attr( wp_create_nonce( 'editing-client-' . $client_id ) ); ?>">
             <?php
             foreach ( $default_client_fields as $field_name => $field ) {
                 $db_field = isset( $field['db_field'] ) ? $field['db_field'] : '';

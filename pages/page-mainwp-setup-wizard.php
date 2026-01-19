@@ -532,6 +532,8 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
      * Method mwp_setup_connect_first_site_already()
      *
      * Render Added first Child Site Step form.
+     *
+     * Outdated.
      */
     public function mwp_setup_connect_first_site_already() {
         $count_clients = MainWP_DB_Client::instance()->count_total_clients();
@@ -615,7 +617,8 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                     $url .= '&step=add_client';
                     MainWP_Manage_Sites::render_import_sites_modal( $url, 'Import Sites' );
                 ?>
-            <?php else :
+                <?php
+            else :
                 $el_id_msg_zn_1 = 'submit';
                 ?>
                 <form method="post" action="" class="ui form" enctype="multipart/form-data" id="mainwp_connect_first_site_form">
@@ -744,7 +747,8 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                 <div class="ui hidden divider"></div>
                 <?php wp_nonce_field( 'mwp-setup' ); ?>
                 <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
-                <input type="hidden" id="nonce_secure_data" mainwp_addwp="<?php echo esc_js( wp_create_nonce( 'mainwp_addwp' ) ); ?>" mainwp_checkwp="<?php echo esc_attr( wp_create_nonce( 'mainwp_checkwp' ) ); ?>" />
+                <input type="hidden" name="qsw_nonce[mainwp_addwp]" value="<?php echo esc_attr( wp_create_nonce( 'mainwp_addwp' ) ); ?>">
+                <input type="hidden" name="qsw_nonce[mainwp_checkwp]" value="<?php echo esc_attr( wp_create_nonce( 'mainwp_checkwp' ) ); ?>">
                 <div class="ui grid">
                     <div class="row">
                         <div class="three wide column">
@@ -792,7 +796,8 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
             ?>
             <h1 class="ui header"><?php esc_html_e( 'Congratulations!', 'mainwp' ); ?></h1>
             <p><?php esc_html_e( 'You have successfully created your first Client.', 'mainwp' ); ?></p>
-        <?php else :
+            <?php
+        else :
             $el_id_msg_zn_2 = 'mainwp-message-zone';
             ?>
             <?php $first_site_id = get_transient( 'mainwp_transient_just_connected_site_id' ); ?>

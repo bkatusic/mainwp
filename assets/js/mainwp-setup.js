@@ -273,8 +273,6 @@ function isUrl(url) {
 let mainwp_setup_secure_data = function (data) {
   if (data['action'] == undefined)
     return data;
-
-  data['security'] = jQuery('#nonce_secure_data').attr(data['action']);
-
+  data.security = jQuery('input[name="qsw_nonce[' + data.action + ']"]').val() || '';
   return data;
 };
