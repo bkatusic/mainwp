@@ -527,7 +527,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
         <div class="extra content">
             <div class="">
                 <?php if ( \mainwp_current_user_can( 'dashboard', 'manage_extensions' ) ) { ?>
-                <a class="ui mini basic button extension-the-plugin-action" plugin-action="<?php echo $disabled ? 'active' : 'disable'; ?>"><?php echo $disabled ? '<i class="toggle off icon"></i> ' . __( 'Enable', 'mainwp' ) : '<i class="toggle on icon"></i> ' . __( 'Disable', 'mainwp' ); ?></a>
+                <a class="ui mini basic button extension-the-plugin-action" plugin-action="<?php echo $disabled ? 'active' : 'disable'; ?>"><?php echo $disabled ? '<i class="toggle off icon"></i> ' . __( 'Enable', 'mainwp' ) : '<i class="toggle on green icon"></i> ' . __( 'Disable', 'mainwp' ); ?></a>
                 <?php } ?>
                 <a class="ui mini extension-privacy-info-link basic button" base-slug="<?php echo esc_attr( $item_slug ); ?>"><?php echo $privacy_class; ?> <?php esc_html_e( 'Privacy', 'mainwp' ); ?></a> <?php // phpcs:ignore WordPress.Security.EscapeOutput ?>
                 <?php if ( $disabled && \mainwp_current_user_can( 'dashboard', 'manage_extensions' ) ) { ?>

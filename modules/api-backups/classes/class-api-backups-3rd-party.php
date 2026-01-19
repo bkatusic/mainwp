@@ -529,7 +529,11 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
 
         if ( empty( $backup_api ) ) {
             $title   = esc_html__( 'No API Backup Solution has been chosen.', 'mainwp' );
-            $message = esc_html__( 'Please double check that you have set the API Key on the API Backups Settings page and have set the Instance ID on the Child Site -> Edit page.', 'mainwp' );
+            $message = sprintf(
+                __( 'Please double check that you have set the API Key on the %1$s page and have set the Instance ID on the %2$s page.', 'mainwp' ),
+                '<a href="' . esc_url( admin_url( 'admin.php?page=SettingsApiBackups' ) ) . '">' . esc_html__( 'API Backups Settings', 'mainwp' ) . '</a>',
+                '<a href="' . esc_url( admin_url( 'admin.php?page=managesites&id=' . intval( $website_id ) ) ) . '">' . esc_html__( 'Child Site &rarr; Settings page', 'mainwp' ) . '</a>'
+            );
             $icon    = '<em data-emoji=":closed_lock_with_key:" class="big"></em>';
             \MainWP\Dashboard\MainWP_UI::render_empty_page_placeholder( $title, $message, $icon );
         } else {
