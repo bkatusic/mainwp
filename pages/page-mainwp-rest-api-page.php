@@ -1420,7 +1420,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         static::render_application_passwords_table_top();
         ?>
         <div id="rest-application-passwords-settings" class="ui segment">
-            <?php if ( ! empty( $passwords ) ) : ?>
+            <?php if ( empty( $passwords ) ) : ?>
                 <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-app-passwords-welcome-message' ) ) : ?>
                     <div class="ui icon message mainwp-welcome-message" style="margin-bottom:0;">
                     <em data-emoji=":wave:" class="big"></em>
