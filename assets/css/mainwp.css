@@ -658,7 +658,7 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
     padding: 1em;
 }
 
-#mainwp-select-sites-header .ui.menu {
+.mainwp-select-sites-header .ui.menu {
     overflow-x: auto;
     overflow-y: hidden;
     margin: 1rem 0 0;
@@ -670,26 +670,26 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
 
 /* Select Sites */
 
-#mainwp-select-sites-body {
+.mainwp-select-sites-items-body {
     height: 220px;
     overflow: auto;
 }
 
-#mainwp-select-sites-select-all-actions {
+.mainwp-select-sites-select-all-actions {
     background: #dadada;
     margin-top: 0;
 }
 
-#mainwp-select-sites-select-all-actions .item {
+.mainwp-select-sites-select-all-actions .item {
     cursor: pointer;
 }
 
-.mainwp-modal-content #mainwp-select-sites-select-all-actions {
+.mainwp-modal-content .mainwp-select-sites-select-all-actions {
     margin-left: auto;
     margin-right: auto;
 }
 
-#mainwp-select-sites-list .item label .url {
+.mainwp-select-sites-list .item label .url {
     display: none;
 }
 

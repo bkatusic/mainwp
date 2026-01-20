@@ -1507,7 +1507,7 @@ body.mainwp-ui.mainwp-custom-theme,
   background: none !important;
 }
 
-.mainwp-ui.mainwp-custom-theme .mainwp-side-content #mainwp-select-sites-select-all-actions {
+.mainwp-ui.mainwp-custom-theme .mainwp-side-content .mainwp-select-sites-select-all-actions {
   background-color: var(--mainwp-base-background-secondary) !important;
 }
 

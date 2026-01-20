@@ -893,7 +893,7 @@ body.mainwp-ui.mainwp-custom-theme,
   min-height: calc(100vh - 68px);
 }
 
-.mainwp-ui.mainwp-custom-theme .mainwp-side-content #mainwp-select-sites-select-all-actions {
+.mainwp-ui.mainwp-custom-theme .mainwp-side-content .mainwp-select-sites-select-all-actions {
   background-color: var(--mainwp-light) !important;
 }
 

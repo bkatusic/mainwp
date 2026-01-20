@@ -2227,4 +2227,15 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         | ( $rank << 29 )
         | min( $build, ( 1 << 29 ) - 1 );
     }
+
+    /**
+     * Method handle gen_rand_id().
+     *
+     * @param  string $str Input string.
+     * @param  bool   $more_entropy More entropy False if a robust prefix is required, default false.
+     * @return string Random ID 8 characters.
+     */
+    public static function gen_rand_id( $str, $more_entropy = false ) {
+        return hash( 'crc32b', uniqid( $str, $more_entropy ? true : false ) );
+    }
 }

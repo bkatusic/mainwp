@@ -421,7 +421,7 @@ let mainwp_createclient = function (currPage) {
     selected_sites.push(jQuery(this).val());
   });
 
-  if (jQuery('#select_by').val() == 'site') {
+  if (jQuery('input[name="select_by"]').val() == 'site') {
     selected_sites = [];
     jQuery("input[name='selected_sites[]']:checked").each(function () {
       selected_sites.push(jQuery(this).val());
@@ -445,7 +445,7 @@ let mainwp_createclient = function (currPage) {
   //Add Client via ajax!!
   let formdata = new FormData(jQuery('#createclient_form')[0]);
   formdata.append("action", 'mainwp_clients_add_client');
-  formdata.append("select_by", jQuery('#select_by').val());
+  formdata.append("select_by", jQuery('input[name="select_by"]').val());
   formdata.append("selected_sites[]", selected_sites);
   formdata.append("is_first_client", is_first_client);
   formdata.append("security", security_nonces['mainwp_clients_add_client']);

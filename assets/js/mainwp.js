@@ -2258,7 +2258,7 @@ let mainwp_createuser = function () {
     let selected_clients = [];
     let selected_groups = [];
 
-    if (jQuery('#select_by').val() == 'site') {
+    if (jQuery('input[name="select_by"]').val() == 'site') {
         jQuery("input[name='selected_sites[]']:checked").each(function () {
             selected_sites.push(jQuery(this).val());
         });
@@ -2266,7 +2266,7 @@ let mainwp_createuser = function () {
             feedback('mainwp-message-zone', __('Please select at least one website or group or client.'), 'yellow');
             cont = false;
         }
-    } else if (jQuery('#select_by').val() == 'client') {
+    } else if (jQuery('input[name="select_by"]').val() == 'client') {
         jQuery("input[name='selected_clients[]']:checked").each(function () {
             selected_clients.push(jQuery(this).val());
         });
@@ -2291,7 +2291,7 @@ let mainwp_createuser = function () {
         //Add user via ajax!!
         let data = mainwp_secure_data({
             action: "mainwp_bulkadduser",
-            select_by: jQuery("#select_by").val(),
+            select_by: jQuery("input[name='select_by']").val(),
             "selected_groups[]": selected_groups,
             "selected_sites[]": selected_sites,
             "selected_clients[]": selected_clients,
@@ -2438,11 +2438,11 @@ let mainwp_install_bulk = function (type, slug, name) {
         type: type,
         slug: slug,
         name: name,
-        selected_by: jQuery('#select_by').val()
+        selected_by: jQuery('input[name="select_by"]').val()
     });
     let placeholder = '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div>';
 
-    if (jQuery('#select_by').val() == 'site') {
+    if (jQuery('input[name="select_by"]').val() == 'site') {
 
         let selected_sites = [];
 
@@ -2457,7 +2457,7 @@ let mainwp_install_bulk = function (type, slug, name) {
 
         data['selected_sites[]'] = selected_sites;
 
-    } else if (jQuery('#select_by').val() == 'client') {
+    } else if (jQuery('input[name="select_by"]').val() == 'client') {
 
         let selected_clients = [];
 
@@ -2691,12 +2691,12 @@ let mainwp_upload_bulk = function (type) {
     let data = mainwp_secure_data({
         action: 'mainwp_preparebulkuploadplugintheme',
         type: type,
-        selected_by: jQuery('#select_by').val()
+        selected_by: jQuery('input[name="select_by"]').val()
     });
 
     let placeholder = '<div class="ui placeholder"><div class="paragraph"><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line"></div></div></div>';
 
-    if (jQuery('#select_by').val() == 'site') {
+    if (jQuery('input[name="select_by"]').val() == 'site') {
         let selected_sites = [];
         jQuery("input[name='selected_sites[]']:checked").each(function () {
             selected_sites.push(jQuery(this).val());
@@ -2707,7 +2707,7 @@ let mainwp_upload_bulk = function (type) {
             return;
         }
         data['selected_sites[]'] = selected_sites;
-    } else if (jQuery('#select_by').val() == 'client') {
+    } else if (jQuery('input[name="select_by"]').val() == 'client') {
         let selected_clients = [];
         jQuery("input[name='selected_clients[]']:checked").each(function () {
             selected_clients.push(jQuery(this).val());

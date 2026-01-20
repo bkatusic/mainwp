@@ -398,7 +398,6 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      * @uses \MainWP\Dashboard\MainWP_Themes::init_subpages_menu()
      * @uses \MainWP\Dashboard\MainWP_Plugins::init_subpages_menu()
      * @uses \MainWP\Dashboard\MainWP_User::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Settings::init_subpages_menu()
      */
     public static function init_sub_pages() {
 
@@ -439,9 +438,6 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             MainWP_Manage_Backups::init_subpages_menu();
         }
 
-        if ( ! static::is_disable_menu_item( 2, 'Settings' ) ) {
-            MainWP_Settings::init_subpages_menu();
-        }
 
         /**
          * Action: mainwp_admin_menu_sub
