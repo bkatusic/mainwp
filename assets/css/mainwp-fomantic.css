@@ -14,7 +14,7 @@
     padding-top: 0 !important;
 }
 
-.mainwp-ui #mainwp-main-menu .menu .item {
+.mainwp-ui .mainwp-main-navigation-menu .menu .item {
     font-size: .95em;
 }
 

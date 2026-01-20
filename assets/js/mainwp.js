@@ -9,18 +9,18 @@ jQuery(function ($) {
         jQuery('.mainwp-popup-tooltip').popup()
     }
 
-    jQuery(document).on('click', '#mainwp-help-menu-item, #mainwp-help-menu-item2', function () {
-        jQuery('#mainwp-help-modal').modal({
-            inverted: true,
-            blurring: false,
-            closable: false,
-            onShow: function () {
-                jQuery('#mainwp-help-modal').parent('.ui.dimmer').removeClass('dimmer');
-                jQuery('#mainwp-help-modal').css({
-                    'top': (jQuery(window).height() - jQuery('#mainwp-help-modal').outerHeight()) / 2 + 'px',
-                    'left': (jQuery(window).width() - jQuery('#mainwp-help-modal').outerWidth()) / 2 + 'px'
-                });
-            },
+  jQuery(document).on('click', '#mainwp-help-menu-item, #mainwp-help-menu-item-mobile', function () {
+    jQuery('#mainwp-help-modal').modal({
+      inverted: true,
+      blurring: false,
+      closable: false,
+      onShow: function() {
+          jQuery('#mainwp-help-modal').parent('.ui.dimmer').removeClass('dimmer');
+          jQuery('#mainwp-help-modal').css({
+            'top':(jQuery(window).height() - jQuery('#mainwp-help-modal').outerHeight()) / 2 + 'px',
+            'left':(jQuery(window).width() - jQuery('#mainwp-help-modal').outerWidth()) / 2 + 'px'
+          });
+      },
 
         }).modal('show').draggable().resizable({
             handles: "n, e, s, w, ne, nw, se, sw", // Allows resizing from all edges

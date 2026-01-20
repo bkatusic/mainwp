@@ -2308,7 +2308,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         );
                         MainWP_UI_Select_Sites::select_sites_box( $sel_params );
                         ?>
-                        <input type="hidden" name="select_sites_nonce" id="select_sites_nonce" value="<?php echo esc_attr( wp_create_nonce( 'select_sites_' . $post->ID ) ); ?>" />
+                        <input type="hidden" name="select_sites_nonce" value="<?php echo esc_attr( wp_create_nonce( 'select_sites_' . $post->ID ) ); ?>" />
                     </div>
                     </div>
                     <div class="ui fitted divider"></div>
@@ -2399,7 +2399,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         }
         ?>
             <div class="content active">
-            <input type="hidden" name="post_category_nonce" id="post_category_nonce" value="<?php echo esc_attr( wp_create_nonce( 'post_category_' . $post->ID ) ); ?>" />
+            <input type="hidden" name="post_category_nonce" value="<?php echo esc_attr( wp_create_nonce( 'post_category_' . $post->ID ) ); ?>" />
             <div class="field">
                 <div class="ui checkbox">
                     <input type="checkbox" name="post_only_existing" id="post_only_existing" value="1" <?php echo $post_only ? 'checked' : ''; ?>>
@@ -2485,7 +2485,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         }
         ?>
             <div class="content active">
-            <input type="hidden" name="post_category_nonce" id="post_category_nonce" value="<?php echo esc_attr( wp_create_nonce( 'post_category_' . $post->ID ) ); ?>" />
+            <input type="hidden" name="post_category_nonce" value="<?php echo esc_attr( wp_create_nonce( 'post_category_' . $post->ID ) ); ?>" />
             <div class="field">
                 <div class="ui checkbox">
                     <input type="checkbox" name="post_only_existing" id="post_only_existing" value="1" <?php echo $post_only ? 'checked' : ''; ?>>

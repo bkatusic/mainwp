@@ -839,8 +839,11 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                     <div class="ui padded segment">
                         <?php wp_nonce_field( 'mwp-setup' ); ?>
                         <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
-                        <input type="hidden" id="nonce_secure_data" mainwp_addwp="<?php echo esc_js( wp_create_nonce( 'mainwp_addwp' ) ); ?>" mainwp_checkwp="<?php echo esc_attr( wp_create_nonce( 'mainwp_checkwp' ) ); ?>" />
-                        <div class="ui two column grid">
+                          <input type="hidden" name="qsw_nonce[mainwp_addwp]" value="<?php echo esc_attr( wp_create_nonce( 'mainwp_addwp' ) ); ?>">
+                          <input type="hidden" name="qsw_nonce[mainwp_checkwp]" value="<?php echo esc_attr( wp_create_nonce( 'mainwp_checkwp' ) ); ?>">
+            
+
+                           <div class="ui two column grid">
                             <div class="column">
                                 <a href="<?php echo esc_url( $this->get_back_step_link() ); ?>" class="ui big basic button"><i class="arrow left icon"></i> <?php esc_html_e( 'Back to System Check', 'mainwp' ); ?></a>
                             </div>

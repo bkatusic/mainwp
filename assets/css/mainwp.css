@@ -444,8 +444,8 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
     overflow-x: hidden;
 }
 
-#mainwp-main-menu {
-    width: 100%;
+.mainwp-main-navigation-menu {
+    width: 100% !important;
     background: #3E3F3D !important;
 }
 
@@ -542,7 +542,7 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
     display: none !important;
 }
 
-#mainwp-main-menu .icon {
+.mainwp-main-navigation-menu .icon {
     color: #fff !important;
 }
 

@@ -899,7 +899,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 </div>
             </div>
             <div id="mainwp-second-level-navigation">
-                <div id="mainwp-main-menu" class="ui inverted vertical accordion menu">
+                <div id="mainwp-main-menu" class="mainwp-main-navigation-menu ui inverted vertical accordion menu">
                     <?php
                     $bar_active_item_key = '';
 
@@ -1085,7 +1085,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     mainwp_left_bar_showhide_init();
 
                     // click on menu with-sub icon.
-                    jQuery( '#mainwp-main-navigation-container #mainwp-main-menu a.title.with-sub .icon' ).on( "click", function ( event ) {
+                    jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu a.title.with-sub .icon' ).on( "click", function ( event ) {
                         let pr = jQuery( this ).closest( '.item' );
                         let title = jQuery( this ).closest( '.title' );
                         let active = jQuery( title ).hasClass( 'active' );
@@ -1102,7 +1102,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         return false;
                     } );
 
-                    jQuery( '#mainwp-main-navigation-container #mainwp-main-menu a.title.with-sub' ).on( "click", function ( event ) {
+                    jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu a.title.with-sub' ).on( "click", function ( event ) {
                         let pr = jQuery( this ).closest( '.item' );
                         let active = jQuery( this ).hasClass( 'active' );
 
@@ -1119,12 +1119,12 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
 
                     mainwp_menu_collapse = function() {
                         // remove current active.
-                        jQuery( '#mainwp-main-navigation-container #mainwp-main-menu a.title.active').removeClass('active');
-                        jQuery( '#mainwp-main-navigation-container #mainwp-main-menu .item').removeClass('active');
-                        jQuery( '#mainwp-main-navigation-container #mainwp-main-menu .content.menu.active').removeClass('active');
+                        jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu a.title.active').removeClass('active');
+                        jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu .item').removeClass('active');
+                        jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu .content.menu.active').removeClass('active');
                     };
 
-                    jQuery('#mainwp-main-mobile-navigation-container #mainwp-main-menu').accordion();
+                    jQuery('.mainwp-main-mobile-navigation-container .mainwp-main-navigation-menu').accordion();
 
                 } );
             </script>
@@ -1299,7 +1299,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         </div>
                     </div>
                     <div class="item">
-                        <a id="mainwp-help-menu-item2" title="<?php esc_attr_e( 'Help', 'mainwp' ); ?>" class="item" href="#" style="opacity:0.3;"><?php esc_html_e( 'Quick Help', 'mainwp' ); ?></a>
+                        <a id="mainwp-help-menu-item-mobile" title="<?php esc_attr_e( 'Help', 'mainwp' ); ?>" class="item" href="#" style="opacity:0.3;"><?php esc_html_e( 'Quick Help', 'mainwp' ); ?></a>
                     </div>
                 </div>
                 <?php
@@ -1393,6 +1393,9 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
 
         MainWP_Utility::array_sort_existed_keys( $submenu_items, 5 ); //phpcs:ignore Squiz.PHP.CommentedOutCode.Found -- 5 => 'leftsub_order_level2'.
 
+        $idx                = 0;
+        $fix_douplicate_ids = array();
+
         foreach ( $submenu_items as $sub_item ) {
             $title        = $sub_item[0];
             $href         = $sub_item[1];
@@ -1481,12 +1484,26 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             if ( empty( $right ) || ( ! empty( $right ) && \mainwp_current_user_can( $right_group, $right ) ) ) {
                 $menu_itemid = $slug; // compatible.
                 $menu_itemid = 'managesites' === $slug && ! empty( $id ) ? $id : $menu_itemid;
+
+                // Fix duplicate ID issue caused by empty id="" (kept for backward compatibility).
+                if ( empty( $menu_itemid ) ) {
+                    $menu_itemid = ! empty( $title ) ? sanitize_title( $title ) : 'left-menu-item';
+                    $menu_itemid = 'left-menu-item-' . hash( 'crc32b', $menu_itemid . '-' . $idx );
+                }
+
+                // Fix duplicate ID issue caused by same id in multiple extensions.
+                if ( ! empty( $fix_douplicate_ids ) && in_array( $menu_itemid, $fix_douplicate_ids ) ) {
+                    $menu_itemid = $menu_itemid . '-' . $idx;
+                }
+                $fix_douplicate_ids[] = $menu_itemid;
+
                 ?>
                 <a class="item <?php echo $level2_active ? 'active level-two-active' : ''; ?> <?php echo esc_attr( $item_classes ); ?>" href="<?php echo esc_url( $href ); ?>" id="<?php echo esc_attr( $menu_itemid ); ?>" <?php echo $_blank ? 'target="_blank"' : ''; ?>>
                     <?php echo $before_title . $title; //phpcs:ignore -- requires escaped. ?>
                 </a>
                 <?php
             }
+            ++$idx;
         }
     }
 
