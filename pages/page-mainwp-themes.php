@@ -1271,11 +1271,11 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                                     <?php if ( $actived ) { ?>
                                     <span data-tooltip="<?php echo esc_html__( 'Active theme on the site can not be deleted.', 'mainwp' ); ?>" data-position="bottom left" data-inverted="" data-variation="mini"><i class="lock icon"></i></span>
                                     <?php } ?>
+                                    <?php endif; ?>
                                     <div class="ui checkbox">
                                         <input type="checkbox"  class="mainwp-selected-theme-site" />
                                         <label></label>
                                     </div>
-                                    <?php endif; ?>
                                 </div>
                                 <div class="one wide center aligned middle aligned column"><?php echo MainWP_System_Utility::get_theme_icon( $theme_slug ); // phpcs:ignore WordPress.Security.EscapeOutput ?></div>
                                 <div class="two wide middle aligned column"><strong><?php echo esc_html( $theme_title ); ?></strong></div>
@@ -1586,11 +1586,11 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                                         <?php if ( $actived ) { ?>
                                         <span data-tooltip="<?php echo esc_html__( 'Active theme on the site can not be deleted.', 'mainwp' ); ?>" data-position="bottom left" data-inverted="" data-variation="mini"><i class="lock icon"></i></span>
                                         <?php } ?>
-                                        <div class="ui checkbox">
-                                            <input type="checkbox"  class="mainwp-selected-theme-site" />
-                                            <label></label>
-                                        </div>
                                     <?php endif; ?>
+                                    <div class="ui checkbox">
+                                        <input type="checkbox"  class="mainwp-selected-theme-site" />
+                                        <label></label>
+                                    </div>
                                 </div>
                                 <div class="two wide middle aligned column"><a target="_blank" href="admin.php?page=SiteOpen&newWindow=yes&websiteid=<?php echo intval( $site_id ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>"><i class="sign in icon"></i></a> <a href="admin.php?page=managesites&dashboard=<?php echo intval( $site_id ); ?>"><?php echo esc_html( $site_name ); ?></a></div>
                                 <div class="one wide middle aligned column"></div>
