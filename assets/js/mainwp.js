@@ -2345,16 +2345,16 @@ jQuery(function () {
         jQuery('.mainwp-bulk-install-showhide-content').hide();
         jQuery('.mainwp-browse-plugins').show();
         jQuery('#mainwp-search-plugins-form').show();
+        jQuery('.mainwp-bulk-install-tabs-header-btn').removeClass('green');
         jQuery(this).addClass('green');
-        jQuery('#MainWPInstallBulkNavUpload').removeClass('green');
     });
     jQuery('#MainWPInstallBulkNavUpload').on('click', function (event) {
         event.preventDefault();
         jQuery('#mainwp_plugin_bulk_install_btn').attr('bulk-action', 'upload');
         jQuery('.mainwp-bulk-install-showhide-content').hide();
         jQuery('.mainwp-upload-plugin').show();
+        jQuery('.mainwp-bulk-install-tabs-header-btn').removeClass('green');
         jQuery(this).addClass('green');
-        jQuery('#MainWPInstallBulkNavSearch').removeClass('green');
     });
 
     // not used?
