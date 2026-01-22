@@ -8,7 +8,6 @@
  */
 
 use MainWP\Dashboard\MainWP_DB;
-use MainWP\Dashboard\MainWP_DB_Common;
 use MainWP\Dashboard\MainWP_DB_Client;
 use MainWP\Dashboard\MainWP_Utility;
 use MainWP\Dashboard\MainWP_System_Utility;
@@ -643,7 +642,7 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
      *
      * @return WP_Error|WP_REST_Response
      */
-    public function delete_page( $request ) {
+    public function delete_page( $request ) {  // phpcs:ignore -- NOSONAR
         // Get website exist.
         $website = $this->get_request_item( $request );
         if ( empty( $website ) ) {
@@ -958,7 +957,7 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
      *
      * @return bool|WP_Error
      */
-    public function validate_filter_params( $request ) {
+    public function validate_filter_params( $request ) {  // phpcs:ignore -- NOSONAR
         // Customer, group, site authentication only one of the 3 is processed once.
         $clients      = $request->get_param( 'clients' );
         $groups       = $request->get_param( 'groups' );
@@ -1008,138 +1007,6 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
     }
 
     /**
-     * Validate site ids.
-     *
-     * @param string          $value Site id.
-     * @param WP_REST_Request $request Request object.
-     *
-     * @return bool|WP_Error
-     */
-    public function validate_site_ids( $value, $request ) {
-        if ( empty( $value ) ) {
-            return true;
-        }
-        $value    = $this->sanitize_field( $value );
-        $site_ids = explode( ',', $value );
-        foreach ( $site_ids as $site_id ) {
-            $db_site = $this->db->get_website_by_id( trim( $site_id ) );
-            if ( ! $db_site ) {
-                return new WP_Error(
-                    'invalid_site',
-                    sprintf(
-                        __( 'Invalid site ID: %s.', 'mainwp' ),
-                        esc_html( $site_id )
-                    ),
-                );
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Sanitize text field to array.
-     *
-     * @param string $value Client id.
-     *
-     * @return string|array
-     */
-    public function sanitize_text_field_to_array( $value ) {
-        if ( empty( $value ) ) {
-            return '';
-        }
-        $value = $this->sanitize_field( $value );
-        return array_map( 'trim', explode( ',', $value ) );
-    }
-
-    /**
-     * Validate clients.
-     *
-     * @param string          $value Client id.
-     * @param WP_REST_Request $request Request object.
-     *
-     * @return bool|WP_Error
-     */
-    public function validate_clients( $value, $request ) {
-        if ( empty( $value ) ) {
-            return true;
-        }
-        $value   = $this->sanitize_field( $value );
-        $clients = array_map( 'trim', explode( ',', $value ) );
-
-        foreach ( $clients as $client ) {
-            $db_client = MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $client );
-            if ( ! $db_client ) {
-                return new WP_Error(
-                    'invalid_client',
-                    sprintf(
-                        __( 'Invalid client ID: %s.', 'mainwp' ),
-                        esc_html( $client )
-                    ),
-                );
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Sanitize groups text field.
-     *
-     * @param string $value Group name.
-     *
-     * @return string
-     */
-    public function sanitize_groups_text_field( $value ) {
-        if ( empty( $value ) ) {
-            return '';
-        }
-        $value     = $this->sanitize_field( $value );
-        $group_ids = array();
-        $groups    = array_map( 'trim', explode( ',', $value ) );
-        foreach ( $groups as $group ) {
-            $db_group = MainWP_DB_Common::instance()->get_group_by_name( $group );
-            if ( ! $db_group ) {
-                return new WP_Error(
-                    'invalid_group',
-                    sprintf(
-                        __( 'Invalid Group: %s.', 'mainwp' ),
-                        esc_html( $group )
-                    ),
-                );
-            }
-            $group_ids[] = $db_group->id;
-        }
-        return $group_ids;
-    }
-
-    /**
-     *  Get group ids from group names.
-     *
-     * @param string $value Group name.
-     * @param mixed  $request Request object.
-     * @return bool|WP_Error True if valid, WP_Error otherwise.
-     */
-    public function validate_groups( $value, $request ) {
-        if ( empty( $value ) ) {
-            return true;
-        }
-        $value  = $this->sanitize_field( $value );
-        $groups = array_map( 'trim', explode( ',', $value ) );
-        foreach ( $groups as $group ) {
-            $db_group = MainWP_DB_Common::instance()->get_group_by_name( $group );
-            if ( ! $db_group ) {
-                return new WP_Error(
-                    'invalid_group',
-                    sprintf(
-                        __( 'Invalid Group: %s.', 'mainwp' ),
-                        esc_html( $group )
-                    ),
-                );
-            }
-        }
-        return true;
-    }
-
-    /**
      * Validate date format.
      *
      * @param string          $value Date format.
@@ -1147,7 +1014,7 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
      *
      * @return bool|WP_Error
      */
-    public function validate_date_format( $value, $request ) {
+    public function validate_date_format( $value, $request ) { // phpcs:ignore -- NOSONAR - callback signature required by WordPress.
         if ( empty( $value ) ) {
             return true;
         }
@@ -1464,7 +1331,7 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
      *
      * @return WP_Error|Object Item.
      */
-    private function get_request_item( $request ) {
+    private function get_request_item( $request ) {  // phpcs:ignore -- NOSONAR
         // Get id or domain raw value.
         $raw = (string) $request->get_param( 'id_domain' );
         $raw = trim( $raw );

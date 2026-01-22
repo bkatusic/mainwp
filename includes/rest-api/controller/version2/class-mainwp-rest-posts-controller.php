@@ -370,7 +370,7 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
         if ( empty( $website ) ) {
             return new WP_Error(
                 'website_not_found',
-                __( 'Website not found.', 'mainwp' )
+                __( 'Website not found.', 'mainwp' ) // NOSONAR.
             );
         }
 
@@ -680,7 +680,7 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
      *
      * @return WP_Error|WP_REST_Response
      */
-    public function delete_post( $request ) {
+    public function delete_post( $request ) {  // phpcs:ignore -- NOSONAR
         // Get website exist.
         $website = $this->get_request_item( $request );
         if ( empty( $website ) ) {
@@ -894,26 +894,26 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
                 'post_title'   => array(
                     'required'          => false,
                     'type'              => 'string',
-                    'description'       => __( 'Post title.', 'mainwp' ),
+                    'description'       => __( 'Post title.', 'mainwp' ), // NOSONAR.
                     'sanitize_callback' => 'sanitize_text_field',
                 ),
                 'post_content' => array(
                     'required'          => false,
                     'type'              => 'string',
-                    'description'       => __( 'Post content.', 'mainwp' ),
+                    'description'       => __( 'Post content.', 'mainwp' ), // NOSONAR.
                     'sanitize_callback' => 'wp_kses_post',
                 ),
                 'post_status'  => array(
                     'required'          => false,
                     'type'              => 'string',
-                    'description'       => __( 'Post status.', 'mainwp' ),
+                    'description'       => __( 'Post status.', 'mainwp' ), // NOSONAR.
                     'sanitize_callback' => $this->make_enum_sanitizer( $status, 'string' ),
                     'validate_callback' => $this->make_enum_validator( $status, 'string' ),
                 ),
                 'post_name'    => array(
                     'required'          => false,
                     'type'              => 'string',
-                    'description'       => __( 'Post slug.', 'mainwp' ),
+                    'description'       => __( 'Post slug.', 'mainwp' ), // NOSONAR.
                     'sanitize_callback' => 'sanitize_title',
                 ),
             )
@@ -1013,7 +1013,7 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
      *
      * @return bool|WP_Error
      */
-    public function validate_filter_params( $request ) {
+    public function validate_filter_params( $request ) {  // phpcs:ignore -- NOSONAR
         // Customer, group, site authentication only one of the 3 is processed once.
         $clients      = $request->get_param( 'clients' );
         $groups       = $request->get_param( 'groups' );
@@ -1063,138 +1063,6 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
     }
 
     /**
-     * Validate site ids.
-     *
-     * @param string          $value Site id.
-     * @param WP_REST_Request $request Request object.
-     *
-     * @return bool|WP_Error
-     */
-    public function validate_site_ids( $value, $request ) {
-        if ( empty( $value ) ) {
-            return true;
-        }
-        $value    = $this->sanitize_field( $value );
-        $site_ids = explode( ',', $value );
-        foreach ( $site_ids as $site_id ) {
-            $db_site = $this->db->get_website_by_id( trim( $site_id ) );
-            if ( ! $db_site ) {
-                return new WP_Error(
-                    'invalid_site',
-                    sprintf(
-                        __( 'Invalid site ID: %s.', 'mainwp' ),
-                        esc_html( $site_id )
-                    ),
-                );
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Sanitize text field to array.
-     *
-     * @param string $value Client id.
-     *
-     * @return string|array
-     */
-    public function sanitize_text_field_to_array( $value ) {
-        if ( empty( $value ) ) {
-            return '';
-        }
-        $value = $this->sanitize_field( $value );
-        return array_map( 'trim', explode( ',', $value ) );
-    }
-
-    /**
-     * Validate clients.
-     *
-     * @param string          $value Client id.
-     * @param WP_REST_Request $request Request object.
-     *
-     * @return bool|WP_Error
-     */
-    public function validate_clients( $value, $request ) {
-        if ( empty( $value ) ) {
-            return true;
-        }
-        $value   = $this->sanitize_field( $value );
-        $clients = array_map( 'trim', explode( ',', $value ) );
-
-        foreach ( $clients as $client ) {
-            $db_client = MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $client );
-            if ( ! $db_client ) {
-                return new WP_Error(
-                    'invalid_client',
-                    sprintf(
-                        __( 'Invalid client ID: %s.', 'mainwp' ),
-                        esc_html( $client )
-                    ),
-                );
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Sanitize groups text field.
-     *
-     * @param string $value Group name.
-     *
-     * @return string
-     */
-    public function sanitize_groups_text_field( $value ) {
-        if ( empty( $value ) ) {
-            return '';
-        }
-        $value     = $this->sanitize_field( $value );
-        $group_ids = array();
-        $groups    = array_map( 'trim', explode( ',', $value ) );
-        foreach ( $groups as $group ) {
-            $db_group = MainWP_DB_Common::instance()->get_group_by_name( $group );
-            if ( ! $db_group ) {
-                return new WP_Error(
-                    'invalid_group',
-                    sprintf(
-                        __( 'Invalid Group: %s.', 'mainwp' ),
-                        esc_html( $group )
-                    ),
-                );
-            }
-            $group_ids[] = $db_group->id;
-        }
-        return $group_ids;
-    }
-
-    /**
-     *  Get group ids from group names.
-     *
-     * @param string $value Group name.
-     * @param mixed  $request Request object.
-     * @return bool|WP_Error True if valid, WP_Error otherwise.
-     */
-    public function validate_groups( $value, $request ) {
-        if ( empty( $value ) ) {
-            return true;
-        }
-        $value  = $this->sanitize_field( $value );
-        $groups = array_map( 'trim', explode( ',', $value ) );
-        foreach ( $groups as $group ) {
-            $db_group = MainWP_DB_Common::instance()->get_group_by_name( $group );
-            if ( ! $db_group ) {
-                return new WP_Error(
-                    'invalid_group',
-                    sprintf(
-                        __( 'Invalid Group: %s.', 'mainwp' ),
-                        esc_html( $group )
-                    ),
-                );
-            }
-        }
-        return true;
-    }
-
-    /**
      * Validate date format.
      *
      * @param string          $value Date format.
@@ -1202,7 +1070,7 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
      *
      * @return bool|WP_Error
      */
-    public function validate_date_format( $value, $request ) {
+    public function validate_date_format( $value, $request ) {  // phpcs:ignore -- NOSONAR
         if ( empty( $value ) ) {
             return true;
         }
@@ -1547,7 +1415,7 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
      *
      * @return WP_Error|Object Item.
      */
-    private function get_request_item( $request ) {
+    private function get_request_item( $request ) { // phpcs:ignore -- NOSONAR
         // Get id or domain raw value.
         $raw = (string) $request->get_param( 'id_domain' );
         $raw = trim( $raw );
@@ -1581,7 +1449,7 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
      *
      * @return array|WP_Error
      */
-    protected function get_request_post_id( $website, $request ) {
+    protected function get_request_post_id( $website, $request ) {  // phpcs:ignore -- NOSONAR
         $post_id = (int) $request->get_param( 'id_post' );
         if ( empty( $post_id ) ) {
             return new WP_Error( 'post_id_not_found', __( 'Post id not found.', 'mainwp' ) );
