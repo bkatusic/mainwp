@@ -363,10 +363,10 @@ class MainWP_Application_Passwords {  // phpcs:ignore Generic.Classes.OpeningBra
      */
     public function get_application_password_capabilities( $get_caps = false ) {
         $application_password_permi = array(
-            'title'        => esc_html__( 'Application Password', 'mainwp-time-tracker-extension' ),
+            'title'        => esc_html__( 'Application Password', 'mainwp' ),
             'capabilities' => array(
-                'all_application_passwords'    => esc_html__( 'ALL Application Passwords', 'mainwp-time-tracker-extension' ),
-                'manage_application_passwords' => esc_html__( 'Application Password Management', 'mainwp-time-tracker-extension' ),
+                'all_application_passwords'    => esc_html__( 'ALL Application Passwords', 'mainwp' ),
+                'manage_application_passwords' => esc_html__( 'Application Password Management', 'mainwp' ),
             ),
         );
 
@@ -419,6 +419,7 @@ class MainWP_Application_Passwords {  // phpcs:ignore Generic.Classes.OpeningBra
             $post_caps = array();
         }
 
+        $save_caps = array();
         foreach ( $application_password_caps as $cap_id => $title ) {
             if ( ! empty( $post_caps[ $cap_id ] ) ) {
                 $save_caps[ $cap_id ] = 1;

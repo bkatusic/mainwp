@@ -1716,7 +1716,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             wp_send_json_error( array( 'message' => __( 'You are not allowed to revoke application passwords.', 'mainwp' ) ) );
         }
         // phpcs:disable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-        $items = isset( $_POST['items'] ) && is_array( $_POST['items'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['items'] ) ) : array();
+        $items = isset( $_POST['items'] ) && is_array( $_POST['items'] ) ? wp_unslash( $_POST['items'] ) : array();
         $uuids = isset( $_POST['uuids'] ) && is_array( $_POST['uuids'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['uuids'] ) ) : array();
         // phpcs:enable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
@@ -1796,30 +1796,6 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         return true;
     }
 
-    /** Determine if user can view Application Passwords (manage or all). */
-    protected static function can_view_application_passwords() {
-        if (
-            static::can_view_manage_application_passwords() ||
-            static::can_view_all_application_passwords() ||
-            static::can_dashboard_manage_application_passwords() ||
-            static::can_view_all_application_passwords_dashboard()
-        ) {
-            return true;
-        }
-        \mainwp_do_not_have_permissions( esc_html__( 'view application passwords', 'mainwp' ) );
-        return false;
-    }
-
-    /** Determine if user can manage Application Passwords (create/delete). */
-    /**
-     * Summary of can_manage_application_passwords
-     *
-     * @return bool
-     */
-    protected static function can_manage_application_passwords() {
-        return static::can_view_manage_application_passwords() || mainwp_current_user_can( 'dashboard', 'manage_application_passwords' );
-    }
-
     /**
      * Get the context for application passwords.
      *
@@ -1830,6 +1806,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         $current_user = wp_get_current_user();
         $admin_email  = get_option( 'admin_email' );
         $display_name = '';
+        $user_login   = '';
 
         if ( $current_user instanceof \WP_User ) {
             $display_name = ! empty( $current_user->display_name ) ? $current_user->display_name : $current_user->user_login;
@@ -2006,7 +1983,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                 <?php
                 printf(
                     esc_html__( '%sMainWP Abilities API%s / MCP uses WordPress Application Passwords so you can grant tool access without sharing your account password. Create a dedicated Application Password (for example "MCP Client") and revoke it whenever you no longer need it. This does not affect your regular login password.', 'mainwp' ),
-                    '<a href="https://docs.mainwp.com/api-reference/abilities-api/overview" target="_blank">',
+                    '<a href="' . esc_url( 'https://docs.mainwp.com/api-reference/abilities-api/overview' ) . '" target="_blank">',
                     '</a>'
                 );
                 ?>
@@ -2026,7 +2003,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         ?>
     <div id="mainwp-message-zone-app-passwords" style="display:none;"></div>
     <div class="content active application-passwords-list-table-wrapper">
-        <table id="mainwp-application-password-table" class="ui unstackable single line table" data-can-manage="<?php echo $can_manage ? '1' : '0'; ?>">
+        <table id="mainwp-application-password-table" class="ui unstackable single line table" data-can-manage="<?php echo esc_attr( $can_manage ? '1' : '0' ); ?>">
             <thead>
             <tr>
                 <th scope="col" class="no-sort collapsing check-column">
@@ -2115,6 +2092,29 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             </td>
         </tr>
         <?php
+    }
+
+        /** Determine if user can view Application Passwords (manage or all). */
+    protected static function can_view_application_passwords() {
+        if (
+            static::can_view_manage_application_passwords() ||
+            static::can_view_all_application_passwords() ||
+            static::can_dashboard_manage_application_passwords() ||
+            static::can_view_all_application_passwords_dashboard()
+        ) {
+            return true;
+        }
+        \mainwp_do_not_have_permissions( esc_html__( 'view application passwords', 'mainwp' ) );
+        return false;
+    }
+
+    /**
+     * Determine if user can manage Application Passwords (create/delete).
+     *
+     * @return bool
+     */
+    protected static function can_manage_application_passwords() {
+        return static::can_view_manage_application_passwords() || static::can_dashboard_manage_application_passwords();
     }
 
     /**
