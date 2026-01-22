@@ -755,6 +755,7 @@ window.mainwp_fetch_themes = function (notFetchContent) {
                 jQuery('#mainwp-themes-content').html(response.result);
                 jQuery('#mainwp-themes-bulk-actions-wapper').html(response.bulk_actions);
                 jQuery('#mainwp-themes-bulk-actions-wapper .ui.dropdown').dropdown();
+                mainwp_show_hide_install_to_selected_sites( 'theme' );
             }
         }
     }, 'json');

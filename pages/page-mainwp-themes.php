@@ -1267,10 +1267,6 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
 
                                 <?php if ( '' !== $parent_str ) : ?>
                                     <?php echo $parent_str; //phpcs:ignore -- escaped. ?>
-                                <?php else : ?>
-                                    <?php if ( $actived ) { ?>
-                                    <span data-tooltip="<?php echo esc_html__( 'Active theme on the site can not be deleted.', 'mainwp' ); ?>" data-position="bottom left" data-inverted="" data-variation="mini"><i class="lock icon"></i></span>
-                                    <?php } ?>
                                     <?php endif; ?>
                                     <div class="ui checkbox">
                                         <input type="checkbox"  class="mainwp-selected-theme-site" />
@@ -1306,9 +1302,7 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                                 </div>
                                 <div class="two wide center aligned middle aligned column column-actions">
                                     <?php if ( $actived ) : ?>
-                                        <?php if ( \mainwp_current_user_can( 'dashboard', 'activate_deactivate_themes' ) ) { ?>
-                                            <a href="javascript:void(0)" disabled class="ui mini button"><?php esc_html_e( 'Deactivate', 'mainwp' ); ?></a>
-                                            <?php } ?>
+                                        <span data-tooltip="<?php echo esc_html__( 'Active theme on the site can not be deleted.', 'mainwp' ); ?>" data-position="bottom left" data-inverted="" data-variation="mini"><i class="lock icon"></i></span>
                                         <?php else : ?>
                                         <div class="ui mini fluid buttons">
 
@@ -1582,10 +1576,6 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                                 <div class="one wide left aligned middle aligned column">
                                     <?php if ( '' !== $parent_str ) : ?>
                                         <?php echo $parent_str; //phpcs:ignore -- escaped. ?>
-                                    <?php else : ?>
-                                        <?php if ( $actived ) { ?>
-                                        <span data-tooltip="<?php echo esc_html__( 'Active theme on the site can not be deleted.', 'mainwp' ); ?>" data-position="bottom left" data-inverted="" data-variation="mini"><i class="lock icon"></i></span>
-                                        <?php } ?>
                                     <?php endif; ?>
                                     <div class="ui checkbox">
                                         <input type="checkbox"  class="mainwp-selected-theme-site" />
@@ -1622,9 +1612,7 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                                 </div>
                                 <div class="two wide center aligned middle aligned column column-actions">
                                 <?php if ( $actived ) : ?>
-                                    <?php if ( \mainwp_current_user_can( 'dashboard', 'activate_deactivate_themes' ) ) { ?>
-                                            <a href="javascript:void(0)" disabled class="ui mini button"><?php esc_html_e( 'Deactivate', 'mainwp' ); ?></a>
-                                            <?php } ?>
+                                        <span data-tooltip="<?php echo esc_html__( 'Active theme on the site can not be deactivated.', 'mainwp' ); ?>" data-position="bottom left" data-inverted="" data-variation="mini"><i class="lock icon"></i></span>
                                     <?php else : ?>
                                         <div class="ui mini fluid buttons">
                                         <?php if ( \mainwp_current_user_can( 'dashboard', 'activate_deactivate_themes' ) ) { ?>
