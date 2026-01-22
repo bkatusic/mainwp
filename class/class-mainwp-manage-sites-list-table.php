@@ -117,6 +117,10 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             return $backupnow_lnk;
         }
 
+        if ( ! \mainwp_current_user_can( 'dashboard', 'execute_backups' ) ) {
+            return '';
+        }
+
         $dir        = MainWP_System_Utility::get_mainwp_specific_dir( $item['id'] );
         $lastbackup = 0;
 
