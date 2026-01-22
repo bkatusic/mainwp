@@ -252,8 +252,9 @@ class MainWP_Updates_Per_Site { // phpcs:ignore Generic.Classes.OpeningBraceSame
                         <td class="accordion-trigger"><i class="icon dropdown"></i></td>
                         <td>
                             <div class="ui master checkbox">
-                                <input type="checkbox" name=""><label><?php MainWP_Updates::render_site_link_dashboard( $website ); ?></label>
-                            </div>
+                                <input type="checkbox" name="">
+                             </div>
+                            <?php MainWP_Utility::mainwp_display_site( $website, true, true ); ?>
                         </td>
                         <td sort-value="<?php echo count( $plugin_upgrades ); ?>"><?php echo count( $plugin_upgrades ); ?> <?php echo esc_html( _n( 'Update', 'Updates', count( $plugin_upgrades ), 'mainwp' ) ); ?></td>
                         <?php if ( $user_can_see_client ) { ?>
@@ -455,8 +456,9 @@ class MainWP_Updates_Per_Site { // phpcs:ignore Generic.Classes.OpeningBraceSame
                         <td class="accordion-trigger"><i class="icon dropdown"></i></td>
                         <td>
                             <div class="ui master checkbox">
-                                <input type="checkbox" name=""><label><?php MainWP_Updates::render_site_link_dashboard( $website ); ?></label>
+                                <input type="checkbox" name=""><label>
                             </div>
+                            <?php MainWP_Utility::mainwp_display_site( $website, true, true ); ?>
                         </td>
                         <td sort-value="<?php echo count( $theme_upgrades ); ?>"><?php echo count( $theme_upgrades ); ?> <?php echo esc_html( _n( 'Update', 'Updates', count( $theme_upgrades ), 'mainwp' ) ); ?></td>
                         <?php if ( $user_can_see_client ) { ?>

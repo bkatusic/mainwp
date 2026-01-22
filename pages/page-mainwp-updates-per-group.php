@@ -350,8 +350,9 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
                                             <td class="accordion-trigger"><i class="icon dropdown"></i></td>
                                             <td>
                                                 <div class="ui master checkbox">
-                                                    <input type="checkbox" name=""><label><?php MainWP_Updates::render_site_link_dashboard( $website ); ?></label>
+                                                    <input type="checkbox" name="">
                                                 </div>
+                                                <?php MainWP_Utility::mainwp_display_site( $website, true, true ); ?>
                                             </td>
                                             <td sort-value="<?php echo count( $plugin_upgrades ); ?>"><strong class="mainwp-768-show"><?php echo esc_html__( 'Updates: ', 'mainwp' ); ?></strong> <?php echo count( $plugin_upgrades ) . ' ' . esc_html( _n( 'Update', 'Updates', count( $plugin_upgrades ), 'mainwp' ) ); ?></td>
                                             <?php if ( $user_can_see_client ) { ?>
@@ -605,8 +606,9 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
                                             <td class="accordion-trigger"><i class="icon dropdown"></i></td>
                                             <td>
                                                 <div class="ui master checkbox">
-                                                    <input type="checkbox" name=""><label><?php MainWP_Updates::render_site_link_dashboard( $website ); ?></label>
+                                                    <input type="checkbox" name=""><label>
                                                 </div>
+                                                <?php MainWP_Utility::mainwp_display_site( $website, true, true ); ?>
                                             </td>
                                             <td sort-value="<?php echo count( $theme_upgrades ); ?>"><strong class="mainwp-768-show"><?php esc_html_e( 'Updates:', 'mainwp' ); ?></strong> <?php echo count( $theme_upgrades ) . ' ' . esc_html( _n( 'Update', 'Updates', count( $theme_upgrades ), 'mainwp' ) ); ?></td>
                                             <?php if ( $user_can_see_client ) { ?>

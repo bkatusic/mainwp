@@ -32,6 +32,9 @@
 table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
     display: none !important;
 }
+.mainwp-manage-updates-table td .mainwp-site-display {
+    display: inline-table !important;
+}
 
 
 /* Genaral Style */

@@ -2116,17 +2116,24 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
     /**
      * Display site name and URL with optional WP Admin link.
      *
-     * @param int|string $website_id Site ID.
+     * @param object|int $site Site object or Site ID.
      * @param bool       $wp_admin   Whether to show WP Admin link.
+     * @param bool       $print_content Whether to print or return the content.
      * @return string HTML markup for site display.
      */
-    public static function mainwp_display_site( $website_id = '', $wp_admin = true ) {
-        if ( empty( $website_id ) || ! static::ctype_digit( $website_id ) ) {
+    public static function mainwp_display_site( $site = '', $wp_admin = true, $print_content = false ) {
+        if ( empty( $site ) ) {
             return '';
         }
 
-        $website_id = intval( $website_id );
-        $website    = MainWP_DB::instance()->get_website_by_id( $website_id );
+        if ( static::ctype_digit( $site ) ) {
+            $website = MainWP_DB::instance()->get_website_by_id( $site );
+        } elseif ( is_object( $site ) && isset( $site->id ) ) {
+            $website = $site;
+        } else {
+            return '';
+        }
+
         if ( ! $website ) {
             return '';
         }
@@ -2154,6 +2161,11 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         $html .= '</span></div>';
 
         $html .= '</div>';
+
+        if ( $print_content ) {
+            echo $html; // phpcs:ignore -- ok.
+            return '';
+        }
 
         return $html;
     }

@@ -166,8 +166,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
 
                                         $last_version = $plugin_upgrade['update']['new_version'];
                                         $row_columns  = array(
-                                            'title'   => MainWP_Updates::render_site_link_dashboard( $website, false ),
-                                            'login'   => '<a href="admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ) . '&_opennonce=' . wp_create_nonce( 'mainwp-admin-nonce' ) . '" data-tooltip="' . esc_attr__( 'Jump to the site WP Admin', 'mainwp' ) . '"  data-position="bottom right"  data-inverted="" class="open_newwindow_wpadmin" target="_blank"><i class="sign in icon"></i></a>',
+                                            'site'    => true,
                                             'version' => '<strong class="mainwp-768-show">' . esc_html__( 'Version: ', 'mainwp' ) . '</strong>' . esc_html( $plugin_upgrade['Version'] ),
                                             'latest'  => '<strong class="mainwp-768-show">' . esc_html__( 'Latest: ', 'mainwp' ) . '</strong><a href="' . admin_url() . 'plugin-install.php?tab=plugin-information&wpplugin=' . intval( $website->id ) . '&plugin=' . esc_attr( $plugin_upgrade['update']['slug'] ) . '&url=' . ( isset( $plugin_upgrade['PluginURI'] ) ? rawurlencode( $plugin_upgrade['PluginURI'] ) : '' ) . '&name=' . rawurlencode( $plugin_upgrade['Name'] ) . '&section=changelog" target="_blank" class="open-plugin-details-modal">' . esc_html( $last_version ) . '</a>',
                                             'trusted' => ( in_array( $slug, $trustedPlugins ) ? true : false ),
@@ -415,8 +414,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
                                         $theme_upgrade = $theme_upgrades[ $slug ];
                                         $last_version  = $theme_upgrade['update']['new_version'];
                                         $row_columns   = array(
-                                            'title'   => MainWP_Updates::render_site_link_dashboard( $website, false ),
-                                            'login'   => '<a href="admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ) . '&_opennonce=' . wp_create_nonce( 'mainwp-admin-nonce' ) . '" data-tooltip="' . esc_attr__( 'Jump to the site WP Admin', 'mainwp' ) . '"  data-position="bottom right"  data-inverted="" class="open_newwindow_wpadmin" target="_blank"><i class="sign in icon"></i></a>',
+                                            'site'    => true,
                                             'version' => '<strong class="mainwp-768-show">' . esc_html__( 'Version: ', 'mainwp' ) . '</strong>' . esc_html( $theme_upgrade['Version'] ),
                                             'latest'  => '<strong class="mainwp-768-show">' . esc_html__( 'Latest: ', 'mainwp' ) . '</strong>' . esc_html( $last_version ),
                                             'trusted' => ( in_array( $slug, $trustedThemes ) ? true : false ),
