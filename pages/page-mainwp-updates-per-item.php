@@ -183,6 +183,9 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
 
                                         $tz_info = MainWP_Updates::get_site_tz_info( $website );
 
+                                        $compatible_php = isset( $plugin_upgrade['wp_compatible'] ) ? $plugin_upgrade['wp_compatible'] : true;
+                                        $compatible_wp  = isset( $plugin_upgrade['php_compatible'] ) ? $plugin_upgrade['php_compatible'] : true;
+
                                         ?>
                                         <tr site_id="<?php echo esc_attr( $website->id ); ?>" site_name="<?php echo esc_attr( $website->name ); ?>" site_url="<?php echo esc_attr( $website->url ); ?>" plugin_slug="<?php echo esc_attr( $plugin_name ); ?>" plugin_name="<?php echo esc_attr( $plugin_upgrade['Name'] ); ?>" last-version="<?php echo esc_attr( rawurlencode( $last_version ) ); ?>" site_name="<?php echo esc_attr( stripslashes( $website->name ) ); ?>" updated="0" <?php echo $first_wpplugin ? 'open-wpplugin-siteid="' . intval( $website->id ) . '"' : ''; ?> tz-info="<?php echo esc_attr( $tz_info ); ?>">
                                             <?php
@@ -202,9 +205,17 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
                                                             </div>
                                                         </div>
                                                     <?php endif; ?>
-                                                    <?php if ( MainWP_Updates::user_can_update_plugins() ) : ?>
-                                                        <a href="javascript:void(0)" class="mainwp-update-now-button ui mini green button" onClick="return updatesoverview_plugins_upgrade( '<?php echo esc_js( $plugin_name ); ?>', <?php echo intval( $website->id ); ?> )"><?php esc_html_e( 'Update', 'mainwp' ); ?></a>
-                                                    <?php endif; ?>
+                                                    <?php
+                                                    if ( MainWP_Updates::user_can_update_plugins() ) :
+                                                        if ( $compatible_php && $compatible_wp ) {
+                                                            ?>
+                                                            <a href="javascript:void(0)" class="mainwp-update-now-button ui mini green button" onClick="return updatesoverview_plugins_upgrade( '<?php echo esc_js( $plugin_name ); ?>', <?php echo intval( $website->id ); ?> )"><?php esc_html_e( 'Update', 'mainwp' ); ?></a>
+                                                            <?php
+                                                        } else {
+                                                            self::render_incompatible_message( $compatible_php, $compatible_wp );
+                                                        }
+                                                        ?>
+                                                <?php endif; ?>
                                                 </td>
                                             <?php } ?>
                                         </tr>
@@ -223,6 +234,50 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
             <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No updates available right now.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
+    }
+
+
+    /**
+     * Method render_incompatible_message().
+     *
+     * @param  mixed $compatible_php Compatible php.
+     * @param  mixed $compatible_wp Compatible wp.     *
+     * @param  mixed $echo_content Print content or not.
+     *
+     * @return string Message
+     */
+    public static function render_incompatible_message( $compatible_php, $compatible_wp, $echo_content = true ) {
+        $msg = static::get_incompatible_message( $compatible_php, $compatible_wp );
+        if ( ! empty( $msg ) ) {
+            $html = '<span class="ui yellow message">' . esc_html( $msg ) . '</span>';
+            if ( $echo_content ) {
+                echo $html; //phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            } else {
+                return $html;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Method get_incompatible_message().
+     *
+     * @param  mixed $compatible_php Compatible php.
+     * @param  mixed $compatible_wp Compatible wp.
+     * @return string Message
+     */
+    public static function get_incompatible_message( $compatible_php, $compatible_wp ) {
+            $msg = '';
+        if ( ! $compatible_php || ! $compatible_wp ) {
+            if ( ! $compatible_php && ! $compatible_wp ) {
+                $msg .= __( 'This plugin does not work with your versions of WordPress and PHP.', 'mainwp' );
+            } elseif ( ! $compatible_wp ) {
+                $msg .= __( 'This plugin does not work with your version of WordPress.', 'mainwp' );
+            } elseif ( ! $compatible_php ) {
+                $msg .= __( 'This plugin does not work with your version of PHP.', 'mainwp' );
+            }
+        }
+        return $msg;
     }
 
     /**
