@@ -38,11 +38,18 @@ class MainWP_Application_Passwords {  // phpcs:ignore Generic.Classes.OpeningBra
     protected static $instance = null;
 
     /**
+     * Private variable to hold the permission slug.
+     *
+     * @var string
+     */
+    private $permis_slug = 'application_password_permis';
+
+    /**
      * Return the single instance of the class.
      *
      * @return mixed $instance The single instance of the class.
      */
-    public static function get_instance() {
+    public static function instance() {
         if ( is_null( static::$instance ) ) {
             static::$instance = new self();
         }
@@ -347,5 +354,91 @@ class MainWP_Application_Passwords {  // phpcs:ignore Generic.Classes.OpeningBra
      */
     public static function get_error_message() {
         return esc_html__( 'Could not find an application password with that id.', 'mainwp' );
+    }
+
+    /**
+     * Get application password capabilities show in Team Control.
+     *
+     * @param bool $get_caps true get caps only, default false.
+     */
+    public function get_application_password_capabilities( $get_caps = false ) {
+        $application_password_permi = array(
+            'title'        => esc_html__( 'Application Password', 'mainwp-time-tracker-extension' ),
+            'capabilities' => array(
+                'all_application_passwords'    => esc_html__( 'ALL Application Passwords', 'mainwp-time-tracker-extension' ),
+                'manage_application_passwords' => esc_html__( 'Application Password Management', 'mainwp-time-tracker-extension' ),
+            ),
+        );
+
+        if ( $get_caps ) {
+            return $application_password_permi['capabilities'];
+        }
+        return $application_password_permi;
+    }
+
+    /**
+     * Hook show all capabilities in Team Control.
+     *
+     * @param array $team_control_permis all team control permission.
+     */
+    public function hook_all_capabilities( $team_control_permis ) {
+        if ( ! is_array( $team_control_permis ) ) {
+            $team_control_permis = array();
+        }
+
+        $team_control_permis[ $this->permis_slug ] = $this->get_application_password_capabilities();
+
+        return $team_control_permis;
+    }
+
+    /**
+     * Hook edit roles capabilities in Team Control.
+     *
+     * @param array $capabilities capabilities.
+     * @param int   $role_id role id.
+     */
+    public function hook_edit_roles_capabilities( $capabilities, $role_id ) {
+        if ( empty( $role_id ) ) {
+            return $capabilities;
+        }
+        if ( ! is_array( $capabilities ) ) {
+            $capabilities = array();
+        }
+
+        $application_password_caps = $this->get_application_password_capabilities( true );
+
+		$custom_permis    = isset( $_POST['custom_permis_caps'] ) ? sanitize_text_field( wp_unslash( $_POST['custom_permis_caps'] ) ) : ''; // phpcs:ignore -- ok.
+        $post_custom_permis = ! empty( $custom_permis ) ? json_decode( $custom_permis, true ) : array();
+
+        $post_caps = array();
+        if ( is_array( $post_custom_permis ) && isset( $post_custom_permis[ $this->permis_slug ] ) ) {
+            $post_caps = $post_custom_permis[ $this->permis_slug ];
+        }
+
+        if ( ! is_array( $post_caps ) ) {
+            $post_caps = array();
+        }
+
+        foreach ( $application_password_caps as $cap_id => $title ) {
+            if ( ! empty( $post_caps[ $cap_id ] ) ) {
+                $save_caps[ $cap_id ] = 1;
+            }
+        }
+        $capabilities[ $this->permis_slug ] = $save_caps;
+
+        return $capabilities;
+    }
+
+    /**
+     * Hook allow permissions in Team Control.
+     *
+     * @param array $allow_permissions allow time tracker permissions.
+     */
+    public function hook_allow_permissions( $allow_permissions ) {
+        if ( ! is_array( $allow_permissions ) ) {
+            $allow_permissions = array();
+        }
+        $allow_permissions[] = $this->permis_slug;
+        return $allow_permissions;
     }
 }

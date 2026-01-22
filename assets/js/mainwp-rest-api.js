@@ -108,6 +108,8 @@ const init_application_passwords = ($) => {
     const success_modal = $("#mainwp-application-password-success-modal");
     const app_pass_name_input = $("#mainwp-app-password-name-input");
     const app_pass_tbody = $("#mainwp-application-password-table-body");
+    const has_user_col = $('#mainwp-application-password-table thead th.mainwp-col-user').length > 0;
+    const current_user_name = $('#rest-application-passwords-settings').data('current-user-name') || '';
     const message_zone = $("#mainwp-message-zone-app-passwords");
 
     /**
@@ -206,13 +208,14 @@ const init_application_passwords = ($) => {
         }
 
         // Create row HTML with proper data-order attributes
-        const row_html = `<tr data-uuid="${item.uuid}">
+        const row_html = `<tr data-uuid="${item.uuid}" data-user-id="${item.user_id || ''}">
             <td class="check-column">
                 <div class="ui checkbox">
                     <input type="checkbox" value="${item.uuid}" name=""/>
                 </div>
             </td>
             <td>${escape_html(item.name)}</td>
+            ${has_user_col ? `<td>${escape_html(current_user_name)}</td>` : ''}
             <td data-order="${item.created}">${created_str}</td>
             <td data-order="0">&mdash;</td>
             <td>&mdash;</td>
@@ -234,10 +237,10 @@ const init_application_passwords = ($) => {
     /**
      * Helper function to revoke multiple passwords
      */
-    const revoke_multiple_passwords = (uuids) => {
+    const revoke_multiple_passwords = (items) => {
         const data = mainwp_secure_data({
             action: "mainwp_application_password_delete_multiple",
-            uuids: uuids,
+            items: items,
         });
 
         $.post(
@@ -249,8 +252,8 @@ const init_application_passwords = ($) => {
 
                     if (table) {
                         // Remove all selected rows using DataTables API
-                        uuids.forEach((uuid) => {
-                            const row = table.row(`[data-uuid="${uuid}"]`);
+                        items.forEach((it) => {
+                            const row = table.row(`[data-uuid="${it.uuid}"]`);
                             if (row.length) {
                                 row.remove();
                             }
@@ -407,6 +410,7 @@ const init_application_passwords = ($) => {
         const button = $(e.currentTarget);
         const tr = button.closest("tr");
         const uuid = button.data("uuid");
+        const user_id = button.data("user-id") || button.closest('tr').data('user-id') || '';
 
         clear_messages();
         button.prop("disabled", true).addClass("disabled loading");
@@ -414,6 +418,7 @@ const init_application_passwords = ($) => {
         const data = mainwp_secure_data({
             action: "mainwp_application_password_delete",
             uuid: uuid,
+            user_id: user_id,
         });
 
         $.post(
@@ -478,8 +483,9 @@ const init_application_passwords = ($) => {
             .find('.check-column input[type="checkbox"]:checked')
             .each(function () {
                 const uuid = $(this).val();
+                const user_id = $(this).data('user-id') || $(this).closest('tr').data('user-id') || '';
                 if (uuid) {
-                    selected.push(uuid);
+                    selected.push({ uuid: uuid, user_id: user_id });
                 }
             });
 

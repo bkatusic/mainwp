@@ -29,7 +29,8 @@
 }
 
 .mainwp-show-all-updates-button,
-table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
+table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
+.mainwp_page_ApplicationPasswords #mainwp-second-level-navigation #mainwp-main-menu #mainwp-restapi-active-item {
     display: none !important;
 }
 

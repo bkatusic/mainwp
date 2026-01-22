@@ -257,8 +257,13 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 'slug'               => 'RESTAPI',
                 'menu_level'         => 2,
                 'menu_rights'        => array(
-                    'dashboard' => array(
+                    'dashboard'                  => array(
                         'manage_dashboard_restapi',
+                        'manage_application_passwords',
+                    ),
+                    'application_password_permis' => array(
+                        'manage_application_passwords',
+                        'all_application_passwords',
                     ),
                 ),
                 'init_menu_callback' => array( MainWP_Rest_Api_Page::class, 'init_menu' ),
@@ -1526,8 +1531,3 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         return $san_path === $san_href;
     }
 }
-
-
-
-
-
