@@ -211,10 +211,21 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
          * @since 4.1
          */
         do_action( 'mainwp_after_select_sites_filters' );
+
+        static $rendered_count = 0;
+
+        $rand_id_prefix = '';
+
+        if ( ! empty( $rendered_count ) ) {
+            $rand_id_prefix = '-' . MainWP_Utility::gen_rand_id();
+        }
+
+        ++$rendered_count;
+
         ?>
-        <input type="hidden" name="select_by" id="select_by" value="<?php echo esc_attr( $selectedby ); ?>"/>
-        <input type="hidden" id="select_sites_tab" value="<?php echo esc_attr( $selectedby ); ?>"/>
-        <div id="mainwp-select-sites-header">
+        <input type="hidden" name="select_by" value="<?php echo esc_attr( $selectedby ); ?>" id="select_by<?php echo esc_attr( $rand_id_prefix ); // empty prefix to ensure compatibility with extensions. ?>"/>
+        <input type="hidden" name="select_sites_tab" id="select_sites_tab<?php echo esc_attr( $rand_id_prefix ); // empty prefix to ensure compatibility with extensions. ?>" value="<?php echo esc_attr( $selectedby ); ?>"/>
+        <div class="mainwp-select-sites-header" id="mainwp-select-sites-header<?php echo esc_attr( $rand_id_prefix ); // empty prefix to ensure compatibility with extensions. ?>" >
             <div class="ui secondary pointing centered fluid menu">
                 <a class="item ui text tab <?php echo ( 'site' === $selectedby ) ? 'active' : ''; ?>" data-tab="mainwp-select-sites-<?php echo esc_attr( $tab_id ); ?>" select-by="site"><?php esc_html_e( 'Sites', 'mainwp' ); ?></a>
                 <?php if ( $show_group ) : ?>
@@ -260,9 +271,20 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
          */
         do_action( 'mainwp_before_select_sites_list', $websites );
         $count_disc = 0;
+
+        static $rendered_count = 0;
+
+        $rand_id_prefix = '';
+
+        if ( ! empty( $rendered_count ) ) {
+            $rand_id_prefix = '-' . MainWP_Utility::gen_rand_id();
+        }
+
+        ++$rendered_count;
+
         ?>
-            <div id="mainwp-select-sites-body">
-                <div class="ui relaxed selection list" id="mainwp-select-sites-list">
+            <div id="mainwp-select-sites-body<?php echo esc_attr( $rand_id_prefix ); ?>" class="mainwp-select-sites-items-body">
+                <div class="ui relaxed selection list mainwp-select-sites-list" id="mainwp-select-sites-list">
                     <?php if ( ! $websites ) : ?>
                         <div id="mainwp-select-sites-placeholder" class="ui segment">
                             <?php static::render_empty_element_placeholder( __( 'No sites connected.', 'mainwp' ) ); ?>
@@ -302,20 +324,21 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                                         $disconnected = true;
                                         ++$count_disc;
                                     }
+                                    $sel_id_prefix = MainWP_Utility::gen_rand_id( $website->id, true );
                                     ?>
                                     <div title="<?php echo esc_html( $website->url ); ?>" class="mainwp_selected_sites_item ui <?php echo esc_html( $type ); ?> item <?php echo $selected ? 'selected_sites_item_checked' : ''; ?> <?php echo esc_html( $disconnected ? 'warning' : '' ); ?>">
-                                    <input <?php echo esc_html( $disabled ); ?> type="<?php echo esc_html( $type ); ?>" name="<?php echo 'radio' === $type ? 'selected_sites' : 'selected_sites[]'; ?>" siteid="<?php echo intval( $website->id ); ?>" value="<?php echo intval( $website->id ); ?>" id="selected_sites_<?php echo intval( $website->id ); ?>" <?php echo $selected ? 'checked="true"' : ''; ?> />
-                                        <label for="selected_sites_<?php echo intval( $website->id ); ?>">
+                                    <input <?php echo esc_html( $disabled ); ?> type="<?php echo esc_html( $type ); ?>" name="<?php echo 'radio' === $type ? 'selected_sites' : 'selected_sites[]'; ?>" siteid="<?php echo intval( $website->id ); ?>" value="<?php echo intval( $website->id ); ?>" id="selected_sites_<?php echo esc_attr( $sel_id_prefix ); ?>" <?php echo $selected ? 'checked="true"' : ''; ?> />
+                                        <label for="selected_sites_<?php echo esc_attr( $sel_id_prefix ); ?>">
                                             <?php echo esc_html( stripslashes( $website->name ) ); ?>  <span class="url"><?php echo esc_html( $website->url ); ?></span>
                                         </label>
                                     </div>
                                     <?php
                                 } else {
-                                    $el_id_wp_1 = $website->id;
+                                    $sel_id_prefix2 = MainWP_Utility::gen_rand_id( $website->id, true );
                                     ?>
                                 <div title="<?php echo esc_html( $website->url ); ?>" class="mainwp_selected_sites_item item ui <?php echo esc_html( $type ); ?> <?php echo $selected ? 'selected_sites_item_checked' : ''; ?>">
-                                    <input type="<?php echo esc_html( $type ); ?>" disabled="disabled" id="selected_sites_<?php echo intval( $el_id_wp_1 ); ?>"/>
-                                    <label for="selected_sites_<?php echo intval( $website->id ); ?>">
+                                    <input type="<?php echo esc_html( $type ); ?>" disabled="disabled" id="selected_sites_<?php echo esc_attr( $sel_id_prefix2 ); ?>"/>
+                                    <label for="selected_sites_<?php echo esc_attr( $sel_id_prefix2 ); ?>">
                                         <?php echo esc_html( stripslashes( $website->name ) ); ?>  <span class="url"><?php echo esc_html( $website->url ); ?></span>
                                     </label>
                                 </div>
@@ -360,8 +383,18 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
      */
     public static function render_select_sites_staging( $selected_websites, $edit_site_id, $type = 'checkbox' ) { //phpcs:ignore -- NOSONAR - complex.
         $websites = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_websites_for_current_user( false, null, 'wp.url', false, false, null, false, array( 'favi_icon' ), 'yes' ) );
+
+        static $rendered_count = 0;
+
+        $rand_id_prefix2 = '';
+
+        if ( ! empty( $rendered_count ) ) {
+            $rand_id_prefix2 = '-' . MainWP_Utility::gen_rand_id();
+        }
+
+        ++$rendered_count;
         ?>
-        <div id="mainwp-select-sites-body">
+        <div id="mainwp-select-sites-body<?php echo esc_attr( $rand_id_prefix2 ); ?>" class="mainwp-select-sites-items-body">
             <div class="ui relaxed selection list" id="mainwp-select-staging-sites-list">
             <?php if ( ! $websites ) : ?>
                     <h2 class="ui icon header">
@@ -378,11 +411,11 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                                 if ( $edit_site_id && $website->id !== $edit_site_id ) {
                                     $disabled = 'disabled="disabled"';
                                 }
-                                $el_id_wp_2 = $website->id;
+                                $sel_id_prefix3 = MainWP_Utility::gen_rand_id( $website->id, true );
                                 ?>
                                 <div title="<?php echo esc_html( $website->url ); ?>" class="mainwp_selected_sites_item ui <?php echo esc_html( $type ); ?> item <?php echo $selected ? 'selected_sites_item_checked' : ''; ?>">
-                                    <input <?php echo esc_html( $disabled ); ?> type="<?php echo esc_html( $type ); ?>" name="<?php echo 'radio' === $type ? 'selected_sites' : 'selected_sites[]'; ?>" siteid="<?php echo intval( $website->id ); ?>" value="<?php echo intval( $website->id ); ?>" id="selected_sites_<?php echo intval( $el_id_wp_2 ); ?>" <?php echo $selected ? 'checked="true"' : ''; ?> />
-                                    <label for="selected_sites_<?php echo intval( $website->id ); ?>">
+                                    <input <?php echo esc_html( $disabled ); ?> type="<?php echo esc_html( $type ); ?>" name="<?php echo 'radio' === $type ? 'selected_sites' : 'selected_sites[]'; ?>" siteid="<?php echo intval( $website->id ); ?>" value="<?php echo intval( $website->id ); ?>" id="selected_sites_<?php echo esc_attr( $sel_id_prefix3 ); ?>" <?php echo $selected ? 'checked="true"' : ''; ?> />
+                                    <label for="selected_sites_<?php echo esc_attr( $sel_id_prefix3 ); ?>">
                                         <?php echo esc_html( stripslashes( $website->name ) ); ?>  <span class="url"><?php echo esc_html( $website->url ); ?></span>
                                     </label>
                                 </div>
@@ -391,7 +424,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                                 ?>
                                 <div title="<?php echo esc_html( $website->url ); ?>" class="mainwp_selected_sites_item item ui <?php echo esc_html( $type ); ?> <?php echo $selected ? 'selected_sites_item_checked' : ''; ?>">
                                     <input type="<?php echo esc_html( $type ); ?>" disabled="disabled"/>
-                                    <label for="selected_sites_<?php echo intval( $website->id ); ?>">
+                                    <label>
                                         <?php echo esc_html( stripslashes( $website->name ) ); ?>  <span class="url"><?php echo esc_html( $website->url ); ?></span>
                                     </label>
                                 </div>
@@ -428,9 +461,20 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
          * @since 4.1
          */
         do_action( 'mainwp_before_select_groups_list', $groups );
+
+        static $rendered_count = 0;
+
+        $rand_id_prefix3 = '';
+
+        if ( ! empty( $rendered_count ) ) {
+            $rand_id_prefix3 = '-' . MainWP_Utility::gen_rand_id();
+        }
+
+        ++$rendered_count;
+
         ?>
-        <div id="mainwp-select-sites-body">
-            <div class="ui relaxed selection list" id="mainwp-select-groups-list">
+        <div id="mainwp-select-sites-body<?php echo esc_attr( $rand_id_prefix3 ); ?>" class="mainwp-select-sites-items-body">
+            <div class="ui relaxed selection list mainwp-select-groups-list" id="mainwp-select-groups-list<?php echo esc_attr( $rand_id_prefix3 ); // empty prefix to ensure compatibility with extensions. ?>">
                 <?php
                 if ( empty( $groups ) ) {
                     ?>
@@ -833,7 +877,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 do_action( 'mainwp_overview_screen_options_top' );
                 ?>
                 <form method="POST" action="" name="mainwp_overview_screen_options_form" id="mainwp-overview-screen-options-form">
-                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
+                    <?php self::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                     <input type="hidden" name="wp_nonce" value="<?php echo esc_html( wp_create_nonce( 'MainWPScrOptions' ) ); ?>" />
                     <?php static::render_screen_options( false ); ?>
                     <?php
@@ -1375,7 +1419,8 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                     <i class="sync alternate icon"></i>
                 </a>
             <?php endif; ?>
-        <?php else :
+            <?php
+        else :
             $el_id_syc_1 = 'mainwp-sync-sites';
             ?>
                 <a class="ui icon green <?php echo 0 < $sites_count ? '' : 'disabled'; ?> button" id="<?php echo esc_attr( $el_id_syc_1 ); ?>" data-tooltip="<?php esc_attr_e( 'Click here to sync data now.', 'mainwp' ); ?>" data-inverted="" data-position="left center" aria-label="<?php esc_attr_e( 'Click here to sync data now.', 'mainwp' ); ?>">
@@ -1422,11 +1467,11 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
         <a class="ui button icon" id="mainwp-sites-sidebar" aria-label="<?php esc_attr_e( 'Open sites shortcuts sidebar', 'mainwp' ); ?>">
             <i class="globe icon"></i>
         </a>
-        <?php if ( 'default-dark' === $custom_theme && empty( $themes_files) ) : ?>
+        <?php if ( 'default-dark' === $custom_theme && empty( $themes_files ) ) : ?>
             <a id="mainwp-select-light-theme-button" class="ui button icon" aria-label="<?php esc_attr_e( 'Select MainWP Light theme', 'mainwp' ); ?>" data-inverted="" data-position="bottom right" data-tooltip="<?php esc_html_e( 'Switch to Light mode', 'mainwp' ); ?>">
                 <i class="sun icon"></i>
             </a>
-        <?php elseif ( 'default' === $custom_theme && empty( $themes_files) ) : ?>
+        <?php elseif ( 'default' === $custom_theme && empty( $themes_files ) ) : ?>
             <a id="mainwp-select-dark-theme-button" class="ui button icon" aria-label="<?php esc_attr_e( 'Select MainWP Dark theme', 'mainwp' ); ?>" data-inverted="" data-position="bottom right" data-tooltip="<?php esc_html_e( 'Switch to Dark mode', 'mainwp' ); ?>">
                 <i class="moon icon"></i>
             </a>
@@ -2010,7 +2055,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
             </div>
                 <div class="content" id="mainwp-upload-custom-icon-content">
                 <form action="" method="post" enctype="multipart/form-data" name="uploadicon_form" id="uploadicon_form" class="">
-                <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
+                <?php self::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                 <div class="ui message" id="mainwp-message-zone-upload" style="display:none;"></div>
                     <?php
                     /**
@@ -2775,7 +2820,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 <div class=""><?php printf( esc_html__( 'Did you know you can create your custom theme? %1$sSee here how to do it%2$s!', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/management/mainwp-dashboard-settings#select-mainwp-theme" target="_blank">', '</a>' ); // NOSONAR - noopener - open safe. ?></div>
             </div>
             <form method="POST" action="" name="mainwp_select_mainwp_themes_form" id="mainwp_select_mainwp_themes_form">
-            <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
+            <?php self::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                 <input type="hidden" name="wp_scr_options_nonce" value="<?php echo esc_attr( wp_create_nonce( 'MainWPSelectThemes' ) ); ?>" />
             <?php
             /**

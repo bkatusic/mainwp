@@ -231,14 +231,14 @@ let mainwp_fetch_users = function () {
     let selected_groups = [];
     let selected_clients = [];
 
-    if (jQuery('#select_by').val() == 'site') {
+    if (jQuery('input[name="select_by"]').val() == 'site') {
         jQuery("input[name='selected_sites[]']:checked").each(function () {
             selected_sites.push(jQuery(this).val());
         });
         if (selected_sites.length == 0) {
             errors.push(__('Please select at least one website or group or clients.'));
         }
-    } else if (jQuery('#select_by').val() == 'client') {
+    } else if (jQuery('input[name="select_by"]').val() == 'client') {
         jQuery("input[name='selected_clients[]']:checked").each(function () {
             selected_clients.push(jQuery(this).val());
         });

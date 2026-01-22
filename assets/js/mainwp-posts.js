@@ -204,14 +204,14 @@ let mainwp_fetch_pages_prepare = function () { // NOSONAR - complexity 19/15.
     let selected_groups = [];
     let selected_clients = [];
 
-    if (jQuery('#select_by').val() == 'site') {
+    if (jQuery('input[name="select_by"]').val() == 'site') {
         jQuery("input[name='selected_sites[]']:checked").each(function () {
             selected_sites.push(jQuery(this).val());
         });
         if (selected_sites.length == 0) {
             errors.push('<div class="ui yellow message">' + __('Please select websites or groups or clients.') + '</div>');
         }
-    } else if (jQuery('#select_by').val() == 'client') {
+    } else if (jQuery('input[name="select_by"]').val() == 'client') {
         jQuery("input[name='selected_clients[]']:checked").each(function () {
             selected_clients.push(jQuery(this).val());
         });
@@ -492,11 +492,11 @@ let mainwp_fetch_posts_prepare = function (postId, userId, start_sites) { // NOS
 
     let bulk_search = num_sites > 0;
 
-    if (jQuery('#select_by').val() == 'site' && start_sites == undefined) {
+    if (jQuery('input[name="select_by"]').val() == 'site' && start_sites == undefined) {
         start_sites = 0;
     }
 
-    if (jQuery('#select_by').val() == 'site') {
+    if (jQuery('input[name="select_by"]').val() == 'site') {
         jQuery("input[name='selected_sites[]']:checked").each(function () {
             if (bulk_search) {
                 if (i >= start_sites && i < start_sites + num_sites) {
@@ -510,14 +510,14 @@ let mainwp_fetch_posts_prepare = function (postId, userId, start_sites) { // NOS
         if (selected_sites.length == 0 && (!bulk_search || (bulk_search && start_sites == 0))) {
             errors.push(select_sites_error);
         }
-    } else if (jQuery('#select_by').val() == 'client') {
+    } else if (jQuery('input[name="select_by"]').val() == 'client') {
         jQuery("input[name='selected_clients[]']:checked").each(function () {
             selected_clients.push(jQuery(this).val());
         });
         if(selected_clients.length == 0){
             errors.push(select_sites_error);
         }
-    } else if (jQuery('#select_by').val() == 'group') {
+    } else if (jQuery('input[name="select_by"]').val() == 'group') {
         jQuery("input[name='selected_groups[]']:checked").each(function () {
             selected_groups.push(jQuery(this).val());
         });

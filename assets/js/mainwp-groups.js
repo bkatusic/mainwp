@@ -53,7 +53,7 @@ jQuery(function () {
                 mainwp_forceReload();
             },
             onShow: function () {
-                jQuery('#mainwp-create-group-modal').find('input#mainwp-group-name').val('');
+                jQuery('#mainwp-create-group-modal').find('input[name="mainwp-group-name"]').val('');
                 jQuery('#mainwp-create-group-modal').find('input#mainwp-new-tag-color').val('');
                 // Disable button initially.
                 jQuery('#mainwp-save-new-group-button').addClass('disabled');
@@ -62,7 +62,7 @@ jQuery(function () {
     });
 
     // Enable/disable create button based on input validation
-    jQuery(document).on('input', '#mainwp-create-group-modal input#mainwp-group-name, #mainwp-rename-group-modal input#mainwp-group-name', function () {
+    jQuery(document).on('input', '#mainwp-create-group-modal input[name="mainwp-group-name"], #mainwp-rename-group-modal input[name="mainwp-group-name"]', function () {
         let groupName = jQuery(this).val().trim();
         if (groupName.length > 0) {
             jQuery('#mainwp-save-new-group-button').removeClass('disabled');
@@ -82,7 +82,7 @@ jQuery(function () {
             onShow: function () {
                 let groupName = jQuery('#mainwp-groups-menu').find('.active').find('#mainwp-hidden-group-name').val();
                 let groupColor = jQuery('#mainwp-groups-menu').find('.active').find('#mainwp-hidden-group-color').val();
-                jQuery('#mainwp-rename-group-modal').find('input#mainwp-group-name').val(groupName);
+                jQuery('#mainwp-rename-group-modal').find('input[name="mainwp-group-name"]').val(groupName);
                 jQuery('#mainwp-rename-group-modal').find('input#mainwp-new-tag-color').val(groupColor);
                 // Disable button initially.
                 jQuery('#mainwp-update-new-group-button').addClass('disabled');
@@ -95,7 +95,7 @@ jQuery(function () {
 
         let $button = jQuery(this);
         let $modal = jQuery('#mainwp-create-group-modal');
-        let newName = $modal.find('input#mainwp-group-name').val().trim();
+        let newName = $modal.find('input[name="mainwp-group-name"]').val().trim();
         let newColor = $modal.find('input#mainwp-new-tag-color').val();
 
         // Validate input
@@ -182,7 +182,7 @@ jQuery(function () {
         let $modal = jQuery('#mainwp-rename-group-modal');
 
         let groupID = jQuery('#mainwp-groups-menu').find('.active').attr('id');
-        let newName = $modal.find('input#mainwp-group-name').val();
+        let newName = $modal.find('input[name="mainwp-group-name"]').val();
         let newColor = $modal.find('input#mainwp-new-tag-color').val();
         let data = mainwp_secure_data({
             action: 'mainwp_group_rename',

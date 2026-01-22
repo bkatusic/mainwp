@@ -683,7 +683,7 @@
   color: #fff !important;
 }
 
-.mainwp-ui.mainwp-custom-theme #mainwp-main-menu {
+.mainwp-ui.mainwp-custom-theme .mainwp-main-navigation-menu {
   background-color: var(--grey-dark-alt) !important;
 }
 
@@ -809,7 +809,7 @@ body.mainwp-ui.mainwp-custom-theme,
   border-bottom: none !important;
 }
 
-.mainwp-ui.mainwp-custom-theme .mainwp-side-content #mainwp-select-sites-select-all-actions {
+.mainwp-ui.mainwp-custom-theme .mainwp-side-content .mainwp-select-sites-select-all-actions {
   background-color: var(--grey-light-alt) !important;
   border-bottom: 1px solid var(--grey-light-alt) !important;
 }
