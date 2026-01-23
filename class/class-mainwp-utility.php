@@ -494,6 +494,66 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
     }
 
     /**
+     * Get last sync information.
+     *
+     * Retrieves synchronization timestamp for global view or specific site.
+     * For global view, checks all sites and returns the most recent sync.
+     * For specific site, returns that site's last sync timestamp.
+     *
+     * @param int|null $site_id Optional. Site ID to get sync info for. Null for global view.
+     * @return array {
+     *     Last sync information.
+     *
+     *     @type int    $timestamp Unix timestamp of last sync (0 if never synced).
+     *     @type string $formatted Formatted date/time string using WordPress date/time format.
+     *     @type string $status    Sync status (only for global view): 'all_synced', 'not_synced', or false.
+     *     @type string $message   Human-readable sync message.
+     * }
+     */
+    public static function get_last_sync_info( $site_id = null ) {
+        $timestamp = 0;
+        $status    = false;
+
+        if ( null === $site_id ) {
+            $result    = MainWP_DB_Common::instance()->get_last_sync_status();
+            $status    = $result['sync_status'];
+            $timestamp = $result['last_sync'];
+
+            if ( 'all_synced' === $status ) {
+                $timestamp = get_option( 'mainwp_last_synced_all_sites', $timestamp );
+            }
+        } else {
+            $site_id = absint( $site_id );
+            if ( $site_id > 0 ) {
+                $website = MainWP_DB::instance()->get_website_by_id( $site_id );
+                if ( $website && ! empty( $website->dtsSync ) ) {
+                    $timestamp = $website->dtsSync;
+                }
+            }
+        }
+
+        $formatted = '';
+        $message   = '';
+
+        if ( $timestamp ) {
+            $formatted = static::format_timestamp( static::get_timestamp( $timestamp ) );
+            $message   = sprintf(
+                esc_html__( 'Last synchronization completed on: %s', 'mainwp' ),
+                $formatted
+            );
+        } else {
+            $message = esc_html__( 'Not yet synchronized', 'mainwp' );
+        }
+
+        return array(
+            'timestamp' => $timestamp,
+            'formatted' => $formatted,
+            'status'    => $status,
+            'message'   => $message,
+        );
+    }
+
+    /**
      * Format duration time to show.
      *
      * @param  float $time timestamp.

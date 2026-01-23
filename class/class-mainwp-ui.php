@@ -1413,23 +1413,72 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
             $website = MainWP_DB::instance()->get_website_by_id( $id );
             ?>
             <?php if ( $id && $website && '' !== $website->sync_errors ) : ?>
-                <a href="#" class="mainwp-updates-overview-reconnect-site ui green icon button" adminuser="<?php echo esc_attr( $website->adminname ); ?>" siteid="<?php echo intval( $website->id ); ?>" data-position="bottom right" aria-label="Reconnect <?php echo esc_html( stripslashes( $website->name ) ); ?>" data-tooltip="Reconnect <?php echo esc_html( stripslashes( $website->name ) ); ?>" data-inverted=""><i class="undo alternate icon"></i></a>
-            <?php else : ?>
-                <a class="ui icon green <?php echo 0 < $sites_count ? '' : 'disabled'; ?> button" id="mainwp-sync-sites" data-tooltip="<?php esc_attr_e( 'Get fresh data from your child sites.', 'mainwp' ); ?>" data-inverted="" data-position="bottom right" aria-label="<?php esc_attr_e( 'Get fresh data from your child sites.', 'mainwp' ); ?>" >
-                    <i class="sync alternate icon"></i>
+                <a href="#" class="mainwp-updates-overview-reconnect-site ui green button" adminuser="<?php echo esc_attr( $website->adminname ); ?>" siteid="<?php echo intval( $website->id ); ?>" data-position="bottom right" aria-label="Reconnect <?php echo esc_html( stripslashes( $website->name ) ); ?>" data-tooltip="Reconnect <?php echo esc_html( stripslashes( $website->name ) ); ?>" data-inverted=""><i class="undo alternate icon"></i> <?php echo esc_html__( 'Reconnect', 'mainwp'); ?></a>
+            <?php
+                else :
+                    $site_sync_info     = MainWP_Utility::get_last_sync_info( $id );
+                    $site_sync_tooltip  = '';
+                    $site_sync_outdated = false;
+                    $current_time       = time();
+                    $twenty_four_h      = 24 * HOUR_IN_SECONDS;
+                    
+                    if ( ! empty( $site_sync_info['timestamp'] ) && ( $current_time - $site_sync_info['timestamp'] ) > $twenty_four_h ) {
+                        $site_sync_outdated = true;
+                        $site_sync_tooltip  = sprintf(
+                            esc_attr__( 'Data not synced for more than 24h. Click here to sync %s.', 'mainwp' ),
+                            stripslashes( $website->name )
+                        );
+                    } elseif ( ! empty( $site_sync_info['formatted'] ) ) {
+                        $site_sync_tooltip = sprintf(
+                            esc_attr__( 'Last sync: %s. Click here to sync %s.', 'mainwp' ),
+                            $site_sync_info['formatted'],
+                            stripslashes( $website->name )
+                        );
+                    } else {
+                        $site_sync_tooltip = sprintf(
+                            esc_attr__( 'Get fresh data from %s.', 'mainwp' ),
+                            stripslashes( $website->name )
+                        );
+                    }
+                ?>
+                <a class="ui green <?php echo 0 < $sites_count ? '' : 'disabled'; ?> button" id="mainwp-sync-sites" data-tooltip="<?php echo esc_attr( $site_sync_tooltip ); ?>" data-inverted="" data-position="left center" aria-label="<?php echo esc_attr( $site_sync_tooltip ); ?>" style="position: relative;">
+                    <?php if ( $site_sync_outdated ) : ?>
+                        <span class="ui red empty circular looping pulsating transition label" style="position: absolute; top: -4px; right: -4px;"></span>
+                    <?php endif; ?>
+                    <i class="sync alternate icon"></i> <?php echo esc_html__( 'Sync', 'mainwp'); ?>
                 </a>
             <?php endif; ?>
             <?php
-        else :
-            $el_id_syc_1 = 'mainwp-sync-sites';
+                else :
+                $el_id_syc_1    = 'mainwp-sync-sites';
+                $sync_info      = MainWP_Utility::get_last_sync_info();
+                $sync_tooltip   = '';
+                $sync_outdated  = false;
+                $current_time   = time();
+                $twenty_four_h  = 24 * HOUR_IN_SECONDS;
+                
+                if ( ! empty( $sync_info['timestamp'] ) && ( $current_time - $sync_info['timestamp'] ) > $twenty_four_h ) {
+                    $sync_outdated = true;
+                    $sync_tooltip  = esc_attr__( 'Data not synced for more than 24h. Click here to sync all sites.', 'mainwp' );
+                } elseif ( ! empty( $sync_info['formatted'] ) ) {
+                    $sync_tooltip = sprintf(
+                        esc_attr__( 'Last sync: %s. Click here to sync all sites.', 'mainwp' ),
+                        $sync_info['formatted']
+                    );
+                } else {
+                    $sync_tooltip = esc_attr__( 'Click here to sync all sites.', 'mainwp' );
+                }
             ?>
-                <a class="ui icon green <?php echo 0 < $sites_count ? '' : 'disabled'; ?> button" id="<?php echo esc_attr( $el_id_syc_1 ); ?>" data-tooltip="<?php esc_attr_e( 'Click here to sync data now.', 'mainwp' ); ?>" data-inverted="" data-position="left center" aria-label="<?php esc_attr_e( 'Click here to sync data now.', 'mainwp' ); ?>">
-                <i class="sync alternate icon"></i>
+                <a class="ui green <?php echo 0 < $sites_count ? '' : 'disabled'; ?> button" id="<?php echo esc_attr( $el_id_syc_1 ); ?>" data-tooltip="<?php echo esc_attr( $sync_tooltip ); ?>" data-inverted="" data-position="left center" aria-label="<?php echo esc_attr( $sync_tooltip ); ?>" style="position: relative;">
+                <?php if ( $sync_outdated ) : ?>
+                    <span class="ui red empty circular looping pulsating transition label" style="position: absolute; top: -4px; right: -4px;"></span>
+                <?php endif; ?>
+                <i class="sync alternate icon"></i> <?php echo esc_html__( 'Sync', 'mainwp'); ?>
             </a>
         <?php endif; ?>
 
-        <div class="ui icon top left pointing dropdown <?php echo empty( $sites_count ) ? 'green' : ''; ?> button" id="mainwp-add-new-buttons" aria-label="<?php esc_attr_e( 'Add new item to your MainWP Dashboard', 'mainwp' ); ?>">
-            <i class="plus icon"></i>
+        <div class="ui top left pointing dropdown <?php echo empty( $sites_count ) ? 'green' : ''; ?> button" id="mainwp-add-new-buttons" aria-label="<?php esc_attr_e( 'Add new item to your MainWP Dashboard', 'mainwp' ); ?>">
+            <i class="plus icon"></i> <?php echo esc_html__( 'Add', 'mainwp'); ?>
             <div class="menu">
                 <a class="item" href="<?php echo esc_url( admin_url( 'admin.php?page=managesites&do=new' ) ); ?>"><?php esc_html_e( 'Add Website', 'mainwp' ); ?></a>
                 <?php if ( \mainwp_current_user_can( 'dashboard', 'manage_clients' ) ) { ?>
@@ -1444,42 +1493,44 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
             </div>
         </div>
 
-        <?php if ( ( 'mainwp_tab' === $page ) || isset( $_GET['dashboard'] ) || in_array( $page, $sidebar_pages ) ) : // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended ?>
-        <a id="mainwp-screen-options-button" class="ui icon button" onclick="jQuery( '#mainwp-overview-screen-options-modal' ).modal({allowMultiple:true}).modal( 'show' ); return false;" data-inverted="" data-position="bottom right" href="#" aria-label="<?php esc_attr_e( 'Page Settings', 'mainwp' ); ?>" data-tooltip="<?php esc_html_e( 'Page Settings', 'mainwp' ); ?>">
-            <i class="cog icon"></i>
-        </a>
+        <span id="mainwp-header-secondary-actions">            
+            <?php if ( ( 'mainwp_tab' === $page ) || isset( $_GET['dashboard'] ) || in_array( $page, $sidebar_pages ) ) : // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended ?>
+            <a id="mainwp-screen-options-button" class="ui icon button" onclick="jQuery( '#mainwp-overview-screen-options-modal' ).modal({allowMultiple:true}).modal( 'show' ); return false;" data-inverted="" data-position="bottom right" href="#" aria-label="<?php esc_attr_e( 'Page Settings', 'mainwp' ); ?>" data-tooltip="<?php esc_html_e( 'Page Settings', 'mainwp' ); ?>">
+                <i class="cog icon"></i>
+            </a>
 
-        <?php endif; ?>
-        <?php
-        // phpcs:enable
-        /**
-         * Filter: mainwp_header_actions_right
-         *
-         * Filters the MainWP header element actions.
-         *
-         * @since 4.0
-         */
-        $actions = apply_filters( 'mainwp_header_actions_right', '' );
-        if ( ! empty( $actions ) ) {
-            echo $actions; // phpcs:ignore WordPress.Security.EscapeOutput
-        }
-        ?>
-        <a class="ui button icon" id="mainwp-sites-sidebar" aria-label="<?php esc_attr_e( 'Open sites shortcuts sidebar', 'mainwp' ); ?>">
-            <i class="globe icon"></i>
-        </a>
-        <?php if ( 'default-dark' === $custom_theme && empty( $themes_files ) ) : ?>
-            <a id="mainwp-select-light-theme-button" class="ui button icon" aria-label="<?php esc_attr_e( 'Select MainWP Light theme', 'mainwp' ); ?>" data-inverted="" data-position="bottom right" data-tooltip="<?php esc_html_e( 'Switch to Light mode', 'mainwp' ); ?>">
-                <i class="sun icon"></i>
+            <?php endif; ?>
+            <?php
+            // phpcs:enable
+            /**
+             * Filter: mainwp_header_actions_right
+             *
+             * Filters the MainWP header element actions.
+             *
+             * @since 4.0
+             */
+            $actions = apply_filters( 'mainwp_header_actions_right', '' );
+            if ( ! empty( $actions ) ) {
+                echo $actions; // phpcs:ignore WordPress.Security.EscapeOutput
+            }
+            ?>
+            <a class="ui button icon" id="mainwp-sites-sidebar" aria-label="<?php esc_attr_e( 'Open sites shortcuts sidebar', 'mainwp' ); ?>">
+                <i class="globe icon"></i>
             </a>
-        <?php elseif ( 'default' === $custom_theme && empty( $themes_files ) ) : ?>
-            <a id="mainwp-select-dark-theme-button" class="ui button icon" aria-label="<?php esc_attr_e( 'Select MainWP Dark theme', 'mainwp' ); ?>" data-inverted="" data-position="bottom right" data-tooltip="<?php esc_html_e( 'Switch to Dark mode', 'mainwp' ); ?>">
-                <i class="moon icon"></i>
-            </a>
-        <?php else : ?>
-            <a id="mainwp-select-theme-button" class="ui button icon mainwp-selecte-theme-button" aria-label="<?php esc_attr_e( 'Select MainWP theme', 'mainwp' ); ?>" custom-theme="default" data-inverted="" data-position="bottom right" data-tooltip="<?php esc_html_e( 'Select MainWP theme', 'mainwp' ); ?>">
-                <i class="palette icon"></i>
-            </a>
-        <?php endif; ?>
+            <?php if ( 'default-dark' === $custom_theme && empty( $themes_files ) ) : ?>
+                <a id="mainwp-select-light-theme-button" class="ui button icon" aria-label="<?php esc_attr_e( 'Select MainWP Light theme', 'mainwp' ); ?>" data-inverted="" data-position="bottom right" data-tooltip="<?php esc_html_e( 'Switch to Light mode', 'mainwp' ); ?>">
+                    <i class="sun icon"></i>
+                </a>
+            <?php elseif ( 'default' === $custom_theme && empty( $themes_files ) ) : ?>
+                <a id="mainwp-select-dark-theme-button" class="ui button icon" aria-label="<?php esc_attr_e( 'Select MainWP Dark theme', 'mainwp' ); ?>" data-inverted="" data-position="bottom right" data-tooltip="<?php esc_html_e( 'Switch to Dark mode', 'mainwp' ); ?>">
+                    <i class="moon icon"></i>
+                </a>
+            <?php else : ?>
+                <a id="mainwp-select-theme-button" class="ui button icon mainwp-selecte-theme-button" aria-label="<?php esc_attr_e( 'Select MainWP theme', 'mainwp' ); ?>" custom-theme="default" data-inverted="" data-position="bottom right" data-tooltip="<?php esc_html_e( 'Select MainWP theme', 'mainwp' ); ?>">
+                    <i class="palette icon"></i>
+                </a>
+            <?php endif; ?>
+        </span>
 
         <?php
         /**

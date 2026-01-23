@@ -1518,9 +1518,25 @@ body.mainwp-ui.mainwp-custom-theme,
   background: var(--mainwp-element-background);
 }
 
+.mainwp-ui.mainwp-custom-theme #mainwp-header-secondary-actions {
+  padding: 7px 10px;
+  margin: 0 10px;
+  border-left: 1px solid var(--mainwp-border) !important;
+  border-right: 1px solid var(--mainwp-border) !important;
+}
+
+.mainwp-ui.mainwp-custom-theme #mainwp-top-header .ui.button {
+  font-size: 0.85714286rem !important;
+}
+
 .mainwp-ui.mainwp-custom-theme #mainwp-top-header .ui.icon.button:not(.red, .green) {
-  background: var(--mainwp-base-background) !important;
+  background: none !important;
   color: var(--mainwp-text) !important;
+  margin: 0px 2px !important;
+}
+
+.mainwp-ui.mainwp-custom-theme #mainwp-top-header .ui.icon.button:not(.red, .green):hover {
+  background-color: var(--mainwp-element-background-secondary) !important;
 }
 
 .mainwp-ui.mainwp-custom-theme #mainwp-top-header .mainwp-page-title {
