@@ -52,8 +52,16 @@ class MainWP_Connection_Status { // phpcs:ignore Generic.Classes.OpeningBraceSam
      */
     public static function render_sites() { // phpcs:ignore -- NOSONAR - current complexity required to achieve desired results. Pull request solutions appreciated.
 
-        $sql      = MainWP_DB::instance()->get_sql_websites_for_current_user();
-        $websites = MainWP_DB::instance()->query( $sql );
+        $wpsite_fields = array( 'id', 'name', 'url', 'adminname' );
+        $sync_fields   = array( 'sync_errors', 'dtsSync' );
+        $websites      = MainWP_DB::instance()->query(
+            MainWP_DB::instance()->get_sql_websites_for_current_user_by_params(
+                array(
+                    'select_wp_fields'   => $wpsite_fields,
+                    'select_sync_fields' => $sync_fields,
+                )
+            )
+        );
 
         $count_connected    = 0;
         $count_disconnected = 0;
@@ -163,9 +171,9 @@ class MainWP_Connection_Status { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     <div id="widget-connect-status-dropdown-selector" class="ui dropdown top right tiny pointing not-auto-init mainwp-dropdown-tab">
                         <i class="vertical ellipsis icon"></i>
                         <div class="menu">
-                            <a class="item" data-tab="all-sites" data-value="all-sites" data-position="left center" data-inverted="" data-tooltip="<?php esc_attr_e( 'See all child sites', 'mainwp' ); ?>" href="#"><?php esc_html_e( 'All Sites', 'mainwp' ); ?></a>
-                            <a class="item" data-tab="connected" data-value="connected" data-position="left center" data-inverted="" data-tooltip="<?php esc_attr_e( 'See all connected child sites', 'mainwp' ); ?>" href="#"><?php esc_html_e( 'Connected', 'mainwp' ); ?></a>
-                            <a class="item" data-tab="disconnected" data-value="disconnected" data-position="left center" data-inverted="" data-tooltip="<?php esc_attr_e( 'See all disconnected child sites', 'mainwp' ); ?>" href="#"><?php esc_html_e( 'Disconnected', 'mainwp' ); ?></a>
+                            <a class="item" data-tab="all-sites" data-value="all-sites" data-position="left center" data-inverted="" data-tooltip="<?php esc_attr_e( 'View all child sites', 'mainwp' ); ?>" href="#"><?php esc_html_e( 'All Sites', 'mainwp' ); ?></a>
+                            <a class="item" data-tab="connected" data-value="connected" data-position="left center" data-inverted="" data-tooltip="<?php esc_attr_e( 'View all connected child sites', 'mainwp' ); ?>" href="#"><?php esc_html_e( 'Connected', 'mainwp' ); ?></a>
+                            <a class="item" data-tab="disconnected" data-value="disconnected" data-position="left center" data-inverted="" data-tooltip="<?php esc_attr_e( 'View all disconnected child sites', 'mainwp' ); ?>" href="#"><?php esc_html_e( 'Disconnected', 'mainwp' ); ?></a>
                             <a class="item" data-tab="no-sites" data-value="no-sites" data-inverted="" data-position="left center" data-tooltip="<?php esc_attr_e( 'Hide the child sites list', 'mainwp' ); ?>" href="#"><?php esc_html_e( 'Hide Details', 'mainwp' ); ?></a>
                         </div>
                     </div>
@@ -221,11 +229,6 @@ class MainWP_Connection_Status { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     <div class="header">
                         <span class="ui large text"><i class="ui een check icon"></i> <?php echo esc_html( MainWP_Utility::short_number_format( $count_connected ) ); ?></span>
                     </div>
-                    <div class="meta">
-                        <div class="ui tiny progress mainwp-site-status-progress" id="" data-total="<?php echo esc_attr( $count_total ); ?>" data-value="<?php echo esc_attr( $count_connected ); ?>">
-                            <div class="green bar"></div>
-                        </div>
-                    </div>
                     <div class="description"><strong><?php esc_html_e( 'Connected Sites', 'mainwp' ); ?></strong></div>
                 </div>
             </div>
@@ -234,18 +237,10 @@ class MainWP_Connection_Status { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     <div class="header">
                         <span class="ui large text"><i class="ui unlink icon"></i> <?php echo esc_html( MainWP_Utility::short_number_format( $count_disconnected ) ); ?></span>
                     </div>
-                    <div class="meta">
-                        <div class="ui tiny progress mainwp-site-status-progress" id="" data-total="<?php echo esc_attr( $count_total ); ?>" data-value="<?php echo esc_attr( $count_disconnected ); ?>">
-                            <div class="red bar"></div>
-                        </div>
-                    </div>
                     <div class="description"><strong><?php esc_html_e( 'Disconnected Sites', 'mainwp' ); ?></strong></div>
                 </div>
             </div>
         </div>
-        <script type="text/javascript">
-            jQuery('.mainwp-site-status-progress').progress();
-        </script>
         <?php
     }
 

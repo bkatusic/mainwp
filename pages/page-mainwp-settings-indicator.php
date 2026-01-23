@@ -180,6 +180,7 @@ class MainWP_Settings_Indicator { // phpcs:ignore Generic.Classes.OpeningBraceSa
             'mainwp_site_is_ignoreCoreUpdates'           => 0,
             'mainwp_site_is_ignorePluginUpdates'         => 0,
             'mainwp_site_is_ignoreThemeUpdates'          => 0,
+            'mainwp_site_is_ignore_trans_updates'        => 0,
             'mainwp_site_monitoring_notification_emails' => '',
             'mainwp_site_disable_health_check'           => 0,
             'mainwp_site_verify_certificate'             => 2,
@@ -205,6 +206,7 @@ class MainWP_Settings_Indicator { // phpcs:ignore Generic.Classes.OpeningBraceSa
             'mainwp_edit_monitor_maxretries_global'      => 1,
             'mainwp_edit_monitor_monitoring_emails'      => '',
             'mainwp_check_http_response_method'          => 'head',
+            'mainwp_warm_cache_pages_ttl'                => 10,
         );
 
         if ( 'all' === $field ) {

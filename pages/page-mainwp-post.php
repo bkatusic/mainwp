@@ -629,7 +629,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-manage-posts-info-message' ) ) : ?>
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-manage-posts-info-message"></i>
-                            <?php printf( esc_html__( 'Manage existing posts on your child sites.  Here you can edit, view and delete pages.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/manage-posts/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
+                            <?php printf( esc_html__( 'Manage existing posts on your child sites.  Here you can edit, view and delete pages.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/content/manage-posts" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
                         </div>
                     <?php endif; ?>
                     <?php static::render_table( true ); ?>
@@ -925,8 +925,8 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         <div id="mainwp-message-zone"></div>
 
         <div id="mainwp-loading-posts-row" style="display: none;">
-            <div class="ui active inverted dimmer">
-                <div class="ui indeterminate large text loader"><?php esc_html_e( 'Loading Posts...', 'mainwp' ); ?></div>
+            <div class="ui active dimmer">
+                <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
             </div>
         </div>
 
@@ -1046,7 +1046,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             setTimeout(() => { // to fix.
                                 jQuery( '#mainwp-posts-table-wrapper table .ui.dropdown' ).dropdown();
                                 jQuery( '#mainwp-posts-table-wrapper table .ui.checkbox' ).checkbox();
-                                mainwp_datatable_fix_menu_overflow();
+                                mainwp_datatable_fix_menu_overflow('#mainwp-posts-table');
                                 mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
                             }, 1000);
                         },
@@ -1068,11 +1068,10 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             .to$().find('td.check-column .ui.checkbox' ).checkbox('set unchecked');
                         }
                     }).on( 'columns-reordered', function () {
-                        console.log('columns-reordered');
                         setTimeout(() => { // to fix.
                             jQuery( '#mainwp-posts-table .ui.dropdown' ).dropdown();
                             jQuery( '#mainwp-posts-table .ui.checkbox' ).checkbox();
-                            mainwp_datatable_fix_menu_overflow();
+                            mainwp_datatable_fix_menu_overflow('#mainwp-posts-table');
                             mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
                         }, 1000);
                     });
@@ -1606,10 +1605,10 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         ?>
 
         <div class="two column row" id="mainwp-metaform-row">
-            <div class="column">
+            <div class="column field">
                 <label for="<?php echo esc_attr( $meta_key_input_id ); ?>"><?php esc_html_e( 'Name', 'mainwp' ); ?></label>
                 <?php if ( $keys ) { ?>
-                    <select id="metakeyselect" name="metakeyselect">
+                    <select id="metakeyselect" name="metakeyselect" class="ui dropdown">
                         <option value="#NONE#"><?php esc_html_e( '&mdash; Select &mdash;', 'mainwp' ); ?></option>
                         <?php
                         foreach ( $keys as $key ) {
@@ -1620,10 +1619,11 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         }
                         ?>
                     </select>
-                    <input class="hide-if-js" type="text" id="metakeyinput" name="metakeyinput" value="" />
-                    <a href="#postcustomstuff" class="hide-if-no-js" onclick="jQuery( '#metakeyinput, #metakeyselect, #enternew, #cancelnew' ).toggle();return false;">
+                    <input style="display:none;" type="text" id="metakeyinput" name="metakeyinput" value="" />
+                    <br/>
+                    <a href="#postcustomstuff" class="ui mini basic grey button" onclick="jQuery('div.ui.dropdown:has(#metakeyselect), #metakeyinput, #enternew, #cancelnew').toggle();return false;">
                         <span id="enternew"><?php esc_html_e( 'Enter new', 'mainwp' ); ?></span>
-                        <span id="cancelnew" class="hidden"><?php esc_html_e( 'Cancel', 'mainwp' ); ?></span>
+                        <span id="cancelnew" style="display:none;"><?php esc_html_e( 'Cancel', 'mainwp' ); ?></span>
                     </a>
                 <?php } else { ?>
                     <input type="text" id="metakeyinput" name="metakeyinput" value="" />
@@ -1634,6 +1634,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 <textarea id="metavalue" name="metavalue" rows="2" cols="25"></textarea>
             </div>
         </div>
+        <div class="ui divider"></div>
         <div class="two column row">
             <div class="column">
                 <input type="button" onclick="mainwp_post_newmeta_submit( 'add' )" class="ui mini button" value="<?php esc_attr_e( 'Add Custom Field', 'mainwp' ); ?>">
@@ -1654,26 +1655,31 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      */
     public static function post_custom_meta_box( $post ) {
         ?>
-        <div class="ui secondary segment">
-            <div class="ui header"><?php esc_html_e( 'Custom Fields', 'mainwp' ); ?></div>
-            <div class="ui grid">
-            <?php
-            $metadata = has_meta( $post->ID );
-            foreach ( $metadata as $key => $value ) {
-                if ( is_protected_meta( $metadata[ $key ]['meta_key'], 'post' ) || ! current_user_can( 'edit_post_meta', $post->ID, $metadata[ $key ]['meta_key'] ) ) {
-                    unset( $metadata[ $key ] );
+        <div class="ui fluid accordion mainwp-sidebar-accordion" style="background:none!important;">
+            <div class="title active" style="background:none!important;">
+                <i class="dropdown icon"></i>
+                <?php esc_html_e( 'Custom Fields', 'mainwp' ); ?>
+            </div>
+            <div class="content active" style="background:none!important;">
+                <div class="ui grid">
+                <?php
+                $metadata = has_meta( $post->ID );
+                foreach ( $metadata as $key => $value ) {
+                    if ( is_protected_meta( $metadata[ $key ]['meta_key'], 'post' ) || ! current_user_can( 'edit_post_meta', $post->ID, $metadata[ $key ]['meta_key'] ) ) {
+                        unset( $metadata[ $key ] );
+                    }
                 }
-            }
 
-            $count = 0;
-            if ( $metadata ) {
-                foreach ( $metadata as $entry ) {
-                    echo static::list_meta_row( $entry, $count ); // phpcs:ignore WordPress.Security.EscapeOutput
+                $count = 0;
+                if ( $metadata ) {
+                    foreach ( $metadata as $entry ) {
+                        echo static::list_meta_row( $entry, $count ); // phpcs:ignore WordPress.Security.EscapeOutput
+                    }
                 }
-            }
 
-            static::meta_form( $post );
-            ?>
+                static::meta_form( $post );
+                ?>
+                </div>
             </div>
         </div>
         <?php
@@ -2131,9 +2137,9 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         <div class="ui message info">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-create-new-bulkpost-info-message"></i>
                             <?php if ( 'bulkpost' === $post_type ) : ?>
-                                <?php printf( esc_html__( 'Create a new bulk post. Scheduling posts on Child Sites is almost the same as publishing it. The only difference is before clicking the Publish button is setting it to Scheduled status and setting the time. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/create-a-new-post/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
+                                <?php printf( esc_html__( 'Create a new bulk post. Scheduling posts on Child Sites is almost the same as publishing it. The only difference is before clicking the Publish button is setting it to Scheduled status and setting the time. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/content/manage-posts#create-a-new-post" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
                             <?php else : ?>
-                                <?php printf( esc_html__( 'Create a new bulk page. Scheduling pages on Child Sites is almost the same as publishing it. The only difference is before clicking the Publish button is setting it to Scheduled status and setting the time. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/create-a-new-page/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
+                                <?php printf( esc_html__( 'Create a new bulk page. Scheduling pages on Child Sites is almost the same as publishing it. The only difference is before clicking the Publish button is setting it to Scheduled status and setting the time. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/content/manage-pages#create-a-new-page" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
                             <?php endif; ?>
                         </div>
                         <?php endif; ?>
@@ -2302,7 +2308,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         );
                         MainWP_UI_Select_Sites::select_sites_box( $sel_params );
                         ?>
-                        <input type="hidden" name="select_sites_nonce" id="select_sites_nonce" value="<?php echo esc_attr( wp_create_nonce( 'select_sites_' . $post->ID ) ); ?>" />
+                        <input type="hidden" name="select_sites_nonce" value="<?php echo esc_attr( wp_create_nonce( 'select_sites_' . $post->ID ) ); ?>" />
                     </div>
                     </div>
                     <div class="ui fitted divider"></div>
@@ -2356,8 +2362,8 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 } );
             } );
             </script>
-            <div class="ui active inverted dimmer" id="mainwp-publish-dimmer" style="display:none">
-                <div class="ui text loader"><?php esc_html_e( 'Publishing...', 'mainwp' ); ?></div>
+            <div class="ui active page dimmer" id="mainwp-publish-dimmer" style="display:none">
+                <div class="ui double text loader"><?php esc_html_e( 'Publishing...', 'mainwp' ); ?></div>
             </div>
             <div class="ui clearing hidden divider"></div>
         </div>
@@ -2393,7 +2399,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         }
         ?>
             <div class="content active">
-            <input type="hidden" name="post_category_nonce" id="post_category_nonce" value="<?php echo esc_attr( wp_create_nonce( 'post_category_' . $post->ID ) ); ?>" />
+            <input type="hidden" name="post_category_nonce" value="<?php echo esc_attr( wp_create_nonce( 'post_category_' . $post->ID ) ); ?>" />
             <div class="field">
                 <div class="ui checkbox">
                     <input type="checkbox" name="post_only_existing" id="post_only_existing" value="1" <?php echo $post_only ? 'checked' : ''; ?>>
@@ -2479,7 +2485,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         }
         ?>
             <div class="content active">
-            <input type="hidden" name="post_category_nonce" id="post_category_nonce" value="<?php echo esc_attr( wp_create_nonce( 'post_category_' . $post->ID ) ); ?>" />
+            <input type="hidden" name="post_category_nonce" value="<?php echo esc_attr( wp_create_nonce( 'post_category_' . $post->ID ) ); ?>" />
             <div class="field">
                 <div class="ui checkbox">
                     <input type="checkbox" name="post_only_existing" id="post_only_existing" value="1" <?php echo $post_only ? 'checked' : ''; ?>>
@@ -2733,12 +2739,12 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             ?>
             <p><?php esc_html_e( 'If you need help with managing posts, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-posts/" target="_blank">Manage Posts</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-posts/#create-a-new-post" target="_blank">Create a New Post</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-posts/#edit-an-existing-post" target="_blank">Edit an Existing Post</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-posts/#change-status-of-an-existing-post" target="_blank">Change Status of an Existing Post</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-posts/#view-an-existing-post" target="_blank">View an Existing Post</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-posts/#delete-post" target="_blank">Delete Post(s)</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/content/manage-posts" target="_blank">Manage Posts</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/content/manage-posts#create-a-new-post" target="_blank">Create a New Post</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/content/manage-posts#edit-an-existing-post" target="_blank">Edit an Existing Post</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/content/manage-posts#change-post-status" target="_blank">Change Status of an Existing Post</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/content/manage-posts#view-existing-posts" target="_blank">View an Existing Post</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/content/manage-posts#delete-posts" target="_blank">Delete Post(s)</a></div>
                 <?php
                 /**
                  * Action: mainwp_posts_help_item

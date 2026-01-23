@@ -141,6 +141,8 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
 
         MainWP_Logger::instance()->debug( ' :: trying Visit :: [url=' . $url . ']' );
 
+        $http_version = false;
+
         $disabled_functions = ini_get( 'disable_functions' );
         if ( empty( $disabled_functions ) || ( stristr( $disabled_functions, 'curl_multi_exec' ) === false ) ) {
             MainWP_Logger::instance()->debug( ' :: trying Visit :: curl_multi_exec => enabled.' );
@@ -155,6 +157,10 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                     $err         = curl_error( $info['handle'] );
                     $http_status = curl_getinfo( $info['handle'], CURLINFO_HTTP_CODE );
                     $realurl     = curl_getinfo( $info['handle'], CURLINFO_EFFECTIVE_URL );
+                    if ( defined( 'CURLINFO_HTTP_VERSION' ) ) {
+                        $http_version = curl_getinfo( $info['handle'], CURLINFO_HTTP_VERSION );
+                    }
+
                     curl_multi_remove_handle( $mh, $info['handle'] );
                 }
                 usleep( 10000 );
@@ -169,6 +175,11 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             $err         = curl_error( $ch );
             $http_status = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
             $realurl     = curl_getinfo( $ch, CURLINFO_EFFECTIVE_URL );
+
+            if ( defined( 'CURLINFO_HTTP_VERSION' ) ) {
+                $http_version = curl_getinfo( $ch, CURLINFO_HTTP_VERSION );
+            }
+
             if ( 'resource' === gettype( $ch ) ) {
                 curl_close( $ch );
             }
@@ -225,6 +236,7 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             'host'           => $host,
             'httpCode'       => $http_status,
             'httpCodeString' => MainWP_Utility::get_http_codes( $http_status ),
+            'httpVersion'    => $http_version,
         );
 
         $hidden_data = '[hidden response data]';
@@ -233,7 +245,7 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             $data = $hidden_data;
         }
 
-        MainWP_Logger::instance()->debug( ' :: tryVisit :: [url=' . $url . '] [http_status=' . $http_status . '] [error=' . $err . '] [data-start]' . $data . '[data-end]' );
+        MainWP_Logger::instance()->debug( ' :: tryVisit :: [url=' . $url . '] [http_status=' . $http_status . '] [http_version=' . ( false === $http_version ? 'N/A' : MainWP_System_Utility::get_http_version_const_str( $http_version ) ) . '] [error=' . $err . '] [data-start]' . $data . '[data-end]' );
 
         if ( false !== $ip ) {
             $out['ip'] = $ip;
@@ -271,25 +283,29 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
      * @return bolean True|False.
      */
     public static function check_ignored_http_code( $value, $website = false ) {
-        $value = (int) $value;
-        if ( 200 === $value ) {
-            return true;
-        }
-
-        if ( ! is_object( $website ) || empty( $website->id ) ) {
-            return false;
-        }
+        $value           = (int) $value;
+        $site_id         = is_object( $website ) && ! empty( $website->id ) ? $website->id : 0;
+        $global_settings = MainWP_Uptime_Monitoring_Handle::get_global_monitoring_settings();
 
         $ignored_code = '';
-        if ( ! property_exists( $website, 'monitor_id' ) ) {
-            $primary_monitor = MainWP_DB_Uptime_Monitoring::instance()->get_monitor_by( $site_id, 'issub', 0 );
 
+        if ( $site_id ) {
+
+            $primary_monitor = MainWP_DB_Uptime_Monitoring::instance()->get_monitor_by( $site_id, 'issub', 0 );
+            $global_settings = MainWP_Uptime_Monitoring_Handle::get_global_monitoring_settings();
+
+            $mo_active = 0;
             if ( $primary_monitor ) {
-                $global_settings = MainWP_Uptime_Monitoring_Handle::get_global_monitoring_settings();
-                $ignored_code    = MainWP_Uptime_Monitoring_Connect::instance()->get_up_codes( $primary_monitor, $global_settings );
-            } else {
-                return false;
+                $mo_active = MainWP_Uptime_Monitoring_Connect::get_apply_setting( 'active', (int) $primary_monitor->active, $global_settings, -1, 0 );
             }
+
+            if ( $mo_active ) {
+                $ignored_code = MainWP_Uptime_Monitoring_Connect::instance()->get_up_codes( $primary_monitor, $global_settings );
+            } else {
+                $ignored_code = is_array( $global_settings ) && isset( $global_settings['up_status_codes'] ) ? $global_settings['up_status_codes'] : '';
+            }
+        } else {
+            $ignored_code = ! empty( $global_settings['up_status_codes'] ) ? $global_settings['up_status_codes'] : '';
         }
 
         if ( ! empty( $ignored_code ) ) {
@@ -873,6 +889,7 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             curl_setopt( $ch, CURLOPT_POSTFIELDS, $postdata );
             curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 10 );
             curl_setopt( $ch, CURLOPT_USERAGENT, $agent );
+            curl_setopt( $ch, CURLOPT_REFERER, get_option( 'siteurl' ) );
             curl_setopt( $ch, CURLOPT_ENCODING, 'none' );
             if ( ! empty( $http_user ) && ! empty( $http_pass ) ) {
                 $http_pass = stripslashes( $http_pass );
@@ -1153,6 +1170,40 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             return MainWP_Demo_Handle::get_instance()->handle_action_demo( $website, $what );
         }
 
+        /**
+         * Filter to mock fetch_url_authed response before any HTTP/signing occurs.
+         *
+         * This filter fires early, before OpenSSL signing or HTTP requests, allowing
+         * tests to bypass child site communication entirely.
+         *
+         * SECURITY WARNING - TEST ONLY:
+         * This filter ONLY fires when ALL of the following conditions are met:
+         * 1. MAINWP_TESTING_MODE constant is defined and true
+         * 2. A PHPUnit test harness constant is present (WP_TESTS_DOMAIN, PHPUNIT_COMPOSER_INSTALL, or WP_TESTS_DIR)
+         *
+         * This triple-check prevents malicious code from defining MAINWP_TESTING_MODE
+         * in production to spoof child site responses.
+         *
+         * IMPORTANT: MAINWP_TESTING_MODE must ONLY be defined in the PHPUnit bootstrap
+         * file (tests/bootstrap.php). Defining it in production code, wp-config.php, or
+         * plugin files would create a security vulnerability allowing response spoofing.
+         *
+         * @since 5.4
+         *
+         * @param mixed  $pre_result Return non-false to short-circuit and return this value.
+         * @param object $website    Website object being communicated with.
+         * @param string $what       Action being performed (e.g., 'plugin_action').
+         * @param array  $params     Request parameters.
+         * @return mixed Array to return early, false to proceed normally.
+         */
+        $is_phpunit_env = defined( 'WP_TESTS_DOMAIN' ) || defined( 'PHPUNIT_COMPOSER_INSTALL' ) || ( defined( 'WP_TESTS_DIR' ) && WP_TESTS_DIR );
+        if ( defined( 'MAINWP_TESTING_MODE' ) && MAINWP_TESTING_MODE && $is_phpunit_env ) {
+            $pre_result = apply_filters( 'mainwp_fetch_url_authed_pre', false, $website, $what, $params );
+            if ( false !== $pre_result ) {
+                return $pre_result;
+            }
+        }
+
         if ( ! is_array( $params ) ) {
             $params = array();
         }
@@ -1208,9 +1259,16 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         $others['function'] = $what;
 
         $information = array();
+        $output      = array();
 
         if ( ! $request_update ) {
-            $information = static::fetch_url( $website, $website->url, $postdata, $checkConstraints, $website->verify_certificate, $pRetryFailed, $website->http_user, $website->http_pass, $website->ssl_version, $others );
+            $information = static::fetch_url( $website, $website->url, $postdata, $checkConstraints, $website->verify_certificate, $pRetryFailed, $website->http_user, $website->http_pass, $website->ssl_version, $others, $output );
+            if ( ! empty( $output ) ) {
+                if ( ! is_array( $information ) ) {
+                    $information = array();
+                }
+                $information['fetch_url_output'] = $output;
+            }
             /**
              * Fires immediately after fetch url action.
              *
@@ -1251,6 +1309,12 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                 MainWP_Monitoring_Handler::handle_check_website( $website, true );
             }
         }
+
+        if ( $updating_website || in_array( $what, array( 'installplugintheme', 'stats' ) ) ) { // Invalidate cache for installation and synchronization actions.
+            MainWP_Cache_Helper::invalidate_cache_group( MainWP_Cache_Helper::CGR_UPDATES );
+            MainWP_Cache_Helper::invalidate_cache_group( MainWP_Cache_Helper::CGR_SYNC_DATA );
+        }
+        MainWP_Cache_Warm_Helper::invalidate_pages_by_site_actions( $what );
 
         return $information;
     }
@@ -1401,6 +1465,28 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         $others = array(),
         &$output = array()
     ) {
+
+        /**
+         * Enables data to be returned prior to connecting to the site.
+         *
+         * @since 5.5
+         *
+         * @param  mixed false
+         * @param  mixed $website
+         * @param  mixed $url
+         * @param  mixed $postdata
+         * @param  mixed $checkConstraints
+         * @param  mixed $verifyCertificate
+         * @param  mixed $http_user
+         * @param  mixed $http_pass
+         * @param  mixed $sslVersion
+         * @param  mixed $others
+         * @param  mixed $output
+         */
+        $dev_data = apply_filters( 'mainwp_dev_return_data_before_connect_site', false, $website, $url, $postdata, $checkConstraints, $verifyCertificate, $http_user, $http_pass, $sslVersion, $others, $output );
+        if ( false !== $dev_data ) {
+            return $dev_data;
+        }
 
         $agent = 'Mozilla/5.0 (compatible; MainWP/' . MainWP_System::$version . '; +http://mainwp.com)';
 
@@ -1600,6 +1686,10 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             $hidden_data = $data;
         }
 
+        if ( ! is_array( $output ) ) {
+            $output = array();
+        }
+
         $output['fetch_data'] = $hidden_data;
 
         $output['http_status'] = (int) $http_status;
@@ -1615,20 +1705,33 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
 
         if ( ( false === $data ) && empty( $http_status ) ) {
             MainWP_Logger::instance()->debug_for_website( $website, 'fetch_url', '[' . $url . '] HTTP Error: [status=0][' . $err . ']' );
-            $thr_error = new MainWP_Exception( 'HTTPERROR', $err ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+            $thr_error                = new MainWP_Exception( 'HTTPERROR', $err ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+            $output['error_category'] = 'http_error';
         } elseif ( empty( $data ) && ! empty( $err ) ) {
             MainWP_Logger::instance()->debug_for_website( $website, 'fetch_url', '[' . $url . '] HTTP Error: [status=' . $http_status . '][' . $err . ']' );
-            $thr_error = new MainWP_Exception( 'HTTPERROR', $err ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+            $thr_error                = new MainWP_Exception( 'HTTPERROR', $err ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+            $output['error_category'] = 'http_error';
+            $output['error_code']     = 'http_request_failed';
+            $output['error_message']  = $err;
         } elseif ( 0 < preg_match( '/<mainwp>(.*)<\/mainwp>/', $data, $results ) ) {
-            $result      = $results[1];
-            $information = MainWP_System_Utility::get_child_response( base64_decode( $result ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
+            $output['connection_step'] = 'verify_credentials';
+            $result                    = $results[1];
+            $information               = MainWP_System_Utility::get_child_response( base64_decode( $result ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
             unset( $output['fetch_data'] ); // hide the data.
             $pdt      = is_string( $postdata ) ? $postdata : '';
             $data_log = is_array( $postdata ) ? print_r( $postdata, true ) : $pdt;  //phpcs:ignore -- good.
             MainWP_Logger::instance()->debug_for_website( $website, 'fetch_url_site', '[' . $url . '] postdata [' . $data_log . '] information: [OK]' ); //phpcs:ignore -- ok.
+
+            $error_code = is_array( $information ) && isset( $information['error_code'] ) ? sanitize_text_field( wp_unslash( $information['error_code'] ) ) : '';
+            if ( ! empty( $error_code ) ) {
+                $output['child_error_code'] = $error_code;
+            }
             return $information;
         } elseif ( 200 === (int) $http_status && ! empty( $err ) ) {
-            $thr_error = new MainWP_Exception( 'HTTPERROR', $err ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+            $thr_error                = new MainWP_Exception( 'HTTPERROR', $err ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+            $output['error_category'] = 'http_error';
+            $output['error_code']     = 'http_request_failed';
+            $output['error_message']  = $err;
         } elseif ( $raw_response ) {
             MainWP_Logger::instance()->debug_for_website( $website, 'fetch_url_site', 'Response: [RAW]' );
             return $data;
@@ -1636,10 +1739,14 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             MainWP_Logger::instance()->debug_for_website( $website, 'fetch_url', '[' . $url . '] Error: NOMAINWP [data=' . $hidden_data . ']' );
             $detect_wsidchk = is_string( $data ) ? strpos( $data, 'wsidchk' ) : false;
             if ( false !== $detect_wsidchk ) {
-                $thr_error = new MainWP_Exception( 'ERROR:Connection Failed. We suspect that Imunify360, a security layer added by your host, is causing this problem. Please contact your host to whitelist your Dashboard IP in their system. If you need help determining your MainWP Dashboard site IP address, check with your hosting provider.', $url );
+                $err_msg   = 'Connection Failed. We suspect that Imunify360, a security layer added by your host, is causing this problem. Please contact your host to whitelist your Dashboard IP in their system. If you need help determining your MainWP Dashboard site IP address, check with your hosting provider.';
+                $thr_error = new MainWP_Exception( 'ERROR:' . $err_msg, $url );
             } else {
                 $thr_error = new MainWP_Exception( 'NOMAINWP', $url ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+                $err_msg   = 'Connection Failed. Please ensure that the MainWP Child plugin is installed and activated on the child site.';
             }
+            $output['error_category'] = 'child_plugin_missing';
+            $output['error_message']  = $err_msg;
         }
 
         if ( null !== $thr_error ) {

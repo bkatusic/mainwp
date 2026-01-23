@@ -1020,7 +1020,7 @@ mainwp_managebackups_update = function () {
     }
     let selected_groups = [];
     let selected_sites = [];
-    if (jQuery('#select_by').val() == 'site') {
+    if (jQuery('input[name="select_by"]').val() == 'site') {
         jQuery("input[name='selected_sites[]']:checked").each(function () {
             selected_sites.push(jQuery(this).val());
         });
@@ -1089,7 +1089,7 @@ mainwp_managebackups_add = function () {
     }
     let selected_sites = [];
     let selected_groups = [];
-    if (jQuery('#select_by').val() == 'site') {
+    if (jQuery('input[name="select_by"]').val() == 'site') {
         jQuery("input[name='selected_sites[]']:checked").each(function () {
             selected_sites.push(jQuery(this).val());
         });
@@ -1105,7 +1105,6 @@ mainwp_managebackups_add = function () {
         }
     }
 
-    console.log(errors);
 
     if (errors.length > 0) {
         feedback('mainwp-message-zone', errors.join('<br />'), 'red');
@@ -1272,7 +1271,6 @@ managebackups_pause = function (element) {
 jQuery(document).on('click', '#updatesoverview-backup-ignore', function () {
     if (updatesoverviewContinueAfterBackup != undefined) {
         mainwpPopup('#updatesoverview-backup-box').close();
-        console.log(updatesoverviewContinueAfterBackup);
         updatesoverviewContinueAfterBackup();
         updatesoverviewContinueAfterBackup = undefined;
     }

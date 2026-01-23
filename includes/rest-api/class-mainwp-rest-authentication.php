@@ -13,8 +13,38 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * REST API authentication class.
+ *
+ * This class handles authentication for MainWP's custom REST API endpoints.
+ * It supports Basic Authentication, OAuth 1.0a, and Bearer Token authentication.
+ *
+ * IMPORTANT: This authentication is ONLY applied to MainWP REST endpoints
+ * (namespaces starting with 'mainwp/' or 'mainwp-'). Other REST APIs,
+ * including the WordPress Abilities API (wp-abilities/v1/abilities/mainwp/...),
+ * use their own native WordPress authentication and MUST NOT be intercepted
+ * by MainWP's REST authentication. See is_request_to_rest_api() for details.
  */
 class MainWP_REST_Authentication { //phpcs:ignore -- NOSONAR - maximumMethodThreshold.
+
+    /**
+     * MainWP REST API namespace prefix.
+     *
+     * Used to identify requests that should be authenticated by MainWP's REST auth system.
+     * This prefix matches routes like /wp-json/mainwp/v2/sites but NOT routes like
+     * /wp-json/wp-abilities/v1/abilities/mainwp/list-sites-v1 (which use native WP auth).
+     *
+     * @var string
+     */
+    const MAINWP_REST_NAMESPACE = 'mainwp/';
+
+    /**
+     * MainWP extension REST API namespace prefix.
+     *
+     * Used to allow third-party MainWP extensions to use MainWP's REST auth.
+     * Matches routes like /wp-json/mainwp-extension/v1/...
+     *
+     * @var string
+     */
+    const MAINWP_EXTENSION_REST_NAMESPACE = 'mainwp-';
 
     //phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared
 
@@ -87,9 +117,27 @@ class MainWP_REST_Authentication { //phpcs:ignore -- NOSONAR - maximumMethodThre
     }
 
     /**
-     * Check if is request to our REST API.
+     * Check if this is a request to MainWP's REST API.
      *
-     * @return bool
+     * This method determines whether the current request should use MainWP's
+     * custom REST API authentication (API keys, OAuth, Bearer tokens).
+     *
+     * Returns TRUE for:
+     *   - /wp-json/mainwp/v2/sites (MainWP core REST API)
+     *   - /wp-json/mainwp-extension/v1/foo (MainWP extension REST APIs)
+     *
+     * Returns FALSE for:
+     *   - /wp-json/wp-abilities/v1/abilities/mainwp/list-sites-v1 (Abilities API)
+     *   - /wp-json/wp/v2/posts (WordPress core REST API)
+     *   - Any other REST endpoint not starting with 'mainwp/' or 'mainwp-'
+     *
+     * IMPORTANT: The Abilities API endpoints contain 'mainwp' in their path
+     * (as the ability provider namespace) but MUST use native WordPress
+     * authentication (cookie auth, application passwords, etc.) - NOT MainWP's
+     * API key system. This method's exact prefix matching ensures Abilities
+     * endpoints are excluded.
+     *
+     * @return bool True if request is to MainWP REST API, false otherwise.
      */
     protected function is_request_to_rest_api() {
         if ( empty( $_SERVER['REQUEST_URI'] ) ) {
@@ -99,12 +147,23 @@ class MainWP_REST_Authentication { //phpcs:ignore -- NOSONAR - maximumMethodThre
         $rest_prefix = trailingslashit( rest_get_url_prefix() );
         $request_uri = esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) );
 
-        // Check if the request is the API endpoints.
-        $mainwp_api = ( false !== strpos( $request_uri, $rest_prefix . 'mainwp/' ) );
+        // Check if the request is to the MainWP API namespace.
+        // Use strpos with exact prefix to avoid false positives from other APIs
+        // that may have 'mainwp/' in their URL path (e.g., wp-abilities/v1/abilities/mainwp/...).
+        $mainwp_api = ( false !== strpos( $request_uri, '/' . $rest_prefix . self::MAINWP_REST_NAMESPACE ) );
 
         // Allow third party plugins use our authentication methods.
-        $extension_api = ( false !== strpos( $request_uri, $rest_prefix . 'mainwp-' ) );
+        $extension_api = ( false !== strpos( $request_uri, '/' . $rest_prefix . self::MAINWP_EXTENSION_REST_NAMESPACE ) );
 
+        /**
+         * Filter whether a request is considered to be to the MainWP REST API.
+         *
+         * IMPORTANT: Do NOT add Abilities API endpoints (wp-abilities/v1/abilities/mainwp/...)
+         * to this filter. Those endpoints use native WordPress authentication and should
+         * NOT be processed by MainWP's REST authentication system.
+         *
+         * @param bool $is_mainwp_api True if this is a MainWP REST API request.
+         */
         return apply_filters( 'mainwp_rest_is_request_to_rest_api', $mainwp_api || $extension_api );
     }
 
@@ -212,6 +271,13 @@ class MainWP_REST_Authentication { //phpcs:ignore -- NOSONAR - maximumMethodThre
     public function check_authentication_error( $error ) {
         // Pass through other errors.
         if ( ! empty( $error ) ) {
+            return $error;
+        }
+
+        // Only return MainWP auth errors for MainWP API endpoints.
+        // Other REST endpoints (e.g., wp-abilities, core WordPress) should use
+        // their own authentication mechanisms without MainWP interference.
+        if ( ! $this->is_request_to_rest_api() ) {
             return $error;
         }
 
@@ -795,9 +861,13 @@ class MainWP_REST_Authentication { //phpcs:ignore -- NOSONAR - maximumMethodThre
             case 'POST':
             case 'PUT':
             case 'PATCH':
-            case 'DELETE':
                 if ( 'write' !== $permissions && 'read_write' !== $permissions ) {
                     $msg = __( 'The API key provided does not have write permissions.', 'mainwp' );
+                }
+                break;
+            case 'DELETE':
+                if ( 'write' !== $permissions && 'read_write' !== $permissions && 'delete' !== $permissions ) {
+                    $msg = __( 'The API key provided does not have delete permissions.', 'mainwp' );
                 }
                 break;
             case 'OPTIONS':
@@ -904,9 +974,17 @@ class MainWP_REST_Authentication { //phpcs:ignore -- NOSONAR - maximumMethodThre
      *
      * @param WP_REST_Request $request Request used to generate the response.
      *
-     * @return mixed user rest data.
+     * @return bool|\WP_Error True if valid, WP_Error otherwise.
      */
     public function is_valid_permissions( $request ) {
+        // If no user is authenticated, deny permission.
+        if ( null === $this->user ) {
+            return new WP_Error(
+                'mainwp_rest_authentication_error',
+                __( 'You are not authenticated.', 'mainwp' ),
+                array( 'status' => 401 )
+            );
+        }
         return $this->check_permissions( $request->get_method() );
     }
 }

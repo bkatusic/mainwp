@@ -80,8 +80,6 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
                     return '<a href="' . esc_attr( $item[ $column_name ] ) . '" target="_blank" class="ui mini icon button"><i class="instagram grey icon"></i></a>';
                 case 'client_linkedin':
                     return '<a href="' . esc_attr( $item[ $column_name ] ) . '" target="_blank" class="ui mini icon button"><i class="linkedin grey icon"></i></a>';
-                case 'contact_name':
-                    return esc_html( $item[ $column_name ] );
                 default:
                     return $item[ $column_name ];
             }
@@ -248,7 +246,7 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
                             ?>
                         </div>
                     </div>
-                    <button class="ui tiny basic button" id="mainwp-do-clients-bulk-actions"><?php esc_html_e( 'Apply', 'mainwp' ); ?></button>
+                    <button class="ui mini basic button" id="mainwp-do-clients-bulk-actions"><?php esc_html_e( 'Apply', 'mainwp' ); ?></button>
                 </div>
                 <div class="right aligned middle aligned column">
                     <div id="mainwp-filter-clients-group" class="ui selection multiple dropdown" style="vertical-align:bottom">
@@ -268,8 +266,8 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
                             <div class="item" data-value="nogroups"><?php esc_html_e( 'No Tags', 'mainwp' ); ?></div>
                         </div>
                     </div>
-                    <button onclick="mainwp_manage_clients_filter()" class="ui mini basic button"><i class="filter icon"></i><?php esc_html_e( 'Filter Clients', 'mainwp' ); ?></button>
-                    <a href="admin.php?page=ManageClients" class="ui mini button" <?php echo $default_filter ? 'disabled="disabled"' : ''; ?>><?php esc_html_e( 'Reset Filters', 'mainwp' ); ?></a>
+                    <button onclick="mainwp_manage_clients_filter()" class="ui mini basic green button"><i class="filter icon"></i> <?php esc_html_e( 'Filter', 'mainwp' ); ?></button>
+                    <a href="admin.php?page=ManageClients" class="ui mini button" <?php echo $default_filter ? 'disabled="disabled"' : ''; ?>><i class="times icon"></i> <?php esc_html_e( 'Reset', 'mainwp' ); ?></a>
                 </div>
             </div>
         </div>
@@ -371,7 +369,7 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
         <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-client-info-message' ) ) : ?>
             <div class="ui info message">
                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-client-info-message"></i>
-                <?php printf( esc_html__( 'Manage your clients. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/manage-clients/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
+                <?php printf( esc_html__( 'Manage your clients. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/clients/manage-clients" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
             </div>
         <?php endif; ?>
         <?php
@@ -388,8 +386,8 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
             </tbody>
         </table>
         <div id="mainwp-loading-sites" style="display: none;">
-            <div class="ui active inverted dimmer">
-                <div class="ui indeterminate large text loader"><?php esc_html_e( 'Loading ...', 'mainwp' ); ?></div>
+            <div class="ui active page dimmer">
+                <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
             </div>
         </div>
         <?php MainWP_UI::render_modal_edit_notes( 'client' ); ?>
@@ -402,13 +400,14 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
             'info'          => 'true',
             'colReorder'    => '{columns:":not(.check-column):not(.manage-client_actions-column)"}',
             'stateSave'     => 'true',
-            'stateDuration' => '0',
+            'stateDuration' => '60 * 60 * 24 * 30',
             'order'         => '[]',
             'scrollX'       => 'true',
             'responsive'    => 'true',
+            'searchDelay'   => 350,
         );
 
-        /**
+        /**z
          * Filter: mainwp_clients_table_features
          *
          * Filter the Clients table features.
@@ -477,13 +476,21 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
                             items: 'row',
                             style: 'multi+shift',
                             selector: 'tr>td.check-column'
-                        }
+                        },
+                        stateSaveParams: function (settings, data) {
+                            data._mwpv = mainwpParams.mainwpVersion || 'dev';
+                        },
+                        stateLoadParams: function (settings, data) {
+                            if ((mainwpParams.mainwpVersion || 'dev') !== data._mwpv) return false;
+                        },
+                        search: { regex: false, smart: false },
+                        orderMulti: false,
+                        searchDelay: <?php echo intval( $table_features['searchDelay'] ); ?>
                     } ).on( 'columns-reordered', function () {
-                        console.log('columns-reorderede');
                         setTimeout(() => {
                             $( '#mainwp-manage-clients-table .ui.dropdown' ).dropdown();
                             $( '#mainwp-manage-clients-table .ui.checkbox' ).checkbox();
-                            mainwp_datatable_fix_menu_overflow();
+                            mainwp_datatable_fix_menu_overflow('#mainwp-manage-clients-tabl');
                         }, 1000 );
                     } ).on('select', function (e, dt, type, indexes) {
                         if( 'row' == type ){
@@ -501,7 +508,7 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
                 } catch(err) {
                     // to fix js error.
                 }
-                mainwp_datatable_fix_menu_overflow();
+                mainwp_datatable_fix_menu_overflow('#mainwp-manage-clients-table');
                 _init_manage_sites_screen = function() {
                     jQuery( '#mainwp-manage-sites-screen-options-modal input[type=checkbox][id^="mainwp_show_column_"]' ).each( function() {
                         let col_id = jQuery( this ).attr( 'id' );

@@ -426,7 +426,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
         if ( false === $show_cols ) { // to backwards.
             $show_cols = array();
             foreach ( $columns as $name => $title ) {
-                if ( in_array( $name, array( 'status', 'favicon', 'site_combo', 'update', 'client_name', 'security', 'index', 'backup', 'site_actions' ) ) ) {
+                if ( in_array( $name, array( 'status', 'favicon', 'site_combo', 'client_name', 'update', 'wpcore_version', 'security', 'index', 'backup', 'site_actions' ) ) ) {
                     $show_cols[ $name ] = 1;
                 } else {
                     $show_cols[ $name ] = 0;
@@ -449,7 +449,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
             <div class="header"><?php esc_html_e( 'Page Settings', 'mainwp' ); ?></div>
             <div class="scrolling content ui form">
                 <form method="POST" action="" id="manage-sites-screen-options-form" name="manage_sites_screen_options_form">
-                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                     <input type="hidden" name="wp_nonce" value="<?php echo esc_attr( wp_create_nonce( 'ManageSitesScrOptions' ) ); ?>" />
                     <div class="ui grid field">
                         <label class="top aligned six wide column" tabindex="0"><?php esc_html_e( 'Sites view mode', 'mainwp' ); ?></label>
@@ -517,7 +517,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                     <div class="ui grid field">
                         <label class="six wide column middle aligned"><?php esc_html_e( 'Optimize for shared hosting or big networks', 'mainwp' ); ?></label>
                         <div class="ten wide column ui toggle checkbox"  data-tooltip="<?php esc_attr_e( 'If enabled, your MainWP Dashboard will cache updates for faster loading.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
-                            <input type="checkbox" name="mainwp_optimize" id="mainwp_optimize" <?php echo 1 === (int) get_option( 'mainwp_optimize', 1 ) ? 'checked="true"' : ''; ?> /><label><?php esc_html_e( 'Default: Off', 'mainwp' ); ?></label>
+                            <input type="checkbox" name="mainwp_optimize" id="mainwp_optimize" <?php echo 1 === (int) get_option( 'mainwp_optimize', 1 ) ? 'checked="true"' : ''; ?> /><label><?php esc_html_e( 'Default: Disabled', 'mainwp' ); ?></label>
                         </div>
                     </div>
                     <div class="ui grid field">
@@ -571,12 +571,12 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                     }
                 } );
                 jQuery('#reset-managersites-settings').on( 'click', function () {
-                    mainwp_confirm(__( 'Are you sure.' ), function(){
+                    mainwp_confirm(__( 'Are you sure?' ), function(){
                         jQuery('#mainwp_sitesviewmode').dropdown( 'set selected', 'table' );
                         jQuery('input[name=mainwp_default_sites_per_page]').val(25);
                         jQuery('.mainwp_hide_wpmenu_checkboxes input[id^="mainwp_show_column_"]').prop( 'checked', false );
                         //default columns.
-                        let cols = ['status', 'favicon', 'site_combo','update','client_name', 'security', 'index', 'site_actions'];
+                        let cols = ['status', 'favicon', 'site_combo','client_name', 'update', 'wpcore_version', 'security', 'index', 'site_actions'];
                         jQuery.each( cols, function ( index, value ) {
                             jQuery('.mainwp_hide_wpmenu_checkboxes input[id="mainwp_show_column_' + value + '"]').prop( 'checked', true );
                         } );
@@ -640,7 +640,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
             ?>
             <div id="mainwp-add-new-site">
                 <form method="POST" class="ui form" action="" enctype="multipart/form-data" id="mainwp_managesites_add_form">
-                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                     <div class="ui labeled icon inverted menu mainwp-sub-submenu" id="mainwp-add-sites-tabular-menu">
                         <a class="item active" data-tab="single-site">
                             <i class="wordpress icon"></i><?php //phpcs:ignore -- WP icon. ?>
@@ -653,14 +653,18 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                             </div>
                             <?php esc_html_e( 'Multiple Sites', 'mainwp' ); ?>
                         </a>
+                        <a class="item" href="admin.php?page=managesites&do=bulknew">
+                            <i class="file upload icon"></i>
+                            <?php esc_html_e( 'Import Sites', 'mainwp' ); ?>
+                        </a>
                     </div>
                     <div class="ui bottom attached tab segment active" data-tab="single-site">
                         <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-add-site-info-message' ) ) : ?>
                             <div class="ui info message">
                                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-add-site-info-message"></i>
-                                <div><?php printf( esc_html__( 'Use the provided form to connect your websites to your MainWP Dashboard. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://kb.mainwp.com/docs/get-started-with-mainwp/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?></div>
-                                <div><?php printf( esc_html__( 'If you are experiencing issues with adding a website to your MainWP Dashboard, use the %1$sTest Connection%2$s feature to ensure that your MainWP Dashboard can communicate with your website.', 'mainwp' ), '<a href="https://mainwp.com/kb/test-connection-between-your-mainwp-dashboard-and-child-site/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?></div>
-                                <div><?php printf( esc_html__( 'If you still can not connect the site, see the list of %1$spotential issues%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/potential-issues/" target="_blank">', '</a>' ); // NOSONAR - noopener - open safe. ?></div>
+                                <div><?php printf( esc_html__( 'Use the provided form to connect your websites to your MainWP Dashboard. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/getting-started/get-started-with-mainwp" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?></div>
+                                <div><?php printf( esc_html__( 'If you are experiencing issues with adding a website to your MainWP Dashboard, use the %1$sTest Connection%2$s feature to ensure that your MainWP Dashboard can communicate with your website.', 'mainwp' ), '<a href="https://docs.mainwp.com/getting-started/get-started-with-mainwp#test-connection" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?></div>
+                                <div><?php printf( esc_html__( 'If you still can not connect the site, see the list of %1$spotential issues%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/troubleshooting/potential-issues" target="_blank">', '</a>' ); // NOSONAR - noopener - open safe. ?></div>
                             </div>
                         <?php endif; ?>
 
@@ -697,8 +701,8 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                 <i class="close icon"></i>
                 <div class="header"><?php esc_html_e( 'Connection Test', 'mainwp' ); ?></div>
                 <div class="content">
-                    <div class="ui active inverted dimmer">
-                        <div class="ui text loader"><?php esc_html_e( 'Testing connection...', 'mainwp' ); ?></div>
+                    <div class="ui active dimmer">
+                        <div class="ui double text loader"><?php esc_html_e( 'Testing...', 'mainwp' ); ?></div>
                     </div>
                     <div id="mainwp-test-connection-result" class="ui segment" style="display:none">
                         <h2 class="ui center aligned icon header">
@@ -715,8 +719,18 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
             </div>
 
             <script type="text/javascript">
-                jQuery('#mainwp-add-sites-tabular-menu .item').tab();
                 jQuery( document ).ready( function () {
+                    jQuery('#mainwp-add-sites-tabular-menu .item').tab();
+                    jQuery(document).ready(function () {
+                        // Parse query parameter
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const tabName = urlParams.get('data-tab');
+
+                        if (tabName) {
+                        // Activate tab by name
+                        jQuery('.menu .item').tab('change tab', tabName);
+                        }
+                    });
                     jQuery( '#mainwp_managesites_add_addgroups' ).dropdown( {
                         allowAdditions: true
                     } );
@@ -768,7 +782,6 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                                         }
                                     }
                                     setTimeout(function () {
-                                        //window.location.href = location.href;
                                         jQuery('#mainwp-upload-custom-icon-modal').modal('hide')
                                     }, 1000);
                                 });
@@ -965,7 +978,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                 <label class="six wide column middle aligned">
                     <?php esc_html_e( 'Tags (optional)', 'mainwp' ); ?>
                 </label>
-                <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Add the website to existing tag(s).', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                <div class="ten wide column">
                     <div class="ui multiple search selection dropdown" init-value="" id="mainwp_managesites_add_addgroups">
                         <i class="dropdown icon"></i>
                         <div class="default text"></div>
@@ -983,7 +996,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                 ?>
                 <div class="ui grid field">
                     <label class="six wide column middle aligned"><?php esc_html_e( 'Client (optional)', 'mainwp' ); ?></label>
-                    <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Add a client to the website.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                    <div class="ten wide column">
                         <div class="ui search selection dropdown" init-value="" id="mainwp_managesites_add_client_id">
                             <i class="dropdown icon"></i>
                             <div class="default text"></div>
@@ -1293,9 +1306,9 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
         }
         $data = explode( ';', $icon_data );
 
-        $uploaded = str_replace( 'uploaded:', '', $data[0] );
-        $selected = str_replace( 'selected:', '', $data[1] );
-        $color    = str_replace( 'color:', '', $data[2] );
+        $uploaded = ! empty( $data[0] ) ? str_replace( 'uploaded:', '', $data[0] ) : '';
+        $selected = ! empty( $data[1] ) ? str_replace( 'selected:', '', $data[1] ) : '';
+        $color    = ! empty( $data[2] ) ? str_replace( 'color:', '', $data[2] ) : '';
 
         if ( empty( $color ) ) {
             $color = '#34424D';
@@ -1358,28 +1371,30 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
         } else {
             ?>
             <div id="mainwp-import-sites">
-                <div class="ui labeled icon inverted menu mainwp-sub-submenu" id="mainwp-import-sites-tabular-menu">
-                    <a class="item active" data-tab="mainwp-import-csv">
-                        <i class="file excel icon"></i>
-                        <?php esc_html_e( 'CSV Import', 'mainwp' ); ?>
-                    </a>
-                </div>
                 <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-import-sites-info-message' ) ) : ?>
                     <div class="ui segment">
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-import-sites-info-message"></i>
-                            <?php printf( esc_html__( 'You can download the sample CSV file to see how to format the import file properly. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/import-sites/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
+                            <?php printf( esc_html__( 'You can download the sample CSV file to see how to format the import file properly. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/management/manage-child-sites?search=Test+Connection#import-sites-csv-import" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-import-new-sites-info-message' ) ) : ?>
+                    <div class="ui segment">
+                        <div class="ui message">
+                            <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-import-new-sites-info-message"></i>
+                            <?php printf( esc_html__( '%1$s Tip: If you\'re importing 10 or fewer sites, we recommend using the %2$sAdd Multiple Sites%3$s screen instead , it\'s faster and doesn\'t require a CSV file.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<a href="admin.php?page=managesites&do=new&data-tab=multiple-site">', '</a>' ); ?>
                         </div>
                     </div>
                 <?php endif; ?>
                 <form method="POST" action="" enctype="multipart/form-data" id="mainwp_managesites_bulkadd_form" class="ui form">
-                    <div class="ui bottom attached tab segment active" data-tab="mainwp-import-csv">
+                    <div class="ui segment">
                         <div id="mainwp-message-zone" class="ui message" style="display:none"></div>
                         <h2 class="ui dividing header">
                             <?php echo esc_html( $title_page ); ?>
                             <div class="sub header"><?php esc_html_e( 'Import multiple websites to your MainWP Dashboard.', 'mainwp' ); ?></div>
                         </h2>
-                        <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                        <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                         <div class="ui grid field">
                             <label class="three wide column middle aligned" for="mainwp_managesites_file_bulkupload"><?php esc_html_e( 'Upload CSV', 'mainwp' ); ?> (<a href="<?php echo esc_url( MAINWP_PLUGIN_URL . 'assets/csv/sample.csv' ); ?>"><?php esc_html_e( 'Download Sample', 'mainwp' ); ?></a>)</label>
                             <div class="nine wide column">
@@ -1398,9 +1413,6 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                         <input type="button" name="mainwp_managesites_add" id="mainwp_managesites_bulkadd" class="ui big green button" value="<?php echo esc_attr( $title_page ); ?>"/>
                     </div>
                 </form>
-                <script type="text/javascript">
-                    jQuery('#mainwp-import-sites-tabular-menu .item').tab();
-                </script>
             </div>
             <?php
         }
@@ -1735,7 +1747,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
         <div id="mainwp-manage-sites-content" class="ui segment">
             <div id="mainwp-message-zone" class="ui message" style="display: none;"></div>
             <form method="post" class="mainwp-table-container">
-                <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                 <?php
                 static::$sitesTable->display( $optimize_for_sites_table );
                 static::$sitesTable->clear_items();
@@ -2044,6 +2056,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                 $newValues['is_ignoreCoreUpdates']   = ! empty( $_POST['mainwp_is_ignoreCoreUpdates'] ) ? 1 : 0;
                 $newValues['is_ignorePluginUpdates'] = ! empty( $_POST['mainwp_is_ignorePluginUpdates'] ) ? 1 : 0;
                 $newValues['is_ignoreThemeUpdates']  = ! empty( $_POST['mainwp_is_ignoreThemeUpdates'] ) ? 1 : 0;
+                MainWP_DB::instance()->update_website_option( $website, 'ignored_trans_updates', ! empty( $_POST['mainwp_is_ignore_trans_updates'] ) ? 1 : 0 );
             }
 
             MainWP_DB::instance()->update_website_values( $website->id, $newValues );
@@ -2157,35 +2170,35 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                 ?>
                 <p><?php esc_html_e( 'If you need help connecting your websites, please review following help documents', 'mainwp' ); ?></p>
                 <div class="ui list">
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/get-started-with-mainwp/#install-mainwp-dashboard" target="_blank">Set up the MainWP Plugin</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/get-started-with-mainwp/#install-mainwp-child" target="_blank">Install MainWP Child</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-child-sites/#add-a-site-to-your-dashboard" target="_blank">Add a Site to your Dashboard</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-child-sites/#import-sites" target="_blank">Import Sites</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/get-started-with-mainwp#install-mainwp-dashboard" target="_blank">Set up the MainWP Plugin</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/get-started-with-mainwp#install-mainwp-child" target="_blank">Install MainWP Child</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/get-started-with-mainwp#add-a-site-to-your-dashboard" target="_blank">Add a Site to your Dashboard</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/management/manage-child-sites?search=Test+Connection#import-sites-csv-import" target="_blank">Import Sites</a></div> <?php // NOSONAR - noopener - open safe. ?>
                 </div>
                 <?php
             } elseif ( isset( $_GET['do'] ) && 'bulknew' === $_GET['do'] ) { // phpcs:ignore WordPress.Security.NonceVerification,ized
                 ?>
                 <p><?php esc_html_e( 'If you need help connecting your websites, please review following help documents', 'mainwp' ); ?></p>
                 <div class="ui list">
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/get-started-with-mainwp/#install-mainwp-dashboard" target="_blank">Set up the MainWP Plugin</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/get-started-with-mainwp/#install-mainwp-child" target="_blank">Install MainWP Child</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-child-sites/#add-a-site-to-your-dashboard" target="_blank">Add a Site to your Dashboard</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-child-sites/#import-sites" target="_blank">Import Sites</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/get-started-with-mainwp#install-mainwp-dashboard" target="_blank">Set up the MainWP Plugin</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/get-started-with-mainwp#install-mainwp-child" target="_blank">Install MainWP Child</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/get-started-with-mainwp#add-a-site-to-your-dashboard" target="_blank">Add a Site to your Dashboard</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/management/manage-child-sites?search=Test+Connection#import-sites-csv-import" target="_blank">Import Sites</a></div> <?php // NOSONAR - noopener - open safe. ?>
                 </div>
                 <?php
             } else {
                 ?>
                 <p><?php esc_html_e( 'If you need help with managing child sites, please review following help documents', 'mainwp' ); ?></p>
                 <div class="ui list">
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-child-sites/" target="_blank">Manage Child Sites</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-child-sites/#access-child-site-wp-admin" target="_blank">Access Child Site WP Admin</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-child-sites/#synchronize-a-child-site" target="_blank">Synchronize a Child Site</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-child-sites/#edit-a-child-site" target="_blank">Edit a Child Site</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-child-sites/#reconnect-a-child-site" target="_blank">Reconnect a Child Site</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-child-sites/#delete-a-child-site" target="_blank">Delete a Child Site</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-child-sites/#security-issues" target="_blank">Security Issues</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-child-sites/#manage-child-site-tags" target="_blank">Manage Child Site Tags</a></div> <?php // NOSONAR - noopener - open safe. ?>
-                    <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-child-sites/#manage-child-site-notes" target="_blank">Manage Child Site Notes</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/management/manage-child-sites" target="_blank">Manage Child Sites</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/management/manage-child-sites#access-child-site-wp-admin" target="_blank">Access Child Site WP Admin</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/management/manage-child-sites#synchronize-a-child-site" target="_blank">Synchronize a Child Site</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/management/manage-child-sites#edit-child-site-settings" target="_blank">Edit a Child Site</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/management/manage-child-sites#reconnect-a-child-site" target="_blank">Reconnect a Child Site</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/management/manage-child-sites#delete-a-child-site" target="_blank">Delete a Child Site</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/management/manage-child-sites#security-issues" target="_blank">Site Hardening</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/management/manage-child-sites#manage-child-site-tags" target="_blank">Manage Child Site Tags</a></div> <?php // NOSONAR - noopener - open safe. ?>
+                    <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/management/manage-child-sites#manage-child-site-notes" target="_blank">Manage Child Site Notes</a></div> <?php // NOSONAR - noopener - open safe. ?>
                 </div>
                 <?php
             }
@@ -2204,28 +2217,31 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
         ?>
         <?php esc_html_e( 'MainWP requires the MainWP Child plugin to be installed and activated on the WordPress sites that you want to connect to your MainWP Dashboard. ', 'mainwp' ); ?>
         <?php esc_html_e( 'To connect multiple sites, please follow these steps:', 'mainwp' ); ?>
-        <ol>
-            <li><?php esc_html_e( 'Fill in the Site URL field by entering the URL of the website you want to connect.', 'mainwp' ); ?></li>
-            <li><?php esc_html_e( 'Enter the username of your Administrator account on the site.', 'mainwp' ); ?></li>
-            <li><?php esc_html_e( 'Optionally, enter a custom Site Name, or MainWP will automatically generate a name for it.', 'mainwp' ); ?></li>
-            <li><?php esc_html_e( 'Enter the administrator account password. If the requirement is disabled in the MainWP Child plugin settings, leave blank.', 'mainwp' ); ?></li>
-        <?php if ( $is_qsw ) : ?>
-            <li><?php esc_html_e( 'To show additional fields (Tags, Security ID, HTTP Username, HTTP Password, SSL Version, and SSL Verification, click the eye icon at the end of the row.', 'mainwp' ); ?></li>
+        <div class="ui hidden divier"></div>
+        <div class="ui relaxed bulleted list">
+            <div class="item"><?php esc_html_e( 'Fill in the Site URL field by entering the URL of the website you want to connect.', 'mainwp' ); ?></div>
+            <div class="item"><?php esc_html_e( 'Enter the username of your Administrator account on the site.', 'mainwp' ); ?></div>
+            <div class="item"><?php esc_html_e( 'Optionally, enter a custom Site Name, or MainWP will automatically generate a name for it.', 'mainwp' ); ?></div>
+            <div class="item"><?php esc_html_e( 'Enter the administrator account password. If the requirement is disabled in the MainWP Child plugin settings, leave blank.', 'mainwp' ); ?></div>
+            <?php if ( $is_qsw ) : ?>
+            <div class="item"><?php esc_html_e( 'To show additional fields (Tags, Security ID, HTTP Username, HTTP Password, SSL Version, and SSL Verification, click the eye icon at the end of the row.', 'mainwp' ); ?></div>
             <?php endif; ?>
-            <li><?php esc_html_e( 'If needed, you can tag your sites in the Tag field.', 'mainwp' ); ?></li>
-            <li><?php esc_html_e( 'If you have enabled the Unique Security ID in the MainWP Child plugin settings, enter the Security ID in the corresponding field.', 'mainwp' ); ?></li>
-            <li><?php esc_html_e( 'If the website you are trying to connect is protected with HTTP Basic Auth, enter the HTTP Username & Password. If not, leave it blank.', 'mainwp' ); ?></li>
-            <li><?php esc_html_e( 'Keep the default value of "1" to verify the SSL certificate for your sites, or change it if you prefer not to verify.', 'mainwp' ); ?></li>
-            <li><?php esc_html_e( 'Leave the SSL Version as "auto" unless you know the specific version required by the site. The "auto" option typically works for most sites.', 'mainwp' ); ?></li>
-            <li><?php esc_html_e( 'Repeat this process for all sites you want to add.', 'mainwp' ); ?></li>
-            <li><?php esc_html_e( 'Use the Add New Row button to add additional rows if you need to connect more sites at once.', 'mainwp' ); ?></li>
-        <?php if ( ! $is_qsw ) : ?>
-            <li><?php esc_html_e( 'After filling in all the required information, submit the form to connect the selected sites to your MainWP Dashboard.', 'mainwp' ); ?></li>
+            <div class="item"><?php esc_html_e( 'If needed, you can tag your sites in the Tag field.', 'mainwp' ); ?></div>
+            <div class="item"><?php esc_html_e( 'If you have enabled the Unique Security ID in the MainWP Child plugin settings, enter the Security ID in the corresponding field.', 'mainwp' ); ?></div>
+            <div class="item"><?php esc_html_e( 'If the website you are trying to connect is protected with HTTP Basic Auth, enter the HTTP Username & Password. If not, leave it blank.', 'mainwp' ); ?></div>
+            <div class="item"><?php esc_html_e( 'Keep the default value of "1" to verify the SSL certificate for your sites, or change it if you prefer not to verify.', 'mainwp' ); ?></div>
+            <div class="item"><?php esc_html_e( 'Leave the SSL Version as "auto" unless you know the specific version required by the site. The "auto" option typically works for most sites.', 'mainwp' ); ?></div>
+            <div class="item"><?php esc_html_e( 'Repeat this process for all sites you want to add.', 'mainwp' ); ?></div>
+            <div class="item"><?php esc_html_e( 'Use the Add New Row button to add additional rows if you need to connect more sites at once.', 'mainwp' ); ?></div>
+            <?php if ( ! $is_qsw ) : ?>
+            <div class="item"><?php esc_html_e( 'After filling in all the required information, submit the form to connect the selected sites to your MainWP Dashboard.', 'mainwp' ); ?></div>
             <?php else : ?>
-            <li><?php esc_html_e( 'After filling in all the required information, confirm that you have the MainWP Child plugin installed and activated and click the Connect Sites button to proceed.', 'mainwp' ); ?></li>
+            <div class="item"><?php esc_html_e( 'After filling in all the required information, confirm that you have the MainWP Child plugin installed and activated and click the Connect Sites button to proceed.', 'mainwp' ); ?></div>
             <?php endif; ?>
-        </ol>
+        </div>
+        <?php if ( ! $is_qsw ) : ?>
         <span class="ui small text">* <?php esc_html_e( 'Your password is never stored by your Dashboard and never sent to MainWP.com. Once this initial connection is complete, your MainWP Dashboard generates a secure Public and Private key pair (2048 bits) using OpenSSL, allowing future connections without needing your password again. For added security, you can even change this admin password once connected, just be sure not to delete the admin account, as this would disrupt the connection.', 'mainwp' ); ?></span>
+        <?php endif; ?>
         <?php
     }
 
@@ -2461,8 +2477,8 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
             <div class="one wide column">
                 <div class="ui mini fluid input">
                     <a class="mainwp-managesites-more-import-row " onclick="mainwp_managesites_import_sites_more_row(<?php echo esc_attr( $index ); ?>)" style="margin-right: 10px !important;" href="javascript:void(0)">
-                        <i class="eye outline icon"  id="icon-visible-<?php echo esc_attr( $index ); ?>"></i>
-                        <i class="eye slash outline icon" id="icon-hidden-<?php echo esc_attr( $index ); ?>" style="<?php echo esc_attr( $display_none ); ?>"></i>
+                        <i class="caret left icon"  id="icon-visible-<?php echo esc_attr( $index ); ?>"></i>
+                        <i class="caret down icon" id="icon-hidden-<?php echo esc_attr( $index ); ?>" style="<?php echo esc_attr( $display_none ); ?>"></i>
                     </a>
                     <a class="mainwp-managesites-delete-import-row" href="javascript:void(0)" onclick="mainwp_managesites_import_sites_delete_row(<?php echo esc_attr( $index ); ?>)">
                         <i class="trash alternate outline icon"></i>
@@ -2470,7 +2486,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                 </div>
             </div>
             <?php foreach ( $optional_fields as $key_optional => $field_optional ) : ?>
-                <div class="<?php echo ( 'verify_certificate' === $key_optional || 'ssl_version' === $key_optional ) ? 'two' : 'three'; ?> wide column mainwp-managesites-import-column-more-<?php echo esc_attr( $index ); ?>" style="<?php echo esc_attr( $display_none ); ?>">
+                <div class="<?php echo ( 'verify_certificate' === $key_optional || 'ssl_version' === $key_optional ) ? 'two' : 'two'; ?> wide column mainwp-managesites-import-column-more-<?php echo esc_attr( $index ); ?>" style="<?php echo esc_attr( $display_none ); ?>">
                     <div class="">
                         <span class="ui small text"><?php echo esc_html( $field_optional['label'] ); ?></span>
                         <?php self::mainwp_managesites_form_import_sites_render_input( $index, $key_optional, $field_optional, $field, $site ); ?>

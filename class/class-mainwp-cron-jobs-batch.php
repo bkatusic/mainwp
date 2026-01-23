@@ -279,10 +279,6 @@ class MainWP_Cron_Jobs_Batch { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     * @since 4.1
                     */
                     do_action( 'mainwp_after_plugin_theme_translation_update', $information, 'plugin', implode( ',', $pluginsToUpdateNow ), $website );
-
-                    if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-                        MainWP_Sync::sync_information_array( $website, $information['sync'] );
-                    }
                 } catch ( \Exception $e ) {
                     // error.
                 }
@@ -332,10 +328,6 @@ class MainWP_Cron_Jobs_Batch { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                                 'list' => urldecode( implode( ',', $themesToUpdateNow ) ),
                             )
                         );
-
-                        if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-                            MainWP_Sync::sync_information_array( $website, $information['sync'] );
-                        }
                     } catch ( \Exception $e ) {
                         // ok.
                     }

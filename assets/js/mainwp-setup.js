@@ -12,11 +12,11 @@ jQuery(function () {
 
   jQuery('#mainwp-qsw-verify-mainwp-child-active').on('change', function () {
     if (jQuery(this).is(':checked')) {
-      jQuery('#mainwp_managesites_add').attr("disabled", false);
-      jQuery('#mainwp_managesites_add_import').attr("disabled", false);
+      jQuery('#mainwp_managesites_add').removeClass('disabled');
+      jQuery('#mainwp_managesites_add_import').removeClass('disabled');
     } else {
-      jQuery('#mainwp_managesites_add').attr("disabled", true);
-      jQuery('#mainwp_managesites_add_import').attr("disabled", true);
+      jQuery('#mainwp_managesites_add').addClass('disabled');
+      jQuery('#mainwp_managesites_add_import').addClass('disabled');
     }
   });
 
@@ -130,7 +130,7 @@ let mainwp_setup_managesites_add = function () {
   if (errors.length > 0) {
     mainwp_set_message_zone('#mainwp-message-zone', errors.join('<br />'), 'yellow');
   } else {
-    mainwp_set_message_zone('#mainwp-message-zone', 'Adding the site to your MainWP Dashboard. Please wait...', '');
+    mainwp_set_message_zone('#mainwp-message-zone', '<i class="notched circle loading icon"></i> Adding the site to your MainWP Dashboard. Please wait...', '');
     jQuery('#mainwp_managesites_add').attr('disabled', 'true'); //disable button to add..
 
     let url = jQuery('#mainwp_managesites_add_wpurl_protocol').val() + '://' + jQuery('#mainwp_managesites_add_wpurl').val().trim();
@@ -161,12 +161,12 @@ let mainwp_setup_managesites_add = function () {
       url = url.replace(/"/g, '&quot;');
 
       if (response == 'HTTPERROR') {
-        errors.push('This site can not be reached! Please use the Test Connection feature and see if the positive response will be returned. For additional help, please review <a href="https://mainwp.com/kb/">MainWP Knowledgebase</a>, and if you still have issues, please let us know in the <a href="https://community.mainwp.com/c/community-support/5">MainWP Community</a>.'); // NOSONAR - noopener - open safe.
+        errors.push('This site can not be reached! Please use the Test Connection feature and see if the positive response will be returned. For additional help, please review <a href="https://docs.mainwp.com/">MainWP Knowledgebase</a>, and if you still have issues, please let us know in the <a href="https://community.mainwp.com/c/community-support/5">MainWP Community</a>.'); // NOSONAR - noopener - open safe.
       } else if (response == 'NOMAINWP') {
         errors.push(mainwp_js_get_error_not_detected_connect());
       } else if (response.substring(0, 5) == 'ERROR') {
         if (response.length == 5) {
-          errors.push('Undefined error occurred. Please try again. If the issue does not resolve, please review <a href="https://mainwp.com/kb/">MainWP Knowledgebase</a>, and if you still have issues, please let us know in the <a href="https://community.mainwp.com/c/community-support/5">MainWP Community</a>.'); // NOSONAR - noopener - open safe.
+          errors.push('Undefined error occurred. Please try again. If the issue does not resolve, please review <a href="https://docs.mainwp.com/">MainWP Knowledgebase</a>, and if you still have issues, please let us know in the <a href="https://community.mainwp.com/c/community-support/5">MainWP Community</a>.'); // NOSONAR - noopener - open safe.
         } else {
           let error = response.substring(6);
           let err = mainwp_js_get_error_not_detected_connect(error, 'html_msg', false, true); // return text error.
@@ -244,7 +244,7 @@ let mainwp_setup_managesites_add = function () {
             });
 
             setTimeout(function () {
-              window.location.href = 'admin.php?page=mainwp-setup&step=add_client';
+              mainwp_forceReload('admin.php?page=mainwp-setup&step=add_client');
             }, 3000);
           }
 
@@ -273,8 +273,6 @@ function isUrl(url) {
 let mainwp_setup_secure_data = function (data) {
   if (data['action'] == undefined)
     return data;
-
-  data['security'] = jQuery('#nonce_secure_data').attr(data['action']);
-
+  data.security = jQuery('input[name="qsw_nonce[' + data.action + ']"]').val() || '';
   return data;
 };

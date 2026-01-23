@@ -8,7 +8,7 @@
  * Author URI: https://mainwp.com
  * Plugin URI: https://mainwp.com/
  * Text Domain: mainwp
- * Version:  5.4.1.1
+ * Version:  6.0-er.5
  *
  * @package MainWP/Dashboard
  *
@@ -118,6 +118,21 @@ require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'functions.p
 require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'core-functions.php'; // NOSONAR -- WP compatible.
 require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'compatible.php'; // NOSONAR -- WP compatible.
 require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'class-mainwp-includes.php'; // NOSONAR -- WP compatible.
+
+// Load Abilities API integration (feature-gated).
+require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities-util.php'; // NOSONAR -- WP compatible.
+require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities-sites.php'; // NOSONAR -- WP compatible.
+require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities-updates.php'; // NOSONAR -- WP compatible.
+require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities-clients.php'; // NOSONAR -- WP compatible.
+require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities-tags.php'; // NOSONAR -- WP compatible.
+require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities-batch.php'; // NOSONAR -- WP compatible.
+require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities-cron.php'; // NOSONAR -- WP compatible.
+require_once MAINWP_PLUGIN_DIR . 'includes' . DIRECTORY_SEPARATOR . 'abilities' . DIRECTORY_SEPARATOR . 'class-mainwp-abilities.php'; // NOSONAR -- WP compatible.
+
+// Initialize Abilities API integration (does nothing if Abilities API not available).
+if ( class_exists( '\MainWP\Dashboard\MainWP_Abilities' ) ) {
+    \MainWP\Dashboard\MainWP_Abilities::init();
+}
 
 // Detect if secupress_scanner is running.
 $mainwp_is_secupress_scanning = false;

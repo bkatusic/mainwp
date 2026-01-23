@@ -277,7 +277,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             ?>
             <div class="ui icon message yellow" style="margin-bottom: 0; border-radius: 0;">
                 <i class="exclamation circle icon"></i>
-                <strong><?php echo esc_html__( 'Important Notice: ', 'mainwp' ); ?></strong>&nbsp;<?php printf( esc_html__( 'MainWP Version 4 is a major upgrade from MainWP Version 3. Please, read this&nbsp; %1$supdating FAQ%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/faq-on-upgrading-from-mainwp-version-3-to-mainwp-version-4/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
+                <strong><?php echo esc_html__( 'Important Notice: ', 'mainwp' ); ?></strong>&nbsp;<?php printf( esc_html__( 'MainWP Version 4 is a major upgrade from MainWP Version 3. Please, read this&nbsp; %1$supdating FAQ%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
                 <i class="close icon mainwp-notice-dismiss" notice-id="upgrade_4"></i>
             </div>
             <?php
@@ -498,8 +498,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
      * @uses  \MainWP\Dashboard\MainWP_Utility::show_mainwp_message()
      */
     public static function render_browser_extensions_notice() {
-        $is_demo = MainWP_Demo_Handle::is_demo_mode();
-        if ( MainWP_DB::instance()->get_websites_count() > 4 && ! $is_demo && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_browser_extensions_notice' ) ) {
+        if ( MainWP_DB::instance()->get_websites_count() > 4 && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_browser_extensions_notice' ) ) {
             ?>
             <div class="ui info message" style="margin-bottom: 0; border-radius: 0;">
                 <h3><?php esc_html_e( 'Track Updates and Non-MainWP Changes from Your Browser!', 'mainwp' ); ?></h3>
@@ -508,7 +507,6 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
                 <br/>
                 <div>
                     <a href="https://chrome.google.com/webstore/detail/mainwp-browser-extension/kjlehednpnfgplekjminjpocdechbnge" target="_blank" class="ui green tiny button"><i class="chrome icon"></i> <?php echo esc_html__( 'Get Chrome Extension', 'mainwp' ); ?></a>
-                    <a href="https://addons.mozilla.org/en-US/firefox/addon/mainwp-browser-extension/" target="_blank" class="ui green tiny button"><i class="firefox icon"></i> <?php echo esc_html__( 'Get Firefox Extension', 'mainwp' ); ?></a>
                     <a href="https://mainwp.com/mainwp-browser-extension/" target="_blank" class="ui tiny button"><?php echo esc_html__( 'Read More', 'mainwp' ); // NOSONAR - noopener - open safe. ?></a>
                 </div>
                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp_browser_extensions_notice"></i>
@@ -527,7 +525,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             ?>
             <div class="ui attention message">
                 <h3><?php esc_html_e( 'New Security Feature: OpenSSL Key Encryption', 'mainwp' ); ?></h3>
-                <div><?php esc_html_e( 'To enhance security, we\'ve added a feature to encrypt your private keys stored in the database. This provides an extra layer of protection in the unlikely event your database is compromised.', 'mainwp' ); ?> <a href="https://mainwp.com/kb/openssl-keys-encryption/" target="_blank"><?php esc_html_e( 'Learn more here.', 'mainwp' ); ?></a></div>
+                <div><?php esc_html_e( 'To enhance security, we\'ve added a feature to encrypt your private keys stored in the database. This provides an extra layer of protection in the unlikely event your database is compromised.', 'mainwp' ); ?> <a href="https://docs.mainwp.com/sites/management/mainwp-dashboard-settings#force-new-openssl-keys" target="_blank"><?php esc_html_e( 'Learn more here.', 'mainwp' ); ?></a></div>
                 <p><button class="ui green mini button" id="increase-connection-security-btn"><?php echo esc_html__( 'Encrypt Keys Now', 'mainwp' ); ?></button></p>
                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp_secure_priv_key_notice"></i>
             </div>
@@ -1005,7 +1003,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             if ( isset( $_GET['page'] ) && 'ManageClients' === $_GET['page'] && isset( $_GET['client_id'] ) && ! empty( $_GET['client_id'] ) ) {
                 $class_string .= ' mainwp-individual-client-overview ';
             }
-            if ( isset( $_GET['page'] ) && ( 'CostTrackerSettings' === $_GET['page'] || 'ServerInformation' === $_GET['page'] || 'ServerInformationCron' === $_GET['page'] || 'ErrorLog' === $_GET['page'] || 'ActionLogs' === $_GET['page'] || 'PluginPrivacy' === $_GET['page'] || 'Settings' === $_GET['page'] || 'SettingsAdvanced' === $_GET['page'] || 'SettingsMonitors' === $_GET['page'] || 'SettingsEmail' === $_GET['page'] || 'MainWPTools' === $_GET['page'] || 'SettingsInsights' === $_GET['page'] || 'SettingsApiBackups' === $_GET['page'] ) ) {
+            if ( isset( $_GET['page'] ) && ( 'CostTrackerSettings' === $_GET['page'] || 'ServerInformation' === $_GET['page'] || 'ServerInformationCron' === $_GET['page'] || 'ErrorLog' === $_GET['page'] || 'ActionLogs' === $_GET['page'] || 'PluginPrivacy' === $_GET['page'] || 'Settings' === $_GET['page'] || 'SettingsAdvanced' === $_GET['page'] || 'SettingsMonitors' === $_GET['page'] || 'SettingsEmail' === $_GET['page'] || 'MainWPTools' === $_GET['page'] || 'SettingsInsights' === $_GET['page'] || 'SettingsApiBackups' === $_GET['page'] || 'MonitoringSettings' === $_GET['page'] ) ) {
                 $class_string .= ' mainwp-individual-site-view ';
             }
             if ( isset( $_GET['page'] ) && 'CostTrackerAdd' !== $_GET['page'] && ( ( isset( $_GET['id'] ) && ! empty( $_GET['id'] ) ) || ( isset( $_GET['dashboard'] ) && ! empty( $_GET['dashboard'] ) ) || ( isset( $_GET['updateid'] ) && ! empty( $_GET['updateid'] ) ) || ( isset( $_GET['monitor_wpid'] ) && ! empty( $_GET['monitor_wpid'] ) ) || ( isset( $_GET['emailsettingsid'] ) && ! empty( $_GET['emailsettingsid'] ) ) || ( isset( $_GET['scanid'] ) && ! empty( $_GET['scanid'] ) ) ) ) {
@@ -1176,7 +1174,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
                 'page'     => 'Extensions-Mainwp-Ithemes-Security-Extension',
                 'slug'     => 'better-wp-security/better-wp-security.php',
                 'slug_pro' => 'ithemes-security-pro/ithemes-security-pro.php',
-                'name'     => 'iThemes Security',
+                'name'     => 'Solid Security Integration',
             ),
             array(
                 'page' => 'Extensions-Mainwp-Updraftplus-Extension',
@@ -1248,7 +1246,16 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             return;
         }
 
-        $websites = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_websites_for_current_user() );
+        $wpsite_fields = array( 'id', 'name', 'url', 'plugins' );
+        $sync_fields   = array( 'sync_errors', 'totalsize' );
+        $websites      = MainWP_DB::instance()->query(
+            MainWP_DB::instance()->get_sql_websites_for_current_user_by_params(
+                array(
+                    'select_wp_fields'   => $wpsite_fields,
+                    'select_sync_fields' => $sync_fields,
+                )
+            )
+        );
 
         if ( empty( $websites ) ) {
             return;
@@ -1330,7 +1337,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
                         let noti_id = jQuery('#mainwp-install-check-modal').attr('noti-slug');
                         mainwp_notice_dismiss(noti_id, 1);
                         setTimeout(function () {
-                            window.location.href = location.href;
+                            mainwp_forceReload();
                         }, 1000);
                     },
                 }).modal('show');

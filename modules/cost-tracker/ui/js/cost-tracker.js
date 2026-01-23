@@ -8,21 +8,21 @@ let mainwp_module_cost_tracker_valid_input_data = function () {
         errors.push('Title is required.');
     }
 
-    if (jQuery('#select_by').val() == 'site') {
+    if (jQuery('input[name="select_by"]').val() == 'site') {
         jQuery("input[name='selected_sites[]']:checked").each(function () {
             selected_sites.push(jQuery(this).val());
         });
         if (selected_sites.length == 0) {
             errors.push('Please select websites or groups or clients.');
         }
-    } else if (jQuery('#select_by').val() == 'group') {
+    } else if (jQuery('input[name="select_by"]').val() == 'group') {
         jQuery("input[name='selected_groups[]']:checked").each(function () {
             selected_groups.push(jQuery(this).val());
         });
         if (selected_groups.length == 0) {
             errors.push('Please select websites or groups or clients.');
         }
-    } else if (jQuery('#select_by').val() == 'client') {
+    } else if (jQuery('input[name="select_by"]').val() == 'client') {
         jQuery("input[name='selected_clients[]']:checked").each(function () {
             selected_clients.push(jQuery(this).val());
         });
@@ -64,7 +64,7 @@ jQuery(function ($) {
 
     jQuery(document).on('click', '.subscription_menu_item_delete', function () {
         let objDel = jQuery(this);
-        mainwp_confirm(__('Are you sure.'), function () {
+        mainwp_confirm(__('Are you sure?'), function () {
             mainwp_module_cost_tracker_delete_start_specific(objDel, '', false);
         }, false, false, true);
     })

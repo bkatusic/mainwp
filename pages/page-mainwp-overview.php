@@ -293,8 +293,10 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             $id = isset( $metaBox['id'] ) ? $metaBox['id'] : $i++;
             $id = 'advanced-' . $id;
 
+            $wg_layout = isset( $metaBox['layout'] ) && is_array( $metaBox['layout'] ) ? $metaBox['layout'] : array( -1, -1, 6, 30 );
+
             if ( $enabled ) {
-                MainWP_UI::add_widget_box( $id, $metaBox['callback'], $page, array( -1, -1, 6, 30 ) );
+                MainWP_UI::add_widget_box( $id, $metaBox['callback'], $page, $wg_layout );
             }
         }
     }
@@ -372,11 +374,15 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             ?>
             <div id="mainwp-message-zone" class="ui message" style="display:none;"></div>
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'widgets' ) ) : ?>
-                <div class="ui info message">
+                <div class="ui message" style="margin-bottom: 0px;">
                     <i class="close icon mainwp-notice-dismiss" notice-id="widgets"></i>
-                        <?php printf( esc_html__( 'To hide or show a widget, click the Cog (%1$s) icon.', 'mainwp' ), '<i class="cog icon"></i>' ); ?>
+                    <?php printf( esc_html__( '%1$s Tip: You can drag and drop widgets to reorder your dashboard or use the Page Settings (%2$s) to show/hide widgets.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<i class="cog fitted icon"></i>' ); ?>
                 </div>
             <?php endif; ?>
+            <?php
+            do_action( 'mainwp_module_log_render_db_update_notice' );
+            do_action( 'mainwp_module_log_render_db_size_notice' );
+            ?>
             </div>
             <?php
             /**
@@ -389,6 +395,14 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             do_action( 'mainwp_before_overview_widgets', 'dashboard' );
             ?>
             <div id="mainwp-grid-wrapper" class="gridster">
+                <div id="mainwp-widgets-placeholder" class="ui page dimmer">
+                    <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
+                </div>
+                <script>
+                    jQuery( document ).ready( function () {
+                        jQuery('#mainwp-widgets-placeholder').dimmer('show');
+                    });
+                </script>
                 <?php MainWP_UI::do_widget_boxes( $screen->id ); ?>
             </div>
             <?php
@@ -410,6 +424,7 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
         <?php
         MainWP_UI::render_modal_upload_icon();
         MainWP_Updates::render_plugin_details_modal();
+        MainWP_Updates::render_changes_history_modal();
     }
 
     /**
@@ -418,8 +433,17 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
     public static function render_layout_selection() { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAfterBrace -- NOSONAR - complexity.
         $screen = get_current_screen();
         ?>
-        <div class="mainwp-sub-header ui right aligned segment" id="mainwp-manage-widgets-layout-row">
-            <?php MainWP_Ui_Manage_Widgets_Layout::render_edit_layout( $screen->id ); ?>
+        <div class="mainwp-sub-header" id="mainwp-manage-widgets-layout-row">
+            <div class="ui stackable two column grid">
+                <div class="column">
+                    <?php if ( isset( $_GET['page'] ) && 'CostSummary' === $_GET['page'] ) : ?>
+                    <a href="admin.php?page=CostTrackerAdd" class="ui mini green button"><?php esc_html_e( 'Add New Cost', 'mainwp' ); ?></a>
+                    <?php endif; ?>
+                </div>
+                <div class="right aligned column">
+                    <?php MainWP_Ui_Manage_Widgets_Layout::render_edit_layout( $screen->id ); ?>
+                </div>
+            </div>
         </div>
         <?php
         MainWP_Ui_Manage_Widgets_Layout::render_modal_save_layout();
@@ -435,12 +459,12 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             ?>
             <p><?php esc_html_e( 'If you need help with your MainWP Dashboard, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/" target="_blank">Understanding MainWP Dashboard UI</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/#navigation" target="_blank">MainWP Navigation</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/#page-settings" target="_blank">Page Settings</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/#widgetized-page-layout" target="_blank">Widgetized Page Layout</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/#tables" target="_blank">MainWP Tables</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/#individual-site-mode" target="_blank">Individual Child Site Mode</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface" target="_blank">Understanding MainWP Dashboard UI</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface#navigation" target="_blank">MainWP Navigation</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface#page-settings" target="_blank">Page Settings</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface#widgetized-pages" target="_blank">Widgetized Page Layout</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface#tables" target="_blank">MainWP Tables</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface#individual-site-mode" target="_blank">Individual Child Site Mode</a></div>
                 <?php
                 /**
                  * Action: mainwp_overview_help_item

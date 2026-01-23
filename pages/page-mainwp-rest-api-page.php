@@ -76,6 +76,13 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
     /** Run the export_sites method that exports the Child Sites .csv file */
     public function admin_init() {
         MainWP_Post_Handler::instance()->add_action( 'mainwp_rest_api_remove_keys', array( $this, 'ajax_rest_api_remove_keys' ) );
+
+        // Page: Application Passwords.
+        MainWP_Post_Handler::instance()->add_action( 'mainwp_application_password_create', array( &$this, 'ajax_application_password_create' ) );
+        MainWP_Post_Handler::instance()->add_action( 'mainwp_application_password_delete', array( &$this, 'ajax_application_password_delete' ) );
+        MainWP_Post_Handler::instance()->add_action( 'mainwp_application_password_delete_multiple', array( &$this, 'ajax_application_password_delete_multiple' ) );
+        MainWP_Post_Handler::instance()->add_action( 'mainwp_application_password_delete_all', array( &$this, 'ajax_application_password_delete_all' ) );
+
         $this->handle_rest_api_add_new();
         $this->handle_rest_api_edit();
     }
@@ -109,6 +116,19 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                 array(
                     static::get_class_name(),
                     'render_rest_api_setings',
+                )
+            );
+        }
+        if ( ! MainWP_Menu::is_disable_menu_item( 3, 'ApplicationPasswords' ) ) {
+            add_submenu_page(
+                'mainwp_tab',
+                esc_html__( 'Application Passwords', 'mainwp' ),
+                ' <div class="mainwp-hidden">' . esc_html__( 'Application Passwords', 'mainwp' ) . '</div>',
+                'read',
+                'ApplicationPasswords',
+                array(
+                    static::get_class_name(),
+                    'render_application_passwords',
                 )
             );
         }
@@ -200,6 +220,14 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                 'slug'       => 'AddApiKeys',
                 'right'      => '',
             ),
+
+            array(
+                'title'      => esc_html__( 'Application Passwords', 'mainwp' ),
+                'parent_key' => 'RESTAPI',
+                'href'       => 'admin.php?page=ApplicationPasswords',
+                'slug'       => 'ApplicationPasswords',
+                'right'      => '',
+            ),
         );
 
         MainWP_Menu::init_subpages_left_menu( $subPages, $init_sub_subleftmenu, 'RESTAPI', 'RESTAPI' );
@@ -262,8 +290,11 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                     $scope = 'read_write';
                 } elseif ( in_array( 'w', $pers_list ) ) {
                     $scope = 'write';
+                } elseif ( in_array( 'd', $pers_list ) ) {
+                    $scope = 'delete';
                 }
             }
+            $this->invalidate_warm_cache();
             MainWP_DB::instance()->insert_rest_api_key( $consumer_key, $consumer_secret, $scope, $desc, $enabled );
             // end.
             wp_safe_redirect( admin_url( 'admin.php?page=RESTAPI&message=created' ) ); //phpcs:ignore -- ok.
@@ -298,6 +329,8 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                             $scope = 'read_write';
                         } elseif ( in_array( 'w', $pers_list ) ) {
                             $scope = 'write';
+                        } elseif ( in_array( 'd', $pers_list ) ) {
+                            $scope = 'delete';
                         }
                     }
 
@@ -334,9 +367,19 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             if ( $updated ) {
                 $msg = '&message=saved';
             }
+
+            $this->invalidate_warm_cache();
+
             wp_safe_redirect( admin_url( 'admin.php?page=RESTAPI' . $msg ) ); //phpcs:ignore -- ok.
             exit();
         }
+    }
+
+    /**
+     * Method invalidate_warm_cache()
+     */
+    public function invalidate_warm_cache() {
+        MainWP_Cache_Warm_Helper::invalidate_manage_pages( array( 'RESTAPI' ) );
     }
 
     /**
@@ -369,6 +412,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             }
             $ret['success'] = 'SUCCESS';
             $ret['result']  = esc_html__( 'REST API Key deleted successfully.', 'mainwp' );
+            $this->invalidate_warm_cache();
         } else {
             $ret['error'] = esc_html__( 'REST API Key ID empty.', 'mainwp' );
         }
@@ -421,6 +465,14 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             );
         }
 
+        if ( ! MainWP_Menu::is_disable_menu_item( 3, 'ApplicationPasswords' ) ) {
+            $renderItems[] = array(
+                'title'  => esc_html__( 'Application Passwords', 'mainwp' ),
+                'href'   => 'admin.php?page=ApplicationPasswords',
+                'active' => ( 'Application Passwords' === $shownPage ) ? true : false,
+            );
+        }
+
         if ( isset( static::$subPages ) && is_array( static::$subPages ) ) {
             foreach ( static::$subPages as $subPage ) {
                 if ( MainWP_Menu::is_disable_menu_item( 3, 'RESTAPI' . $subPage['slug'] ) ) {
@@ -457,17 +509,14 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
 
         if ( ! empty( $all_keys ) ) {
             ?>
-        <h2 class="ui dividing header">
-            <?php esc_html_e( 'MainWP REST API v1 API Keys (Legacy)', 'mainwp' ); ?>
-            <div class="sub header"><?php esc_html_e( 'Legacy API keys for older integrations. We recommend switching to v2 for better security and performance.', 'mainwp' ); ?></div>
-        </h2>
-        <table id="mainwp-rest-api-keys-table" class="ui unstackable table">
+
+        <table id="mainwp-rest-api-keys-table" class="ui unstackable single linetable">
             <thead>
                 <tr>
                     <th scope="col" class="no-sort collapsing check-column"><span class="ui checkbox"><input aria-label="<?php esc_attr_e( 'Select all REST API keys', 'mainwp' ); ?>" id="cb-select-all-top" type="checkbox" /></span></th>
                     <th scope="col" class="collapsing"><?php esc_html_e( 'Status', 'mainwp' ); ?></th>
                     <th scope="col" ><?php esc_html_e( 'API Key', 'mainwp' ); ?></th>
-                    <th scope="col"><?php esc_html_e( 'Permissions', 'mainwp' ); ?></th>
+                    <th scope="col" class="collapsing"><?php esc_html_e( 'Permissions', 'mainwp' ); ?></th>
                     <th scope="col" class="no-sort collapsing"><?php esc_html_e( 'Consumer key ending in', 'mainwp' ); ?></th>
                     <th scope="col" class="no-sort collapsing"></th>
                 </tr>
@@ -521,8 +570,8 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                             <div class="ui right pointing dropdown" style="z-index:999">
                             <i class="ellipsis vertical icon"></i>
                                 <div class="menu">
-                                <a class="item" href="admin.php?page=AddApiKeys&editkey=<?php echo esc_html( $endcoded_ck ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>"><i class="pen icon"></i><?php esc_html_e( 'Edit', 'mainwp' ); ?></a>
-                                <a class="item" href="javascript:void(0)" onclick="mainwp_restapi_remove_key_confirm(jQuery(this).closest('tr').find('.check-column INPUT:checkbox'));" ><i class="trash icon"></i><?php esc_html_e( 'Delete', 'mainwp' ); ?></a>
+                                <a class="item" href="admin.php?page=AddApiKeys&editkey=<?php echo esc_html( $endcoded_ck ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>"><?php esc_html_e( 'Edit', 'mainwp' ); ?></a>
+                                <a class="item" href="javascript:void(0)" onclick="mainwp_restapi_remove_key_confirm(jQuery(this).closest('tr').find('.check-column INPUT:checkbox'));" ><?php esc_html_e( 'Delete', 'mainwp' ); ?></a>
                                 </div>
                             </div>
                         </td>
@@ -566,9 +615,9 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
     /** Render REST API SubPage */
     public static function render_api_keys_v2_table() { // phpcs:ignore -- NOSONAR - complex.
         $all_keys_v2 = MainWP_DB::instance()->get_rest_api_keys();
-        $el_id_cb_1 = 'cb-select-all-top';
+        $el_id_cb_1  = 'cb-select-all-top';
         ?>
-        <table id="mainwp-rest-api-keys-v2-table" class="ui unstackable table">
+        <table id="mainwp-rest-api-keys-v2-table" class="ui unstackable single line table">
             <thead>
                 <tr>
                     <th scope="col" class="no-sort collapsing check-column"><span class="ui checkbox"><input aria-label="<?php esc_attr_e( 'Select all REST API keys', 'mainwp' ); ?>" id="<?php echo esc_attr( $el_id_cb_1 ); ?>" type="checkbox" /></span></th>
@@ -576,7 +625,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                     <th scope="col" ><?php esc_html_e( 'API Key (v2)', 'mainwp' ); ?></th>
                     <th scope="col" class="collapsing"><?php esc_html_e( 'Permissions', 'mainwp' ); ?></th>
                     <th scope="col" class="no-sort collapsing"><?php esc_html_e( 'API key ending in', 'mainwp' ); ?></th>
-                    <th scope="col"><?php esc_html_e( 'Last access', 'mainwp' ); ?></th>
+                    <th scope="col" class="collapsing"><?php esc_html_e( 'Last access', 'mainwp' ); ?></th>
                     <th scope="col" class="no-sort collapsing"></th>
                 </tr>
                 </thead>
@@ -597,9 +646,12 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                             if ( 'write' === $per ) {
                                 $pers_title[] = esc_html__( 'Write', 'mainwp' );
                             }
+                            if ( 'delete' === $per ) {
+                                $pers_title[] = esc_html__( 'Delete', 'mainwp' );
+                            }
                             if ( 'read_write' === $per ) {
                                 $pers_title[] = esc_html__( 'Read', 'mainwp' );
-                                $pers_title[] = esc_html__( 'Write', 'mainwp' );
+                                $pers_title[] = esc_html__( 'Write & Delete', 'mainwp' );
                             }
                             ?>
                             <tr key-ck-id="<?php echo intval( $key_id ); ?>">
@@ -627,8 +679,8 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                         }
                     }
                     ?>
-                </tbody>
-            </table>
+            </tbody>
+        </table>
         <script type="text/javascript">
             var responsive = true;
             if( jQuery( window ).width() > 1140 ) {
@@ -669,25 +721,62 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             \mainwp_do_not_have_permissions( esc_html__( 'manage dashboard REST API', 'mainwp' ) );
             return;
         }
+        $all_keys = static::check_rest_api_updates();
+        if ( ! is_array( $all_keys ) ) {
+            $all_keys = array();
+        }
         static::render_header();
         static::render_table_top();
         if ( ! static::check_rest_api_enabled() ) {
             ?>
-            <div class="ui message yellow"><?php printf( esc_html__( 'It seems the WordPress REST API is currently disabled on your site. MainWP REST API requires the WordPress REST API to function properly. Please enable it to ensure smooth operation. Need help? %sClick here for a guide%s.', 'mainwp' ), '<a href="https://mainwp.com/kb/wordpress-rest-api-does-not-respond/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?></div>
+            <div class="ui message yellow"><?php printf( esc_html__( 'It seems the WordPress REST API is currently disabled on your site. MainWP REST API requires the WordPress REST API to function properly. Please enable it to ensure smooth operation. Need help? %sClick here for a guide%s.', 'mainwp' ), '<a href="https://docs.mainwp.com/troubleshooting/wordpress-rest-api-does-not-respond" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?></div>
             <?php
         }
         ?>
         <div id="mainwp-rest-api-keys" class="ui segment">
+            <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-api-welcome-message' ) ) : ?>
+                <div class="ui icon message mainwp-welcome-message" style="margin-bottom:0;">
+                    <em data-emoji=":wave:" class="big"></em>
+                    <div class="content">
+                        <div class="ui massive header"><?php esc_html_e( 'Welcome to MainWP REST API', 'mainwp' ); ?></div>
+                        <p><?php esc_html_e( 'Integrate MainWP with your custom tools, automations, and external platforms through the REST API.', 'mainwp' ); ?></p>
+                        <p><?php printf( esc_html__( 'Start by %1$screating an API key%2$s and %3$sexploring available routes%4$s.', 'mainwp' ), '<a href="admin.php?page=AddApiKeys">', '</a>', '<a href="https://www.postman.com/mainwp/workspace/mainwp/collection/25047126-5ed97ddf-1d45-4bd1-bede-1a1f3b7584ef" target="_blank">', '</a>' ); ?></p>
+                    </div>
+                    <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-api-welcome-message"></i>
+                </div>
+            <?php endif; ?>
+
+
             <div class="ui message" id="mainwp-message-zone-apikeys" style="display:none;"></div>
             <?php static::show_messages(); ?>
-            <h2 class="ui dividing header">
-                <?php esc_html_e( 'MainWP REST API v2 API Keys', 'mainwp' ); ?>
-                <div class="sub header"><?php esc_html_e( 'The latest and most secure version of the MainWP REST API. Use these keys for new integrations.', 'mainwp' ); ?></div>
-            </h2>
-            <?php static::render_api_keys_v2_table(); ?>
-
-            <?php static::render_api_keys_v1_table(); ?>
+            <div class="ui basic accordion mainwp-blank-accordion" id="mainwp-rest-api-keys-accordion">
+                <h2 class="ui dividing header active title">
+                    <i class="right dropdown icon"></i>
+                    <?php esc_html_e( 'MainWP REST API v2 API Keys', 'mainwp' ); ?>
+                    <div class="sub header"><?php esc_html_e( 'The latest and most secure version of the MainWP REST API. Use these keys for new integrations.', 'mainwp' ); ?></div>
+                </h2>
+                <div class="content active">
+                    <?php static::render_api_keys_v2_table(); ?>
+                </div>
+                <?php if ( ! empty( $all_keys ) ) : ?>
+                <h2 class="ui dividing header title">
+                    <i class="right dropdown icon"></i>
+                    <?php esc_html_e( 'MainWP REST API v1 API Keys (Legacy)', 'mainwp' ); ?>
+                    <div class="sub header"><?php esc_html_e( 'Legacy API keys for older integrations. We recommend switching to v2 for better security and performance.', 'mainwp' ); ?></div>
+                </h2>
+                <div class="content">
+                    <?php static::render_api_keys_v1_table(); ?>
+                </div>
+                <?php endif; ?>
+            </div>
         </div>
+        <script>
+            jQuery(document).ready(function() {
+                jQuery('#mainwp-rest-api-keys-accordion').accordion({
+                    exclusive : false,
+                });
+            });
+        </script>
         <?php
         static::render_footer();
     }
@@ -698,7 +787,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
      */
     public static function render_table_top() {
         ?>
-        <div class="mainwp-actions-bar">
+        <div class="mainwp-sub-header">
             <div class="ui grid">
                 <div class="equal width row ui mini form">
                     <div class="middle aligned column">
@@ -845,7 +934,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
 
             <div class="ui form">
                 <form method="POST" action="">
-                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                     <input type="hidden" name="wp_nonce" value="<?php echo esc_attr( wp_create_nonce( 'RESTAPI' ) ); ?>" />
                     <?php
                     /**
@@ -859,13 +948,13 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                     ?>
                     <div class="ui grid field">
                         <label class="six wide column middle aligned"><?php esc_html_e( 'Enable API key', 'mainwp' ); ?></label>
-                        <div class="ten wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'If enabled, the REST API will be activated.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
+                        <div class="ten wide column ui toggle checkbox">
                             <input type="checkbox" name="mainwp_enable_rest_api" id="mainwp_enable_rest_api" checked="true" aria-label="<?php esc_attr_e( 'Enable REST API key', 'mainwp' ); ?>"/>
                         </div>
                     </div>
                     <div class="ui grid field">
                         <label class="six wide column middle aligned"><?php esc_html_e( 'API key name', 'mainwp' ); ?></label>
-                        <div class="five wide column" data-tooltip="<?php esc_attr_e( 'Name your API Key.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
+                        <div class="five wide column">
                             <input type="text" name="mainwp_rest_add_api_key_desc" id="mainwp_rest_add_api_key_desc" value="" aria-label="<?php esc_attr_e( 'API key name.', 'mainwp' ); ?>"/>
                         </div>
                     </div>
@@ -884,6 +973,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                     </div>
 
                     <?php $init_pers = 'r,w,d'; ?>
+
                     <div class="ui grid field">
                         <label class="six wide column middle aligned"><?php esc_html_e( 'Permissions', 'mainwp' ); ?></label>
                         <div class="five wide column">
@@ -949,27 +1039,34 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             </form>
         </div>
     </div>
-            <script type="text/javascript">
-                jQuery(function($) {
-                    //we are going to inject the values into the copy buttons to make things easier for people
-                    $('#mainwp_consumer_key_clipboard_button').attr('data-clipboard-text', '<?php echo esc_html( $consumer_key ); ?>');
-                    $('#mainwp_consumer_secret_clipboard_button').attr('data-clipboard-text', '<?php echo esc_html( $consumer_secret ); ?>');
-                    $('#mainwp_rest_token_clipboard_button').attr('data-clipboard-text', '<?php echo esc_html( $token ); ?>'); //phpcs:ignore -- NOSONAR - token value ok.
-                    //initiate clipboard
-                    new ClipboardJS('.copy-to-clipboard');
-                    //show copy to clipboard buttons
-                    $('.copy-to-clipboard').show();
+    <div id="mainwp-api-key-copied-confirm-modal" class="ui mini modal">
+        <i class="close icon"></i>
+        <div class="header">
+            <?php esc_html_e( 'API Key Copied', 'mainwp' ); ?>
+        </div>
+        <div class="content">
+            <p><?php esc_html_e( 'Your API key has been copied to your clipboard.', 'mainwp' ); ?></p>
+        </div>
+    </div>
+    <script type="text/javascript">
+        jQuery(function($) {
+            //we are going to inject the values into the copy buttons to make things easier for people
+            $('#mainwp_consumer_key_clipboard_button').attr('data-clipboard-text', '<?php echo esc_html( $consumer_key ); ?>');
+            $('#mainwp_consumer_secret_clipboard_button').attr('data-clipboard-text', '<?php echo esc_html( $consumer_secret ); ?>');
+            $('#mainwp_rest_token_clipboard_button').attr('data-clipboard-text', '<?php echo esc_html( $token ); ?>'); //phpcs:ignore -- NOSONAR - token value ok.
+            //initiate clipboard
+            new ClipboardJS('.copy-to-clipboard');
+            //show copy to clipboard buttons
+            $('.copy-to-clipboard').show();
 
-                    $('#mainwp_rest_api_keys_compatible_v1').on('change', function() {
-                        $('#mainwp-legacy-api-credentials').toggle();
-                    });
-                });
+            $('#mainwp_rest_api_keys_compatible_v1').on('change', function() {
+                $('#mainwp-legacy-api-credentials').toggle();
+            });
+        });
+    </script>
+    <?php
 
-
-            </script>
-        <?php
-
-        static::render_footer( 'Settings' );
+    static::render_footer( 'Settings' );
     }
 
     /**
@@ -1007,8 +1104,11 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         if ( 'write' === $perms ) {
             $init_pers = 'w';
         }
+        if ( 'delete' === $perms ) {
+            $init_pers = 'd';
+        }
         if ( 'read_write' === $perms ) {
-            $init_pers = 'r,w';
+            $init_pers = 'r,w,d';
         }
         static::render_header( 'Edit' );
         $el_id_res_api_1 = 'rest-api-settings';
@@ -1016,7 +1116,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             <div id="<?php echo esc_attr( $el_id_res_api_1 ); ?>" class="ui segment">
             <div class="ui form">
                     <form method="POST" action="">
-                        <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                        <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                         <input type="hidden" name="edit_key_nonce" value="<?php echo esc_attr( wp_create_nonce( 'edit-key-nonce-' . $keyid ) ); ?>" />
                         <input type="hidden" name="editkey_id" value="<?php echo esc_html( $keyid ); ?>" />
                         <input type="hidden" name="rest_v2_edit" value="1" />
@@ -1077,6 +1177,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                                     <div class="menu">
                                         <div class="item" data-value="r"><?php esc_html_e( 'Read', 'mainwp' ); ?></div>
                                         <div class="item" data-value="w"><?php esc_html_e( 'Write', 'mainwp' ); ?></div>
+                                        <div class="item" data-value="d"><?php esc_html_e( 'Delete', 'mainwp' ); ?></div>
                                     </div>
                                 </div>
                             </div>
@@ -1120,7 +1221,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         <div id="<?php echo esc_attr( $el_id_res_api_2 ); ?>" class="ui segment">
             <div class="ui form">
                     <form method="POST" action="">
-                        <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                        <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                         <input type="hidden" name="edit_key_nonce" value="<?php echo esc_attr( wp_create_nonce( 'edit-key-nonce-' . $keyid ) ); ?>" />
                         <input type="hidden" name="editkey_id" value="<?php echo esc_html( $keyid ); ?>" />
                         <div class="ui grid field settings-field-indicator-wrapper <?php echo $item ? 'settings-field-indicator-edit-api-keys' : ''; ?>">
@@ -1136,7 +1237,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                             <input type="checkbox" class="settings-field-value-change-handler" name="mainwp_enable_rest_api" id="<?php echo esc_attr( $el_id_en_res_api_2 ); ?>" value="1" <?php echo $enabled ? 'checked="true"' : ''; ?> aria-label="<?php esc_attr_e( 'Enable REST API key', 'mainwp' ); ?>" />
                             </div>
                         </div>
-                        <div class="ui grid field settings-field-indicator-wrapper <?php echo $item ? 'settings-field-indicator-edit-api-keys' : ''; ?>"">
+                        <div class="ui grid field settings-field-indicator-wrapper <?php echo $item ? 'settings-field-indicator-edit-api-keys' : ''; ?>">
                             <label class="six wide column middle aligned">
                             <?php
                             if ( $item ) {
@@ -1148,7 +1249,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                                 <input type="text" class="settings-field-value-change-handler" name="mainwp_rest_api_key_desc" id="mainwp_rest_api_key_desc" value="<?php echo esc_html( $edit_desc ); ?>" aria-label="<?php esc_attr_e( 'Key description', 'mainwp' ); ?>"/>
                             </div>
                         </div>
-                        <div class="ui grid field settings-field-indicator-wrapper <?php echo $item ? 'settings-field-indicator-edit-api-keys' : ''; ?>"">
+                        <div class="ui grid field settings-field-indicator-wrapper <?php echo $item ? 'settings-field-indicator-edit-api-keys' : ''; ?>">
                             <label class="six wide column middle aligned">
                             <?php
                             if ( $item ) {
@@ -1258,11 +1359,11 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             ?>
             <p><?php esc_html_e( 'If you need help with the MainWP REST API, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-rest-api/" target="_blank">REST API</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-rest-api/#how-to-enable-rest-api" target="_blank">Enable REST API</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-rest-api/#rest-api-permissions" target="_blank">REST API Permissions</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-rest-api/#how-to-disable-rest-api" target="_blank">Disable REST API</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-rest-api/#how-to-delete-rest-api-keys" target="_blank">Delete REST API Key</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/mainwp-rest-api" target="_blank">REST API</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/mainwp-rest-api#enable-rest-api" target="_blank">Enable REST API</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/mainwp-rest-api#rest-api-permissions" target="_blank">REST API Permissions</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/mainwp-rest-api#disable-rest-api" target="_blank">Disable REST API</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/dashboard/overview/mainwp-rest-api#delete-rest-api-keys" target="_blank">Delete REST API Key</a></div> <?php // NOSONAR -- compatible with help. ?>
                 <?php
                 /**
                  * Action: mainwp_rest_api_help_item
@@ -1280,5 +1381,314 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             </div>
             <?php
         }
+    }
+
+    /**
+     * Render application password table top.
+     */
+    public static function render_application_passwords_table_top() {
+        ?>
+        <div class="mainwp-sub-header">
+            <div class="ui grid">
+                <div class="equal width row ui mini form">
+                    <div class="middle aligned column">
+                        <button type="button" class="ui mini green button" id="mainwp-create-application-password-button"><?php esc_html_e( 'Add Application Password', 'mainwp' ); ?></button>
+                    </div>
+                    <div class="right aligned middle aligned column">
+                        <button class="ui mini grey basic button disabled" id="mainwp-do-application-passwords-bulk-actions"><?php esc_html_e( 'Revoke Selected Application Passwords', 'mainwp' ); ?></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render Application Passwords page.
+     */
+    public static function render_application_passwords() {
+        if ( ! \mainwp_current_user_can( 'dashboard', 'manage_dashboard_restapi' ) ) {
+            \mainwp_do_not_have_permissions( esc_html__( 'manage dashboard REST API', 'mainwp' ) );
+            return;
+        }
+
+        $page_title = 'Application Passwords';
+        $user_id    = get_current_user_id();
+        $passwords  = MainWP_Application_Passwords::get_user_application_passwords( $user_id );
+
+        static::render_header( $page_title );
+        static::render_application_passwords_table_top();
+        ?>
+        <div id="rest-application-passwords-settings" class="ui segment">
+            <?php if ( empty( $passwords ) ) : ?>
+                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-app-passwords-welcome-message' ) ) : ?>
+                    <div class="ui icon message mainwp-welcome-message" style="margin-bottom:0;">
+                    <em data-emoji=":wave:" class="big"></em>
+                    <div class="content">
+                        <div class="ui massive header"><?php esc_html_e( 'Get started with MainWP Abilities API / MCP', 'mainwp' ); ?></div>
+                        <p><?php esc_html_e( 'You haven\'t created any Application Passwords. MainWP Abilities API / MCP uses WordPress Application Passwords (not the MainWP API Key).', 'mainwp' ); ?></p>
+                        <p><?php esc_html_e( 'Create a new Application Password (recommended: name it after the client/tool), then use it as the credential when connecting.', 'mainwp' ); ?></p>
+                    </div>
+                    <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-app-passwords-welcome-message"></i>
+                </div>
+                <?php endif; ?>
+            <?php else : ?>
+                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-app-passwords-info-message' ) ) : ?>
+                    <div class="ui info message">
+                        <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-app-passwords-info-message"></i>
+                        <?php printf( esc_html__( '%sMainWP Abilities API%s / MCP uses WordPress Application Passwords so you can grant tool access without sharing your account password. Create a dedicated Application Password (for example "MCP Client") and revoke it whenever you no longer need it. This does not affect your regular login password.', 'mainwp' ), '<a href="https://docs.mainwp.com/api-reference/abilities-api/overview" target="_blank">', '</a>' ); ?>
+                    </div>
+                <?php endif; ?>
+            <?php endif; ?>
+
+            <div id="mainwp-message-zone-app-passwords" style="display:none;"></div>
+            <div class="content active application-passwords-list-table-wrapper">
+                <table id="mainwp-application-password-table" class="ui unstackable single line table">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="no-sort collapsing check-column">
+                                <span class="ui checkbox">
+                                    <input aria-label="<?php esc_attr_e( 'Select all Application Passwords', 'mainwp' ); ?>"
+                                        id="application-password-select-all-top" type="checkbox" />
+                                </span>
+                            </th>
+                            <th scope="col" class="collapsing"><?php esc_html_e( 'Name', 'mainwp' ); ?></th>
+                            <th scope="col"><?php esc_html_e( 'Created', 'mainwp' ); ?></th>
+                            <th scope="col" class="collapsing"><?php esc_html_e( 'Last Used', 'mainwp' ); ?></th>
+                            <th scope="col" class="collapsing"><?php esc_html_e( 'Last IP', 'mainwp' ); ?></th>
+                            <th scope="col" class="no-sort  collapsing"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="mainwp-application-password-table-body" class="mainwp-application-password-body-table-manage">
+                        <?php
+                        if ( ! empty( $passwords ) ) {
+                            foreach ( $passwords as $item ) {
+                                ?>
+                                <tr data-uuid="<?php echo esc_attr( $item['uuid'] ); ?>" class="mainwp-application-password-row">
+                                    <td class="check-column">
+                                        <div class="ui checkbox">
+                                            <input type="checkbox" class="mainwp-application-password-checkbox"
+                                                aria-label="<?php echo esc_attr( sprintf( __( 'Select %s', 'mainwp' ), $item['name'] ) ); ?>"
+                                                value="<?php echo esc_attr( $item['uuid'] ); ?>" name="" />
+                                        </div>
+                                    </td>
+                                    <td><?php echo esc_html( $item['name'] ); ?></td>
+                                    <td data-order="<?php echo esc_attr( $item['created'] ); ?>">
+                                        <?php echo esc_html( MainWP_Utility::format_timestamp( $item['created'] ) ); ?>
+                                    </td>
+                                    <td data-order="<?php echo ! empty( $item['last_used'] ) ? esc_attr( $item['last_used'] ) : 0; ?>">
+                                        <?php
+                                        if ( ! empty( $item['last_used'] ) ) {
+                                            echo '<span data-tooltip="' . esc_attr( MainWP_Utility::format_timestamp( $item['last_used'] ) ) . '" data-position="left center" data-inverted="">' . esc_html( MainWP_Utility::time_elapsed_string( $item['last_used'] ) ) . '</span>';
+                                        } else {
+                                            echo '&mdash;';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php echo ! empty( $item['last_ip'] ) ? esc_html( $item['last_ip'] ) : '&mdash;'; ?>
+                                    </td>
+                                    <td class="right aligned">
+                                        <button type="button" class="ui mini button mainwp-revoke-application-password"
+                                            data-uuid="<?php echo esc_attr( $item['uuid'] ); ?>"
+                                            aria-label="<?php echo esc_attr( sprintf( __( 'Revoke "%s"', 'mainwp' ), $item['name'] ) ); ?>">
+                                            <?php esc_html_e( 'Revoke', 'mainwp' ); ?>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <?php
+                            }
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Create Application Password Modal -->
+        <?php static::create_application_password_modal(); ?>
+
+        <!-- Success Modal -->
+        <?php static::success_application_password_modal(); ?>
+
+        <script type="text/javascript">
+            jQuery(document).ready(function ($) {
+                window.mainwp_app_passwords_table = $('#mainwp-application-password-table').DataTable({
+                    "pageLength": 10,
+                    "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                    "stateSave": true,
+                    "order": [[2, 'desc']],
+                    "columnDefs": [{
+                        "targets": 'no-sort',
+                        "orderable": false
+                    }],
+                    "preDrawCallback": function () {
+                        $('#mainwp-application-password-table .ui.checkbox').checkbox();
+                        mainwp_table_check_columns_init();
+                    }
+                });
+            });
+        </script>
+        <?php
+        static::render_footer();
+    }
+
+    /**
+     * Render create application password modal.
+     */
+    public static function create_application_password_modal() {
+        ?>
+        <div class="ui small modal" id="mainwp-create-application-password-modal">
+            <div class="header"><?php esc_html_e( 'Add Application Password', 'mainwp' ); ?></div>
+            <div class="content">
+                <div class="ui form">
+                    <div class="field">
+                        <label for="mainwp-app-password-name-input"><?php esc_html_e( 'Application Password Name', 'mainwp' ); ?></label>
+                        <input type="text" name="app_password_name" id="mainwp-app-password-name-input" placeholder="<?php esc_attr_e( 'e.g. MCP Client', 'mainwp' ); ?>" />
+                        <span class="ui small text"><?php esc_html_e( 'Enter a name to help you identify this application password.', 'mainwp' ); ?></span>
+                    </div>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="ui green ok button" id="mainwp-create-app-password-submit">
+                    <?php esc_html_e( 'Create', 'mainwp' ); ?>
+                </button>
+                <button class="ui cancel button"><?php esc_html_e( 'Cancel', 'mainwp' ); ?></button>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render success application password modal.
+     */
+    public static function success_application_password_modal() {
+        ?>
+        <div class="ui small modal" id="mainwp-application-password-success-modal">
+            <div class="header">
+                <strong id="app-pass-success-name"></strong> <?php esc_html_e( 'Application Password Created', 'mainwp' ); ?>
+            </div>
+            <div class="content">
+                <div class="ui message info">
+                    <?php esc_html_e( 'Be sure to save this in a safe location. You will not be able to retrieve it.', 'mainwp' ); ?>
+                </div>
+                <?php esc_html_e( 'Your new password for is:', 'mainwp' ); ?>
+                <div class="ui grid">
+                    <div class="thirteen wide middle aligned column">
+                        <div class="ui fluid input"><input type="text" id="app-pass-success-value" readonly="readonly" style="font-family: monospace; font-size: 16px; letter-spacing: 2px;" /></div>                    </div>
+                    <div class="three wide middle aligned column">
+                        <button class="ui green basic fluid button copy-app-password" data-tooltip="<?php esc_attr_e( 'Copy to clipboard', 'mainwp' ); ?>" data-position="top center" data-inverted="">
+                            <i class="copy icon"></i> <?php esc_html_e( 'Copy', 'mainwp' ); ?>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="actions">
+                <div class="ui green ok button"><?php esc_html_e( 'Done', 'mainwp' ); ?></div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * AJAX handler for creating application password.
+     */
+    public function ajax_application_password_create() {
+        MainWP_Post_Handler::instance()->check_security( 'mainwp_application_password_create' );
+
+        $name = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : ''; // phpcs:ignore -- WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- ok.
+
+        if ( empty( $name ) ) {
+            wp_send_json_error( array( 'message' => __( 'Application name is required.', 'mainwp' ) ) );
+        }
+
+        $user_id = get_current_user_id();
+        $result  = MainWP_Application_Passwords::create_new_application_password( $user_id, array( 'name' => $name ) );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+        }
+
+        list( $password, $item ) = $result;
+
+        // Format password with spaces for better readability.
+        $formatted_password = MainWP_Application_Passwords::chunk_password( $password );
+
+        wp_send_json_success(
+            array(
+                'password' => $formatted_password,
+                'item'     => $item,
+            )
+        );
+    }
+
+    /**
+     * AJAX handler for deleting application password.
+     */
+    public function ajax_application_password_delete() {
+        MainWP_Post_Handler::instance()->check_security( 'mainwp_application_password_delete' );
+
+        $uuid = isset( $_POST['uuid'] ) ? sanitize_text_field( wp_unslash( $_POST['uuid'] ) ) : ''; // phpcs:ignore -- WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- ok.
+
+        if ( empty( $uuid ) ) {
+            wp_send_json_error( array( 'message' => __( 'UUID is required.', 'mainwp' ) ) );
+        }
+
+        $user_id = get_current_user_id();
+        $result  = MainWP_Application_Passwords::delete_application_password( $user_id, $uuid );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+        }
+
+        wp_send_json_success( array( 'deleted' => true ) );
+    }
+
+    /**
+     * AJAX handler for deleting multiple application passwords.
+     */
+    public function ajax_application_password_delete_multiple() {
+        MainWP_Post_Handler::instance()->check_security( 'mainwp_application_password_delete_multiple' );
+
+        $uuids = isset( $_POST['uuids'] ) && is_array( $_POST['uuids'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['uuids'] ) ) : array();  // phpcs:ignore -- WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- ok.
+
+        if ( empty( $uuids ) ) {
+            wp_send_json_error( array( 'message' => __( 'No passwords selected.', 'mainwp' ) ) );
+        }
+
+        $user_id = get_current_user_id();
+        $deleted = 0;
+        $errors  = array();
+
+        foreach ( $uuids as $uuid ) {
+            $result = MainWP_Application_Passwords::delete_application_password( $user_id, $uuid );
+            if ( is_wp_error( $result ) ) {
+                $errors[] = $result->get_error_message();
+            } else {
+                ++$deleted;
+            }
+        }
+
+        if ( ! empty( $errors ) ) {
+            wp_send_json_error( array( 'message' => implode( ', ', $errors ) ) );
+        }
+
+        wp_send_json_success( array( 'deleted' => $deleted ) );
+    }
+
+    /**
+     * AJAX handler for deleting all application passwords.
+     */
+    public function ajax_application_password_delete_all() {
+        MainWP_Post_Handler::instance()->check_security( 'mainwp_application_password_delete_all' );
+
+        $user_id = get_current_user_id();
+        $result  = MainWP_Application_Passwords::delete_all_application_passwords( $user_id );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+        }
+
+        wp_send_json_success( array( 'deleted' => $result ) );
     }
 }

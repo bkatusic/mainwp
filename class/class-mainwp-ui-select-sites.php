@@ -214,9 +214,19 @@ class MainWP_UI_Select_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameL
             $select_all_disconnected .= '<div onClick="return mainwp_ss_select_disconnected( this, false )" class="mainwp-ss-deselect-disconnected" style="display:none;padding-top:0;"><i class="check square outline icon"></i> ' . esc_attr__( 'Deselect All Disconnected', 'mainwp' ) . '</div>';
         }
 
+        static $rendered_count = 0;
+
+        $rand_id_prefix = '';
+
+        if ( ! empty( $rendered_count ) ) {
+            $rand_id_prefix = '-' . MainWP_Utility::gen_rand_id();
+        }
+
+        ++$rendered_count;
+
         if ( $show_select_all || $show_selectall_disc || $show_new_tag ) :
             ?>
-            <div id="mainwp-select-sites-select-all-actions" class="ui two column grid">
+            <div id="mainwp-select-sites-select-all-actions<?php echo esc_attr( $rand_id_prefix ); // empty prefix to ensure compatibility with extensions. ?>" class="ui two column grid mainwp-select-sites-select-all-actions">
                 <div class="ui middle aligned twelve wide column">
                     <?php if ( $show_select_all ) : ?>
                     <button onClick="return mainwp_ss_select( this, true )" onKeyUp="" class="mainwp-ss-select mainwp-sites-select-deselect-button ui mini basic grey button"><i class="square outline icon"></i> <?php esc_attr_e( 'Select All', 'mainwp' ); ?></button>
@@ -226,7 +236,7 @@ class MainWP_UI_Select_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 </div>
                 <div class="ui right aligned middle aligned four wide column">
                     <?php if ( $show_new_tag ) { ?>
-                    <a class="ui mini basic icon button" href="javascript:void(0)" id="mainwp-create-new-tag-button" aria-label="<?php esc_attr_e( 'Create a tag with selected sites.', 'mainwp' ); ?>" data-tooltip="<?php esc_attr_e( 'Create a tag with selected sites.', 'mainwp' ); ?>" data-position="left center" data-inverted=""><i class="tag icon"></i></a>
+                    <a class="ui mini basic icon button mainwp-create-new-tag-button" href="javascript:void(0)" id="mainwp-create-new-tag-button<?php echo esc_attr( $rand_id_prefix ); ?>" aria-label="<?php esc_attr_e( 'Create a tag with selected sites.', 'mainwp' ); ?>" data-tooltip="<?php esc_attr_e( 'Create a tag with selected sites.', 'mainwp' ); ?>" data-position="left center" data-inverted=""><i class="tag icon"></i></a>
                     <?php } ?>
                 </div>
             </div>
@@ -281,18 +291,18 @@ class MainWP_UI_Select_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameL
         ?>
         <script type="text/javascript">
         jQuery( document ).ready( function () {
-            jQuery( '#mainwp-create-new-tag-button' ).on( 'click', function() {
-                jQuery( '#mainwp-create-group-sites-modal' ).modal( {
+            jQuery( '.mainwp-create-new-tag-button' ).on( 'click', function() {
+                jQuery( '.mainwp-create-group-sites-modal' ).modal( {
                     onHide: function () {
-                        window.location.href = location.href;
+                        mainwp_forceReload();
                         return false;
                     },
                 } ).modal( 'show' );
             } );
             // Create a new group (Select Sites UI)
-            jQuery( document ).on( 'click', '#mainwp-save-new-tag-button', function () {
-                let newName = jQuery( '#mainwp-create-group-sites-modal' ).find( '#mainwp-group-name' ).val().trim();
-                let newColor = jQuery( '#mainwp-create-group-sites-modal' ).find( '#mainwp-group-color' ).val();
+            jQuery( document ).on( 'click', '.mainwp-save-new-tag-button', function () {
+                let newName = jQuery( '.mainwp-create-group-sites-modal' ).find( 'input[name="mainwp-group-name"]' ).val().trim();
+                let newColor = jQuery( '.mainwp-create-group-sites-modal' ).find( 'input[name="mainwp-group-color"]' ).val();
                 if('' == newName ){
                     return false;
                 }
@@ -310,13 +320,13 @@ class MainWP_UI_Select_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 jQuery.post( ajaxurl, data, function ( response ) {
                     try {
                         if ( response.error != undefined ){
-                            jQuery('#mainwp-message-zone-tag').show().find('.ui.message').html(response.error);
+                            jQuery('.mainwp-message-zone-tag').show().find('.ui.message').html(response.error);
                             return;
                         }
                     } catch ( err ) {
                         // to fix js error.
                     }
-                    jQuery( '#mainwp-create-group-sites-modal' ).modal( 'hide' );
+                    jQuery( '.mainwp-create-group-sites-modal' ).modal( 'hide' );
                 }, 'json' );
                 return false;
             } );
@@ -366,8 +376,19 @@ class MainWP_UI_Select_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameL
          * @since 4.1
          */
         do_action( 'mainwp_before_select_clients_list', $clients );
+
+        static $rendered_count = 0;
+
+        $rand_id_prefix = '';
+
+        if ( ! empty( $rendered_count ) ) {
+            $rand_id_prefix = '-' . MainWP_Utility::gen_rand_id();
+        }
+
+        ++$rendered_count;
+
         ?>
-            <div id="mainwp-select-sites-body">
+            <div id="mainwp-select-sites-body<?php echo esc_attr( $rand_id_prefix ); ?>" class="mainwp-select-sites-items-body">
                 <div class="ui relaxed selection list" id="mainwp-select-clients-list">
                 <?php if ( ! $clients ) : ?>
                         <h2 class="ui icon header">
@@ -424,22 +445,33 @@ class MainWP_UI_Select_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameL
      * Renders the Create Tag modal.
      */
     public static function render_create_tag_modal() {
+
+        static $rendered_count = 0;
+
+        $rand_id_prefix = '';
+
+        if ( ! empty( $rendered_count ) ) {
+            $rand_id_prefix = '-' . MainWP_Utility::gen_rand_id();
+        }
+
+        ++$rendered_count;
+
         ?>
-        <div class="ui mini modal" id="mainwp-create-group-sites-modal">
+        <div class="ui mini modal mainwp-create-group-sites-modal" id="mainwp-create-group-sites-modal<?php echo esc_attr( $rand_id_prefix ); ?>">
         <i class="close icon"></i>
             <div class="header"><?php echo esc_html__( 'Create Tag', 'mainwp' ); ?></div>
                 <div class="content">
-                    <div id="mainwp-message-zone-tag" style="display: none;">
+                    <div class="mainwp-message-zone-tag" style="display: none;">
                         <div class="ui message red"></div>
                     </div>
                     <div class="ui form">
                         <div class="field">
                             <label><?php esc_html_e( 'Enter tag name', 'mainwp' ); ?></label>
-                            <input type="text" value="" name="mainwp-group-name" id="mainwp-group-name">
+                            <input type="text" value="" name="mainwp-group-name" id="mainwp-group-name<?php echo esc_attr( $rand_id_prefix ); ?>">
                         </div>
                         <div class="field">
                             <label><?php esc_html_e( 'Select tag color', 'mainwp' ); ?></label>
-                            <input type="color" name="mainwp-group-color" class="mainwp-color-picker-input" id="mainwp-group-color"  value="" />
+                            <input type="color" name="mainwp-group-color" class="mainwp-color-picker-input mainwp-group-color-picker" id="mainwp-group-color<?php echo esc_attr( $rand_id_prefix ); ?>"  value="#ffffff" />
                         </div>
                     </div>
                 </div>
@@ -449,7 +481,7 @@ class MainWP_UI_Select_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameL
 
                         </div>
                         <div class="right aligned column">
-                        <a class="ui green button" id="mainwp-save-new-tag-button" href="javascript:void(0);"><?php echo esc_html__( 'Create Tag', 'mainwp' ); ?></a>
+                        <a class="ui green button mainwp-save-new-tag-button" href="javascript:void(0);"><?php echo esc_html__( 'Create Tag', 'mainwp' ); ?></a>
                         </div>
                     </div>
                 </div>
@@ -457,7 +489,7 @@ class MainWP_UI_Select_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     .mainwp-ui .ui.modal .wp-picker-clear {
                         display:none;
                     }
-                    .mainwp-ui .ui.modal #mainwp-group-color {
+                    .mainwp-ui .ui.modal .mainwp-group-color-picker {
                         height: 28px;
                         margin-left: 5px;
                     }

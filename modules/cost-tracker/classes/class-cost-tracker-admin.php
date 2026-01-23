@@ -15,6 +15,7 @@ use MainWP\Dashboard\MainWP_Utility;
 use MainWP\Dashboard\MainWP_System_Utility;
 use MainWP\Dashboard\MainWP_Logger;
 use MainWP\Dashboard\MainWP_Post_Handler;
+use MainWP\Dashboard\MainWP_Settings;
 use MainWP\Dashboard\MainWP_Settings_Indicator;
 use MainWP\Dashboard\MainWP_Exception;
 
@@ -320,6 +321,10 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
      * Run on page load.
      */
     public static function on_load_summary_page() {
+        if ( ! \mainwp_current_user_can( 'dashboard', 'access_cost_summary_dashboard' ) && \mainwp_current_user_can( 'dashboard', 'manage_cost_tracker' ) ) {
+            wp_safe_redirect( 'admin.php?page=ManageCostTracker' );
+            exit();
+        }
         Cost_Tracker_Summary::instance()->on_load_page( static::$page );
     }
 
@@ -341,6 +346,13 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
             ),
             0
         );
+
+        $sum_item_class = '';
+
+        if ( ! \mainwp_current_user_can( 'dashboard', 'access_cost_summary_dashboard' ) ) {
+            $sum_item_class = 'hidden-menu-item';
+        }
+
         $init_sub_subleftmenu = array(
             array(
                 'title'      => esc_html__( 'Cost Summary', 'mainwp' ),
@@ -348,6 +360,7 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
                 'href'       => 'admin.php?page=CostSummary',
                 'slug'       => 'CostSummary',
                 'right'      => 'manage_cost_tracker',
+                'item_class' => $sum_item_class,
             ),
             array(
                 'title'      => esc_html__( 'Manage Costs', 'mainwp' ),
@@ -513,11 +526,13 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
         }
 
         //phpcs:enable
-        $err_msg = '';
-        $output  = false;
+        $err_msg  = '';
+        $output   = false;
+        $saved_id = 0;
         try {
             $output = Cost_Tracker_DB::get_instance()->update_cost_tracker( $update );
             if ( $output && ! empty( $output->id ) ) {
+                $saved_id = $output->id;
                 Cost_Tracker_DB::get_instance()->update_selected_lookup_cost( $output->id, $selected_sites, $selected_groups, $selected_clients );
                 if ( $current && ! empty( $current->cost_icon ) && false === strpos( $current->cost_icon, 'deficon:' ) && $current->cost_icon !== $update['cost_icon'] ) {
                     Cost_Tracker_Add_Edit::get_instance()->delete_product_icon_file( $current->cost_icon );
@@ -540,12 +555,62 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
             set_transient( 'mainwp_cost_tracker_update_error_' . $msg_id, $err_msg, HOUR_IN_SECONDS );
         }
 
+        $snapshot_info = static::get_costs_snapshot_info();
+
+        /**
+         * Action hook for cost tracker update or insert.
+         *
+         * @since 6.0
+         *
+         * @param array  $update The data used for the update.
+         * @param int    $saved_id The saved cost tracker ID.
+         * @param string $err_msg The error message, if any.
+         * @param array $snapshot_info Costs snapshot info.
+         */
+        do_action( 'mainwp_cost_tracker_update_cost', $update, $saved_id, $err_msg, $snapshot_info );
+
         if ( empty( $err_msg ) && ! empty( $output ) ) { // success.
             wp_safe_redirect( admin_url( 'admin.php?page=CostTrackerAdd&message=1&id=' . $output->id ) );
         } elseif ( ! empty( $err_msg ) ) { // error.
             wp_safe_redirect( admin_url( 'admin.php?page=CostTrackerAdd&message=2&id=' . $msg_id ) );
         }
         exit();
+    }
+
+    /**
+     * Handle get_costs_snapshot_info
+     *
+     * @return array
+     */
+    public static function get_costs_snapshot_info() {
+
+        $costs = Cost_Tracker_DB::get_instance()->get_cost_tracker_by( 'all' );
+
+        $total     = 0;
+        $recurring = 0;
+        $one_time  = 0;
+        $active    = 0;
+
+        if ( is_array( $costs ) ) {
+            $total = count( $costs );
+            foreach ( $costs as $cost ) {
+                if ( 'active' === $cost->cost_status ) {
+                    ++$active;
+                }
+                if ( 'subscription' === $cost->type ) {
+                    ++$recurring;
+                } else {
+                    ++$one_time;
+                }
+            }
+        }
+
+        return array(
+            'cost_items_total'           => $total,
+            'cost_items_recurring_count' => $recurring,
+            'cost_items_one_time_count'  => $one_time,
+            'cost_items_active_count'    => $active,
+        );
     }
 
 
@@ -560,6 +625,8 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
         if ( ! isset( $_POST['mwp_cost_tracker_settings_submit'] ) || ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'module_cost_tracker_settings_nonce' ) ) {
             return;
         }
+
+        $old_settings = MainWP_Settings::get_all_settings_values();
 
         $all_opts        = Cost_Tracker_Utility::get_instance()->get_all_options();
         $currency        = isset( $_POST['mainwp_module_cost_tracker_settings_currency'] ) ? sanitize_text_field( wp_unslash( $_POST['mainwp_module_cost_tracker_settings_currency'] ) ) : '';
@@ -590,6 +657,20 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
         $all_opts = apply_filters( 'mainwp_module_cost_tracker_before_save_settings', $all_opts );
 
         Cost_Tracker_Utility::get_instance()->save_options( $all_opts );
+
+        $new_settings = MainWP_Settings::get_all_settings_values();
+
+        /**
+        * Action: mainwp_after_save_settings
+        *
+        * Fires after save settings.
+        *
+        * @since 6.0
+        *
+        * @param array $new_settings The new settings.
+        * @param array $old_settings The old settings.
+        */
+        do_action( 'mainwp_after_save_settings', $new_settings, $old_settings );
 
         wp_safe_redirect( admin_url( 'admin.php?page=CostTrackerSettings&message=1' ) );
         exit();
@@ -863,13 +944,13 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
             ?>
             <p><?php esc_html_e( 'If you need help with the Cost Tracker module, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-cost-tracker/" target="_blank">Cost Tracker</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-cost-tracker/#manage-costs-page" target="_blank">Manage Costs</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-cost-tracker/#adding-a-new-cost-to-track" target="_blank">Adding a New Cost to track</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-cost-tracker/#edit-an-item" target="_blank">Edit Costs</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-cost-tracker/#delete-an-item" target="_blank">Delete Costs</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-cost-tracker/#settings-page" target="_blank">Cost Tracker Settings</a></div> <?php // NOSONAR -- compatible with help. ?>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-cost-tracker/#cost-tracker-pro-extension" target="_blank">Cost Tracker Pro Extension</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/add-ons/client/cost-tracker-extension#cost-tracker" target="_blank">Cost Tracker</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/add-ons/client/cost-tracker-extension#manage-costs-page" target="_blank">Manage Costs</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/add-ons/client/cost-tracker-extension#adding-a-new-cost-to-track" target="_blank">Adding a New Cost to track</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/add-ons/client/cost-tracker-extension#edit-an-item" target="_blank">Edit Costs</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/add-ons/client/cost-tracker-extension#delete-an-item" target="_blank">Delete Costs</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/add-ons/client/cost-tracker-extension#settings-page" target="_blank">Cost Tracker Settings</a></div> <?php // NOSONAR -- compatible with help. ?>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/add-ons/client/cost-tracker-extension#cost-tracker-pro-extension" target="_blank">Cost Tracker Pro Extension</a></div> <?php // NOSONAR -- compatible with help. ?>
                 <?php
                 /**
                  * Action: mainwp_module_cost_tracker_help_item

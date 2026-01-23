@@ -180,7 +180,7 @@ let mainwp_manageclients_bulk_remove_next = function () {
   if ((bulkManageClientsTotal > 0) && (bulkManageClientsFinished == bulkManageClientsTotal)) { // NOSONAR -- modified out side the function.
     setHtml('#mainwp-message-zone-client', __("Process completed. Reloading page..."));
     setTimeout(function () {
-      window.location.reload()
+        mainwp_forceReload();
     }, 3000);
   }
 }
@@ -363,7 +363,7 @@ jQuery(document).on('click', '#bulk_add_multi_create_client', function (e) {
     });
     jQuery.post(ajaxurl, data, function (response) {
       if (response?.success) {
-        window.location.href = 'admin.php?page=mainwp-setup&step=monitoring&message=1';
+        mainwp_forceReload('admin.php?page=mainwp-setup&step=monitoring&message=1');
       } else if (response?.error) {
         mainwp_set_message_zone('#mainwp-message-zone', response.error, 'red');
       } else {
@@ -421,7 +421,7 @@ let mainwp_createclient = function (currPage) {
     selected_sites.push(jQuery(this).val());
   });
 
-  if (jQuery('#select_by').val() == 'site') {
+  if (jQuery('input[name="select_by"]').val() == 'site') {
     selected_sites = [];
     jQuery("input[name='selected_sites[]']:checked").each(function () {
       selected_sites.push(jQuery(this).val());
@@ -442,10 +442,10 @@ let mainwp_createclient = function (currPage) {
   mainwp_set_message_zone('#mainwp-message-zone-client', '<i class="notched circle loading icon"></i> ' + msg);
   jQuery('#bulk_add_createclient').attr('disabled', 'disabled');
 
-  //Add user via ajax!!
+  //Add Client via ajax!!
   let formdata = new FormData(jQuery('#createclient_form')[0]);
   formdata.append("action", 'mainwp_clients_add_client');
-  formdata.append("select_by", jQuery('#select_by').val());
+  formdata.append("select_by", jQuery('input[name="select_by"]').val());
   formdata.append("selected_sites[]", selected_sites);
   formdata.append("is_first_client", is_first_client);
   formdata.append("security", security_nonces['mainwp_clients_add_client']);
@@ -459,11 +459,14 @@ let mainwp_createclient = function (currPage) {
       jQuery('#bulk_add_createclient').prop("disabled", false);
       if (response?.success) {
         if ('add-new' == currPage) {
-          window.location.href = "admin.php?page=ManageClients";
+          mainwp_forceReload("admin.php?page=ManageClients");
         } else if ('qsw-add' == currPage) {
-          window.location.href = 'admin.php?page=mainwp-setup&step=monitoring&message=1';
+            mainwp_set_message_zone('#mainwp-message-zone', '<a href="admin.php?page=mainwp-setup&step=monitoring" class="ui mini basic green right floated button">Continue</a><div class="ui header">Congratulations! You have added your first client.</div> After finishing the Quick Setup Wizard, you can add more clients from the Add New Client page. Proceeding to the next step in 3 seconds...', 'green');
+            setTimeout(function () {
+              mainwp_forceReload('admin.php?page=mainwp-setup&step=monitoring&message=1');
+            }, 3000);
         } else {
-          window.location.href = location.href;
+            mainwp_forceReload();
         }
       } else if (response?.error) {
         feedback('mainwp-message-zone-client', response.error, 'red');
@@ -549,7 +552,7 @@ let mainwp_clients_update_custom_field = function (me) {
   jQuery.post(ajaxurl, fields, function (response) {
     if (response) {
       if (response.success) {
-        window.location.href = location.href;
+        mainwp_forceReload();
       } else if (response.error) {
         parent.find('.ui.message').html(response.error).show().removeClass('yellow').addClass('red');
       } else {

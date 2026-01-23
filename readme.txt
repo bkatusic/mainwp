@@ -7,7 +7,7 @@ Plugin URI: https://mainwp.com
 Requires at least: 6.2
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 5.4.1.1
+Stable tag: 6.0-er.5
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -83,9 +83,9 @@ You can even install your MainWP Dashboard on a WordPress site located on your l
 
 3. Once installed then Activate the plugin through the Plugins menu in WordPress.
 
-4. Add your first Child Site to the MainWP Dashboard - [Documentation](https://mainwp.com/kb/set-up-the-mainwp-plugin/add-site-to-your-dashboard/)
+4. Add your first Child Site to the MainWP Dashboard - [Documentation](https://docs.mainwp.com/getting-started/get-started-with-mainwp#add-a-site-to-your-dashboard)
 
-5. Set your MainWP Settings - [Documentation](https://mainwp.com/kb/set-up-the-mainwp-plugin/mainwp-dashboard-settings/)
+5. Set your MainWP Settings - [Documentation](https://docs.mainwp.com/sites/management/mainwp-dashboard-settings#mainwp-dashboard-settings)
 
 == Frequently Asked Questions ==
 
@@ -127,7 +127,7 @@ Think of it as the word "Main" followed by the letters "WP" (pronounced as "doub
 *But don't worry if you pronounce it differently – we answer to almost anything, including WP Main and WPMain!*
 
 = I have an idea for MainWP; how do I let you know? =
-Please follow the steps outlined in the [MainWP Feature Requests](https://feedback.mainwp.com/) so you can add your idea to the MainWP Community to be voted on.
+Please follow the steps outlined in the [MainWP Voice](https://voice.mainwp.com/) so you can add your idea to the MainWP Community to be voted on.
 
 = I have more questions. Do you have any other information? =
 Yes, we have a quick FAQ with many more questions and answers [here](https://mainwp.com/preinstall-faq/).
@@ -151,7 +151,6 @@ Yes, we have a quick FAQ with many more questions and answers [here](https://mai
 
 * Fixed: Resolved an issue where post categories would not load on the "Add New Bulk Post" screen.
 
-
 = 5.4.1 - Maintenance Release - 12-10-2025 =
 
 * Fixed: Resolved an issue where the OpenSSL Key encryption information banner was incorrectly displayed to all MainWP Dashboard administrators.
@@ -159,6 +158,15 @@ Yes, we have a quick FAQ with many more questions and answers [here](https://mai
 * Added: Implemented `AND` logic for filtering Tags in the "Manage Sites" list, allowing more precise filtering of site groups.
 * Updated: Improved output-escaping compliance throughout the plugin to meet WordPress coding standards.
 * Updated: Improved the logic used to detect when the `WP REST API` is disabled on the Dashboard site, providing more reliable behavior across different configurations.
+
+* Added: Abilities API integration providing 62 standardized abilities for managing sites, updates, clients, and tags
+* Added: REST API v2 endpoints exposing Abilities API for programmatic access and MCP tool integration
+* Added: Batch processing system with automatic queuing for operations exceeding 200 sites
+* Added: Background cron handlers for reliable processing of large-scale sync, update, and site management operations
+* Added: Job status polling via `mainwp/get-batch-job-status-v1` ability for monitoring long-running batch operations
+* Added: Comprehensive test coverage for all abilities including authentication, permissions, and input validation
+* Dev: New `mainwp_abilities_batch_threshold` filter to customize batch operation threshold (default: 200 sites)
+* Dev: Abilities API categories: mainwp-sites (30 abilities), mainwp-updates (13 abilities), mainwp-clients (11 abilities), mainwp-tags (7 abilities), mainwp-batch (1 ability)
 
 = 5.4.0.23 - Maintenance Release - 10-7-2025 =
 

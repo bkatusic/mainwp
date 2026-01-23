@@ -66,11 +66,11 @@ let mainwp_managesites_import_sites = function () { // NOSONAR - to compatible.
             jQuery('#mainwp_managesites_btn_import').hide();
             if (page_href !== undefined && page_href !== '') {
                 setTimeout(function () {
-                    window.location.href = page_href;
+                    mainwp_forceReload(page_href);
                 }, 2000);
             } else {
                 setTimeout(function () {
-                    location.reload();
+                    mainwp_forceReload();
                 }, 2000);
             }
         } else {
@@ -193,6 +193,7 @@ let mainwp_managesites_import_sites = function () { // NOSONAR - to compatible.
                 verify_certificate: import_verify_certificate,
                 managesites_add_http_user: import_http_username,
                 managesites_add_http_pass: import_http_password,
+                bulk: true,
             });
 
             jQuery.post(ajaxurl, data, function (res_things) {
@@ -337,9 +338,9 @@ jQuery(document).ready(function ($) {
 
             if (parsed_url !== "" && parsed_url !== undefined) {
                 // Update input value with domain name only
-				input.val(`${parsed_url.origin}${parsed_url.pathname}`);
+                input.val(`${parsed_url.origin}${parsed_url.pathname}`);
                 // Set value site name
-				input_site_name.val(`${parsed_url.origin}`);
+                input_site_name.val(`${parsed_url.origin}`);
             } else {
                 const user_confirmed = confirm(
                     __(
@@ -374,7 +375,7 @@ jQuery(document).ready(function ($) {
             );
             if (parsed_url !== "" && parsed_url !== undefined) {
                 // Update input value with domain name only
-				input.val(`${parsed_url.origin}${parsed_url.pathname}`);
+                input.val(`${parsed_url.origin}${parsed_url.pathname}`);
                 // Set value site name
                 input_site_name.val(`${parsed_url.origin}`);
             } else {

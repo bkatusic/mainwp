@@ -65,7 +65,7 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
         $saved_segments = static::set_get_widgets_layout( false, array(), $screen_slug );
         ?>
 
-        <a class="ui mini button" id="mainwp-manage-widgets-load-saved-layout-button" selected-layout-id="" settings-slug="<?php echo esc_attr( $screen_slug ); ?>"><?php esc_html_e( 'Save Layout', 'mainwp' ); ?></a>
+        <a class="ui mini green button" id="mainwp-manage-widgets-load-saved-layout-button" selected-layout-id="" settings-slug="<?php echo esc_attr( $screen_slug ); ?>"><?php esc_html_e( 'Save Layout', 'mainwp' ); ?></a>
         <?php if ( ! empty( $saved_segments ) ) : ?>
             <a class="ui mini button mainwp_manage_widgets_ui_choose_layout"><?php esc_html_e( 'Load Layout', 'mainwp' ); ?></a>
         <?php else : ?>
@@ -80,7 +80,7 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
                         action: 'mainwp_ui_load_widgets_layout',
                         settings_slug: jQuery('#mainwp-manage-widgets-load-saved-layout-button').attr('settings-slug')
                     });
-                    mainwpUIHandleWidgetsLayout.showWorkingStatus('<i class="notched circle loading icon"></i> ' + __('Loading layouts. Please wait...'), 'green');
+                    mainwpUIHandleWidgetsLayout.showWorkingStatus('<i class="notched circle loading icon"></i> ' + __('Loading layouts. Please wait...'), '');
                     jQuery.post(ajaxurl, data, function (response) {
                         if (response.error != undefined) {
                             mainwpUIHandleWidgetsLayout.showWorkingStatus(response.error, 'red');
@@ -107,7 +107,7 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
                     let seg_name = jQuery('#mainwp-common-edit-widgets-layout-name').val().trim();
 
                     if('' == seg_name){
-                        mainwpUIHandleWidgetsLayout.showWorkingStatus(__('Please enter layout name.'), 'red' );
+                        mainwpUIHandleWidgetsLayout.showWorkingStatus(__('Please enter layout name.'), 'yellow' );
                         return false;
                     }
 
@@ -117,7 +117,7 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
                         settings_slug: $('#mainwp-manage-widgets-load-saved-layout-button').attr('settings-slug')
                     };
 
-                    mainwpUIHandleWidgetsLayout.showWorkingStatus( '<i class="notched circle loading icon"></i> ' + __('Saving layout. Please wait...'), 'green' );
+                    mainwpUIHandleWidgetsLayout.showWorkingStatus( '<i class="notched circle loading icon"></i> ' + __('Saving layout. Please wait...'), '' );
 
                     mainwp_common_ui_widgets_save_layout( '.grid-stack-item', data, function(response){
                         if (response.error != undefined) {
@@ -127,7 +127,7 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
                             setTimeout(function () {
                                 jQuery('#mainwp-common-edit-widgets-layout-status').fadeOut(300);
                                 jQuery( '#mainwp-common-edit-widgets-layout-modal' ).modal('hide');
-                                window.location.href = location.href;
+                                mainwp_forceReload();
                             }, 2000);
                         } else {
                             mainwpUIHandleWidgetsLayout.showWorkingStatus(__('Undefined error occured while saving your layout!'), 'red');
@@ -166,7 +166,7 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
                         seg_id: seg_id,
                         settings_slug: $('#mainwp-manage-widgets-load-saved-layout-button').attr('settings-slug')
                     });
-                    mainwpUIHandleWidgetsLayout.showWorkingStatus('<i class="notched circle loading icon"></i> ' + __('Deleting layout. Please wait...'), 'green' );
+                    mainwpUIHandleWidgetsLayout.showWorkingStatus('<i class="notched circle loading icon"></i> ' + __('Deleting layout. Please wait...'), '' );
                     jQuery.post(ajaxurl, data, function (response) {
 
                         jQuery(delBtn).removeAttr('running');

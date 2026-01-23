@@ -386,7 +386,7 @@ class MainWP_Manage_Backups { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                     </div>
 
                 <form method="post" class="mainwp-table-container">
-                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                     <?php
                     MainWP_UI::render_modal_edit_notes();
                     static::instance()->display( $backup_items );
@@ -556,7 +556,7 @@ class MainWP_Manage_Backups { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         $out = '<div class="ui right pointing dropdown" style="z-index:999">
                         <i class="ellipsis vertical icon"></i>
                         <div class="menu">
-                        <div class="header">' . esc_html_e( 'Backup Actions', 'mainwp' ) . '</div>
+                        <div class="header">' . esc_html__( 'Backup Actions', 'mainwp' ) . '</div>
                         <div class="divider"></div>';
         foreach ( $actions as $link ) {
             $out .= $link;
@@ -681,7 +681,7 @@ class MainWP_Manage_Backups { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         <div class="ui alt segment">
             <div class="ui message" id="mainwp-message-zone" style="display:none"></div>
             <form method="POST" action="" class="ui form">
-                <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                 <input type="hidden" name="mainwp_managebackups_edit_id" id="mainwp_managebackups_edit_id" value="<?php echo esc_attr( $task->id ); ?>"/>
                 <?php
                 static::render_new_edit( $task );
@@ -703,7 +703,7 @@ class MainWP_Manage_Backups { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         <div class="ui alt segment">
             <div class="ui message" id="mainwp-message-zone" style="display:none"></div>
             <form method="POST" action="" id="mainwp-backup-task-form" class="ui form">
-                <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                 <?php static::render_new_edit( null ); ?>
             </form>
         </div>
@@ -1016,7 +1016,7 @@ class MainWP_Manage_Backups { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
             <label class="six wide column middle aligned"><?php esc_html_e( 'Select primary backup system', 'mainwp' ); ?></label>
             <div class="ten wide column">
                 <select class="ui dropdown" name="mainwp_primaryBackup" id="mainwp_primaryBackup">
-                    <?php if ( $enableLegacyBackupFeature ) { ?>
+                    <?php if ( $enableLegacyBackupFeature || empty( $primaryBackup ) ) { ?>
                         <option value="" ><?php esc_html_e( 'Native backups', 'mainwp' ); ?></option>
                     <?php } ?>
                     <?php
