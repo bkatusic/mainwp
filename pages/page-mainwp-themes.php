@@ -1800,8 +1800,8 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                     <div class="ui stackable two column grid">
                         <div class="column">
                             <div class="ui mini buttons">
-                                <a href="#" class="ui basic green button browse-themes" ><?php esc_html_e( 'Install from WordPress.org', 'mainwp' ); ?></a>
-                                <a href="#" class="ui basic button upload" ><?php esc_html_e( 'Upload .zip file', 'mainwp' ); ?></a>
+                                <a href="#" class="ui basic green button browse-themes mainwp-bulk-install-tabs-header-btn" ><?php esc_html_e( 'Install from WordPress.org', 'mainwp' ); ?></a>
+                                <a href="#" class="ui basic button upload  mainwp-bulk-install-tabs-header-btn" ><?php esc_html_e( 'Upload .zip file', 'mainwp' ); ?></a>
                                 <?php do_action( 'mainwp_install_plugin_theme_tabs_header_top', 'theme' ); ?>
                             </div>
                             <?php

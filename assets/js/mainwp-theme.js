@@ -1567,8 +1567,8 @@ window.wp = window.wp || {};
                 $('.mainwp-bulk-install-showhide-content').hide();
                 $('.mainwp-upload-theme').show();
                 themes.router.navigate(themes.router.baseUrl('&upload'), { replace: true });
+                $('a.mainwp-bulk-install-tabs-header-btn').removeClass('green');
                 $(this).addClass('green');
-                $('a.browse-themes').removeClass('green');
                 $('#mainwp_theme_bulk_install_btn').attr('bulk-action', 'upload');
             });
             $('a.browse-themes').on('click', function (event) {
@@ -1577,8 +1577,8 @@ window.wp = window.wp || {};
                 $('#mainwp-search-themes-input-container').show();
                 $('#theme-filter').show();
                 themes.router.navigate(themes.router.baseUrl(''), { replace: true });
+                $('a.mainwp-bulk-install-tabs-header-btn').removeClass('green');
                 $(this).addClass('green');
-                $('a.upload').removeClass('green');
                 $('#mainwp_theme_bulk_install_btn').attr('bulk-action', 'install');
             });
         },
