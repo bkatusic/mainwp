@@ -1858,7 +1858,11 @@ class MainWP_Rest_Users_Controller extends MainWP_REST_Controller { //phpcs:igno
         if ( ! empty( $body ) && is_string( $body ) ) {
             $body = json_decode( $body, true );
             if ( ! is_array( $body ) ) {
-                return array();
+                return new WP_Error(
+                    'invalid_json',
+                    __( 'Request body contains invalid JSON.', 'mainwp' ),
+                    array( 'status' => 400 )
+                );
             }
             return $body;
         }
