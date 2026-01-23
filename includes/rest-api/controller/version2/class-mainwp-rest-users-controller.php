@@ -426,7 +426,7 @@ class MainWP_Rest_Users_Controller extends MainWP_REST_Controller { //phpcs:igno
             $ct  = $request->get_header( 'content-type' );
             $msg = __( 'No CSV file uploaded.', 'mainwp' );
             if ( $ct && false !== stripos( $ct, 'multipart/form-data' ) ) {
-                $msg .= ' ' . __( 'If you manually set Content-Type: multipart/form-data, remove it and let the client add the boundary automatically, or send CSV via the csv_data field.', 'mainwp' );
+                $msg .= ' ' . __( 'If you manually set Content-Type: multipart/form-data, remove it and let the client add the boundary automatically.', 'mainwp' );
             }
             return new WP_Error( 'no_file_uploaded', $msg, array( 'status' => 400 ) );
         }
@@ -1796,7 +1796,7 @@ class MainWP_Rest_Users_Controller extends MainWP_REST_Controller { //phpcs:igno
                 if ( $utility->ctype_digit( $v ) ) {
                     $websites = $this->db->query( $this->db->get_sql_websites_by_group_id( $v ) );
                     while ( $websites && ( $website = $this->db->fetch_object( $websites ) ) ) {
-                        if ( empty( $website->sync_errors ) || $system_utility->is_suspended_site( $website ) ) {
+                        if ( ! empty( $website->sync_errors ) || $system_utility->is_suspended_site( $website ) ) {
                             continue;
                         }
                         $db_websites[ $website->id ] = $utility->map_site(
@@ -1819,7 +1819,7 @@ class MainWP_Rest_Users_Controller extends MainWP_REST_Controller { //phpcs:igno
             );
             if ( $websites ) {
                 foreach ( $websites as $website ) {
-                    if ( empty( $website->sync_errors ) || $system_utility->is_suspended_site( $website ) ) {
+                    if ( ! empty( $website->sync_errors ) || $system_utility->is_suspended_site( $website ) ) {
                         continue;
                     }
                     $db_websites[ $website->id ] = $utility->map_site(
