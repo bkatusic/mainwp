@@ -904,6 +904,17 @@ body.mainwp-ui.mainwp-custom-theme,
   background: var(--mainwp-dark);
 }
 
+.mainwp-ui.mainwp-custom-theme #mainwp-header-secondary-actions {
+  padding: 7px 10px;
+  margin: 0 10px;
+  border-left: 1px solid var(--mainwp-border) !important;
+  border-right: 1px solid var(--mainwp-border) !important;
+}
+
+.mainwp-ui.mainwp-custom-theme #mainwp-top-header .ui.button {
+  font-size: 0.85714286rem !important;
+}
+
 .mainwp-ui.mainwp-custom-theme #mainwp-top-header .ui.icon.button:not(.red, .green) {
   background: var(--mainwp-dark) !important;
   color: var(--mainwp-light) !important;
