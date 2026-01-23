@@ -1988,7 +1988,7 @@ class MainWP_Rest_Users_Controller extends MainWP_REST_Controller { //phpcs:igno
 	public function get_item_schema() {  // phpcs:ignore -- NOSONAR - long schema.
         return array(
             '$schema'    => 'http://json-schema.org/draft-04/schema#',
-            'title'      => 'settings',
+            'title'      => 'user',
             'type'       => 'object',
             'properties' => array(
                 'id'         => array(
