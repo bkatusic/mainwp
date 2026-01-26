@@ -731,12 +731,12 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
                 </div>
                 <div class="" style="float:right">
                     <div class="ui buttons">
-                        <a href="https://wordpress.org/support/plugin/mainwp/reviews/#new-post" class="ui green mini button" target="_blank"><?php esc_html_e( 'Review on WordPress.org', 'mainwp' ); ?></a>
+                        <a href="https://wordpress.org/support/plugin/mainwp/reviews/#new-post" class="ui green mini button" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Review on WordPress.org', 'mainwp' ); ?></a>
                         <div class="ui floating dropdown icon green mini button" style="opacity:0.85">
                             <i class="dropdown icon"></i>
                             <div class="menu">
-                                <a href="https://www.g2.com/products/mainwp/reviews" target="_blank" class="item" style="text-decoration:none!important;"><?php esc_html_e( 'Review on G2', 'mainwp' ); ?></a>
-                                <a href="https://www.trustpilot.com/review/mainwp.com" target="_blank" class="item" style="text-decoration:none!important;"><?php esc_html_e( 'Review on Trustpilot', 'mainwp' ); ?></a>
+                                <a href="https://www.g2.com/products/mainwp/reviews" target="_blank" rel="noopener noreferrer" class="item" style="text-decoration:none!important;"><?php esc_html_e( 'Review on G2', 'mainwp' ); ?></a>
+                                <a href="https://www.trustpilot.com/review/mainwp.com" target="_blank" rel="noopener noreferrer" class="item" style="text-decoration:none!important;"><?php esc_html_e( 'Review on Trustpilot', 'mainwp' ); ?></a>
                             </div>
                         </div>
                     </div>
