@@ -38,13 +38,6 @@ class MainWP_Application_Passwords {  // phpcs:ignore Generic.Classes.OpeningBra
     protected static $instance = null;
 
     /**
-     * Private variable to hold the permission slug.
-     *
-     * @var string
-     */
-    private $permis_slug = 'application_password_permis';
-
-    /**
      * Return the single instance of the class.
      *
      * @return mixed $instance The single instance of the class.
@@ -357,89 +350,74 @@ class MainWP_Application_Passwords {  // phpcs:ignore Generic.Classes.OpeningBra
     }
 
     /**
-     * Get application password capabilities show in Team Control.
+     * Determine if user can view Application Passwords.
      *
-     * @param bool $get_caps true get caps only, default false.
+     * @return bool
      */
-    public function get_application_password_capabilities( $get_caps = false ) {
-        $application_password_permi = array(
-            'title'        => esc_html__( 'Application Password', 'mainwp' ),
-            'capabilities' => array(
-                'all_application_passwords'    => esc_html__( 'ALL Application Passwords', 'mainwp' ),
-                'manage_application_passwords' => esc_html__( 'Application Password Management', 'mainwp' ),
-            ),
-        );
-
-        if ( $get_caps ) {
-            return $application_password_permi['capabilities'];
+    public static function can_access_application_passwords() { // phpcs:ignore -- used outside.
+        if (
+            static::can_view_manage_application_passwords() ||
+            static::can_view_all_application_passwords() ||
+            static::can_create_application_passwords() ||
+            static::can_delete_application_passwords() ||
+            static::can_edit_application_passwords()
+        ) {
+            return true;
         }
-        return $application_password_permi;
+        return false;
     }
 
     /**
-     * Hook show all capabilities in Team Control.
+     * Determine if user can manage Application Passwords (create/delete).
      *
-     * @param array $team_control_permis all team control permission.
+     * @return bool
      */
-    public function hook_all_capabilities( $team_control_permis ) {
-        if ( ! is_array( $team_control_permis ) ) {
-            $team_control_permis = array();
-        }
-
-        $team_control_permis[ $this->permis_slug ] = $this->get_application_password_capabilities();
-
-        return $team_control_permis;
+    public static function can_manage_application_passwords() {
+        return static::can_view_manage_application_passwords();
     }
 
     /**
-     * Hook edit roles capabilities in Team Control.
+     * Determine if user can add Application Passwords.
      *
-     * @param array $capabilities capabilities.
-     * @param int   $role_id role id.
+     * @return bool
      */
-    public function hook_edit_roles_capabilities( $capabilities, $role_id ) {
-        if ( empty( $role_id ) ) {
-            return $capabilities;
-        }
-        if ( ! is_array( $capabilities ) ) {
-            $capabilities = array();
-        }
-
-        $application_password_caps = $this->get_application_password_capabilities( true );
-
-		$custom_permis    = isset( $_POST['custom_permis_caps'] ) ? sanitize_text_field( wp_unslash( $_POST['custom_permis_caps'] ) ) : ''; // phpcs:ignore -- ok.
-        $post_custom_permis = ! empty( $custom_permis ) ? json_decode( $custom_permis, true ) : array();
-
-        $post_caps = array();
-        if ( is_array( $post_custom_permis ) && isset( $post_custom_permis[ $this->permis_slug ] ) ) {
-            $post_caps = $post_custom_permis[ $this->permis_slug ];
-        }
-
-        if ( ! is_array( $post_caps ) ) {
-            $post_caps = array();
-        }
-
-        $save_caps = array();
-        foreach ( $application_password_caps as $cap_id => $title ) {
-            if ( ! empty( $post_caps[ $cap_id ] ) ) {
-                $save_caps[ $cap_id ] = 1;
-            }
-        }
-        $capabilities[ $this->permis_slug ] = $save_caps;
-
-        return $capabilities;
+    public static function can_create_application_passwords() {
+        return \mainwp_current_user_can( 'rest_api', 'create_application_passwords' );
     }
 
     /**
-     * Hook allow permissions in Team Control.
+     * Check if the current user can editApplication Passwords.
      *
-     * @param array $allow_permissions allow time tracker permissions.
+     * @return bool
      */
-    public function hook_allow_permissions( $allow_permissions ) {
-        if ( ! is_array( $allow_permissions ) ) {
-            $allow_permissions = array();
-        }
-        $allow_permissions[] = $this->permis_slug;
-        return $allow_permissions;
+    public static function can_edit_application_passwords() {
+        return \mainwp_current_user_can( 'rest_api', 'edit_application_passwords' );
+    }
+
+    /**
+     * Determine if user can revoke Application Passwords.
+     *
+     * @return bool
+     */
+    public static function can_delete_application_passwords() {
+        return \mainwp_current_user_can( 'rest_api', 'delete_application_passwords' );
+    }
+
+    /**
+     * Check if the current user can view all application passwords.
+     *
+     * @return bool
+     */
+    public static function can_view_all_application_passwords() {
+        return \mainwp_current_user_can( 'rest_api', 'view_all_application_passwords' );
+    }
+
+    /**
+     * Check if the current user can view and manage application passwords.
+     *
+     * @return bool
+     */
+    public static function can_view_manage_application_passwords() {
+        return \mainwp_current_user_can( 'rest_api', 'manage_application_passwords' );
     }
 }

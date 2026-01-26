@@ -256,16 +256,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             $menus_items[] = array(
                 'slug'               => 'RESTAPI',
                 'menu_level'         => 2,
-                'menu_rights'        => array(
-                    'dashboard'                  => array(
-                        'manage_dashboard_restapi',
-                        'manage_application_passwords',
-                    ),
-                    'application_password_permis' => array(
-                        'manage_application_passwords',
-                        'all_application_passwords',
-                    ),
-                ),
+                'menu_rights'        => true,
                 'init_menu_callback' => array( MainWP_Rest_Api_Page::class, 'init_menu' ),
                 'leftbar_order'      => 4,
             );

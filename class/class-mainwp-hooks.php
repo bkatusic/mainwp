@@ -223,15 +223,6 @@ class MainWP_Hooks { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conten
         add_action( 'mainwp_general_process_update', array( MainWP_DB::instance(), 'update_regular_process' ), 10, 1 );
         add_action( 'mainwp_general_process_delete', array( MainWP_DB::instance(), 'delete_regular_process' ), 10, 4 );
         add_filter( 'mainwp_general_process_get_process_by', array( &$this, 'hook_get_regular_process_by' ), 10, 4 );
-
-        /**
-         * Handle application passwords.
-         *
-         * @since 6.0
-         */
-        add_filter( 'mainwp_team_control_edit_roles_capabilities', array( MainWP_Application_Passwords::instance(), 'hook_edit_roles_capabilities' ), 10, 2 );
-        add_filter( 'mainwp_team_control_all_capabilities', array( MainWP_Application_Passwords::instance(), 'hook_all_capabilities' ), 10, 1 );
-        add_filter( 'mainwp_team_control_user_can_allow_permissions', array( MainWP_Application_Passwords::instance(), 'hook_allow_permissions' ), 10, 1 );
     }
 
     /**

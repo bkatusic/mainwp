@@ -4,14 +4,14 @@ let bulk_RestAPITotal = 0;
 let bulk_RestAPIFinished = 0;
 let bulk_RestAPITaskRunning = false;
 
-jQuery(function($) {
+jQuery(function ($) {
     $('body').on('click', '.copy-to-clipboard', function () {
         $('#mainwp-api-key-copied-confirm-modal').modal('show');
     });
     // Trigger Manage Bulk Actions
     jQuery(document).on('click', '#mainwp-do-rest-api-bulk-actions', function () {
         let action = jQuery("#mainwp-rest-api-bulk-actions-menu").dropdown("get value");
-        if (action == 'delete' && ! bulk_RestAPITaskRunning ) {
+        if (action == 'delete' && !bulk_RestAPITaskRunning) {
             mainwp_restapi_bulk_remove_keys_confirm();
         }
         return false;
@@ -70,7 +70,7 @@ let mainwp_restapi_bulk_remove_specific = function (pCheckedBox) {
     let data = mainwp_secure_data({
         action: 'mainwp_rest_api_remove_keys',
         keyId: id,
-        api_ver: rowObj.closest('tbody').attr('id') === 'mainwp-rest-api-v2-body-table' ? 'v2': 'v1'
+        api_ver: rowObj.closest('tbody').attr('id') === 'mainwp-rest-api-v2-body-table' ? 'v2' : 'v1'
     });
     jQuery.post(ajaxurl, data, function (response) {
         bulk_RestAPICurrentThreads--;
@@ -92,8 +92,8 @@ let mainwp_restapi_bulk_remove_specific = function (pCheckedBox) {
             jQuery('tr[key-ck-id=' + id + ']').fadeOut(1000);
         }, 3000);
 
-            mainwp_restapi_remove_keys_next();
-        },
+        mainwp_restapi_remove_keys_next();
+    },
         "json"
     );
 };
@@ -108,6 +108,10 @@ const init_application_passwords = ($) => {
     const success_modal = $("#mainwp-application-password-success-modal");
     const app_pass_name_input = $("#mainwp-app-password-name-input");
     const app_pass_tbody = $("#mainwp-application-password-table-body");
+    const edit_modal = $("#mainwp-edit-application-password-modal");
+    const edit_name_input = $("#mainwp-app-password-edit-name-input");
+    const edit_uuid_input = $("#mainwp-app-password-edit-uuid");
+    const edit_user_id_input = $("#mainwp-app-password-edit-user-id");
     const has_user_col = $('#mainwp-application-password-table thead th.mainwp-col-user').length > 0;
     const current_user_name = $('#rest-application-passwords-settings').data('current-user-name') || '';
     const message_zone = $("#mainwp-message-zone-app-passwords");
@@ -152,7 +156,7 @@ const init_application_passwords = ($) => {
 
         setTimeout(() => {
             message_zone.fadeOut();
-        }, 5000);
+        }, 3000);
     };
 
     /**
@@ -207,11 +211,14 @@ const init_application_passwords = ($) => {
             return;
         }
 
+        // Check manage capability from table data attribute
+        const can_manage_table = $('#mainwp-application-password-table').data('can-manage') == 1;
+
         // Create row HTML with proper data-order attributes
         const row_html = `<tr data-uuid="${item.uuid}" data-user-id="${item.user_id || ''}">
             <td class="check-column">
                 <div class="ui checkbox">
-                    <input type="checkbox" value="${item.uuid}" name=""/>
+                    <input type="checkbox" value="${item.uuid}" name="" ${can_manage_table ? '' : 'disabled'} />
                 </div>
             </td>
             <td>${escape_html(item.name)}</td>
@@ -220,10 +227,7 @@ const init_application_passwords = ($) => {
             <td data-order="0">&mdash;</td>
             <td>&mdash;</td>
             <td class="right aligned">
-                <button type="button" class="ui mini grey basic button mainwp-revoke-application-password" data-uuid="${item.uuid
-            }">
-                    ${__("Revoke")}
-                </button>
+                ${can_manage_table ? `<button type="button" class="ui mini grey basic button mainwp-revoke-application-password" data-uuid="${item.uuid}">${__("Revoke")}</button>` : ''}
             </td>
         </tr>`;
 
@@ -233,6 +237,79 @@ const init_application_passwords = ($) => {
         // Initialize Semantic UI checkbox
         $(row_node).find(".ui.checkbox").checkbox();
     };
+
+    /**
+     * Open edit modal
+     */
+    app_pass_tbody.on('click', '.mainwp-edit-application-password', (e) => {
+        e.preventDefault();
+        const btn = $(e.currentTarget);
+        const uuid = btn.data('uuid');
+        const userId = btn.data('user-id');
+        const name = btn.data('name');
+
+        edit_uuid_input.val(uuid);
+        edit_user_id_input.val(userId);
+        edit_name_input.val(name);
+
+        edit_modal.modal('show');
+    });
+
+    /**
+     * Submit edit application password
+     */
+    $('#mainwp-edit-app-password-submit').on('click', (e) => {
+        e.preventDefault();
+        const uuid = edit_uuid_input.val();
+        const userId = edit_user_id_input.val();
+        const name = (edit_name_input.val() || '').trim();
+        if (!name) {
+            edit_name_input.trigger('focus');
+            show_message(__('Please enter an application name.'), 'error');
+            return false;
+        }
+
+        const data = mainwp_secure_data({
+            action: 'mainwp_application_password_update',
+            uuid: uuid,
+            user_id: userId,
+            name: name,
+        });
+
+        $.post(ajaxurl, data, (resp) => {
+            if (resp && resp.success) {
+                try {
+                    const table = window.mainwp_app_passwords_table;
+                    const tr = $('#mainwp-application-password-table tbody tr[data-uuid="' + uuid + '"]');
+                    if (tr.length) {
+                        // Update name cell
+                        const nameCell = tr.find('td').eq(1);
+                        nameCell.text(name);
+                        // Update buttons aria/data
+                        const editBtn = tr.find('.mainwp-edit-application-password');
+                        if (editBtn.length) {
+                            editBtn.attr('data-name', name);
+                            editBtn.attr('aria-label', __('Rename "%s"').replace('%s', name));
+                        }
+                        const revokeBtn = tr.find('.mainwp-revoke-application-password');
+                        if (revokeBtn.length) {
+                            revokeBtn.attr('aria-label', __('Revoke "%s"').replace('%s', name));
+                        }
+                        if (table) {
+                            table.row(tr).invalidate().draw(false);
+                        }
+                    }
+                    show_message(__('Application password updated successfully.'), 'success');
+                    edit_modal.modal('hide');
+                } catch (err) {
+                    mainwp_forceReload();
+                }
+            } else {
+                const msg = (resp && resp.data && resp.data.message) ? resp.data.message : __('Failed to update Application Password.');
+                show_message(msg, 'error');
+            }
+        }, 'json');
+    });
 
     /**
      * Helper function to revoke multiple passwords
@@ -466,11 +543,11 @@ const init_application_passwords = ($) => {
     /**
      * Select checkboxes and disable/enable bulk actions
      */
-    $('.mainwp-application-password-checkbox').on('change', function(){
+    $('.mainwp-application-password-checkbox').on('change', function () {
         const all_checked = $('.mainwp-application-password-checkbox').is(':checked');
-        if (all_checked > 0){
+        if (all_checked > 0) {
             $("#mainwp-do-application-passwords-bulk-actions").removeClass('disabled');
-        }else{
+        } else {
             $("#mainwp-do-application-passwords-bulk-actions").addClass('disabled');
         }
     });
