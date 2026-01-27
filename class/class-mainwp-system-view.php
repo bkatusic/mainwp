@@ -692,26 +692,60 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             update_option( 'mainwp_showhide_events_notice', $current_options );
         }
 
-        if ( isset( $current_options['request_reviews2'] ) ) {
-            if ( 'forever' === $current_options['request_reviews2'] ) {
-                $display_request2 = false;
-            } else {
-                $days             = intval( $current_options['request_reviews2'] );
-                $start_time       = $current_options['request_reviews2_starttime'];
-                $display_request2 = ( ( time() - $start_time ) > $days * 24 * 3600 ) ? true : false;
-            }
-        } else {
-            $currentExtensions = MainWP_Extensions_Handler::get_extensions();
-            if ( is_array( $currentExtensions ) && count( $currentExtensions ) > 10 ) {
-                $display_request2 = true;
-            }
-        }
+        $currentExtensions = MainWP_Extensions_Handler::get_extensions();
+        $has_many_addons   = is_array( $currentExtensions ) && count( $currentExtensions ) > 10;
 
-        if ( $display_request1 ) {
-            static::render_rating_notice_1();
-        } elseif ( $display_request2 ) {
-            static::render_rating_notice_2();
+        if ( $display_request1 && $has_many_addons ) {
+            static::render_review_mainwp_notice( true );
+        } elseif ( $display_request1 ) {
+            static::render_review_mainwp_notice( false );
         }
+    }
+
+    /**
+     * Renders MainWP review request notice.
+     *
+     * Displays a dismissible notice encouraging users to leave a review on WordPress.org.
+     * Message content varies based on whether user has extensions installed.
+     *
+     * @since 6.0.0
+     *
+     * @param bool $addons Whether user has add-ons/extensions installed. Default false.
+     * @return void
+     */
+    public static function render_review_mainwp_notice( $addons = false ) {
+        ?>
+        <div class="ui segment">
+            <div class="ui icon message">
+                <i class="yellow star icon"></i>
+                <div class="content">
+                    <div class="header"><?php esc_html_e( 'Enjoying MainWP?', 'mainwp' ); ?></div>
+                    <div>
+                        <?php if ( $addons ) : ?>
+                        <?php esc_html_e( 'You\'ve been using MainWP for a while and it looks like you\'ve built a solid setup with add-ons.', 'mainwp' ); ?>
+                        <?php else : ?>
+                        <?php esc_html_e( 'You\'ve been using MainWP for a while.', 'mainwp' ); ?>
+                        <?php endif; ?>
+                    </div>
+                    <div><?php esc_html_e( 'If MainWP has been helpful, would you mind leaving a quick review on WordPress.org? It helps others find the plugin and supports ongoing improvements.', 'mainwp' ); ?></div>
+                </div>
+                <div class="" style="float:right">
+                    <div class="ui buttons">
+                        <a href="https://wordpress.org/support/plugin/mainwp/reviews/#new-post" class="ui green mini button" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Review on WordPress.org', 'mainwp' ); ?></a>
+                        <div class="ui floating dropdown icon green mini button" style="opacity:0.85">
+                            <i class="dropdown icon"></i>
+                            <div class="menu">
+                                <a href="https://www.g2.com/products/mainwp/reviews" target="_blank" rel="noopener noreferrer" class="item" style="text-decoration:none!important;"><?php esc_html_e( 'Review on G2', 'mainwp' ); ?></a>
+                                <a href="https://www.trustpilot.com/review/mainwp.com" target="_blank" rel="noopener noreferrer" class="item" style="text-decoration:none!important;"><?php esc_html_e( 'Review on Trustpilot', 'mainwp' ); ?></a>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="" class="ui mini basic grey button mainwp-events-notice-dismiss" notice="request_reviews1"><?php esc_html_e( 'Remind me later', 'mainwp' ); ?></a>
+                </div>
+                <i class="close icon mainwp-events-notice-dismiss" notice="request_reviews1_forever"></i>
+            </div>
+        </div>
+        <?php
     }
 
     /**
@@ -731,73 +765,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
         }
     }
 
-    /**
-     * Renders MainWP 30 day review request.
-     */
-    public static function render_rating_notice_1() {
-        ?>
-        <div class="ui huge icon message" style="margin-bottom: 0; border-radius: 0;">
-            <i class="star yellow icon"></i>
-            <div>
-                <p><?php esc_html_e( 'Hi, I noticed you have been using MainWP for over 30 days and that\'s awesome!', 'mainwp' ); ?></p>
-                <p><?php esc_html_e( 'Could you please do me a BIG favor and give it a 5-star rating? Reviews from users like YOU really help the MainWP community to grow.', 'mainwp' ); ?></p>
-                <p><?php esc_html_e( 'Thanks, Dennis.', 'mainwp' ); ?></p>
-                <div class="ui green floating mini labeled icon top pointing dropdown button">
-                    <i class="star icon"></i>
-                    <span class="text">Rate MainWP</span>
-                    <div class="menu">
-                    <a href="https://wordpress.org/support/plugin/mainwp/reviews/#new-post" class="item" target="_blank">
-                        <span class="text">WordPress.org</span>
-                    </a>
-                    <a href="https://www.trustpilot.com/review/mainwp.com" class="item" target="_blank">
-                        <span class="text">Trustpilot</span>
-                    </a>
-                    <a href="https://www.g2.com/products/mainwp/reviews" class="item" target="_blank">
-                        <span class="text">G2</span>
-                    </a>
-                    </div>
-                </div>
-                <a href="" class="ui mini button mainwp-events-notice-dismiss" notice="request_reviews1"><?php esc_html_e( 'Nope, maybe later', 'mainwp' ); ?></a>
-                <a href="" class="ui mini button mainwp-events-notice-dismiss" notice="request_reviews1_forever"><?php esc_html_e( 'I already did', 'mainwp' ); ?></a>
-            </div>
-            <i class="close icon mainwp-events-notice-dismiss" notice="request_reviews1_forever"></i>
-        </div>
-        <?php
-    }
-
-    /**
-     * Renders MainWP review notice after a few extensions have been installed.
-     */
-    public static function render_rating_notice_2() {
-        ?>
-        <div class="ui huge icon message" style="margin-bottom: 0; border-radius: 0;">
-            <i class="star yellow icon"></i>
-            <div>
-                <p><?php esc_html_e( 'Hi, I noticed you have a few MainWP Extensions installed and that\'s awesome!', 'mainwp' ); ?></p>
-                <p><?php esc_html_e( 'Could you please do me a BIG favor and give it a 5-star rating? Reviews from users like YOU really help the MainWP community to grow.', 'mainwp' ); ?></p>
-                <p><?php esc_html_e( 'Thanks, Dennis.', 'mainwp' ); ?></p>
-                <div class="ui green floating mini labeled icon top pointing dropdown button">
-                    <i class="star icon"></i>
-                    <span class="text">Rate MainWP</span>
-                    <div class="menu">
-                    <a href="https://wordpress.org/support/plugin/mainwp/reviews/#new-post" class="item" target="_blank">
-                        <span class="text">WordPress.org</span>
-                    </a>
-                    <a href="https://www.trustpilot.com/review/mainwp.com" class="item" target="_blank">
-                        <span class="text">Trustpilot</span>
-                    </a>
-                    <a href="https://www.g2.com/products/mainwp/reviews" class="item" target="_blank">
-                        <span class="text">G2</span>
-                    </a>
-                    </div>
-                </div>
-                <a href="" class="ui mini button mainwp-events-notice-dismiss" notice="request_reviews2"><?php esc_html_e( 'Nope, maybe later', 'mainwp' ); ?></a>
-                <a href="" class="ui mini button mainwp-events-notice-dismiss" notice="request_reviews2_forever"><?php esc_html_e( 'I already did', 'mainwp' ); ?></a>
-            </div>
-            <i class="close icon mainwp-events-notice-dismiss" notice="request_reviews2_forever"></i>
-        </div>
-        <?php
-    }
+    
 
     /** Renders Send Mail Function may have failed error. */
     public static function wp_admin_notices() {
