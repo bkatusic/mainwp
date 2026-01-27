@@ -9,6 +9,7 @@
 namespace MainWP\Dashboard\Module\Log;
 
 use MainWP\Dashboard\MainWP_Utility;
+use MainWP\Dashboard\MainWP_Settings;
 use MainWP\Dashboard\MainWP_Settings_Indicator;
 
 defined( 'ABSPATH' ) || exit;
