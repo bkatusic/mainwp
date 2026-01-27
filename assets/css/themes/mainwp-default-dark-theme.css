@@ -1465,6 +1465,12 @@ body.mainwp-ui.mainwp-custom-theme,
   color: var(--mainwp-text);
 }
 
+.mainwp-ui.mainwp-custom-theme .ui.secondary.segment:not(.mainwp-widget) {
+  background-color: var(--mainwp-element-background-secondary) !important;
+  border-radius: 0.28571429rem;
+  -webkit-border-radius: 0.28571429rem;
+}
+
 .mainwp-ui.mainwp-custom-theme .mainwp-main-content {
   border-right: 1px solid var(--mainwp-border) !important;
 }
