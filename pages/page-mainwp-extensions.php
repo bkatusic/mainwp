@@ -575,7 +575,7 @@ class MainWP_Extensions { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.C
                                 <div class="ui stackable grid">
                                     <div class="two column row">
                                         <div class="column"><span class="ui checkbox"><input type="checkbox" disabled="disabled"><label>' . $ext_source_label . ' <a href="' . esc_url( $ext['link'] ) . '" target="_blank">' . esc_html( $software_title ) . '</a>' . $privacy . ' ' . $notice . ' ' . $new . '</label></span></div>
-                                        <div class="right aligned column"><a href="' . $ext['url'] . '" target="_blank" data-tooltip="' . esc_html__( 'Add-on not installed. Click to find out more.', 'mainwp' ) . '" data-position="left center" data-inverted=""><i class="info blue icon"></i></a></div>
+                                        <div class="right aligned column"><a href="' . $ext['url'] . '" target="_blank" data-tooltip="' . esc_attr__( 'Add-on not installed. Click to find out more.', 'mainwp' ) . '" data-position="left center" data-inverted=""><i class="info blue icon"></i></a></div>
                                     </div>
                                 </div>
                             </div>';
@@ -585,8 +585,8 @@ class MainWP_Extensions { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.C
                     <div class="item extension ' . esc_attr( $add_on_model ) . '" product-id="' . esc_attr( $product_id ) . '" software-title="' . esc_attr( $software_title ) . '" slug="' . esc_attr( $ext['slug'] ) . '">
                         <div class="ui stackable grid">
                             <div class="two column row">
-                                <div class="column"><span data-tooltip="' . esc_html__( 'Already installed', 'mainwp' ) . '" data-inverted="" data-position="right center"><span class="ui checkbox"><input type="checkbox" disabled="disabled"><label>' . $ext_source_label . ' <a href="' . esc_url( $ext['link'] ) . '" target="_blank">' . esc_html( $software_title ) . '</a> ' . $notice . '</label></label></span>' . $privacy . ' ' . $new . '</div>
-                                <div class="right aligned column"><span data-tooltip="' . esc_html__( 'Already installed', 'mainwp' ) . '" data-inverted="" data-position="left center"><i class="grey box icon"></i></span></div>
+                                <div class="column"><span data-tooltip="' . esc_attr__( 'Already installed', 'mainwp' ) . '" data-inverted="" data-position="right center"><span class="ui checkbox"><input type="checkbox" disabled="disabled"><label>' . $ext_source_label . ' <a href="' . esc_url( $ext['link'] ) . '" target="_blank">' . esc_html( $software_title ) . '</a> ' . $notice . '</label></label></span>' . $privacy . ' ' . $new . '</div>
+                                <div class="right aligned column"><span data-tooltip="' . esc_attr__( 'Already installed', 'mainwp' ) . '" data-inverted="" data-position="left center"><i class="grey box icon"></i></span></div>
                             </div>
                         </div>
                     </div>';
@@ -658,7 +658,7 @@ class MainWP_Extensions { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.C
             $html .= esc_html__( 'Show: ', 'mainwp' );
             $html .= '<div class="ui checkbox"><input type="checkbox" checked="" id="mainwp-standalone-extensions-filer" name="mainwp-standalone-extensions-filer"><label><strong>' . esc_html__( 'Extensions', 'mainwp' ) . '</label></div>';
             $html .= '&nbsp;&nbsp; <div class="ui checkbox"><input type="checkbox" checked="" id="mainwp-api-extensions-filer" name="mainwp-api-extensions-filer"><label>' . esc_html__( 'Integrations', 'mainwp' ) . '</label></div>';
-            $html .= '&nbsp;&nbsp;&nbsp;&nbsp;<span class="ui small grey text" data-tooltip="' . esc_html__( 'Extensions add Dashboard features without third-party dependencies. Integrations connect your Dashboard to third-party tools you use.', 'mainwp' ) . '" data-position="right center" data-inverted=""><i class="question circle icon"></i> ' . esc_html__( 'What\'s the difference?', 'mainwp' ) . '</span>';
+            $html .= '&nbsp;&nbsp;&nbsp;&nbsp;<span class="ui small grey text" data-tooltip="' . esc_attr__( 'Extensions add Dashboard features without third-party dependencies. Integrations connect your Dashboard to third-party tools you use.', 'mainwp' ) . '" data-position="right center" data-inverted=""><i class="question circle icon"></i> ' . esc_html__( 'What\'s the difference?', 'mainwp' ) . '</span>';
             $html .= '</div>';
             $html .= '</div>';
 
