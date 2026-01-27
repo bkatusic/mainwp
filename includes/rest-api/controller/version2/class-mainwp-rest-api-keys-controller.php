@@ -320,14 +320,31 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
             );
         }
 
-        // Map data.
-        $active = isset( $body['active'] ) ? ( $body['active'] ? 1 : 0 ) : $api_key->enabled;
-        $desc   = ! empty( $body['description'] ) ? sanitize_text_field( wp_unslash( $body['description'] ) ) : $api_key->description;
-
+        // Get key identifier.
         $cons_key_id = $request->get_param( 'key_identifier' );
+
+        // Determine defaults based on key version (v1 = array, v2 = object).
+        if ( is_numeric( $cons_key_id ) ) {
+            $current_enabled     = $api_key->enabled ?? 0;
+            $current_description = $api_key->description ?? '';
+            $current_permissions = $api_key->permissions ?? 'read';
+        } else {
+            $current_enabled     = $api_key['enabled'] ?? 0;
+            $current_description = $api_key['desc'] ?? '';
+            $current_permissions = $api_key['perms'] ?? 'r';
+        }
+
+        // Determine active.
+        $active = $current_enabled;
+        if ( isset( $body['active'] ) ) {
+            $active = $body['active'] ? 1 : 0;
+        }
+        // Determine description.
+        $desc = ! empty( $body['description'] ) ? sanitize_text_field( wp_unslash( $body['description'] ) ) : $current_description;
+
         // Edit api key v1.
         if ( ! is_numeric( $cons_key_id ) ) {
-            $scope    = ! empty( $body['permissions'] ) ? $this->determine_scope( $body['permissions'], 'v1' ) : $api_key->permissions;
+            $scope    = ! empty( $body['permissions'] ) ? $this->determine_scope( $body['permissions'], 'v1' ) : $current_permissions;
             $save     = false;
             $all_keys = get_option( 'mainwp_rest_api_keys', false );
             if ( is_array( $all_keys ) && isset( $all_keys[ $cons_key_id ] ) ) {
@@ -350,7 +367,7 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
 
             MainWP_Utility::update_option( 'mainwp_rest_api_keys', $all_keys );
         } else {
-            $scope = ! empty( $body['permissions'] ) ? $this->determine_scope( $body['permissions'] ) : $api_key->permissions;
+            $scope = ! empty( $body['permissions'] ) ? $this->determine_scope( $body['permissions'] ) : $current_permissions;
             // Update api key.
             $updated = MainWP_DB::instance()->update_rest_api_key( $api_key->key_id, $scope, $desc, $active );
             if ( false === $updated ) {
