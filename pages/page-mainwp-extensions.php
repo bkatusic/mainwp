@@ -472,7 +472,7 @@ class MainWP_Extensions { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.C
 
             $item_slug = MainWP_Utility::get_dir_slug( $ext['slug'] );
 
-            $privacy = '<a href="#" class="extension-privacy-info-link" base-slug="' . esc_attr( $item_slug ) . '" style="text-decoration:none"> <i class="shield alternate small icon"></i></a>';
+            $privacy = '<a href="#" class="extension-privacy-info-link" base-slug="' . esc_attr( $item_slug ) . '" style="text-decoration:none"> <i class="fingerprint small icon"></i></a>';
 
             $new = '';
 
@@ -575,7 +575,7 @@ class MainWP_Extensions { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.C
                                 <div class="ui stackable grid">
                                     <div class="two column row">
                                         <div class="column"><span class="ui checkbox"><input type="checkbox" disabled="disabled"><label>' . $ext_source_label . ' <a href="' . esc_url( $ext['link'] ) . '" target="_blank">' . esc_html( $software_title ) . '</a>' . $privacy . ' ' . $notice . ' ' . $new . '</label></span></div>
-                                        <div class="right aligned column"><a href="' . $ext['url'] . '" target="_blank" data-tooltip="' . esc_html__( 'Add-on not installed. Click to find out more.', 'mainwp' ) . '" data-position="left center" data-inverted=""><i class="info blue icon"></i></a></div>
+                                        <div class="right aligned column"><a href="' . $ext['url'] . '" target="_blank" data-tooltip="' . esc_attr__( 'Add-on not installed. Click to find out more.', 'mainwp' ) . '" data-position="left center" data-inverted=""><i class="info blue icon"></i></a></div>
                                     </div>
                                 </div>
                             </div>';
@@ -585,8 +585,8 @@ class MainWP_Extensions { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.C
                     <div class="item extension ' . esc_attr( $add_on_model ) . '" product-id="' . esc_attr( $product_id ) . '" software-title="' . esc_attr( $software_title ) . '" slug="' . esc_attr( $ext['slug'] ) . '">
                         <div class="ui stackable grid">
                             <div class="two column row">
-                                <div class="column"><span class="ui checkbox"><input type="checkbox" disabled="disabled"><label>' . $ext_source_label . ' <a href="' . esc_url( $ext['link'] ) . '" target="_blank">' . esc_html( $software_title ) . '</a> ' . $notice . '</label></span>' . $privacy . ' ' . $new . '</div>
-                                <div class="right aligned column">Installed</div>
+                                <div class="column"><span data-tooltip="' . esc_attr__( 'Already installed', 'mainwp' ) . '" data-inverted="" data-position="right center"><span class="ui checkbox"><input type="checkbox" disabled="disabled"><label>' . $ext_source_label . ' <a href="' . esc_url( $ext['link'] ) . '" target="_blank">' . esc_html( $software_title ) . '</a> ' . $notice . '</label></label></span>' . $privacy . ' ' . $new . '</div>
+                                <div class="right aligned column"><span data-tooltip="' . esc_attr__( 'Already installed', 'mainwp' ) . '" data-inverted="" data-position="left center"><i class="grey box icon"></i></span></div>
                             </div>
                         </div>
                     </div>';
@@ -608,19 +608,33 @@ class MainWP_Extensions { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.C
         $html = '<div class="mainwp-installing-extensions">';
 
         if ( empty( $installing_exts ) && count( $purchased_data ) === count( $all_free_pro_exts ) ) {
-            $html .= '<div class="ui message yellow">' . esc_html__( 'All purchased add-ons already installed.', 'mainwp' ) . '</div>';
+            $html .= '<div class="ui message">' . esc_html__( 'All purchased add-ons already installed.', 'mainwp' ) . '</div>';
         } else {
             if ( isset( $not_purchased_exts ) && ! empty( $not_purchased_exts ) ) {
-                $html .= '<div class="ui message info">' . esc_html__( 'You have access to all our Free and third-party Add-ons on WP.org and any that you have registered for, but you DO NOT need to install them. ', 'mainwp' );
-                $html .= '<br />';
-                $html .= esc_html__( 'To avoid information overload, we highly recommend adding Add-ons one at a time and as you need them. Skip any add-on you do not want to install at this time. ', 'mainwp' );
-                $html .= sprintf( esc_html__( 'After installing all your selected Add-ons, close the modal by clicking the Close button and %1$sactivate Add-ons API license%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/dashboard/overview/manage-extensions#activate-add-ons" target="_blank">', '</a> <i class="external alternate icon"></i>' ) . '</div>'; // NOSONAR - noopener - open safe.
+                $html .= '<div class="ui icon message">';
+                $html .= '<em data-emoji=":bulb:" class="medium"></em>';
+                $html .= '<div class="content">';
+                $html .= '<div class="header">' . esc_html__( 'Install the Add-ons you need, you can always add more later.', 'mainwp' ) . '</div>';
+                $html .= '<p>';
+                $html .= esc_html__( 'You already have access to all free Add-ons. For best performance, install only what you need now. ', 'mainwp' ) . '<br/>';
+                $html .= esc_html__( 'When you\'re done, activate your license to enable automatic updates.', 'mainwp' );
+                $html .= '</p>';
+                $html .= '</div>';
+                $html .= '</div>';
             } else {
-                $html .= '<div class="ui message info">' . esc_html__( 'You have access to the MainWP Pro plan, which gives you access to all MainWP-created add-on, but you DO NOT need to install all of them.', 'mainwp' );
-                $html .= '<br />';
-                $html .= esc_html__( 'To avoid information overload, we highly recommend adding Add-ons one at a time and as you need them. Skip any add-on you do not want to install at this time. ', 'mainwp' );
-                $html .= sprintf( esc_html__( 'After installing all your selected Add-ons, close the modal by clicking the Close button and %1$sactivate Add-ons API license%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/dashboard/overview/manage-extensions#activate-add-ons" target="_blank">', '</a> <i class="external alternate icon"></i>' ) . '</div>'; // NOSONAR - noopener - open safe.
+                $html .= '<div class="ui icon message">';
+                $html .= '<em data-emoji=":bulb:" class="medium"></em>';
+                $html .= '<div class="content">';
+                $html .= '<div class="header">' . esc_html__( 'Install the Add-ons you need, you can always add more later.', 'mainwp' ) . '</div>';
+                $html .= '<p>';
+                $html .= esc_html__( 'You already have access to all free and pro Add-ons. For best performance, install only what you need now. ', 'mainwp' ) . '<br/>';
+                $html .= esc_html__( 'When you\'re done, activate your license to enable automatic updates.', 'mainwp' );
+                $html .= '</p>';
+                $html .= '</div>';
+                $html .= '</div>';
             }
+
+            $html .= '<div class="ui hidden divider"></div>';
 
             $html .= '<div id="mainwp-bulk-activating-extensions-status" class="ui message" style="display:none;"></div>';
 
@@ -639,15 +653,21 @@ class MainWP_Extensions { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.C
 
             $html .= '</div>';
 
-            $html .= '<div class="ui checkbox"><input type="checkbox" checked="" id="mainwp-standalone-extensions-filer" name="mainwp-standalone-extensions-filer"><label><strong>' . esc_html__( 'Show Extensions', 'mainwp' ) . '</strong> - ' . esc_html__( 'Purpose-built add-ons that expand your Dashboard\'s functionality without relying on third-party tools.', 'mainwp' ) . '</label></div><br/>';
-            $html .= '<div class="ui checkbox"><input type="checkbox" checked="" id="mainwp-api-extensions-filer" name="mainwp-api-extensions-filer"><label><strong>' . esc_html__( 'Show Integrations', 'mainwp' ) . '</strong> -' . esc_html__( 'Add-ons that connect to 3rd party tools you already use, bringing their power directly into your Dashboard.', 'mainwp' ) . '</label></div><br/>';
+            $html .= '<div class="ui grid">';
+            $html .= '<div class="sixteen wide left aligned middle aligned column">';
+            $html .= esc_html__( 'Show: ', 'mainwp' );
+            $html .= '<div class="ui checkbox"><input type="checkbox" checked="" id="mainwp-standalone-extensions-filer" name="mainwp-standalone-extensions-filer"><label><strong>' . esc_html__( 'Extensions', 'mainwp' ) . '</label></div>';
+            $html .= '&nbsp;&nbsp; <div class="ui checkbox"><input type="checkbox" checked="" id="mainwp-api-extensions-filer" name="mainwp-api-extensions-filer"><label>' . esc_html__( 'Integrations', 'mainwp' ) . '</label></div>';
+            $html .= '&nbsp;&nbsp;&nbsp;&nbsp;<span class="ui small grey text" data-tooltip="' . esc_attr__( 'Extensions add Dashboard features without third-party dependencies. Integrations connect your Dashboard to third-party tools you use.', 'mainwp' ) . '" data-position="right center" data-inverted=""><i class="question circle icon"></i> ' . esc_html__( 'What\'s the difference?', 'mainwp' ) . '</span>';
+            $html .= '</div>';
+            $html .= '</div>';
+
             $html .= '<div class="ui divider"></div>';
 
             foreach ( $all_groups as $gr_id => $gr_name ) {
                 if ( isset( $grouped_exts[ $gr_id ] ) && 'all' !== $gr_id ) {
                     $html .= '<div class="ui tab" data-tab="' . $gr_id . '">';
-                    $html .= '<h3>' . $gr_name . '</h3>';
-                    $html .= '<div class="ui selection list">';
+                    $html .= '<div class="ui middle aligned divided list">';
                     $html .= $grouped_exts[ $gr_id ];
                     $html .= '</div>';
                     $html .= '</div>';
@@ -656,8 +676,7 @@ class MainWP_Extensions { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.C
 
             if ( isset( $grouped_exts['others'] ) && ! empty( $grouped_exts['others'] ) ) {
                 $html .= '<div class="ui tab" data-tab="other">';
-                $html .= '<h3>Other</h3>';
-                $html .= '<div class="ui selection list">';
+                $html .= '<div class="ui middle aligned divided list">';
                 $html .= $grouped_exts['others'];
                 $html .= '</div>';
                 $html .= '</div>';
@@ -678,14 +697,17 @@ class MainWP_Extensions { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.C
 
         }
 
-        $html .= '<div class="ui divider"></div>';
+        $html .= '<div class="ui hidden divider"></div>';
 
-        $html .= '<span class="ui mini green label">FREE</span> - ' . esc_html__( 'Free add-on developed by MainWP', 'mainwp' ) . '<br/>';
-        $html .= '<span class="ui mini blue label">PRO</span> - ' . esc_html__( 'Premium add-on developed by MainWP', 'mainwp' ) . '<br/>';
-        $html .= '<span class="ui mini grey label">.ORG</span> - ' . esc_html__( 'Free add-on developed by 3rd party author, available on WordPress.org', 'mainwp' );
-        $html .= '<div class="ui hidden fitted divider"></div>';
-        $html .= '<i class="info circle icon"></i> ' . esc_html__( 'Add-on requires the corresponding plugin on your MainWP Dashboard site too.', 'mainwp' ) . '<br/>';
-        $html .= '<i class="shield alternate icon"></i> ' . esc_html__( 'Shows the add-on privacy info.', 'mainwp' ) . '<br/>';
+        $html .= '<div class="ui secondary vertically fitted segment">';
+        $html .= '<div class="ui horizontal mini list">';
+        $html .= '<div class="item"><span class="ui mini green label">FREE</span> ' . esc_html__( 'Free add-on by MainWP', 'mainwp' ) . '</div>';
+        $html .= '<div class="item"><span class="ui mini blue label">PRO</span> ' . esc_html__( 'Premium add-on by MainWP', 'mainwp' ) . '</div>';
+        $html .= '<div class="item"><span class="ui mini grey label">.ORG</span> ' . esc_html__( 'Free add-on by a third party (WP.org)', 'mainwp' ) . '</div>';
+        $html .= '<div class="item"><i class="info circle icon"></i> ' . esc_html__( 'Requires the matching plugin on MainWP Dashboard too.', 'mainwp' ) . '</div>';
+        $html .= '<div class="item"><i class="fingerprint icon"></i> ' . esc_html__( 'Add-on privacy info.', 'mainwp' ) . '</div>';
+        $html .= '</div>';
+        $html .= '</div>';
 
         $html .= '<script>jQuery( "#mainwp-install-extensions-menu .item" ).tab();</script>';
         $html .= '<script type="text/javascript">

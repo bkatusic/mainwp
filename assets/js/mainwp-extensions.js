@@ -727,7 +727,7 @@ let mainwp_extension_bulk_install = function () {
     if (bulkExtensionsRunning)
         return;
 
-    jQuery('.mainwp-installing-extensions input[type="checkbox"][status="queue"]:not(:checked)').closest('.extension-to-install').find('.installing-extension[status="queue"]').html('<span data-tooltip="Skipped" data-position="left center" data-inverted=""><i class="stop circle outline grey icon"></i></span>');
+    jQuery('.mainwp-installing-extensions input[type="checkbox"][status="queue"]:not(:checked)').closest('.extension-to-install').find('.installing-extension[status="queue"]').html('<span data-tooltip="Skipped" data-position="left center" data-inverted=""><i class="ban grey icon"></i></span>');
 
     bulkExtensionsTotal = jQuery('.mainwp-installing-extensions input[type="checkbox"][status="queue"]:checked').length;
 

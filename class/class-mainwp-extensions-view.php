@@ -647,7 +647,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     </div>
                     <div class="right aligned column">
                         <?php if ( ! $is_pro ) : ?>
-                        <a href="https://mainwp.com/signup/?utm_campaign=Dashboard%20-%20Upgrade%20to%20Pro&utm_source=Dashboard&utm_medium=install%20modal&utm_term=get%20mainwp%20pro" class="ui green basic button" target="_blank"><?php esc_html_e( 'Get MainWP Pro', 'mainwp' ); ?></a>
+                        <a href="<?php echo esc_url( 'https://mainwp.com/signup/?utm_campaign=Dashboard%20-%20Upgrade%20to%20Pro&utm_source=Dashboard&utm_medium=install%20modal&utm_term=get%20mainwp%20pro' ); ?>" class="ui green basic button" target="_blank"><?php esc_html_e( 'Upgrade to Pro', 'mainwp' ); ?></a>
                         <?php endif; ?>
                     </div>
                 </div>
