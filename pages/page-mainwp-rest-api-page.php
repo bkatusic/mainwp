@@ -730,7 +730,19 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                         <td><?php echo $enabled ? '<span class="ui green fluid label">' . esc_html__( 'Enabled', 'mainwp' ) . '</span>' : '<span class="ui gray fluid label">' . esc_html__( 'Disabled', 'mainwp' ) . '</span>'; ?></td>
                         <td>
                             <?php if ( static::can_edit_rest_api_keys() ) : ?>
-                                <a href="admin.php?page=AddApiKeys&editkey=<?php echo esc_html( $endcoded_ck ); ?>"><?php echo esc_html( $desc ); ?></a>
+                                <?php
+                                $url = esc_url(
+                                    add_query_arg(
+                                        array(
+                                            'page'       => 'AddApiKeys',
+                                            'editkey'    => $endcoded_ck,
+                                            '_opennonce' => wp_create_nonce( 'mainwp-admin-nonce' ),
+                                        ),
+                                        admin_url( 'admin.php' )
+                                    )
+                                );
+                                ?>
+                                <a href="<?php echo $url; ?>"><?php echo esc_html( $desc ); ?></a>
                             <?php else : ?>
                                 <?php echo esc_html( $desc ); ?>
                             <?php endif; ?>
@@ -742,7 +754,19 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                             <i class="ellipsis vertical icon"></i>
                                 <div class="menu">
                                 <?php if ( static::can_edit_rest_api_keys() ) : ?>
-                                    <a class="item" href="admin.php?page=AddApiKeys&editkey=<?php echo esc_html( $endcoded_ck ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>"><?php esc_html_e( 'Edit', 'mainwp' ); ?></a>
+                                    <?php
+                                    $url = esc_url(
+                                        add_query_arg(
+                                            array(
+                                                'page'       => 'AddApiKeys',
+                                                'editkey'    => $endcoded_ck,
+                                                '_opennonce' => wp_create_nonce( 'mainwp-admin-nonce' ),
+                                            ),
+                                            admin_url( 'admin.php' )
+                                        )
+                                    );
+                                    ?>
+                                    <a class="item" href="<?php echo $url; ?>"><?php esc_html_e( 'Edit', 'mainwp' ); ?></a>
                                 <?php endif; ?>
                                 <?php if ( static::can_delete_rest_api_keys() ) : ?>
                                     <a class="item" href="javascript:void(0)" onclick="mainwp_restapi_remove_key_confirm(jQuery(this).closest('tr').find('.check-column INPUT:checkbox'));" ><?php esc_html_e( 'Delete', 'mainwp' ); ?></a>
