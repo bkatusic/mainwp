@@ -138,7 +138,7 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
         // Get params.
         $args     = $this->prepare_objects_query( $request );
         $page     = ! empty( $args['paged'] ) ? (int) $args['paged'] : 1;
-        $per_page = ! empty( $args['items_per_page'] ) ? (int) $args['items_per_page'] : 20;
+        $per_page = ! empty( $args['items_per_page'] ) ? (int) $args['items_per_page'] : 50;
 
         // get keys v1.
         $all_keys_v1 = MainWP_Rest_Api_Page::check_rest_api_updates();
