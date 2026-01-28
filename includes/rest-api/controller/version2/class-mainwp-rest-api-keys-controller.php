@@ -462,7 +462,7 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                 'sanitize_callback' => 'absint',
                 'description'       => __( 'Page number.', 'mainwp' ),
             ),
-            'pre_page' => array(
+            'per_page' => array(
                 'required'          => false,
                 'type'              => 'integer',
                 'sanitize_callback' => 'absint',
@@ -602,7 +602,7 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
         if ( 'v2' === $version ) {
             if ( in_array( 'write', $pers_list, true ) && in_array( 'read', $pers_list, true ) ) {
                 return 'read_write';
-            } elseif ( in_array( 'write', $pers_list ) ) {
+            } elseif ( in_array( 'write', $pers_list, true ) ) {
                 $scope = 'write';
             } elseif ( in_array( 'read', $pers_list, true ) ) {
                 return 'read';
