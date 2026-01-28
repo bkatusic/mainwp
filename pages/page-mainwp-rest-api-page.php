@@ -2166,10 +2166,11 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
     protected static function render_application_passwords_table( $rows, $show_user_col ) {
         // Align revoke (delete) permission with delete_application_passwords capability.
         $can_revoke = static::$application_passwords->can_delete_application_passwords();
+        $can_edit   = static::$application_passwords->can_edit_application_passwords();
         ?>
         <div id="mainwp-message-zone-app-passwords" style="display:none;"></div>
         <div class="content active application-passwords-list-table-wrapper">
-            <table id="mainwp-application-password-table" class="ui unstackable single line table" data-can-manage="<?php echo esc_attr( $can_revoke ? '1' : '0' ); ?>">
+            <table id="mainwp-application-password-table" class="ui unstackable single line table" data-can-manage="<?php echo esc_attr( $can_revoke ? '1' : '0' ); ?>" data-can-edit="<?php echo esc_attr( $can_edit ? '1' : '0' ); ?>">
                 <thead>
                 <tr>
                     <th scope="col" class="no-sort collapsing check-column">

@@ -202,7 +202,7 @@ const init_application_passwords = ($) => {
      */
     const add_password_row = (item) => {
         const created_str = format_timestamp(item.created);
-
+        const table_el = $('#mainwp-application-password-table');
         // Get DataTable instance
         const table = window.mainwp_app_passwords_table; // NOSONAR - noopener - global variable.
 
@@ -212,7 +212,8 @@ const init_application_passwords = ($) => {
         }
 
         // Check manage capability from table data attribute
-        const can_manage_table = $('#mainwp-application-password-table').data('can-manage') == 1;
+        const can_manage_table = table_el.data('can-manage') == 1;
+        const can_edit_table = table_el.data('can-edit') == 1;
 
         // Create row HTML with proper data-order attributes
         const row_html = `<tr data-uuid="${item.uuid}" data-user-id="${item.user_id || ''}">
@@ -227,6 +228,7 @@ const init_application_passwords = ($) => {
             <td data-order="0">&mdash;</td>
             <td>&mdash;</td>
             <td class="right aligned">
+                ${can_edit_table ? `<button type="button" class="ui mini basic button mainwp-edit-application-password" data-uuid="${item.uuid}" data-user-id="${item.user_id || ''}" data-name="${escape_html(item.name)}">${__("Edit")}</button>` : ''}
                 ${can_manage_table ? `<button type="button" class="ui mini grey basic button mainwp-revoke-application-password" data-uuid="${item.uuid}">${__("Revoke")}</button>` : ''}
             </td>
         </tr>`;
@@ -276,10 +278,10 @@ const init_application_passwords = ($) => {
             name: name,
         });
 
-        $.post(ajaxurl, data, (resp) => {
-            if (resp && resp.success) {
+        $.post(ajaxurl, data, (resp) => { // NOSONAR - noopener - complex.
+            if (resp?.success) {
                 try {
-                    const table = window.mainwp_app_passwords_table;
+                    const table = window.mainwp_app_passwords_table; // NOSONAR - noopener - global variable.
                     const tr = $('#mainwp-application-password-table tbody tr[data-uuid="' + uuid + '"]');
                     if (tr.length) {
                         // Update name cell
@@ -305,7 +307,7 @@ const init_application_passwords = ($) => {
                     mainwp_forceReload();
                 }
             } else {
-                const msg = (resp && resp.data && resp.data.message) ? resp.data.message : __('Failed to update Application Password.');
+                const msg = (resp?.data?.message) ?? __('Failed to update Application Password.');
                 show_message(msg, 'error');
             }
         }, 'json');
