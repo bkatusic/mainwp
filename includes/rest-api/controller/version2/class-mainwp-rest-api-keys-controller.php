@@ -179,6 +179,7 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                     'permissions'   => ! empty( $key->permissions ) ? $this->get_permissions_title( $key->permissions ) : '',
                     'truncated_key' => $key->truncated_key ? $key->truncated_key : '',
                     'active'        => (bool) $key->enabled ? true : false,
+                    'last_access'   => ! empty( $key->last_access ) ? gmdate( 'Y-m-d H:i:s', strtotime( $key->last_access ) ) : '',
                 );
 
                 // Filter response data by allowed fields.
@@ -597,8 +598,10 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
 
         // v2: keep existing behavior.
         if ( 'v2' === $version ) {
-            if ( in_array( 'write', $pers_list, true ) ) {
+            if ( in_array( 'write', $pers_list, true ) && in_array( 'read', $pers_list, true ) ) {
                 return 'read_write';
+            } elseif ( in_array( 'write', $pers_list ) ) {
+                $scope = 'write';
             } elseif ( in_array( 'read', $pers_list, true ) ) {
                 return 'read';
             }
@@ -759,6 +762,12 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                     'type'        => 'boolean',
                     'description' => __( 'API Key active.', 'mainwp' ),
                     'context'     => array( 'view', 'view_v1' ),
+                ),
+                'last_access'   => array(
+                    'type'        => 'string',
+                    'format'      => 'date-time',
+                    'description' => __( 'API Key last access.', 'mainwp' ),
+                    'context'     => array( 'view' ),
                 ),
             ),
         );
