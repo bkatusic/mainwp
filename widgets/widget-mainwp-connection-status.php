@@ -381,14 +381,14 @@ class MainWP_Connection_Status { // phpcs:ignore Generic.Classes.OpeningBraceSam
                         <a href="javascript:void(0)" class="mainwp-updates-overview-reconnect-site item" adminuser="<?php echo esc_attr( $website->adminname ); ?>" siteid="<?php echo intval( $website->id ); ?>"><?php esc_html_e( 'Reconnect Site', 'mainwp' ); ?></a>
                         <?php else : ?>
                         <a href="javascript:void(0)" class="item" siteid="<?php echo intval( $website->id ); ?>" onClick="updatesoverview_wp_sync( '<?php echo intval( $website->id ); ?>' )"><?php esc_html_e( 'Sync Site', 'mainwp' ); ?></a>
-                        <a href="<?php echo 'admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank" class="item"><?php esc_html_e( 'Go to WP Admin', 'mainwp' ); ?></a>
+                        <a href="<?php MainWP_Site_Open::get_open_site_admin_link( $website->id, true ); ?>" target="_blank" class="item"><?php esc_html_e( 'Go to WP Admin', 'mainwp' ); ?></a>
                         <?php endif; ?>
                         <a href="<?php echo esc_html( $website->url ); ?>" class="item" target="_blank"><?php esc_html_e( 'Visit Site', 'mainwp' ); ?></a>
                     </div>
                 </div>
             </div>
             <?php if ( ! $hasSyncErrors ) : ?>
-            <a href="<?php echo 'admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank"><i class="sign in alternate icon"></i></a>
+            <a href="<?php MainWP_Site_Open::get_open_site_admin_link( $website->id, true ); ?>" target="_blank"><i class="sign in alternate icon"></i></a>
             <?php endif; ?>
             <a href="
                 <?php
@@ -436,12 +436,12 @@ class MainWP_Connection_Status { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     <i class="ellipsis vertical icon"></i>
                     <div class="menu">
                         <a href="javascript:void(0)" class="item" siteid="<?php echo intval( $website->id ); ?>" onClick="updatesoverview_wp_sync( '<?php echo intval( $website->id ); ?>' )"><?php esc_html_e( 'Sync Site', 'mainwp' ); ?></a>
-                        <a href="<?php echo 'admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank" class="item"><?php esc_html_e( 'Go to WP Admin', 'mainwp' ); ?></a>
+                        <a href="<?php MainWP_Site_Open::get_open_site_admin_link( $website->id, true ); ?>" target="_blank" class="item"><?php esc_html_e( 'Go to WP Admin', 'mainwp' ); ?></a>
                         <a href="<?php echo esc_html( $website->url ); ?>" class="item" target="_blank"><?php esc_html_e( 'Visit Site', 'mainwp' ); ?></a>
                     </div>
                 </div>
             </div>
-            <a href="<?php echo 'admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank"><i class="sign in alternate icon"></i></a>
+            <a href="<?php MainWP_Site_Open::get_open_site_admin_link( $website->id, true ); ?>" target="_blank"><i class="sign in alternate icon"></i></a>
             <a href="
                 <?php
                 /**

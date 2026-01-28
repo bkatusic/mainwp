@@ -1193,7 +1193,7 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                     <div class="ui stackable grid">
                         <div class="one wide left aligned middle aligned column"><i class="dropdown icon dropdown-trigger"></i></div>
                         <div class="one wide center aligned middle aligned column"><div class="ui checkbox master"><input type="checkbox"><label></label></div></div>
-                        <div class="four wide middle aligned column"><a target="_blank" href="admin.php?page=SiteOpen&newWindow=yes&websiteid=<?php echo intval( $site_id ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>"><i class="sign in icon"></i></a> <a href="admin.php?page=managesites&dashboard=<?php echo intval( $site_id ); ?>"><?php echo esc_html( $site_name ); ?></a></div>
+                        <div class="four wide middle aligned column"><a target="_blank" href="<?php MainWP_Site_Open::get_open_site_admin_link( $site_id, true ); ?>"><i class="sign in icon"></i></a> <a href="admin.php?page=managesites&dashboard=<?php echo intval( $site_id ); ?>"><?php echo esc_html( $site_name ); ?></a></div>
                         <div class="two wide center aligned middle aligned column"></div>
                         <div class="two wide center aligned middle aligned column"></div>
                         <div class="two wide center aligned middle aligned column"></div>
@@ -1582,7 +1582,7 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                                         <label></label>
                                     </div>
                                 </div>
-                                <div class="two wide middle aligned column"><a target="_blank" href="admin.php?page=SiteOpen&newWindow=yes&websiteid=<?php echo intval( $site_id ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>"><i class="sign in icon"></i></a> <a href="admin.php?page=managesites&dashboard=<?php echo intval( $site_id ); ?>"><?php echo esc_html( $site_name ); ?></a></div>
+                                <div class="two wide middle aligned column"><a target="_blank" href="<?php MainWP_Site_Open::get_open_site_admin_link( $site_id, true ); ?>"><i class="sign in icon"></i></a> <a href="admin.php?page=managesites&dashboard=<?php echo intval( $site_id ); ?>"><?php echo esc_html( $site_name ); ?></a></div>
                                 <div class="one wide middle aligned column"></div>
                                 <div class="two wide center aligned middle aligned column"><?php echo $theme_status; // phpcs:ignore WordPress.Security.EscapeOutput ?></div>
                                 <div class="two wide center aligned middle aligned column">

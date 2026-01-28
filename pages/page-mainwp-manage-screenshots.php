@@ -386,7 +386,7 @@ class MainWP_Manage_Screenshots { // phpcs:ignore Generic.Classes.OpeningBraceSa
                             </div>
                             <div class="content">
                                 <h2 class="ui small header">
-                                    <a href="admin.php?page=SiteOpen&newWindow=yes&websiteid=<?php echo intval( $website->id ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank" data-tooltip="<?php esc_attr_e( 'Go to WP Admin', 'mainwp' ); ?>" data-position="top left" data-inverted=""><i class="sign in icon"></i></a> <a href="admin.php?page=managesites&dashboard=<?php echo intval( $website->id ); ?>"><?php echo esc_html( stripslashes( $website->name ) ); ?></a>
+                                    <a href="<?php MainWP_Site_Open::get_open_site_admin_link( $website->id, true ); //phpcs:ignore -- ok. ?>" target="_blank" data-tooltip="<?php esc_attr_e( 'Go to WP Admin', 'mainwp' ); ?>" data-position="top left" data-inverted=""><i class="sign in icon"></i></a> <a href="admin.php?page=managesites&dashboard=<?php echo intval( $website->id ); ?>"><?php echo esc_html( stripslashes( $website->name ) ); ?></a>
                                     <br/><?php MainWP_Utility::get_site_index_option_icon( $website_info['site_public'] ); ?> <span class="ui small text"><a href="<?php echo esc_url( $website->url ); ?>" class="ui grey text" target="_blank"><?php echo esc_url( $website->url ); ?></a></span>
                                 </h2>
                                 <?php if ( isset( $website->wpgroups ) && '' !== $website->wpgroups ) : ?>
