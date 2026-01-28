@@ -259,6 +259,8 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                     $scope_v1 = 'r,w,d';
                 } elseif ( 'write' === $scope ) {
                     $scope_v1 = 'w';
+                } elseif ( 'delete' === $scope ) {
+                    $scope_v1 = 'd';
                 }
 
                 $all_keys[ $consumer_key ] = array(
