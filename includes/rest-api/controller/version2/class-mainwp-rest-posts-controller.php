@@ -1624,6 +1624,7 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
                 __( 'Both search and search_on must be provided together.', 'mainwp' ),
             );
         }
+        return true;
     }
 
     /**
