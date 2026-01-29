@@ -774,7 +774,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                                 </div>
                                 <div class="item">
                                     <i class="sign in icon"></i>
-                                    <a target="_blank" href="<?php echo 'admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ); ?>&_opennonce=<?php echo esc_attr( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>"><?php esc_html_e( 'Go to WP Admin', 'mainwp' ); ?></a>
+                                    <a target="_blank" href="<?php MainWP_Site_Open::get_open_site_admin_link( $website->id, true ); //phpcs:ignore -- ok. ?>"><?php esc_html_e( 'Go to WP Admin', 'mainwp' ); ?></a>
                                 </div>
                                 <div class="item">
                                     <i class="globe icon"></i>
@@ -1421,7 +1421,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                     $site_sync_outdated = false;
                     $current_time       = time();
                     $twenty_four_h      = 24 * HOUR_IN_SECONDS;
-                    
+
                     if ( ! empty( $site_sync_info['timestamp'] ) && ( $current_time - $site_sync_info['timestamp'] ) > $twenty_four_h ) {
                         $site_sync_outdated = true;
                         $site_sync_tooltip  = sprintf(
@@ -1456,7 +1456,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 $sync_outdated  = false;
                 $current_time   = time();
                 $twenty_four_h  = 24 * HOUR_IN_SECONDS;
-                
+
                 if ( ! empty( $sync_info['timestamp'] ) && ( $current_time - $sync_info['timestamp'] ) > $twenty_four_h ) {
                     $sync_outdated = true;
                     $sync_tooltip  = esc_attr__( 'Data not synced for more than 24h. Click here to sync all sites.', 'mainwp' );
@@ -1493,7 +1493,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
             </div>
         </div>
 
-        <span id="mainwp-header-secondary-actions">            
+        <span id="mainwp-header-secondary-actions">
             <?php if ( ( 'mainwp_tab' === $page ) || isset( $_GET['dashboard'] ) || in_array( $page, $sidebar_pages ) ) : // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended ?>
             <a id="mainwp-screen-options-button" class="ui icon button" onclick="jQuery( '#mainwp-overview-screen-options-modal' ).modal({allowMultiple:true}).modal( 'show' ); return false;" data-inverted="" data-position="bottom right" href="#" aria-label="<?php esc_attr_e( 'Page Settings', 'mainwp' ); ?>" data-tooltip="<?php esc_html_e( 'Page Settings', 'mainwp' ); ?>">
                 <i class="cog icon"></i>

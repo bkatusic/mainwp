@@ -11,6 +11,7 @@ namespace MainWP\Dashboard\Module\ApiBackups;
 use WP_Error;
 use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_Extensions_Handler;
+use MainWP\Dashboard\MainWP_Site_Open;
 
 /**
  * Class Api_Backups_3rd_Party
@@ -396,7 +397,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                         </td>
                         <td>
                             <div>
-                                <a href="<?php echo 'admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ); ?>&_opennonce=<?php echo esc_attr( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank">
+                                <a href="<?php MainWP_Site_Open::get_open_site_admin_link( $website->id, true ); //phpcs:ignore -- ok. ?>" target="_blank">
                                     <i class="sign in alternate icon"></i>
                                 </a>
                                 <a href="admin.php?page=ManageSitesApiBackups&id=<?php echo intval( $website->id ); ?>"><?php esc_html_e( $website->name, 'mainwp' ); ?></a> <span class="running"></span>
@@ -908,7 +909,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                                 installation_id="<?php echo intval( $installation_id ); ?>"
                                                 website_id="<?php echo intval( $website['id'] ); ?>"
                                                 backup_name="<?php echo esc_attr( $backup->value->fileName->value ); ?>"
-                                                href="admin.php?page=SiteOpen&websiteid=<?php echo intval( $website['id'] ); ?>&dirdl=<?php echo esc_attr( rawurlencode( $dirdl ) ); ?>&filedl=<?php echo esc_attr( rawurlencode( $backup->value->fileName->value ) ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>"
+                                                href="<?php MainWP_Site_Open::get_open_site_admin_link( $website['id'], true ); //phpcs:ignore -- ok. ?>&dirdl=<?php echo esc_attr( rawurlencode( $dirdl ) ); ?>&filedl=<?php echo esc_attr( rawurlencode( $backup->value->fileName->value ) ); ?>"
                                                 data-tooltip="<?php esc_attr_e( 'Download Backup', 'mainwp' ); ?>"
                                                 data-inverted=""
                                                 data-position="top center"
@@ -1066,7 +1067,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                             <?php
                                                 $file_path = $backup->absolute_dir . '/';
                                             ?>
-                                            <a class="open_newwindow_wpadmin" href="admin.php?page=SiteOpen&websiteid=<?php echo intval( $website['id'] ); ?>&dirdl=<?php echo esc_attr( rawurlencode( $file_path ) ); ?>&filedl=<?php echo esc_attr( rawurlencode( $backup->file_name ) ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank">
+                                            <a class="open_newwindow_wpadmin" href="<?php MainWP_Site_Open::get_open_site_admin_link( $website['id'], true ); //phpcs:ignore -- ok. ?>&dirdl=<?php echo esc_attr( rawurlencode( $file_path ) ); ?>&filedl=<?php echo esc_attr( rawurlencode( $backup->file_name ) ); ?>" target="_blank">
                                                 <button class="ui right labeled icon button">
                                                     <i class="right download icon"></i>
                                                     <?php echo esc_html__( 'Download', 'mainwp' ); ?>
@@ -1216,7 +1217,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                                 <button class="ui mini icon button mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_download_wptk_backup item"
                                                         website_id="<?php echo intval( $website['id'] ); ?>"
                                                         backup_name="<?php echo esc_attr( $backup->value->fileName->value ); ?>"
-                                                        href="admin.php?page=SiteOpen&websiteid=<?php echo intval( $website['id'] ); ?>&dirdl=<?php echo esc_attr( rawurlencode( $dirdl ) ); ?>&filedl=<?php echo esc_attr( rawurlencode( $backup->value->fileName->value ) ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>"
+                                                        href="<?php MainWP_Site_Open::get_open_site_admin_link( $website['id'], true ); //phpcs:ignore -- ok. ?>&dirdl=<?php echo esc_attr( rawurlencode( $dirdl ) ); ?>&filedl=<?php echo esc_attr( rawurlencode( $backup->value->fileName->value ) ); ?>"
                                                         data-tooltip="<?php esc_attr_e( 'Download Backup', 'mainwp' ); ?>"
                                                         data-inverted=""
                                                         data-position="top center">
