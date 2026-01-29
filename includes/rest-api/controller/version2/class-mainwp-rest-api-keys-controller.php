@@ -98,7 +98,7 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
 
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/edit-key/(?P<id>[\d]+)',
+            '/' . $this->rest_base . '/edit-key/(?P<key_identifier>([1-9][0-9]*|ck_[a-f0-9]{40}))',
             array(
                 array(
                     'methods'             => 'PUT, PATCH',
@@ -111,7 +111,7 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
 
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/delete-key/(?P<id>[\d]+)',
+            '/' . $this->rest_base . '/delete-key/(?P<key_identifier>([1-9][0-9]*|ck_[a-f0-9]{40}))',
             array(
                 array(
                     'methods'             => WP_REST_Server::DELETABLE,
@@ -153,16 +153,18 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                         $perms
                     )
                     : array(); // Get permissions title.
-                $record      = array(
+
+                $record = array(
+                    'id'            => $key,
                     'version'       => 'v1',
                     'description'   => ! empty( $item['desc'] ) ? $item['desc'] : '',
-                    'permissions'   => $permissions,
+                    'permissions'   => array_unique( $permissions ),
                     'truncated_key' => substr( $key, -7 ),
                     'active'        => $item['enabled'] ? true : false,
                 );
 
                 // Filter response data by allowed fields.
-                $data[] = $this->filter_response_data_by_allowed_fields( $record, 'view' );
+                $data[] = $this->filter_response_data_by_allowed_fields( $record, 'view_v1' );
             }
         }
 
@@ -176,9 +178,7 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                     'version'       => 'v2',
                     'description'   => $key->description ? $key->description : '',
                     'permissions'   => ! empty( $key->permissions ) ? $this->get_permissions_title( $key->permissions ) : '',
-                    'nonces'        => $key->nonces ? $key->nonces : '',
                     'truncated_key' => $key->truncated_key ? $key->truncated_key : '',
-                    'type'          => $key->key_type ? $key->key_type : '',
                     'active'        => (bool) $key->enabled ? true : false,
                     'last_access'   => ! empty( $key->last_access ) ? gmdate( 'Y-m-d H:i:s', strtotime( $key->last_access ) ) : '',
                 );
@@ -243,6 +243,7 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
         $compatible_v1   = ! empty( $body['compatible_v1'] ) ? 1 : 0;
         $scope           = $this->determine_scope( $permission );
 
+        $token_v1 = array();
         try {
             // Save api key v2.
             $api_key = $this->db->insert_rest_api_key( $consumer_key, $consumer_secret, $scope, $desc, $active );
@@ -254,13 +255,8 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                 if ( ! is_array( $all_keys ) ) {
                     $all_keys = array();
                 }
-                $scope_v1 = 'r';
-                if ( 'read_write' === $scope ) {
-                    $scope_v1 = 'r,w,d';
-                } elseif ( 'write' === $scope ) {
-                    $scope_v1 = 'w';
-                }
 
+                $scope_v1                  = $this->determine_scope( $permission, 'v1' );
                 $all_keys[ $consumer_key ] = array(
                     'ck_hashed' => wp_hash_password( $consumer_key ),
                     'cs'        => wp_hash_password( $consumer_secret ),
@@ -269,6 +265,10 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                     'perms'     => $scope_v1,
                 );
                 MainWP_Utility::update_option( 'mainwp_rest_api_keys', $all_keys );
+                $token_v1 = array(
+                    'consumer_key'    => $consumer_key,
+                    'consumer_secret' => $consumer_secret,
+                );
             }
         } catch ( Exception $e ) {
             return new WP_Error(
@@ -278,10 +278,13 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
         }
 
         return rest_ensure_response(
-            array(
-                'success' => 1,
-                'message' => esc_html__( 'API Key created successfully.', 'mainwp' ),
-                'token'   => $_consumer_secret . '==' . $_consumer_key,
+            array_merge(
+                array(
+                    'success' => 1,
+                    'message' => esc_html__( 'API Key created successfully.', 'mainwp' ),
+                    'token'   => $_consumer_secret . '==' . $_consumer_key,
+                ),
+                $token_v1
             )
         );
     }
@@ -314,18 +317,62 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
             );
         }
 
-        // Map data.
-        $active = ! empty( $body['active'] ) ? 1 : $api_key->enabled;
-        $desc   = ! empty( $body['description'] ) ? sanitize_text_field( wp_unslash( $body['description'] ) ) : $api_key->description;
-        $scope  = ! empty( $body['permissions'] ) ? $this->determine_scope( $body['permissions'] ) : $api_key->permissions;
+        // Get key identifier.
+        $cons_key_id = $request->get_param( 'key_identifier' );
 
-        // Update api key.
-        $updated = MainWP_DB::instance()->update_rest_api_key( $api_key->key_id, $scope, $desc, $active );
-        if ( false === $updated ) {
-            return new WP_Error(
-                'update_key_failed',
-                __( 'Update API key failed.', 'mainwp' ),
-            );
+        // Determine defaults based on key version (v1 = array, v2 = object).
+        if ( is_numeric( $cons_key_id ) ) {
+            $current_enabled     = $api_key->enabled ?? 0;
+            $current_description = $api_key->description ?? '';
+            $current_permissions = $api_key->permissions ?? 'read';
+        } else {
+            $current_enabled     = $api_key['enabled'] ?? 0;
+            $current_description = $api_key['desc'] ?? '';
+            $current_permissions = $api_key['perms'] ?? 'r';
+        }
+
+        // Determine active.
+        $active = $current_enabled;
+        if ( isset( $body['active'] ) ) {
+            $active = $body['active'] ? 1 : 0;
+        }
+        // Determine description.
+        $desc = ! empty( $body['description'] ) ? sanitize_text_field( wp_unslash( $body['description'] ) ) : $current_description;
+
+        // Edit api key v1.
+        if ( ! is_numeric( $cons_key_id ) ) {
+            $scope    = ! empty( $body['permissions'] ) ? $this->determine_scope( $body['permissions'], 'v1' ) : $current_permissions;
+            $save     = false;
+            $all_keys = get_option( 'mainwp_rest_api_keys', false );
+            if ( is_array( $all_keys ) && isset( $all_keys[ $cons_key_id ] ) ) {
+                $item = $all_keys[ $cons_key_id ];
+                if ( is_array( $item ) && isset( $item['cs'] ) ) {
+                    $item['desc']             = $desc;
+                    $item['enabled']          = $active;
+                    $item['perms']            = $scope;
+                    $all_keys[ $cons_key_id ] = $item;
+                    $save                     = true;
+                }
+            }
+
+            if ( ! $save ) {
+                return new WP_Error(
+                    'update_key_failed',
+                    __( 'Update API key failed.', 'mainwp' ),
+                );
+            }
+
+            MainWP_Utility::update_option( 'mainwp_rest_api_keys', $all_keys );
+        } else {
+            $scope = ! empty( $body['permissions'] ) ? $this->determine_scope( $body['permissions'] ) : $current_permissions;
+            // Update api key.
+            $updated = MainWP_DB::instance()->update_rest_api_key( $api_key->key_id, $scope, $desc, $active );
+            if ( false === $updated ) {
+                return new WP_Error(
+                    'update_key_failed',
+                    __( 'Update API key failed.', 'mainwp' ),
+                );
+            }
         }
 
         return rest_ensure_response(
@@ -355,14 +402,37 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
             );
         }
 
-        // Delete api key.
-        $deleted = $this->db->remove_rest_api_key( $api_key->key_id );
-        if ( false === $deleted ) {
-            return new WP_Error(
-                'delete_key_failed',
-                __( 'Delete API key failed.', 'mainwp' ),
-            );
+        $cons_key_id = $request->get_param( 'key_identifier' );
+        // Delete api key v2.
+        if ( is_numeric( $cons_key_id ) ) {
+            $deleted = $this->db->remove_rest_api_key( $api_key->key_id );
+            if ( false === $deleted ) {
+                return new WP_Error(
+                    'delete_key_failed',
+                    __( 'Delete API key failed.', 'mainwp' ),
+                );
+            }
+        } else {
+            // Delete api key v1.
+            $save     = false;
+            $all_keys = get_option( 'mainwp_rest_api_keys', false );
+            if ( is_array( $all_keys ) && isset( $all_keys[ $cons_key_id ] ) ) {
+                $item = $all_keys[ $cons_key_id ];
+                if ( is_array( $item ) && isset( $item['cs'] ) ) {
+                    unset( $all_keys[ $cons_key_id ] ); // delete key.
+                    $save = true;
+                }
+            }
+
+            if ( ! $save ) {
+                return new WP_Error(
+                    'delete_key_failed',
+                    __( 'Delete API key failed.', 'mainwp' ),
+                );
+            }
+            MainWP_Utility::update_option( 'mainwp_rest_api_keys', $all_keys );
         }
+
         return rest_ensure_response(
             array(
                 'success' => 1,
@@ -386,7 +456,7 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                 'sanitize_callback' => 'absint',
                 'description'       => __( 'Page number.', 'mainwp' ),
             ),
-            'pre_page' => array(
+            'per_page' => array(
                 'required'          => false,
                 'type'              => 'integer',
                 'sanitize_callback' => 'absint',
@@ -479,10 +549,10 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
         }
 
         $key                 = explode( ',', $value );
-        $allowed_permissions = array( 'read', 'write', 'delete' );
+        $allowed_permissions = array( 'read', 'write' );
         if ( ! empty( $key ) && is_array( $key ) ) {
             foreach ( $key as $per ) {
-                if ( ! in_array( $per, $allowed_permissions ) ) {
+                if ( ! in_array( $per, $allowed_permissions, true ) ) {
                     return new WP_Error(
                         'invalid_method',
                         __( 'Invalid method value.', 'mainwp' ),
@@ -497,13 +567,13 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
      * Determine scope string based on permission list.
      *
      * @param string|array $permission  Permission string (comma-separated) or array.
-     *
+     *  @param string       $version API version.
      * @return string  Returns one of: 'read', 'write', or 'read_write'.
      */
-    private function determine_scope( $permission ) {
+    private function determine_scope( $permission, $version = 'v2' ) { // phpcs:ignore -- NOSONAR - complex.
         $scope = 'read'; // Default scope.
         if ( empty( $permission ) ) {
-            return $scope;
+            return ( 'v2' === $version ) ? $scope : 'r';
         }
 
         if ( is_string( $permission ) ) {
@@ -511,7 +581,7 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
         } elseif ( is_array( $permission ) ) {
             $pers_list = array_map( 'strtolower', $permission );
         } else {
-            return $scope;
+            return ( 'v2' === $version ) ? $scope : 'r';
         }
 
         // Trim all values.
@@ -522,14 +592,34 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
             $pers_list[] = 'write';
         }
 
-        // If write is set => read_write.
-        if ( in_array( 'write', $pers_list, true ) ) {
-            $scope = 'read_write';
-        } elseif ( in_array( 'read', $pers_list, true ) ) {
-            $scope = 'read';
+        // v2: keep existing behavior.
+        if ( 'v2' === $version ) {
+            if ( in_array( 'write', $pers_list, true ) && in_array( 'read', $pers_list, true ) ) {
+                $scope = 'read_write';
+            } elseif ( in_array( 'write', $pers_list, true ) || in_array( 'delete', $pers_list, true ) ) {
+                $scope = 'write';
+            } elseif ( in_array( 'read', $pers_list, true ) ) {
+                $scope = 'read';
+            }
+            return $scope;
         }
 
-        return $scope;
+        // v1: map to r/w/d.
+        $out = array();
+
+        if ( in_array( 'read', $pers_list, true ) ) {
+            $out[] = 'r';
+        }
+        if ( in_array( 'write', $pers_list, true ) || in_array( 'delete', $pers_list, true ) ) {
+            $out[] = 'w';
+            $out[] = 'd';
+        }
+
+        if ( empty( $out ) ) {
+            $out[] = 'r';
+        }
+
+        return implode( ',', array_unique( $out ) );
     }
     /**
      * Get permissions title.
@@ -546,20 +636,20 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                 $titles[] = esc_html__( 'Read', 'mainwp' );
                 break;
             case 'write':
+            case 'delete':
             case 'w':
-                $titles[] = esc_html__( 'Write', 'mainwp' );
-                break;
             case 'd':
-                $titles[] = esc_html__( 'Delete', 'mainwp' );
+                $titles[] = esc_html__( 'Write & Delete', 'mainwp' );
                 break;
             case 'read_write':
                 $titles[] = esc_html__( 'Read', 'mainwp' );
-                $titles[] = esc_html__( 'Write', 'mainwp' );
+                $titles[] = esc_html__( 'Write & Delete', 'mainwp' );
                 break;
             default:
                 $titles[] = esc_html__( 'Unknown', 'mainwp' );
                 break;
         }
+
         return $titles;
     }
 
@@ -572,16 +662,24 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
      *
      * @return WP_Error|Object Item.
      */
-    private function get_request_item( $request ) {
+    private function get_request_item( $request ) {  // phpcs:ignore -- NOSONAR
         // Get id or domain raw value.
-        $id = (int) $request->get_param( 'id' );
+        $id = $request->get_param( 'key_identifier' );
 
         if ( empty( $id ) ) {
             return false;
         }
 
         // Get API by id.
-        return $this->db->get_rest_api_key_by( $id );
+        if ( is_numeric( $id ) ) {
+            return $this->db->get_rest_api_key_by( $id );
+        }
+
+        $all_keys = get_option( 'mainwp_rest_api_keys', false );
+        if ( empty( $all_keys ) || ! is_array( $all_keys ) ) {
+            return false;
+        }
+        return isset( $all_keys[ $id ] ) ? $all_keys[ $id ] : false;
     }
 
     /**
@@ -591,10 +689,10 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
      */
     public function get_api_allowed_id_field() {
         return array(
-            'id' => array(
-                'description'       => __( 'Site ID (number).', 'mainwp' ),
-                'type'              => 'integer',
-                'sanitize_callback' => 'absint',
+            'key_identifier' => array(
+                'description'       => __( 'API KEY ID.', 'mainwp' ),
+                'type'              => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
             ),
         );
     }
@@ -612,9 +710,9 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
             'type'       => 'object',
             'properties' => array(
                 'id'            => array(
-                    'type'        => 'integer',
+                    'type'        => 'string',
                     'description' => __( 'API Key ID.', 'mainwp' ),
-                    'context'     => array( 'view', 'simple_view' ),
+                    'context'     => array( 'view', 'view_v1', 'simple_view' ),
                     'readonly'    => true,
                 ),
                 'user_id'       => array(
@@ -627,18 +725,18 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                     'type'        => 'string',
                     'readonly'    => true,
                     'description' => __( 'API Key version.', 'mainwp' ),
-                    'context'     => array( 'view' ),
+                    'context'     => array( 'view', 'view_v1' ),
                 ),
                 'description'   => array(
                     'type'        => 'string',
                     'readonly'    => true,
                     'description' => __( 'API Key description.', 'mainwp' ),
-                    'context'     => array( 'view', 'simple_view' ),
+                    'context'     => array( 'view', 'simple_view', 'view_v1' ),
                 ),
                 'permissions'   => array(
                     'type'        => 'array',
                     'description' => __( 'API Key permissions.', 'mainwp' ),
-                    'context'     => array( 'view' ),
+                    'context'     => array( 'view', 'view_v1' ),
                     'items'       => array(
                         'type'       => 'object',
                         'properties' => array(
@@ -649,25 +747,15 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                         ),
                     ),
                 ),
-                'nonces'        => array(
-                    'type'        => 'string',
-                    'description' => __( 'API Key nonces.', 'mainwp' ),
-                    'context'     => array( 'view' ),
-                ),
                 'truncated_key' => array(
                     'type'        => 'string',
                     'description' => __( 'API Key truncated.', 'mainwp' ),
-                    'context'     => array( 'view' ),
-                ),
-                'type'          => array(
-                    'type'        => 'string',
-                    'description' => __( 'API Key type.', 'mainwp' ),
-                    'context'     => array( 'view' ),
+                    'context'     => array( 'view', 'view_v1' ),
                 ),
                 'active'        => array(
                     'type'        => 'boolean',
                     'description' => __( 'API Key active.', 'mainwp' ),
-                    'context'     => array( 'view' ),
+                    'context'     => array( 'view', 'view_v1' ),
                 ),
                 'last_access'   => array(
                     'type'        => 'string',
@@ -675,7 +763,6 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                     'description' => __( 'API Key last access.', 'mainwp' ),
                     'context'     => array( 'view' ),
                 ),
-
             ),
         );
     }
