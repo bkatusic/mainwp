@@ -1117,7 +1117,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
      *
      * Get websites by client.
      *
-     * @param int   $client_ids Client ids.
+     * @param array $client_ids Client ids.
      * @param array $params other params.
      *
      * @return mixed $result Results.
