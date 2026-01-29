@@ -153,11 +153,12 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                         $perms
                     )
                     : array(); // Get permissions title.
-                $record      = array(
+
+                $record = array(
                     'id'            => $key,
                     'version'       => 'v1',
                     'description'   => ! empty( $item['desc'] ) ? $item['desc'] : '',
-                    'permissions'   => $permissions,
+                    'permissions'   => array_unique( $permissions ),
                     'truncated_key' => substr( $key, -7 ),
                     'active'        => $item['enabled'] ? true : false,
                 );
@@ -257,10 +258,8 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                 $scope_v1 = 'r';
                 if ( 'read_write' === $scope ) {
                     $scope_v1 = 'r,w,d';
-                } elseif ( 'write' === $scope ) {
+                } elseif ( 'write' === $scope || 'delete' === $scope ) {
                     $scope_v1 = 'w';
-                } elseif ( 'delete' === $scope ) {
-                    $scope_v1 = 'd';
                 }
 
                 $all_keys[ $consumer_key ] = array(
@@ -555,7 +554,7 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
         }
 
         $key                 = explode( ',', $value );
-        $allowed_permissions = array( 'read', 'write', 'delete' );
+        $allowed_permissions = array( 'read', 'write' );
         if ( ! empty( $key ) && is_array( $key ) ) {
             foreach ( $key as $per ) {
                 if ( ! in_array( $per, $allowed_permissions ) ) {
@@ -601,11 +600,11 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
         // v2: keep existing behavior.
         if ( 'v2' === $version ) {
             if ( in_array( 'write', $pers_list, true ) && in_array( 'read', $pers_list, true ) ) {
-                return 'read_write';
-            } elseif ( in_array( 'write', $pers_list, true ) ) {
+                $scope = 'read_write';
+            } elseif ( in_array( 'write', $pers_list, true ) || in_array( 'delete', $pers_list, true ) ) {
                 $scope = 'write';
             } elseif ( in_array( 'read', $pers_list, true ) ) {
-                return 'read';
+                $scope = 'read';
             }
             return $scope;
         }
@@ -616,18 +615,15 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
         if ( in_array( 'read', $pers_list, true ) ) {
             $out[] = 'r';
         }
-        if ( in_array( 'write', $pers_list, true ) ) {
+        if ( in_array( 'write', $pers_list, true ) || in_array( 'delete', $pers_list, true ) ) {
             $out[] = 'w';
-        }
-        if ( in_array( 'delete', $pers_list, true ) ) {
-            $out[] = 'd';
         }
 
         if ( empty( $out ) ) {
             $out[] = 'r';
         }
 
-        return implode( ',', $out );
+        return implode( ',', array_unique( $out ) );
     }
     /**
      * Get permissions title.
@@ -644,20 +640,20 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                 $titles[] = esc_html__( 'Read', 'mainwp' );
                 break;
             case 'write':
+            case 'delete':
             case 'w':
-                $titles[] = esc_html__( 'Write', 'mainwp' );
-                break;
             case 'd':
-                $titles[] = esc_html__( 'Delete', 'mainwp' );
+                $titles[] = esc_html__( 'Write & Delete', 'mainwp' );
                 break;
             case 'read_write':
                 $titles[] = esc_html__( 'Read', 'mainwp' );
-                $titles[] = esc_html__( 'Write', 'mainwp' );
+                $titles[] = esc_html__( 'Write & Delete', 'mainwp' );
                 break;
             default:
                 $titles[] = esc_html__( 'Unknown', 'mainwp' );
                 break;
         }
+
         return $titles;
     }
 
