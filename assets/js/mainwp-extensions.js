@@ -28,6 +28,82 @@ jQuery(document).on( 'click', '#mainwp-extensions-show-integrations', function (
     jQuery('#mainwp-extensions-list').find('.card[extension-model="extension"]').fadeOut(200);
 });
 
+jQuery(document).on('click', '#mainwp-extensions-manage-toggle-on', function () {
+    jQuery('#mainwp-manage-add-ons-buttons').hide();
+    jQuery('#mainwp-manage-license-buttons').removeClass('hidden').show();
+    jQuery('#mainwp_com_api_key').focus();
+    return false;
+});
+
+jQuery(document).on('click', '#mainwp-extensions-manage-toggle-off', function () {
+    jQuery('#mainwp-manage-license-buttons').hide();
+    jQuery('#mainwp-manage-add-ons-buttons').show();
+    mainwp_extensions_check_activate_button_state();
+    return false;
+});
+
+function mainwp_extensions_check_activate_button_state() {
+    let api_key = (jQuery('#mainwp_com_api_key').val() || '').trim();
+    if (api_key === '') {
+        jQuery('#mainwp-extensions-grabkeys').addClass('disabled').attr('disabled', true);
+    } else {
+        jQuery('#mainwp-extensions-grabkeys').removeClass('disabled').attr('disabled', false);
+    }
+}
+
+function mainwp_extensions_update_status_header() {
+    let api_key = (jQuery('#mainwp_com_api_key').val() || '').trim();
+    let count_enabled = jQuery('#mainwp-extensions-list .card.mainwp-enabled-extension').length;
+    let count_not_activated = jQuery('#mainwp-extensions-list .card.mainwp-enabled-extension[license-status="deactivated"]').length;
+    let count_activated = count_enabled - count_not_activated;
+    
+    let headerHtml = '';
+    
+    if (api_key === '') {
+        headerHtml = '<h2 class="ui small header">' +
+            '<i class="large yellow warning icon"></i>' +
+            '<div class="content">' +
+            'License Inactive' +
+            '<div class="sub header">' +
+            count_enabled + ' add-ons enabled • Missing License key • Updates Disabled' +
+            '</div>' +
+            '</div>' +
+            '</h2>';
+    } else if (count_not_activated > 0) {
+        let title = count_not_activated === 1 ? 
+            count_not_activated + ' add-on not activated' : 
+            count_not_activated + ' add-ons not activated';
+        headerHtml = '<h2 class="ui small header">' +
+            '<i class="large yellow warning icon"></i>' +
+            '<div class="content">' +
+            title +
+            '<div class="sub header">' +
+            count_enabled + ' add-ons enabled • ' + count_activated + ' activated • Updates enabled for activated add-ons' +
+            '</div>' +
+            '</div>' +
+            '</h2>';
+    } else {
+        headerHtml = '<h2 class="ui small header">' +
+            '<i class="large green check icon"></i>' +
+            '<div class="content">' +
+            'License Active' +
+            '<div class="sub header">' +
+            count_enabled + ' add-ons enabled • All activated • Updates enabled' +
+            '</div>' +
+            '</div>' +
+            '</h2>';
+    }
+    
+    jQuery('#mainwp-extensions-status-header').html(headerHtml);
+}
+
+jQuery(document).ready(function() {
+    mainwp_extensions_check_activate_button_state();
+    jQuery('#mainwp_com_api_key').on('input', function() {
+        mainwp_extensions_check_activate_button_state();
+    });
+});
+
 jQuery(document).on('click', '.mainwp-extensions-add-menu', function () {
     let extensionSlug = jQuery(this).parents('.plugin-card').attr('extension_slug');
     let data = mainwp_secure_data({
@@ -312,15 +388,20 @@ function mainwp_extensions_activate(pObj, retring) {
     return false;
 }
 
+jQuery(document).on('click', '.mainwp-extension-license-cancel', function () {
+    let currentCard = jQuery(this).closest(".card");
+    currentCard.find("#mainwp-extensions-api-form").hide();
+    return false;
+});
+
 jQuery(document).on('click', '.mainwp-extensions-deactivate', function () {
     let apiEl = jQuery(this).closest(".card");
     let statusEl = apiEl.find(".activate-api-status");
     let loadingEl = apiEl.find(".api-feedback");
-
-    if (!apiEl.find('.mainwp-extensions-deactivate-chkbox').is(':checked'))
-        return;
+    let formEl = apiEl.find("#mainwp-extensions-api-form");
 
     loadingEl.hide();
+    formEl.hide();
 
     let extensionSlug = jQuery(apiEl).attr('extension-slug');
     let extensionApiKey = jQuery(apiEl).find('.extension-api-key').val();
@@ -340,7 +421,8 @@ jQuery(document).on('click', '.mainwp-extensions-deactivate', function () {
             if (response.result == 'SUCCESS') {
                 loadingEl.find('.message').addClass('green');
                 loadingEl.find('.message').html(__('License deactivated.'));
-                statusEl.html('<i class="green check icon"></i> License');
+                statusEl.html('<i class="times icon"></i> ' + __('Activate License'));
+                statusEl.attr('api-actived', '0');
             } else if (response.error) {
                 loadingEl.find('.message').addClass('red');
                 loadingEl.find('.message').html(response.error);
@@ -362,12 +444,12 @@ jQuery(document).on('click', '.mainwp-extensions-deactivate', function () {
 
 // Verify mainwp.com login credentials
 jQuery(document).on('click', '#mainwp-extensions-savelogin', function () {
-    mainwp_extensions_savelogin(false);
+    let autoTriggerInstall = jQuery(this).attr('data-context') === 'intro-notice';
+    mainwp_extensions_savelogin(false, autoTriggerInstall);
 });
 
-function mainwp_extensions_savelogin(retring) {
-    let grabingEl = jQuery("#mainwp-extensions-api-fields");
-    let api_key = grabingEl.find('#mainwp_com_api_key').val();
+function mainwp_extensions_savelogin(retring, autoTriggerInstall) {
+    let api_key = jQuery('#mainwp_com_api_key').val() || '';
     let statusEl = jQuery(".mainwp-extensions-api-loading");
     let data = mainwp_secure_data({
         action: 'mainwp_extension_saveextensionapilogin',
@@ -386,17 +468,30 @@ function mainwp_extensions_savelogin(retring) {
 
     jQuery.post(ajaxurl, data, function (response) {
         let undefError = false;
+        let isSuccess = false;
         if (response) {
             if (response.saved) {
-                statusEl.find('.text').html('Your API license key has been successfully saved!');
+                isSuccess = true;
+                if (autoTriggerInstall) {
+                    statusEl.find('.text').html(__('Loading add-ons info...'));
+                    mainwp_extension_grab_purchased(false);
+                } else {
+                    statusEl.find('.text').html('Your API license key has been successfully saved!');
+                }
             } else if (response.result == 'SUCCESS') {
-                statusEl.find('.text').html('API license key verification successful!');
+                isSuccess = true;
+                if (autoTriggerInstall) {
+                    statusEl.find('.text').html(__('Loading add-ons info...'));
+                    mainwp_extension_grab_purchased(false);
+                } else {
+                    statusEl.find('.text').html('API license key verification successful!');
+                }
             } else if (response.error) {
                 statusEl.find('.text').html(response.error);
             } else if (response.retry_action && response.retry_action == 1) {
                 jQuery("#mainwp_api_sslVerifyCertificate").val(0);
                 statusEl.fadeOut();
-                mainwp_extensions_savelogin(true);
+                mainwp_extensions_savelogin(true, autoTriggerInstall);
                 return false;
             } else {
                 undefError = true;
@@ -408,9 +503,18 @@ function mainwp_extensions_savelogin(retring) {
         if (undefError) {
             statusEl.find('.text').html(__('Undefined error. Please try again.'));
         }
-        setTimeout(function () {
-            statusEl.fadeOut();
-        }, 3000);
+        
+        if (!autoTriggerInstall || response.error || undefError) {
+            setTimeout(function () {
+                statusEl.fadeOut();
+                if (isSuccess) {
+                    jQuery('#mainwp-manage-license-buttons').hide();
+                    jQuery('#mainwp-manage-add-ons-buttons').show();
+                    mainwp_extensions_check_activate_button_state();
+                    mainwp_extensions_update_status_header();
+                }
+            }, 3000);
+        }
 
     }, 'json');
     return false;
@@ -424,72 +528,11 @@ let countSuccessActivation = 0;
 
 // Bulk grab API keys
 jQuery(document).on('click', '#mainwp-extensions-grabkeys', function () {
-    mainwp_extensions_grabkeys(false);
-});
-
-function mainwp_extensions_grabkeys(retring) {
-    let grabingEl = jQuery("#mainwp-extensions-api-fields");
-    let master_api_key = grabingEl.find('#mainwp_com_api_key').val();
-    let statusEl = jQuery(".mainwp-extensions-api-loading");
-    let data = mainwp_secure_data({
-        action: 'mainwp_extension_testextensionapilogin',
-        master_api_key: master_api_key
-    });
-
-    if (master_api_key == '') {
-        statusEl.find('.text').html(__("Main API Key is required."));
-        statusEl.addClass('yellow');
-        statusEl.fadeOut();
-        setTimeout(function () {
-            statusEl.fadeOut();
-        }, 3000);
-    } else {
-        if (retring) {
-            statusEl.find('.text').html(__("Connection error detected. The Verify Certificate option has been switched to NO. Retrying...")).fadeIn();
-        } else {
-            statusEl.removeClass('red');
-            statusEl.removeClass('yellow');
-            statusEl.removeClass('green');
-            statusEl.find('.text').html(__('Validating. Please wait...')).show();
-        }
-        statusEl.show();
-        jQuery.post(ajaxurl, data, function (response) {
-            let undefError = false;
-            if (response) {
-                if (response.result == 'SUCCESS') {
-                    statusEl.addClass('green');
-                    statusEl.find('.text').html('MainWP Main API Key is valid!').fadeIn();
-                    setTimeout(function () {
-                        statusEl.fadeOut();
-                    }, 3000);
-                    totalActivateThreads = jQuery('#mainwp-extensions-list .card[status="queue"]').length;
-                    if (totalActivateThreads > 0)
-                        extensions_loop_next();
-                } else if (response.error) {
-                    statusEl.addClass('red');
-                    statusEl.find('.text').html(response.error).fadeIn();
-                } else if (response.retry_action && response.retry_action == 1) {
-                    jQuery("#mainwp_api_sslVerifyCertificate").val(0);
-                    mainwp_extensions_grabkeys(true);
-                    return false;
-                } else {
-                    undefError = true;
-                }
-            } else {
-                undefError = true;
-            }
-            if (undefError) {
-                statusEl.addClass('red');
-                statusEl.find('.text').html(__('Undefined error. Please try again.')).fadeIn();
-            }
-
-            setTimeout(function () {
-                statusEl.fadeOut();
-            }, 3000);
-        }, 'json');
+    totalActivateThreads = jQuery('#mainwp-extensions-list .card[status="queue"]').length;
+    if (totalActivateThreads > 0) {
+        extensions_loop_next();
     }
-    return false;
-}
+});
 
 let extensions_loop_next = function () {
     let extToActivate = jQuery('#mainwp-extensions-list .card[status="queue"]:first');
@@ -497,22 +540,25 @@ let extensions_loop_next = function () {
         extensions_activate_next(extToActivate, true);
         extToActivate = jQuery('#mainwp-extensions-list .card[status="queue"]:first');
     }
-    if ((finishedActivateThreads == totalActivateThreads) && (countSuccessActivation == totalActivateThreads)) {
-        setTimeout(function () {
-            mainwp_forceReload('admin.php?page=Extensions');
-        }, 2000);
+    if (finishedActivateThreads == totalActivateThreads) {
+        if (countSuccessActivation == totalActivateThreads) {
+            setTimeout(function () {
+                mainwp_forceReload('admin.php?page=Extensions');
+            }, 2000);
+        } else {
+            mainwp_extensions_update_status_header();
+        }
     }
 };
 
 let extensions_activate_next = function (pObj, bulkAct) {
     pObj.attr("status", "running");
 
-    let grabingEl = jQuery("#mainwp-extensions-api-fields");
     let apiEl = pObj;
     let statusEl = apiEl.find(".activate-api-status");
     let loadingEl = apiEl.find(".api-feedback");
 
-    let master_api_key = grabingEl.find('#mainwp_com_api_key').val();
+    let master_api_key = jQuery('#mainwp_com_api_key').val() || '';
 
 
     let extensionSlug = apiEl.attr('extension-slug');
@@ -550,6 +596,7 @@ let extensions_activate_next = function (pObj, bulkAct) {
                 loadingEl.find('.message').addClass('green');
                 loadingEl.find('.message').html(__('License activated.'));
                 statusEl.html('<i class="green check icon"></i> License');
+                apiEl.attr('license-status', 'activated');
                 apiEl.find('.mainwp-extensions-deactivate-chkbox').attr('checked', false);
                 if (!bulkAct) {
                     setTimeout(function () {
@@ -574,8 +621,7 @@ let extensions_activate_next = function (pObj, bulkAct) {
 };
 
 jQuery(document).on('click', '#mainwp-extensions-bulkinstall, #mainwp-extensions-message-bulkinstall', function () {
-    let grabingEl = jQuery("#mainwp-extensions-api-fields");
-    let api_key = grabingEl.find('#mainwp_com_api_key').val().trim();
+    let api_key = (jQuery('#mainwp_com_api_key').val() || '').trim();
     if (api_key == '') {
         mainwp_extension_grab_org_extensions();
     } else {
@@ -585,8 +631,7 @@ jQuery(document).on('click', '#mainwp-extensions-bulkinstall, #mainwp-extensions
 
 let mainwp_extension_grab_purchased = function (retring) {
 
-    let grabingEl = jQuery("#mainwp-extensions-api-fields");
-    let api_key = grabingEl.find('#mainwp_com_api_key').val().trim();
+    let api_key = (jQuery('#mainwp_com_api_key').val() || '').trim();
 
     let statusEl = jQuery(".mainwp-extensions-api-loading");
     let data = mainwp_secure_data({
