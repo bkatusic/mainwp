@@ -288,10 +288,8 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                 $pers_list = explode( ',', $pers );
                 if ( in_array( 'w', $pers_list ) && in_array( 'd', $pers_list ) ) {
                     $scope = 'read_write';
-                } elseif ( in_array( 'w', $pers_list ) ) {
+                } elseif ( in_array( 'w', $pers_list ) || in_array( 'd', $pers_list ) ) {
                     $scope = 'write';
-                } elseif ( in_array( 'd', $pers_list ) ) {
-                    $scope = 'delete';
                 }
             }
             $this->invalidate_warm_cache();
@@ -327,10 +325,8 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                         $pers_list = explode( ',', $pers );
                         if ( in_array( 'w', $pers_list ) && in_array( 'r', $pers_list ) ) {
                             $scope = 'read_write';
-                        } elseif ( in_array( 'w', $pers_list ) ) {
+                        } elseif ( in_array( 'w', $pers_list ) || in_array( 'd', $pers_list ) ) {
                             $scope = 'write';
-                        } elseif ( in_array( 'd', $pers_list ) ) {
-                            $scope = 'delete';
                         }
                     }
 
@@ -503,11 +499,14 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
      */
     public static function render_api_keys_v1_table() { //phpcs:ignore -- NOSONAR - complex.
         $all_keys = static::check_rest_api_updates();
+
         if ( ! is_array( $all_keys ) ) {
             $all_keys = array();
         }
 
         if ( ! empty( $all_keys ) ) {
+            $write_delete = esc_html__( 'Write & Delete', 'mainwp' ); // NOSONAR - ok.
+            $read         = esc_html__( 'Read', 'mainwp' );
             ?>
 
         <table id="mainwp-rest-api-keys-table" class="ui unstackable single linetable">
@@ -544,13 +543,10 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                         $pers_codes = explode( ',', $pers_codes );
                         if ( is_array( $pers_codes ) ) {
                             if ( in_array( 'r', $pers_codes ) ) {
-                                $pers_names[] = esc_html__( 'Read', 'mainwp' );
+                                $pers_names[] = $read;
                             }
-                            if ( in_array( 'w', $pers_codes ) ) {
-                                $pers_names[] = esc_html__( 'Write', 'mainwp' );
-                            }
-                            if ( in_array( 'd', $pers_codes ) ) {
-                                $pers_names[] = esc_html__( 'Delete', 'mainwp' );
+                            if ( in_array( 'w', $pers_codes ) || in_array( 'd', $pers_codes ) ) {
+                                $pers_names[] = $write_delete; // NOSONAR - ok.
                             }
                         }
                     }
@@ -614,8 +610,11 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
 
     /** Render REST API SubPage */
     public static function render_api_keys_v2_table() { // phpcs:ignore -- NOSONAR - complex.
-        $all_keys_v2 = MainWP_DB::instance()->get_rest_api_keys();
-        $el_id_cb_1  = 'cb-select-all-top';
+        $all_keys_v2  = MainWP_DB::instance()->get_rest_api_keys();
+        $el_id_cb_1   = 'cb-select-all-top';
+        $write_delete = esc_html__( 'Write & Delete', 'mainwp' );
+        $read         = esc_html__( 'Read', 'mainwp' );
+
         ?>
         <table id="mainwp-rest-api-keys-v2-table" class="ui unstackable single line table">
             <thead>
@@ -641,17 +640,15 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                             $pers_title = array();
                             $per        = $item->permissions;
                             if ( 'read' === $per ) {
-                                $pers_title[] = esc_html__( 'Read', 'mainwp' );
+                                $pers_title[] = $read;
                             }
-                            if ( 'write' === $per ) {
-                                $pers_title[] = esc_html__( 'Write', 'mainwp' );
+                            if ( 'write' === $per || 'delete' === $per ) {
+                                $pers_title[] = $write_delete;
                             }
-                            if ( 'delete' === $per ) {
-                                $pers_title[] = esc_html__( 'Delete', 'mainwp' );
-                            }
+
                             if ( 'read_write' === $per ) {
-                                $pers_title[] = esc_html__( 'Read', 'mainwp' );
-                                $pers_title[] = esc_html__( 'Write & Delete', 'mainwp' );
+                                $pers_title[] = $read;
+                                $pers_title[] = $write_delete;
                             }
                             ?>
                             <tr key-ck-id="<?php echo intval( $key_id ); ?>">
@@ -983,8 +980,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                                 <div class="default text"><?php echo ( '' === $init_pers ) ? esc_html__( 'No Permissions selected.', 'mainwp' ) : ''; ?></div>
                                 <div class="menu">
                                     <div class="item" data-value="r"><?php esc_html_e( 'Read', 'mainwp' ); ?></div>
-                                    <div class="item" data-value="w"><?php esc_html_e( 'Write', 'mainwp' ); ?></div>
-                                    <div class="item" data-value="d"><?php esc_html_e( 'Delete', 'mainwp' ); ?></div>
+                                    <div class="item" data-value="w"><?php esc_html_e( 'Write & Delete', 'mainwp' ); ?></div>
                                 </div>
                             </div>
                         </div>
@@ -1064,9 +1060,9 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             });
         });
     </script>
-    <?php
+        <?php
 
-    static::render_footer( 'Settings' );
+        static::render_footer( 'Settings' );
     }
 
     /**
@@ -1176,8 +1172,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                                     <div class="default text"><?php echo ( '' === $init_pers ) ? esc_html__( 'No Permissions selected.', 'mainwp' ) : ''; ?></div>
                                     <div class="menu">
                                         <div class="item" data-value="r"><?php esc_html_e( 'Read', 'mainwp' ); ?></div>
-                                        <div class="item" data-value="w"><?php esc_html_e( 'Write', 'mainwp' ); ?></div>
-                                        <div class="item" data-value="d"><?php esc_html_e( 'Delete', 'mainwp' ); ?></div>
+                                        <div class="item" data-value="w"><?php esc_html_e( 'Write & Delete', 'mainwp' ); ?></div>
                                     </div>
                                 </div>
                             </div>
@@ -1280,8 +1275,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                                     <div class="default text"><?php echo ( '' === $init_pers ) ? esc_html__( 'No Permissions selected.', 'mainwp' ) : ''; ?></div>
                                     <div class="menu">
                                         <div class="item" data-value="r"><?php esc_html_e( 'Read', 'mainwp' ); ?></div>
-                                        <div class="item" data-value="w"><?php esc_html_e( 'Write', 'mainwp' ); ?></div>
-                                        <div class="item" data-value="d"><?php esc_html_e( 'Delete', 'mainwp' ); ?></div>
+                                        <div class="item" data-value="w"><?php esc_html_e( 'Write & Delete', 'mainwp' ); ?></div>
                                     </div>
                                 </div>
                             </div>
