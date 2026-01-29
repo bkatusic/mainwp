@@ -255,13 +255,8 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                 if ( ! is_array( $all_keys ) ) {
                     $all_keys = array();
                 }
-                $scope_v1 = 'r';
-                if ( 'read_write' === $scope ) {
-                    $scope_v1 = 'r,w,d';
-                } elseif ( 'write' === $scope || 'delete' === $scope ) {
-                    $scope_v1 = 'w';
-                }
 
+                $scope_v1 = $this->determine_scope( $permission, 'v1' );
                 $all_keys[ $consumer_key ] = array(
                     'ck_hashed' => wp_hash_password( $consumer_key ),
                     'cs'        => wp_hash_password( $consumer_secret ),
@@ -617,6 +612,7 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
         }
         if ( in_array( 'write', $pers_list, true ) || in_array( 'delete', $pers_list, true ) ) {
             $out[] = 'w';
+            $out[] = 'd';
         }
 
         if ( empty( $out ) ) {
