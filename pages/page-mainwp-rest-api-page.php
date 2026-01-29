@@ -729,7 +729,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                         }
 
                         ?>
-                        <tr key-ck-id="<?php echo esc_html( $endcoded_ck ); ?>">
+                        <tr key-ck-id="<?php echo esc_attr( $endcoded_ck ); ?>">
                             <td class="check-column">
                                 <div class="ui checkbox">
                                     <input type="checkbox"
@@ -834,9 +834,13 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         <table id="mainwp-rest-api-keys-v2-table" class="ui unstackable single line table">
             <thead>
                 <tr>
-                    <th scope="col" class="no-sort collapsing check-column"><span class="ui checkbox"><input
+                    <th scope="col" class="no-sort collapsing check-column">
+                        <span class="ui checkbox">
+                            <input
                                 aria-label="<?php esc_attr_e( 'Select all REST API keys', 'mainwp' ); ?>"
-                                id="<?php echo esc_attr( $el_id_cb_1 ); ?>" type="checkbox" /></span></th>
+                                id="<?php echo esc_attr( $el_id_cb_1 ); ?>" type="checkbox" />
+                        </span>
+                    </th>
                     <th scope="col" class="collapsing"><?php esc_html_e( 'Status', 'mainwp' ); ?></th>
                     <th scope="col"><?php esc_html_e( 'API Key (v2)', 'mainwp' ); ?></th>
                     <th scope="col" class="collapsing"><?php esc_html_e( 'Permissions', 'mainwp' ); ?></th>
@@ -905,8 +909,8 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                             </td>
                             <td><code><?php echo esc_html( '...' . $ending ); // phpcs:ignore WordPress.Security.EscapeOutput ?></code>
                             </td>
-                            <td data-order="<?php echo ! empty( $item->last_access ) ? strtotime( $item->last_access ) : 0; ?>">
-                                <?php echo ! empty( $item->last_access ) ? '<span data-tooltip="' . MainWP_Utility::format_timestamp( MainWP_Utility::get_timestamp( strtotime( $item->last_access ) ) ) . '" data-position="left center" data-inverted="">' . MainWP_Utility::time_elapsed_string( strtotime( $item->last_access ) ) . '</span>' : 'N/A'; // phpcs:ignore WordPress.Security.EscapeOutput ?>
+                            <td data-order="<?php echo ! empty( $item->last_access ) ? esc_attr( strtotime( $item->last_access ) ) : 0; ?>">
+                                <?php echo ! empty( $item->last_access ) ? '<span data-tooltip="' . esc_attr( MainWP_Utility::format_timestamp( MainWP_Utility::get_timestamp( strtotime( $item->last_access ) ) ) ) . '" data-position="left center" data-inverted="">' . esc_html( MainWP_Utility::time_elapsed_string( strtotime( $item->last_access ) ) ) . '</span>' : 'N/A'; // phpcs:ignore WordPress.Security.EscapeOutput ?>
                             </td>
                             <?php if ( $can_edit_keys || $can_delete_keys ) : ?>
                                 <td class="right aligned">
@@ -965,8 +969,9 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         <?php
     }
 
-
-    /** Render REST API SubPage */
+    /**
+     * Render All API Keys
+     */
 	public static function render_all_api_keys() { // phpcs:ignore -- NOSONAR - complex.
         // Allow page if user can view REST API (any of manage/create/edit/delete).
         if ( ! static::can_access_rest_api() ) {
@@ -1044,7 +1049,6 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         static::render_footer();
     }
 
-
     /**
      * Render table top.
      */
@@ -1077,7 +1081,6 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         </div>
         <?php
     }
-
 
     /**
      * Method check_rest_api_updates().
@@ -1115,8 +1118,6 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
 
     /**
      * Method show_messages().
-     *
-     * Show actions messages.
      */
     public static function show_messages() {
         $msg = '';
@@ -1174,7 +1175,6 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         }
 
         // we need to generate a consumer key and secret and return the result and save it into the database.
-
         $_consumer_key    = static::mainwp_generate_rand_hash();
         $_consumer_secret = static::mainwp_generate_rand_hash();
 
@@ -1513,7 +1513,6 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         <?php
         static::render_footer();
     }
-
 
     /**
      * Method render_rest_api_edit().

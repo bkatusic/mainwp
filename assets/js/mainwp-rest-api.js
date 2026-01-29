@@ -45,7 +45,6 @@ let mainwp_restapi_bulk_init = function () {
     }
 };
 
-
 let mainwp_restapi_remove_keys_next = function () {
     while ((checkedBox = jQuery('.mainwp-rest-api-body-table-manage .check-column INPUT:checkbox:checked[status="queue"]:first')) && (checkedBox.length > 0) && (bulk_RestAPICurrentThreads < bulk_RestAPIMaxThreads)) { // NOSONAR - variables modified in other functions.
         mainwp_restapi_bulk_remove_specific(checkedBox);
@@ -64,14 +63,13 @@ let mainwp_restapi_bulk_remove_specific = function (pCheckedBox) {
     bulk_RestAPICurrentThreads++;
 
     let id = rowObj.attr('key-ck-id');
-
     rowObj.html('<td colspan="999"><i class="notched circle loading icon"></i> ' + 'Deleting ...' + '</td>');
-
     let data = mainwp_secure_data({
         action: 'mainwp_rest_api_remove_keys',
         keyId: id,
         api_ver: rowObj.closest('tbody').attr('id') === 'mainwp-rest-api-v2-body-table' ? 'v2' : 'v1'
     });
+
     jQuery.post(ajaxurl, data, function (response) {
         bulk_RestAPICurrentThreads--;
         bulk_RestAPIFinished++;
@@ -247,11 +245,11 @@ const init_application_passwords = ($) => {
         e.preventDefault();
         const btn = $(e.currentTarget);
         const uuid = btn.data('uuid');
-        const userId = btn.data('user-id');
+        const user_id = btn.data('user-id');
         const name = btn.data('name');
 
         edit_uuid_input.val(uuid);
-        edit_user_id_input.val(userId);
+        edit_user_id_input.val(user_id);
         edit_name_input.val(name);
 
         edit_modal.modal('show');
@@ -263,7 +261,7 @@ const init_application_passwords = ($) => {
     $('#mainwp-edit-app-password-submit').on('click', (e) => {
         e.preventDefault();
         const uuid = edit_uuid_input.val();
-        const userId = edit_user_id_input.val();
+        const user_id = edit_user_id_input.val();
         const name = (edit_name_input.val() || '').trim();
         if (!name) {
             edit_name_input.trigger('focus');
@@ -274,7 +272,7 @@ const init_application_passwords = ($) => {
         const data = mainwp_secure_data({
             action: 'mainwp_application_password_update',
             uuid: uuid,
-            user_id: userId,
+            user_id: user_id,
             name: name,
         });
 
@@ -285,17 +283,17 @@ const init_application_passwords = ($) => {
                     const tr = $('#mainwp-application-password-table tbody tr[data-uuid="' + uuid + '"]');
                     if (tr.length) {
                         // Update name cell
-                        const nameCell = tr.find('td').eq(1);
-                        nameCell.text(name);
+                        const name_cell = tr.find('td').eq(1);
+                        name_cell.text(name);
                         // Update buttons aria/data
-                        const editBtn = tr.find('.mainwp-edit-application-password');
-                        if (editBtn.length) {
-                            editBtn.attr('data-name', name);
-                            editBtn.attr('aria-label', __('Rename "%s"').replace('%s', name));
+                        const edit_btn = tr.find('.mainwp-edit-application-password');
+                        if (edit_btn.length) {
+                            edit_btn.attr('data-name', name);
+                            edit_btn.attr('aria-label', __('Rename "%s"').replace('%s', name));
                         }
-                        const revokeBtn = tr.find('.mainwp-revoke-application-password');
-                        if (revokeBtn.length) {
-                            revokeBtn.attr('aria-label', __('Revoke "%s"').replace('%s', name));
+                        const revoke_btn = tr.find('.mainwp-revoke-application-password');
+                        if (revoke_btn.length) {
+                            revoke_btn.attr('aria-label', __('Revoke "%s"').replace('%s', name));
                         }
                         if (table) {
                             table.row(tr).invalidate().draw(false);
@@ -422,7 +420,6 @@ const init_application_passwords = ($) => {
                         .modal({
                             closable: false,
                             onHidden: () => {
-                                // Add new row to table after modal is closed
                                 add_password_row(response.data.item);
                             },
                         })
@@ -507,7 +504,7 @@ const init_application_passwords = ($) => {
                 button.prop("disabled", false).removeClass("disabled loading");
 
                 if (response.success) {
-                    const table = window.mainwp_app_passwords_table;
+                    const table = window.mainwp_app_passwords_table; // NOSONAR - noopener - global variable.
 
                     if (table) {
                         // Remove row using DataTables API
@@ -553,6 +550,7 @@ const init_application_passwords = ($) => {
             $("#mainwp-do-application-passwords-bulk-actions").addClass('disabled');
         }
     });
+
     /**
      * Bulk actions
      */
