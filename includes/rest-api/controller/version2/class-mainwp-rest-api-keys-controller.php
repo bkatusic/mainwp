@@ -256,7 +256,7 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
                     $all_keys = array();
                 }
 
-                $scope_v1 = $this->determine_scope( $permission, 'v1' );
+                $scope_v1                  = $this->determine_scope( $permission, 'v1' );
                 $all_keys[ $consumer_key ] = array(
                     'ck_hashed' => wp_hash_password( $consumer_key ),
                     'cs'        => wp_hash_password( $consumer_secret ),
@@ -552,7 +552,7 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
         $allowed_permissions = array( 'read', 'write' );
         if ( ! empty( $key ) && is_array( $key ) ) {
             foreach ( $key as $per ) {
-                if ( ! in_array( $per, $allowed_permissions ) ) {
+                if ( ! in_array( $per, $allowed_permissions, true ) ) {
                     return new WP_Error(
                         'invalid_method',
                         __( 'Invalid method value.', 'mainwp' ),
