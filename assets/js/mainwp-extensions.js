@@ -257,16 +257,15 @@ jQuery(function () {
         let whatAct = jQuery(this).attr("plugin-action");
 
         loadingEl.show();
-        loadingEl.find('.message').removeClass('red green');
 
-        let msg = __('Deactivating...');
+        let msg = __('Disabling add-on...');
         if (whatAct == 'active') {
-            msg = __('Activating...');
+            msg = __('Enabling add-on...');
         } else if (whatAct == 'remove') {
-            msg = __('Removing...');
+            msg = __('Removing add-on...');
         }
 
-        loadingEl.find('.message').html('<i class="notched circle loading icon"></i> ' + msg);
+        loadingEl.find('.ui.text.loader').html(msg);
 
         let data = mainwp_secure_data({
             action: 'mainwp_extension_plugin_action',
@@ -280,25 +279,30 @@ jQuery(function () {
             let success = false;
             if (response) {
                 if (response.result == 'SUCCESS') {
-                    loadingEl.find('.message').addClass('green');
-                    msg = __('Add-on deactivated.');
+                    msg = __('Add-on disabled');
                     if (whatAct == 'active') {
-                        msg = __('Add-on activated.');
+                        msg = __('Add-on enabled');
                     } else if (whatAct == 'remove') {
-                        msg = __('Add-on removed.');
+                        msg = __('Add-on removed');
                     }
-                    loadingEl.find('.message').html(msg);
+                    loadingEl.find('.ui.text.loader').html(msg);
                     success = true;
                 } else if (response.error) {
-                    loadingEl.find('.message').addClass('red');
-                    loadingEl.find('.message').html(response.error);
+                    loadingEl.find('.ui.text.loader').html(response.error);
+                    setTimeout(function () {
+                        loadingEl.find();
+                    }, 3000);
                 } else {
-                    loadingEl.find('.message').addClass('red');
-                    loadingEl.find('.message').html(__('Undefined error. '));
+                    loadingEl.find('.ui.text.loader').html(__('Undefined error'));
+                    setTimeout(function () {
+                        loadingEl.find();
+                    }, 3000);
                 }
             } else {
-                loadingEl.find('.message').addClass('red');
-                loadingEl.find('.message').html(__('Undefined error. '));
+                loadingEl.find('.ui.text.loader').html(__('Undefined error'));
+                setTimeout(function () {
+                    loadingEl.find();
+                }, 3000);
             }
 
             if (success) {
@@ -323,8 +327,6 @@ function mainwp_extensions_activate(pObj, retring) {
     loadingEl.hide();
 
     if (jQuery(pObj).attr('license-status') == 'activated') {
-        loadingEl.show();
-        loadingEl.find('.message').html(__('Already activated.'));
         return;
     }
 
@@ -332,7 +334,7 @@ function mainwp_extensions_activate(pObj, retring) {
 
     if (retring) {
         loadingEl.show();
-        loadingEl.find('.message').html(__('Connection error detected. The Verify Certificate option has been switched to NO. Retrying...'));
+        loadingEl.find('.ui.text.loader').html(__('Connection error detected. The Verify Certificate option has been switched to NO. Retrying...'));
     } else {
         let extensionSlug = jQuery(apiEl).attr('extension-slug');
         let key = apiEl.find('input[type="text"].extension-api-key').val();
@@ -350,8 +352,7 @@ function mainwp_extensions_activate(pObj, retring) {
     }
 
     loadingEl.show();
-    loadingEl.find('.message').removeClass('red green');
-    loadingEl.find('.message').html('<i class="notched circle loading icon"></i>' + __('Activating...'));
+    loadingEl.find('.ui.text.loader').html(__('Activating license...'));
 
     jQuery.post(ajaxurl, data, function (response) {
 
@@ -359,24 +360,26 @@ function mainwp_extensions_activate(pObj, retring) {
 
         if (response) {
             if (response.result == 'SUCCESS') {
-                loadingEl.find('.message').addClass('green');
-                loadingEl.find('.message').html(__('License activated. '));
-                statusEl.html('<i class="green check icon"></i> License');
+                loadingEl.find('.ui.text.loader').html(__('License activated'));
+                statusEl.html('<i class="green key icon"></i> Licensed');
                 success = true;
             } else if (response.error) {
-                loadingEl.find('.message').addClass('red');
-                loadingEl.find('.message').html(response.error);
+                loadingEl.find('.ui.text.loader').html(response.error);
             } else if (response.retry_action && response.retry_action == 1) {
                 jQuery("#mainwp_api_sslVerifyCertificate").val(0);
                 mainwp_extensions_activate(pObj, true);
                 return false;
             } else {
-                loadingEl.find('.message').addClass('red');
-                loadingEl.find('.message').html(__('Undefined error. '));
+                loadingEl.find('.ui.text.loader').html(__('Undefined error'));
+                setTimeout(function () {
+                    loadingEl.hide();
+                }, 3000);
             }
         } else {
-            loadingEl.find('.message').addClass('red');
-            loadingEl.find('.message').html(__('Undefined error. '));
+            loadingEl.find('.ui.text.loader').html(__('Undefined error'));
+            setTimeout(function () {
+                loadingEl.hide();
+            }, 3000);
         }
 
         if (success) {
@@ -412,27 +415,31 @@ jQuery(document).on('click', '.mainwp-extensions-deactivate', function () {
     });
 
     loadingEl.show();
-    loadingEl.find('.message').removeClass('red green');
-    loadingEl.find('.message').html('<i class="notched circle loading icon"></i>' + __('Deactivating...'));
+    loadingEl.find('.ui.text.loader').html(__('Deactivating license...'));
 
     jQuery.post(ajaxurl, data, function (response) {
 
         if (response) {
             if (response.result == 'SUCCESS') {
-                loadingEl.find('.message').addClass('green');
-                loadingEl.find('.message').html(__('License deactivated.'));
-                statusEl.html('<i class="times icon"></i> ' + __('Activate License'));
+                loadingEl.find('.ui.text.loader').html(__('License deactivated'));
+                statusEl.html('<i class="red key icon"></i> ' + __('Activate License'));
                 statusEl.attr('api-actived', '0');
             } else if (response.error) {
-                loadingEl.find('.message').addClass('red');
-                loadingEl.find('.message').html(response.error);
+                loadingEl.find('.ui.text.loader').html(response.error);
+                setTimeout(function () {
+                    loadingEl.hide();
+                }, 3000);
             } else {
-                loadingEl.find('.message').addClass('red');
-                loadingEl.find('.message').html(__('Undefined error. '));
+                loadingEl.find('.ui.text.loader').html(__('Undefined error'));
+                setTimeout(function () {
+                    loadingEl.hide();
+                }, 3000);
             }
         } else {
-            loadingEl.find('.message').addClass('red');
-            loadingEl.find('.message').html(__('Undefined error. '));
+            loadingEl.find('.ui.text.loader').html(__('Undefined error'));
+            setTimeout(function () {
+                loadingEl.hide();
+            }, 3000);
         }
 
         setTimeout(function () {
@@ -571,14 +578,12 @@ let extensions_activate_next = function (pObj, bulkAct) {
     currentActivateThreads++;
 
     loadingEl.show();
-    loadingEl.find('.message').removeClass('red green');
-    loadingEl.find('.message').html('<i class="notched circle loading icon"></i>' + __('Activating...'));
+    loadingEl.find('.ui.text.loader').html(__('Activating license...'));
 
     if (apiEl.attr('license-status') == 'activated') {
         finishedActivateThreads++;
         currentActivateThreads--;
-        loadingEl.find('.message').addClass('green');
-        loadingEl.find('.message').html(__('Already activated.'));
+        loadingEl.hide();
         countSuccessActivation++;
         if (bulkAct) {
             extensions_loop_next();
@@ -593,26 +598,32 @@ let extensions_activate_next = function (pObj, bulkAct) {
         if (response) {
             if (response.result == 'SUCCESS') {
                 countSuccessActivation++;
-                loadingEl.find('.message').addClass('green');
-                loadingEl.find('.message').html(__('License activated.'));
-                statusEl.html('<i class="green check icon"></i> License');
+                loadingEl.find('.ui.text.loader').html(__('License activated'));
+                statusEl.html('<i class="green key icon"></i> Licensed');
                 apiEl.attr('license-status', 'activated');
-                apiEl.find('.mainwp-extensions-deactivate-chkbox').attr('checked', false);
+                //apiEl.find('.mainwp-extensions-deactivate-chkbox').attr('checked', false);
+                loadingEl.hide();
                 if (!bulkAct) {
                     setTimeout(function () {
                         mainwp_forceReload('admin.php?page=Extensions');
                     }, 2000);
                 }
             } else if (response.error) {
-                loadingEl.find('.message').addClass('red');
-                loadingEl.find('.message').html(response.error);
+                loadingEl.find('.ui.text.loader').html(response.error);
+                setTimeout(function () {
+                    loadingEl.hide();
+                }, 3000);
             } else {
-                loadingEl.find('.message').addClass('red');
-                loadingEl.find('.message').html(__('Undefined error. '));
+                loadingEl.find('.ui.text.loader').html(__('Undefined error'));
+                setTimeout(function () {
+                    loadingEl.hide();
+                }, 3000);
             }
         } else {
-            loadingEl.find('.message').addClass('red');
-            loadingEl.find('.message').html(__('Undefined error. '));
+            loadingEl.find('.ui.text.loader').html(__('Undefined error'));
+            setTimeout(function () {
+                loadingEl.hide();
+            }, 3000);
         }
         if (bulkAct) {
             extensions_loop_next();
@@ -931,7 +942,7 @@ jQuery(document).on('click', '#mainwp-extensions-api-sslverify-certificate', fun
 
         if (undefError) {
             statusEl.css('color', 'red');
-            statusEl.html('<i class="exclamation circle icon"></i> Undefined error!').fadeIn();
+            statusEl.html('<i class="exclamation circle icon"></i> Undefined error').fadeIn();
         }
     }, 'json');
     return false;

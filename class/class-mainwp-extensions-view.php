@@ -781,27 +781,31 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
         </div>
         <?php } ?>
 
-        <div class="extra content action-feedback" style="display:none;">
+        <!--<div class="extra content action-feedback" style="display:none;">
             <div class="ui mini message"></div>
+        </div>-->
+        <div class="ui active dimmer action-feedback" style="display:none;">
+            <div class="ui text loader"></div>
         </div>
 
         <?php if ( isset( $extension['apiManager'] ) && $extension['apiManager'] ) { ?>
             <?php if ( $active ) { ?>
-                <div class="extra content" id="mainwp-extensions-api-form" style="display: none;">
+                <div class="ui active dimmer" id="mainwp-extensions-api-form" style="display: none;">
                     <input type="hidden" class="extension-api-key" value="<?php echo esc_attr( $extension['api_key'] ); ?>"/>
-                    <div class="ui basic segment" style="text-align:center;">
-                        <p><strong><?php esc_html_e( 'Deactivate license for this add-on?', 'mainwp' ); ?></strong></p>
-                        <div class="ui mini buttons">
-                            <button class="ui button mainwp-extension-license-cancel"><?php esc_html_e( 'Cancel', 'mainwp' ); ?></button>
-                            <button class="ui red button mainwp-extensions-deactivate"><?php esc_html_e( 'Deactivate', 'mainwp' ); ?></button>
-                        </div>
+                    <div class="ui center aligned secondary segment">
+                        <p><?php esc_html_e( 'Deactivate license for this add-on?', 'mainwp' ); ?></p>
+                        <button class="ui red mini button mainwp-extensions-deactivate"><?php esc_html_e( 'Deactivate', 'mainwp' ); ?></button>
+                        <button class="ui button mini mainwp-extension-license-cancel"><?php esc_html_e( 'Cancel', 'mainwp' ); ?></button>
                     </div>
                 </div>
             <?php } ?>
 
             <?php if ( isset( $extension['apiManager'] ) && $extension['apiManager'] ) { ?>
-            <div class="extra content api-feedback" style="display:none;">
+            <!--<div class="extra content api-feedback" style="display:none;">
                 <div class="ui mini message"></div>
+            </div>-->
+            <div class="ui active dimmer api-feedback" style="display:none;">
+                <div class="ui text loader"></div>
             </div>
             <?php } ?>
         <?php } ?>
@@ -977,7 +981,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     <div id="mainwp-manage-add-ons-buttons">
                         <a href="javascript:void(0);" class="ui grey basic tiny button" id="mainwp-extensions-bulkinstall"><i class="download icon"></i> <?php esc_html_e( 'Install Add-ons', 'mainwp' ); ?></a>
                         <a href="javascript:void(0);" class="ui grey basic tiny button" id="mainwp-extensions-grabkeys"><i class="unlock icon"></i> <?php esc_html_e( 'Activate Add-ons', 'mainwp' ); ?></a>
-                        <a href="javascript:void(0);" class="ui green basic tiny button" id="mainwp-extensions-manage-toggle-on"><i class="key icon"></i> <?php esc_html_e( 'Manage Licence', 'mainwp' ); ?></a>
+                        <a href="javascript:void(0);" class="ui green basic tiny button" id="mainwp-extensions-manage-toggle-on"><i class="key icon"></i> <?php echo empty( $mainwp_api_key ) ? esc_html__( 'Add License Key', 'mainwp' ) : esc_html__( 'Manage Licence', 'mainwp' ); ?></a>
                     </div>
                     <div id="mainwp-manage-license-buttons" class="hidden">
                         <span class="ui left icon tiny input"><i class="key icon"></i><input type="password" id="mainwp_com_api_key" autocomplete="one-time-code" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="<?php esc_attr_e( 'Enter your MainWP Main API Key', 'mainwp' ); ?>" value="<?php echo esc_attr( $mainwp_api_key ); ?>"/></span>&nbsp;&nbsp;

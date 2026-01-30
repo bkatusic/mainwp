@@ -1594,6 +1594,13 @@ body.mainwp-ui.mainwp-custom-theme,
   backdrop-filter: blur(5px) !important;
 }
 
+.mainwp-ui.mainwp-custom-theme .ui.extension.card .ui.dimmer,
+.mainwp-ui.mainwp-custom-theme .ui.extension.card .ui.inverted.dimmer {
+  background-color: #20222095 !important;
+  backdrop-filter: blur(5px) !important;
+  border-radius: var(--area-radius) !important;
+}
+
 .mainwp-ui.mainwp-custom-theme .ui.loader:after {
   color: var(--mainwp-green) !important;
 }
