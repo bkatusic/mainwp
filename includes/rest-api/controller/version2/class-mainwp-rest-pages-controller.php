@@ -232,17 +232,13 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
      * @return WP_Error|WP_REST_Response
      */
 	public function list_pages( $request ) { // phpcs:ignore -- NOSONAR - complex.
-        $page_data      = array();
-        $utility        = MainWP_Utility::instance();
-        $system_utility = new MainWP_System_Utility();
+        $page_data = array();
+        $utility   = MainWP_Utility::instance();
         // Get params.
-        $args    = $this->prepare_objects_query( $request, 'pages_fields' );
-        $clients = ! empty( $args['clients'] ) ? $args['clients'] : '';
-        $groups  = ! empty( $args['groups'] ) ? $args['groups'] : '';
-        $sites   = ! empty( $args['websites'] ) ? $args['websites'] : '';
+        $args = $this->prepare_objects_query( $request, 'pages_fields' );
 
         $page_data = array(
-            'keyword'    => ! empty( $args['search'] ) ? $args['search'] : '',
+            'keyword'    => ! empty( $args['s'] ) ? $args['s'] : '',
             'search_on'  => ! empty( $args['search_on'] ) ? $args['search_on'] : '',
             'dtsstart'   => ! empty( $args['dtsstart'] ) ? $args['dtsstart'] : '',
             'dtsstop'    => ! empty( $args['dtsstop'] ) ? $args['dtsstop'] : '',
@@ -254,73 +250,15 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
             $page_data['WPSEOEnabled'] = 1;
         }
 
-        $website_url = array();
-        $db_websites = array();
-        if ( '' !== $sites ) {
-            foreach ( $sites as $v ) {
-                if ( $utility->ctype_digit( $v ) ) {
-                    $website = $this->db->get_website_by_id( $v );
-                    if ( empty( $website->sync_errors ) && ! $system_utility->is_suspended_site( $website ) ) {
-                        $db_websites[]               = $website;
-                        $website_url[ $website->id ] = $website->url;
-                    }
-                }
-            }
+        // Get target websites.
+        $websites_data = $this->get_websites_for_pages_query( $args );
+        if ( is_wp_error( $websites_data ) ) {
+            return $websites_data;
         }
 
-        if ( '' !== $groups ) {
-            foreach ( $groups as $v ) {
-                if ( $utility->ctype_digit( $v ) ) {
-                    $websites = $this->db->query( $this->db->get_sql_websites_by_group_id( $v ) );
-                    while ( $websites && ( $website = $this->db->fetch_object( $websites ) ) ) {
-                        if ( '' !== $website->sync_errors || $system_utility->is_suspended_site( $website ) ) {
-                            continue;
-                        }
-                        $db_websites[]               = $website;
-                        $website_url[ $website->id ] = $website->url;
-                    }
-                    $this->db->free_result( $websites );
-                }
-            }
-        }
-
-        if ( '' !== $clients && is_array( $clients ) ) {
-            $data_fields = $system_utility->get_default_map_site_fields();
-            $websites    = MainWP_DB_Client::instance()->get_websites_by_client_ids(
-                $clients,
-                array(
-                    'select_data' => $data_fields,
-                )
-            );
-
-            foreach ( $websites as $website ) {
-                if ( '' !== $website->sync_errors || $system_utility->is_suspended_site( $website ) ) {
-                    continue;
-                }
-                $db_websites[]               = $website;
-                $website_url[ $website->id ] = $website->url;
-            }
-        }
-
-        if ( empty( $db_websites ) ) {
-            // If no websites specified, get all websites for current user.
-            $all_websites = $this->db->query( $this->db->get_sql_websites_for_current_user() );
-            while ( $all_websites && ( $website = $this->db->fetch_object( $all_websites ) ) ) {
-                if ( '' !== $website->sync_errors || $system_utility->is_suspended_site( $website ) ) {
-                    continue;
-                }
-                $db_websites[]               = $website;
-                $website_url[ $website->id ] = $website->url;
-            }
-            $this->db->free_result( $all_websites );
-
-            if ( empty( $db_websites ) ) {
-                return new WP_Error(
-                    'no_website_found',
-                    __( 'No website found.', 'mainwp' ),
-                );
-            }
-        }
+        // Extract websites data.
+        $website_url = $websites_data['website_url'] ?? array();
+        $db_websites = $websites_data['db_websites'] ?? array();
 
         // Fetch pages from child sites.
         $output          = new \stdClass();
@@ -378,7 +316,7 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
         if ( empty( $website ) ) {
             return new WP_Error(
                 'website_not_found',
-                __( 'Website not found.', 'mainwp' )
+                $this->get_common_message( 'website_not_found' )
             );
         }
 
@@ -430,7 +368,7 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
         if ( empty( $website ) ) {
             return new WP_Error(
                 'website_not_found',
-                __( 'Website not found.', 'mainwp' )
+                $this->get_common_message( 'website_not_found' )
             );
         }
 
@@ -498,7 +436,7 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
         if ( empty( $website ) ) {
             return new WP_Error(
                 'website_not_found',
-                __( 'Website not found.', 'mainwp' )
+                $this->get_common_message( 'website_not_found' )
             );
         }
 
@@ -579,7 +517,7 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
         if ( empty( $website ) ) {
             return new WP_Error(
                 'website_not_found',
-                __( 'Website not found.', 'mainwp' )
+                $this->get_common_message( 'website_not_found' )
             );
         }
 
@@ -642,13 +580,13 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
      *
      * @return WP_Error|WP_REST_Response
      */
-    public function delete_page( $request ) {  // phpcs:ignore -- NOSONAR
+    public function delete_page( $request ) { // phpcs:ignore -- NOSONAR - complex.
         // Get website exist.
         $website = $this->get_request_item( $request );
         if ( empty( $website ) ) {
             return new WP_Error(
                 'website_not_found',
-                __( 'Website not found.', 'mainwp' )
+                $this->get_common_message( 'website_not_found' )
             );
         }
 
@@ -852,26 +790,26 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
                 'post_title'   => array(
                     'required'          => false,
                     'type'              => 'string',
-                    'description'       => __( 'Post title.', 'mainwp' ),
+                    'description'       => $this->get_common_message( 'page_title' ),
                     'sanitize_callback' => 'sanitize_text_field',
                 ),
                 'post_content' => array(
                     'required'          => false,
                     'type'              => 'string',
-                    'description'       => __( 'Post content.', 'mainwp' ),
+                    'description'       => $this->get_common_message( 'page_content' ),
                     'sanitize_callback' => 'wp_kses_post',
                 ),
                 'post_status'  => array(
                     'required'          => false,
                     'type'              => 'string',
-                    'description'       => __( 'Post status.', 'mainwp' ),
+                    'description'       => $this->get_common_message( 'page_status' ),
                     'sanitize_callback' => $this->make_enum_sanitizer( $status, 'string' ),
                     'validate_callback' => $this->make_enum_validator( $status, 'string' ),
                 ),
                 'post_name'    => array(
                     'required'          => false,
                     'type'              => 'string',
-                    'description'       => __( 'Post slug.', 'mainwp' ),
+                    'description'       => $this->get_common_message( 'page_slug' ),
                     'sanitize_callback' => 'sanitize_title',
                 ),
             )
@@ -892,26 +830,26 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
                 'post_title'   => array(
                     'required'          => true,
                     'type'              => 'string',
-                    'description'       => __( 'Post title.', 'mainwp' ),
+                    'description'       => $this->get_common_message( 'page_title' ),
                     'sanitize_callback' => 'sanitize_text_field',
                 ),
                 'post_content' => array(
                     'required'          => true,
                     'type'              => 'string',
-                    'description'       => __( 'Post content.', 'mainwp' ),
+                    'description'       => $this->get_common_message( 'page_content' ),
                     'sanitize_callback' => 'wp_kses_post',
                 ),
                 'post_status'  => array(
                     'required'          => true,
                     'type'              => 'string',
-                    'description'       => __( 'Post status.', 'mainwp' ),
+                    'description'       => $this->get_common_message( 'page_status' ),
                     'sanitize_callback' => $this->make_enum_sanitizer( $status, 'string' ),
                     'validate_callback' => $this->make_enum_validator( $status, 'string' ),
                 ),
                 'post_name'    => array(
                     'required'          => true,
                     'type'              => 'string',
-                    'description'       => __( 'Post slug.', 'mainwp' ),
+                    'description'       => $this->get_common_message( 'page_slug' ),
                     'sanitize_callback' => 'sanitize_title',
                 ),
             )
@@ -927,7 +865,7 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
         return array(
             'id_page' => array(
                 'required'          => true,
-                'description'       => __( 'Post ID.', 'mainwp' ),
+                'description'       => $this->get_common_message( 'page_id' ),
                 'type'              => 'integer',
                 'sanitize_callback' => 'absint',
             ),
@@ -957,7 +895,7 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
      *
      * @return bool|WP_Error
      */
-    public function validate_filter_params( $request ) {  // phpcs:ignore -- NOSONAR
+    public function validate_filter_params( $request ) {  // phpcs:ignore -- NOSONAR - complex.
         // Customer, group, site authentication only one of the 3 is processed once.
         $clients      = $request->get_param( 'clients' );
         $groups       = $request->get_param( 'groups' );
@@ -967,27 +905,6 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
             return new WP_Error(
                 'invalid_filter_params',
                 __( 'Only one of clients, groups, or websites can be specified.', 'mainwp' ),
-            );
-        }
-
-        // Validate date range.
-        $date_start = $request->get_param( 'dtsstart' );
-        $date_stop  = $request->get_param( 'dtsstop' );
-        $has_start  = ! empty( $date_start );
-        $has_stop   = ! empty( $date_stop );
-
-        // XOR logic: if only one of the two is filled in.
-        if ( $has_start xor $has_stop ) {
-            return new WP_Error(
-                'incomplete_date_range',
-                __( 'Both start date and stop date must be provided together.', 'mainwp' ),
-            );
-        }
-
-        if ( $has_start && $has_stop && strtotime( $date_start ) >= strtotime( $date_stop ) ) {
-            return new WP_Error(
-                'invalid_date_range',
-                __( 'Start date must be before stop date.', 'mainwp' ),
             );
         }
 
@@ -1011,10 +928,11 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
      *
      * @param string          $value Date format.
      * @param WP_REST_Request $request Request object.
+     * @param string          $param Parameter name.
      *
      * @return bool|WP_Error
      */
-    public function validate_date_format( $value, $request ) { // phpcs:ignore -- NOSONAR - callback signature required by WordPress.
+    public function validate_date_format( $value, $request, $param ) { // phpcs:ignore -- NOSONAR - complex.
         if ( empty( $value ) ) {
             return true;
         }
@@ -1035,14 +953,6 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
             return new WP_Error(
                 'invalid_date_value',
                 __( 'Invalid date value. Use a real date.', 'mainwp' ),
-            );
-        }
-
-        // Validation not greater than current date.
-        if ( strtotime( $value ) > time() ) {
-            return new WP_Error(
-                'invalid_date_value',
-                __( 'Invalid date value. Date must be in the past.', 'mainwp' ),
             );
         }
 
@@ -1111,7 +1021,7 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
             'properties' => array(
                 'id'                  => array(
                     'type'        => 'integer',
-                    'description' => __( 'Post ID.', 'mainwp' ),
+                    'description' => $this->get_common_message( 'page_id' ),
                     'context'     => array( 'view', 'simple_view', 'detail' ),
                     'readonly'    => true,
                 ),
@@ -1123,19 +1033,19 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
                 ),
                 'post_type'           => array(
                     'type'        => 'string',
-                    'description' => __( 'Post type.', 'mainwp' ),
+                    'description' => __( 'Page type.', 'mainwp' ),
                     'context'     => array( 'view', 'simple_view', 'detail' ),
                     'readonly'    => true,
                 ),
                 'status'              => array(
                     'type'        => 'string',
-                    'description' => __( 'Post status.', 'mainwp' ),
+                    'description' => $this->get_common_message( 'page_status' ),
                     'context'     => array( 'view', 'simple_view' ),
                     'readonly'    => true,
                 ),
                 'title'               => array(
                     'type'        => 'string',
-                    'description' => __( 'Post title.', 'mainwp' ),
+                    'description' => $this->get_common_message( 'page_title' ),
                     'context'     => array( 'view', 'simple_view' ),
                     'readonly'    => true,
                 ),
@@ -1147,20 +1057,20 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
                 ),
                 'author'              => array(
                     'type'        => 'string',
-                    'description' => __( 'Post author.', 'mainwp' ),
+                    'description' => __( 'Page author.', 'mainwp' ),
                     'context'     => array( 'view', 'simple_view' ),
                     'readonly'    => true,
                 ),
                 'dts'                 => array(
                     'type'        => 'string',
                     'format'      => 'date-time',
-                    'description' => __( 'Post date.', 'mainwp' ),
+                    'description' => __( 'Page date.', 'mainwp' ),
                     'context'     => array( 'view', 'simple_view' ),
                     'readonly'    => true,
                 ),
                 'authorEmail'         => array(
                     'type'        => 'string',
-                    'description' => __( 'Post author email.', 'mainwp' ),
+                    'description' => __( 'Page author email.', 'mainwp' ),
                     'context'     => array( 'simple_view', 'view' ),
                     'readonly'    => true,
                 ),
@@ -1178,19 +1088,19 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
                 ),
                 'post_content'        => array(
                     'type'        => 'string',
-                    'description' => __( 'Page content.', 'mainwp' ),
+                    'description' => $this->get_common_message( 'page_content' ),
                     'context'     => array( 'detail' ),
                     'readonly'    => true,
                 ),
                 'post_status'         => array(
                     'type'        => 'string',
-                    'description' => __( 'Page status.', 'mainwp' ),
+                    'description' => $this->get_common_message( 'page_status' ),
                     'context'     => array( 'detail' ),
                     'readonly'    => true,
                 ),
                 'post_name'           => array(
                     'type'        => 'string',
-                    'description' => __( 'Page slug.', 'mainwp' ),
+                    'description' => $this->get_common_message( 'page_slug' ),
                     'context'     => array( 'detail' ),
                     'readonly'    => true,
                 ),
@@ -1253,13 +1163,13 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
             'post_excerpt'        => array(
                 'required'          => false,
                 'type'              => 'string',
-                'description'       => __( 'Post excerpt.', 'mainwp' ),
+                'description'       => __( 'Page excerpt.', 'mainwp' ),
                 'sanitize_callback' => 'sanitize_text_field',
             ),
             'post_password'       => array(
                 'required'          => false,
                 'type'              => 'string',
-                'description'       => __( 'Post password.', 'mainwp' ),
+                'description'       => __( 'Page password.', 'mainwp' ),
                 'sanitize_callback' => 'sanitize_text_field',
             ),
             'comment_status'      => array(
@@ -1279,14 +1189,14 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
             'post_date'           => array(
                 'required'          => false,
                 'type'              => 'string',
-                'description'       => __( 'Post date (YYYY-MM-DD HH:MM:SS).', 'mainwp' ),
+                'description'       => __( 'Page date (YYYY-MM-DD HH:MM:SS).', 'mainwp' ),
                 'sanitize_callback' => 'sanitize_text_field',
                 'validate_callback' => array( $this, 'validate_datetime_format' ),
             ),
             'post_date_gmt'       => array(
                 'required'          => false,
                 'type'              => 'string',
-                'description'       => __( 'Post date GMT (YYYY-MM-DD HH:MM:SS).', 'mainwp' ),
+                'description'       => __( 'Page date GMT (YYYY-MM-DD HH:MM:SS).', 'mainwp' ),
                 'sanitize_callback' => 'sanitize_text_field',
                 'validate_callback' => array( $this, 'validate_datetime_format' ),
             ),
@@ -1331,7 +1241,7 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
      *
      * @return WP_Error|Object Item.
      */
-    private function get_request_item( $request ) {  // phpcs:ignore -- NOSONAR
+    private function get_request_item( $request ) { // phpcs:ignore -- NOSONAR - complex.
         // Get id or domain raw value.
         $raw = (string) $request->get_param( 'id_domain' );
         $raw = trim( $raw );
@@ -1354,5 +1264,137 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
         }
 
         return $website;
+    }
+
+    /**
+     * Get websites for users query.
+     *
+     * @param array $args Query arguments.
+     * @return array|WP_Error Array with db_websites and website_url or WP_Error on failure.
+     */
+    private function get_websites_for_pages_query( $args ) {
+        $clients = $args['clients'] ?? '';
+        $groups  = $args['groups'] ?? '';
+        $sites   = $args['websites'] ?? '';
+
+        $filter_db_websites = $this->get_db_websites_by_filter( $sites, $groups, $clients );
+
+        if ( empty( $filter_db_websites ) || ! is_array( $filter_db_websites ) ) {
+            return new WP_Error(
+                'no_website_found',
+                __( 'No website found.', 'mainwp' ) // NOSONAR.
+            );
+        }
+
+        $db_websites = $filter_db_websites['db_websites'] ?? array();
+        $website_url = $filter_db_websites['website_url'] ?? array();
+
+        if ( empty( $db_websites ) ) {
+            return new WP_Error(
+                'no_website_found',
+                __( 'No website found.', 'mainwp' ) // NOSONAR.
+            );
+        }
+
+        return array(
+            'db_websites' => $db_websites,
+            'website_url' => $website_url,
+        );
+    }
+
+    /**
+     * Get websites by filter.
+     *
+     * @param array $sites   Sites.
+     * @param array $groups  Groups.
+     * @param array $clients Clients.
+     *
+     * @return array
+     */
+    protected function get_db_websites_by_filter( $sites, $groups, $clients ) {  // phpcs:ignore -- NOSONAR - complex.
+        $utility        = MainWP_Utility::instance();
+        $system_utility = new MainWP_System_Utility();
+        $data_fields    = $system_utility->get_default_map_site_fields();
+        $data_fields[]  = 'users';
+
+        // Default result.
+        $website_url = array();
+        $db_websites = array();
+
+        if ( ! empty( $sites ) && is_array( $sites ) ) {
+            foreach ( $sites as $v ) {
+                if ( $utility->ctype_digit( $v ) ) {
+                    $website = $this->db->get_website_by_id( $v );
+                    if ( empty( $website->sync_errors ) && ! $system_utility->is_suspended_site( $website ) ) {
+                        $db_websites[ $website->id ] = $utility->map_site(
+                            $website,
+                            $data_fields
+                        );
+                        $website_url[ $website->id ] = $website->url;
+                    }
+                }
+            }
+        }
+        if ( ! empty( $groups ) && is_array( $groups ) ) {
+            foreach ( $groups as $v ) {
+                if ( $utility->ctype_digit( $v ) ) {
+                    $websites = $this->db->query( $this->db->get_sql_websites_by_group_id( $v ) );
+                    while ( $websites && ( $website = $this->db->fetch_object( $websites ) ) ) {
+                        if ( ! empty( $website->sync_errors ) || $system_utility->is_suspended_site( $website ) ) {
+                            continue;
+                        }
+                        $db_websites[ $website->id ] = $utility->map_site(
+                            $website,
+                            $data_fields
+                        );
+                        $website_url[ $website->id ] = $website->url;
+                    }
+                    $this->db->free_result( $websites );
+                }
+            }
+        }
+
+        if ( ! empty( $clients ) && is_array( $clients ) ) {
+            $websites = MainWP_DB_Client::instance()->get_websites_by_client_ids(
+                $clients,
+                array(
+                    'select_data' => $data_fields,
+                )
+            );
+            if ( $websites ) {
+                foreach ( $websites as $website ) {
+                    if ( ! empty( $website->sync_errors ) || $system_utility->is_suspended_site( $website ) ) {
+                        continue;
+                    }
+                    $db_websites[ $website->id ] = $utility->map_site(
+                        $website,
+                        $data_fields
+                    );
+                    $website_url[ $website->id ] = $website->url;
+                }
+            }
+        }
+
+        return compact( 'db_websites', 'website_url' );
+    }
+
+    /**
+     * Get common message.
+     *
+     * @param string $key Message key.
+     *
+     * @return string
+     */
+    protected function get_common_message( $key ) {
+        $words_map = array(
+            'page_id'           => __( 'Page ID.', 'mainwp' ),
+            'page_status'       => __( 'Page status.', 'mainwp' ),
+            'page_title'        => __( 'Page title.', 'mainwp' ),
+            'page_content'      => __( 'Page content.', 'mainwp' ),
+            'page_slug'         => __( 'Page slug.', 'mainwp' ),
+            'website_not_found' => __( 'Website not found.', 'mainwp' ),
+        );
+
+        return isset( $words_map[ $key ] ) ? $words_map[ $key ] : '';
     }
 }
