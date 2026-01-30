@@ -981,7 +981,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     <div id="mainwp-manage-add-ons-buttons">
                         <a href="javascript:void(0);" class="ui grey basic tiny button" id="mainwp-extensions-bulkinstall"><i class="download icon"></i> <?php esc_html_e( 'Install Add-ons', 'mainwp' ); ?></a>
                         <a href="javascript:void(0);" class="ui grey basic tiny button" id="mainwp-extensions-grabkeys"><i class="unlock icon"></i> <?php esc_html_e( 'Activate Add-ons', 'mainwp' ); ?></a>
-                        <a href="javascript:void(0);" class="ui green basic tiny button" id="mainwp-extensions-manage-toggle-on"><i class="key icon"></i> <?php echo empty( $mainwp_api_key ) ? esc_html__( 'Add License Key', 'mainwp' ) : esc_html__( 'Manage Licence', 'mainwp' ); ?></a>
+                        <a href="javascript:void(0);" class="ui green basic tiny button" id="mainwp-extensions-manage-toggle-on"><i class="key icon"></i> <?php echo empty( $mainwp_api_key ) ? esc_html__( 'Add License Key', 'mainwp' ) : esc_html__( 'Manage License', 'mainwp' ); ?></a>
                     </div>
                     <div id="mainwp-manage-license-buttons" class="hidden">
                         <span class="ui left icon tiny input"><i class="key icon"></i><input type="password" id="mainwp_com_api_key" autocomplete="one-time-code" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="<?php esc_attr_e( 'Enter your MainWP Main API Key', 'mainwp' ); ?>" value="<?php echo esc_attr( $mainwp_api_key ); ?>"/></span>&nbsp;&nbsp;
