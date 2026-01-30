@@ -1517,13 +1517,44 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
      *
      * @return callable
      */
-    public function make_enum_sanitizer( array $allowed, string $type = 'int' ) {
+    public function make_enum_sanitizer( array $allowed, string $type = 'int' ) { // phpcs:ignore -- NOSONAR - complex.
         $allowed_norm = array_map( fn( $v ) => $this->coerce_type( $v, $type ), $allowed );
 
-		return function ( $value, $request, $param ) use ( $allowed_norm, $type ) {  // phpcs:ignore -- NOSONAR
+		return function ( $value, $request, $param ) use ( $allowed_norm, $type, $allowed ) {  // phpcs:ignore -- NOSONAR
             if ( null === $value || '' === $value ) {
                 return $value;
             }
+
+            if ( 'array' === $type ) {
+                if ( ! is_array( $value ) ) {
+                    $value = $this->sanitize_field( $value );
+                    if ( is_string( $value ) && strpos( $value, ',' ) !== false ) {
+                        $value = array_map( 'trim', explode( ',', $value ) );
+                    } else {
+                        $value = array( $value );
+                    }
+                }
+
+                $sanitized = array();
+                foreach ( $value as $item ) {
+                    $item = $this->sanitize_field( $item );
+                    if ( in_array( $item, $allowed, true ) ) {
+                        $sanitized[] = $item;
+                    } else {
+                        return new WP_Error(
+                            "invalid_{$param}",
+                            sprintf(
+                                __( 'Invalid %1$s. Allowed values: %2$s.', 'mainwp' ), // NOSONAR.
+                                esc_html( $param ),
+                                esc_html( implode( ', ', $allowed ) )
+                            ),
+                        );
+                    }
+                }
+                return $sanitized;
+            }
+
+            // Standard sanitization for non-array types.
             $value = $this->sanitize_field( $value );
             $v     = $this->coerce_type( $value, $type );
 
@@ -1550,10 +1581,14 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
      *
      * @return mixed
      */
-    public function coerce_type( $value, string $type ) {
+    public function coerce_type( $value, string $type ) {  // phpcs:ignore -- NOSONAR
         switch ( $type ) {
             case 'int':
                 return (int) $value;
+            case 'bool':
+                return (bool) $value;
+            case 'array':
+                return (array) $value;
             case 'string':
             default:
                 return (string) $value;
@@ -1568,14 +1603,43 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
      *
      * @return callable
      */
-    public function make_enum_validator( array $allowed, string $type = 'int' ) {
+    public function make_enum_validator( array $allowed, string $type = 'int' ) { // phpcs:ignore -- NOSONAR
         $allowed_norm = array_map( fn( $v ) => $this->coerce_type( $v, $type ), $allowed );
 
-		return function ( $value, $request, $param ) use ( $allowed_norm, $type ) {  // phpcs:ignore -- NOSONAR
+		return function ( $value, $request, $param ) use ( $allowed_norm, $type, $allowed ) {  // phpcs:ignore -- NOSONAR
             if ( null === $value || '' === $value ) {
                 return true;
             }
 
+            if ( 'array' === $type ) {
+                if ( ! is_array( $value ) ) {
+                    $value = $this->sanitize_field( $value );
+                    if ( is_string( $value ) && strpos( $value, ',' ) !== false ) {
+                        $value = array_map( 'trim', explode( ',', $value ) );
+                    } else {
+                        $value = array( $value );
+                    }
+                }
+
+                // Validate each element in the array.
+                foreach ( $value as $item ) {
+                    $item = $this->sanitize_field( $item );
+                    if ( ! in_array( $item, $allowed, true ) ) {
+                        return new WP_Error(
+                            "invalid_{$param}",
+                            sprintf(
+                                /* translators: 1: field name, 2: allowed list */
+                                __( 'Invalid %1$s. Allowed values: %2$s.', 'mainwp' ),
+                                esc_html( $param ),
+                                esc_html( implode( ', ', $allowed ) )
+                            ),
+                        );
+                    }
+                }
+                return true;
+            }
+
+            // Standard validation for non-array types.
             $value = $this->sanitize_field( $value );
             $v     = $this->coerce_type( $value, $type );
 
@@ -1632,7 +1696,7 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
      *
      * @return array|WP_Error
      */
-    protected function get_request_post_page_id( $website, $request, $type = 'page' ) {
+    protected function get_request_post_page_id( $website, $request, $type = 'page' ) {  // phpcs:ignore -- NOSONAR
         // Param names.
         $type          = ( 'post' === $type ) ? 'post' : 'page';
         $type_id_param = ( 'page' === $type ) ? 'id_page' : 'id_post';
@@ -1673,5 +1737,136 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
             'post_id'   => $id,
             'post_type' => $type,
         );
+    }
+
+    /**
+     * Validate site ids.
+     *
+     * @param string          $value Site id.
+     * @param WP_REST_Request $request Request object.
+     *
+     * @return bool|WP_Error
+     */
+    public function validate_site_ids( $value, $request ) {
+        if ( empty( $value ) ) {
+            return true;
+        }
+        $value    = $this->sanitize_field( $value );
+        $site_ids = explode( ',', $value );
+        foreach ( $site_ids as $site_id ) {
+            $db_site = \MainWP\Dashboard\MainWP_DB::instance()->get_website_by_id( trim( $site_id ) );
+            if ( ! $db_site ) {
+                return new WP_Error(
+                    'invalid_site',
+                    sprintf(
+                        __( 'Invalid site ID: %s.', 'mainwp' ),
+                        esc_html( $site_id )
+                    ),
+                );
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Sanitize text field to array.
+     *
+     * @param string $value Client id.
+     *
+     * @return string|array
+     */
+    public function sanitize_text_field_to_array( $value ) {
+        if ( empty( $value ) ) {
+            return '';
+        }
+        $value = $this->sanitize_field( $value );
+        return array_map( 'trim', explode( ',', $value ) );
+    }
+
+    /**
+     * Validate clients.
+     *
+     * @param string          $value Client id.
+     * @param WP_REST_Request $request Request object.
+     *
+     * @return bool|WP_Error
+     */
+    public function validate_clients( $value, $request ) {
+        if ( empty( $value ) ) {
+            return true;
+        }
+        $value   = $this->sanitize_field( $value );
+        $clients = array_map( 'trim', explode( ',', $value ) );
+
+        foreach ( $clients as $client ) {
+            $db_client = MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $client );
+            if ( ! $db_client ) {
+                return new WP_Error(
+                    'invalid_client',
+                    sprintf(
+                        __( 'Invalid client ID: %s.', 'mainwp' ),
+                        esc_html( $client )
+                    ),
+                );
+            }
+        }
+        return true;
+    }
+    /**
+     * Sanitize groups text field.
+     *
+     * @param string $value Group name.
+     *
+     * @return string
+     */
+    public function sanitize_groups_text_field( $value ) {
+        if ( empty( $value ) ) {
+            return '';
+        }
+        $value     = $this->sanitize_field( $value );
+        $group_ids = array();
+        $groups    = array_map( 'trim', explode( ',', $value ) );
+        foreach ( $groups as $group ) {
+            $db_group = \MainWP\Dashboard\MainWP_DB_Common::instance()->get_group_by_name( $group );
+            if ( ! $db_group ) {
+                return new WP_Error(
+                    'invalid_group',
+                    sprintf(
+                        __( 'Invalid Group: %s.', 'mainwp' ),
+                        esc_html( $group )
+                    ),
+                );
+            }
+            $group_ids[] = $db_group->id;
+        }
+        return $group_ids;
+    }
+
+    /**
+     *  Get group ids from group names.
+     *
+     * @param string $value Group name.
+     * @param mixed  $request Request object.
+     * @return bool|WP_Error True if valid, WP_Error otherwise.
+     */
+    public function validate_groups( $value, $request ) {
+        if ( empty( $value ) ) {
+            return true;
+        }
+        $value  = $this->sanitize_field( $value );
+        $groups = array_map( 'trim', explode( ',', $value ) );
+        foreach ( $groups as $group ) {
+            $db_group = \MainWP\Dashboard\MainWP_DB_Common::instance()->get_group_by_name( $group );
+            if ( ! $db_group ) {
+                return new WP_Error(
+                    'invalid_group',
+                    sprintf(
+                        __( 'Invalid Group: %s.', 'mainwp' ),
+                        esc_html( $group )
+                    ),
+                );
+            }
+        }
+        return true;
     }
 }

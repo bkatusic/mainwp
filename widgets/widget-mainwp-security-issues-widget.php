@@ -211,7 +211,7 @@ class MainWP_Security_Issues_Widget { // phpcs:ignore Generic.Classes.OpeningBra
                         <?php if ( $is_demo ) : ?>
                             <a href="<?php echo esc_html( $website->url ) . 'wp-admin.html'; ?>" target="_blank"><i class="sign in alternate icon"></i></a>
                         <?php else : ?>
-                            <a href="<?php echo 'admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank"><i class="sign in alternate icon"></i></a>
+                            <a href="<?php MainWP_Site_Open::get_open_site_admin_link( $website->id, true ); ?>" target="_blank"><i class="sign in alternate icon"></i></a>
                         <?php endif; ?>
                         <a href="
                         <?php

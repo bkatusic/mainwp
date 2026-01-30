@@ -117,6 +117,7 @@ class MainWP_Rest_Server {
             'settings'      => 'MainWP_Rest_Settings_Controller',
             'posts'         => 'MainWP_Rest_Posts_Controller',
             'pages'         => 'MainWP_Rest_Pages_Controller',
+            'users'         => 'MainWP_Rest_Users_Controller',
         );
     }
 
