@@ -142,21 +142,25 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
 
         ?>
         <div id="mainwp-manage-extensions">
-            <div class="mainwp-main-content">
-
+            <div class="ui segment">
                 <?php if ( empty( $extensions ) && empty( $extensions_disabled ) ) { ?>
-                    <?php static::render_intro_notice(); ?>
+                    <?php static::render_intro_notice( $mainwp_api_key ); ?>
                 <?php } else { ?>
-                    
-
-                    <div class="mainwp-actions-bar">
+                    <div>
+                        <?php
+                        if ( \mainwp_current_user_can( 'dashboard', 'manage_extensions' ) ) {
+                            static::render_licensing_actions_bar( $mainwp_api_key );
+                        }
+                        ?>
+                    </div>
+                    <div class="ui segment">
                         <div class="ui stackable grid">
                             <div class="eight wide column" data-tooltip="<?php esc_attr_e( 'Extensions are purpose-built add-ons that expand your Dashboard\'s functionality without relying on external services. Integrations are add-ons that connect MainWP with third-party tools, bringing their power directly into your Dashboard.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
-                                <div class="ui mini stackable buttons">
-                                    <button class="ui basic green button" id="mainwp-extensions-show-all"><i class="box icon"></i><?php esc_html_e( 'Show All Add-ons', 'mainwp' ); ?></button>
-                                    <button class="ui basic button" id="mainwp-extensions-show-extensions"><i class="puzzle piece icon"></i><?php esc_html_e( 'Show Extensions', 'mainwp' ); ?></button>
-                                    <button class="ui basic button" id="mainwp-extensions-show-integrations"><i class="plug icon"></i><?php esc_html_e( 'Show Integrations', 'mainwp' ); ?></button>
-                                </div>
+                                <!--<div class="ui mini stackable buttons">-->
+                                    <button class="ui mini basic green button" id="mainwp-extensions-show-all"><i class="box icon"></i><?php esc_html_e( 'Show All Add-ons', 'mainwp' ); ?></button>
+                                    <button class="ui mini basic button" id="mainwp-extensions-show-extensions"><i class="puzzle piece icon"></i><?php esc_html_e( 'Show Extensions', 'mainwp' ); ?></button>
+                                    <button class="ui mini basic button" id="mainwp-extensions-show-integrations"><i class="plug icon"></i><?php esc_html_e( 'Show Integrations', 'mainwp' ); ?></button>
+                                <!--</div>-->
                             </div>
                             <div class="eight wide right aligned column">
                                 <div id="mainwp-search-extensions" class="ui mini search">
@@ -194,14 +198,18 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                                 <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
                             </div>
                         </div>
-                        <div id="mainwp-extensions-list">
-                        <h2 class="ui dividing header">
-                            <div class="content">
-                                <?php esc_html_e( 'Active Add-ons', 'mainwp' ); ?>
-                                <div class="sub header"><?php esc_html_e( 'The add-ons you’re currently using to power up your MainWP Dashboard.', 'mainwp' ); ?></div>
-                            </div>
-                        </h2>
-                        <div class="ui four cards" id="mainwp-active-add-ons-cards">
+                        <div id="mainwp-extensions-list" class="ui fluid accordion">
+                        <div class="active title" style="background:none!important;">
+                            <i class="dropdown icon"></i>
+                            <h2 class="ui header" style="display:inline-block;margin:0;">
+                                <div class="content" style="background:none!important;">
+                                    <?php esc_html_e( 'Enabled Add-ons', 'mainwp' ); ?>
+                                    <div class="sub header"><?php esc_html_e( 'The add-ons you\'re currently using to power up your MainWP Dashboard.', 'mainwp' ); ?></div>
+                                </div>
+                            </h2>
+                        </div>
+                        <div class="active content" style="background:none!important;">
+                            <div class="ui four cards" id="mainwp-active-add-ons-cards">
                             <?php if ( isset( $extensions ) && is_array( $extensions ) ) { ?>
                                 <?php foreach ( $extensions as $extension ) { ?>
                                     <?php
@@ -227,14 +235,20 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                                 <?php } ?>
                                 <?php $extensions_count = count( $extensions ); ?>
                             <?php } ?>
-                        </div>
-                        <h2 class="ui dividing header">
-                            <div class="content">
-                                <?php esc_html_e( 'Inactive Add-ons', 'mainwp' ); ?>
-                                <div class="sub header"><?php esc_html_e( 'These add-ons are installed but turned off. Activate them anytime to unlock more features.', 'mainwp' ); ?></div>
                             </div>
-                        </h2>
-                        <div class="ui four cards" id="mainwp-inactive-add-ons-cards">  
+                        </div>
+                        <div class="ui section divider"></div>
+                        <div class="title" style="background:none!important;">
+                            <i class="dropdown icon"></i>
+                            <h2 class="ui header" style="display:inline-block;margin:0;">
+                                <div class="content" style="background:none!important;">
+                                    <?php esc_html_e( 'Disabled Add-ons', 'mainwp' ); ?>
+                                    <div class="sub header"><?php esc_html_e( 'These add-ons are installed but turned off. Enable them anytime to unlock more features.', 'mainwp' ); ?></div>
+                                </div>
+                            </h2>
+                        </div>
+                        <div class="content" style="background:none!important;">
+                            <div class="ui four cards" id="mainwp-inactive-add-ons-cards">  
                             <?php if ( is_array( $extensions_disabled ) ) { ?>
                                 <?php foreach ( $extensions_disabled as $extension ) { ?>
                                     <?php
@@ -275,20 +289,13 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                                 <div class="ui card" style="visibility:hidden"></div>
                             <?php endif; ?>
 
+                            </div>
                         </div>
                     </div>
                 </div>
                 <?php } ?>
 
                 <?php static::render_purchase_notice(); ?>
-            </div>
-
-            <div class="mainwp-side-content mainwp-no-padding">
-            <?php
-            if ( \mainwp_current_user_can( 'dashboard', 'manage_extensions' ) ) {
-                static::render_side_box( $mainwp_api_key );
-            }
-            ?>
             </div>
             <div id="mainwp-extensions-privacy-info">
                 <?php $priv_extensions = static::get_available_extensions( 'all' ); ?>
@@ -346,6 +353,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
 
         <script type="text/javascript">
         jQuery( document ).ready( function () {
+            jQuery( '#mainwp-extensions-list' ).accordion();
             jQuery( '#mainwp-search-extensions-input' ).on( 'keyup', function () {
                 var searchQuery = jQuery( this ).val().toLowerCase();
                 var extensions = jQuery( '#mainwp-extensions-list' ).find( '.ui.extension.card' );
@@ -372,36 +380,280 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 jQuery( '#mainwp-search-extensions-input' ).trigger('keyup');
             } );
         } );
-            
-   
-
         </script>
-
         <?php
     }
 
     /**
-     * Method render_intro_notice()
+     * Render the introductory notice section for extensions page.
      *
-     * Render Intro Notice.
+     * Displays the main intro content including API key validation form,
+     * category browsing cards, and popular add-ons section.
+     *
+     * @param string|false $mainwp_api_key The MainWP API key or false if not set.
+     * @return void
      */
-    public static function render_intro_notice() {
+    public static function render_intro_notice( $mainwp_api_key ) {
+        $folder_url = MAINWP_PLUGIN_URL . 'assets/images/extensions/';
         ?>
-        <div class="ui secondary segment">
-            <h2 class="header"><?php esc_html_e( 'What are Add-ons?', 'mainwp' ); ?></h2>
-            <p><?php esc_html_e( 'Add-ons are specific features or tools created to expand the basic functionality of MainWP. The core of MainWP is designed to provide the functions most needed for you and minimize code bloat.', 'mainwp' ); ?></p>
-            <p><?php esc_html_e( 'Add-ons offer custom functions and features so that each user can tailor the MainWP Dashboard to their specific needs.', 'mainwp' ); ?></p>
-            <p><?php esc_html_e( 'MainWP Pro offers 40+ Free & Premium Add-ons in multiple categories, such as Security, Backup, Performance, Administrative, etc. You can get all of them at a single price.', 'mainwp' ); ?></p>
-            <h4><?php esc_html_e( 'MainWP Pro includes:', 'mainwp' ); ?></h4>
-            <div class="ui bulleted list">
-                <div class="item"><?php esc_html_e( 'All current MainWP Add-ons (free & premium)', 'mainwp' ); ?></div>
-                <div class="item"><?php esc_html_e( 'All future MainWP Add-ons (free & premium)', 'mainwp' ); ?></div>
-                <div class="item"><?php esc_html_e( 'Critical Security & Performance updates for MainWP Add-ons', 'mainwp' ); ?></div>
-                <div class="item"><?php esc_html_e( 'Priority support via Helpdesk & Community for MainWP products', 'mainwp' ); ?></div>
+        <div class="ui very padded segment">
+            <h2 class="ui massive header">
+                <?php esc_html_e( 'Extend your MainWP Dashboard.', 'mainwp' ); ?><br/>
+                <span class="ui green text"><?php esc_html_e( 'Add what you need.', 'mainwp' ); ?></span>
+            </h2>
+            <p style="max-width:700px"><span class="ui grey text"><?php esc_html_e( 'The MainWP Dashboard core keeps things lean. Add-ons let you expand with exactly the features you need, security, backups, performance monitoring, and more.', 'mainwp' ); ?></span></p>
+            <div class="ui section hidden divider"></div>
+            <div class="ui two column stacking grid">
+                <div class="column">
+                    <div class="ui green padded secondary segment">
+                        <h2 class="ui header">
+                            <i class="key icon"></i>
+                            <div class="content">
+                                <?php esc_html_e( 'Connect your MainWP Account', 'mainwp' ); ?>
+                                <div class="sub header"><?php esc_html_e( 'All add-ons (including free MainWP add-ons) require an API key. Create a free account or enter your existing key to get started.', 'mainwp' ); ?></div>
+                            </div>
+                        </h2>
+                        <div class="ui hidden divider"></div>
+                        <div class="ui grid">
+                            <div class="nine wide column">
+                                <div class="ui form" id="mainwp-extensions-api-fields">
+                                    <div class="field">
+                                        <div class="ui fluid input">
+                                            <input type="password" id="mainwp_com_api_key" autocomplete="one-time-code" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="<?php esc_attr_e( 'Enter your MainWP Main API Key', 'mainwp' ); ?>" value="<?php echo esc_attr( $mainwp_api_key ); ?>"/>
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <div class="ui checkbox">
+                                            <input type="checkbox" <?php echo '' !== $mainwp_api_key ? 'checked="checked"' : ''; ?> name="extensions_api_savemylogin_chk" id="extensions_api_savemylogin_chk">
+                                            <label for="extensions_api_savemylogin_chk"><small><?php esc_html_e( 'Remember MainWP Main API Key', 'mainwp' ); ?></small></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="seven wide column">
+                                <input type="button" class="ui fluid green basic button" id="mainwp-extensions-savelogin" data-context="intro-notice" value="<?php esc_attr_e( 'Validate License & Install Add-ons', 'mainwp' ); ?>">
+                            </div>
+                        </div>
+                        <div class="ui section divider"></div>
+                        <div class="mainwp-extensions-api-loading" style="display:none">
+                            <div class="ui active page dimmer">
+                                <div class="ui double text loader"><?php esc_html_e( 'Validating...', 'mainwp' ); ?></div>
+                            </div>
+                        </div>
+                        <span class="ui grey text"><?php esc_html_e( 'Don\'t have an account?', 'mainwp' ); ?></span> &nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp; <a href="https://mainwp.com/signup/" rel="noopener noreferrer" target="_blank"><?php esc_html_e( 'Create Free Account', 'mainwp' ); ?> →</a>
+                    </div>
+                </div>
+                <div class="column">
+                    <div class="ui padded segment" id="mainwp-pro-hero-segment">
+                        <span class="ui small green label" style="opacity:.8"><?php esc_html_e( 'PRO', 'mainwp' ); ?></span> <?php esc_html_e( 'Unlock the full toolkit', 'mainwp' ); ?>
+                        <h2 class="ui header"><?php esc_html_e( 'Want everything? MainWP Pro includes all add-ons.', 'mainwp' ); ?></h2>
+                        <p><span class="ui grey text" style="font-weight:300"><?php esc_html_e( 'Free gets you started. Pro gets you everything we make now and in the future, priority support, and automatic updates.', 'mainwp' ); ?></span></p>
+                        <div class="ui three column grid">
+                            <div class="column">
+                                <div class="ui small header">
+                                    <em data-emoji=":ring_buoy:" class="small"></em>
+                                    <div class="content">
+                                        <?php esc_html_e( 'Priority Ticket Support', 'mainwp' ); ?>
+                                        <div class="sub header"><?php esc_html_e( 'Faster response times', 'mainwp' ); ?></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <div class="ui small header">
+                                    <em data-emoji=":arrow_upper_right:" class="small"></em>
+                                    <div class="content">
+                                        <?php esc_html_e( 'Auto Updates', 'mainwp' ); ?>
+                                        <div class="sub header"><?php esc_html_e( 'Critical & security updates', 'mainwp' ); ?></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <div class="ui small header">
+                                    <em data-emoji=":package:" class="small"></em>
+                                    <div class="content">
+                                        <?php esc_html_e( 'All Add-ons', 'mainwp' ); ?>
+                                        <div class="sub header"><?php esc_html_e( 'Current & future', 'mainwp' ); ?></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ui hidden divider"></div>
+                        <a href="https://mainwp.com/free-vs-pro/" rel="noopener noreferrer" target="_blank" class="ui grey basic button"><?php esc_html_e( 'Learn About Pro', 'mainwp' ); ?></a>
+                    </div>
+                </div>
             </div>
-            <a class="ui basic green button" href="https://mainwp.com/mainwp-add-ons/" target="_blank"><?php esc_html_e( 'Browse All Add-ons', 'mainwp' ); ?></a> <a class="ui green button" href="https://mainwp.com/free-vs-pro/" target="_blank"><?php esc_html_e( 'Free Vs. Pro', 'mainwp' ); ?></a> <a class="ui green button" href="https://mainwp.com/signup/" target="_blank"><?php esc_html_e( 'Get Pro', 'mainwp' ); ?></a> <?php // NOSONAR - noopener - open safe. ?>
-            <h2 class="header"><?php esc_html_e( 'How to install your MainWP Add-ons?', 'mainwp' ); ?></h2>
-            <p><?php printf( esc_html__( 'Once you have ordered MainWP Add-ons, you can either use the %1$sautomatic add-on installation%2$s option or %3$smanual installation%4$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/dashboard/overview/manage-extensions#automatic-add-ons-installation" target="_blank">', '</a> <i class="external alternate icon"></i>', '<a href="https://docs.mainwp.com/dashboard/overview/manage-extensions#manual-add-ons-installation" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?></p> <?php // NOSONAR - noopener - open safe. ?>
+            <div class="ui hidden section divider"></div>
+            <div class="ui two column grid">
+                <div class="column"><?php esc_html_e( 'BROWSE BY CATEGORY', 'mainwp' ); ?></div>
+                <div class="right aligned column"><span class="ui grey small text"><?php esc_html_e( '🔒 Validate license to install', 'mainwp' ); ?></span></div>
+            </div>
+            <div class="ui twelve mini cards" id="mainwp-browse-add-ons-by-category-cards">
+                <div class="ui card">
+                    <div class="content">
+                        <em data-emoji=":gear:" class="medium mainwp-greyscale"></em>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/mainwp-add-ons/add-on-category/administrative/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Administrative', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( '4 Add-ons', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+                <div class="ui card">
+                    <div class="content">
+                        <em data-emoji=":office:" class="medium mainwp-greyscale"></em>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/mainwp-add-ons/add-on-category/agency/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Agency', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( '2 Add-ons', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+                <div class="ui card">
+                    <div class="content">
+                        <em data-emoji=":minidisc:" class="medium mainwp-greyscale"></em>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/mainwp-add-ons/add-on-category/backups/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Backups', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( '5 Add-ons', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+                <div class="ui card">
+                    <div class="content">
+                        <em data-emoji=":man_office_worker:" class="medium mainwp-greyscale"></em>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/mainwp-add-ons/add-on-category/client/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Client', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( '2 Add-ons', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+                <div class="ui card">
+                    <div class="content">
+                        <em data-emoji=":newspaper:" class="medium mainwp-greyscale"></em>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/mainwp-add-ons/add-on-category/content/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Posts/Pages', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( '7 Add-ons', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+                <div class="ui card">
+                    <div class="content">
+                        <em data-emoji=":desktop:" class="medium mainwp-greyscale"></em>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/mainwp-add-ons/add-on-category/development/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Development', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( '12 Add-ons', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+                <div class="ui card">
+                    <div class="content">
+                        <em data-emoji=":satellite_orbital:" class="medium mainwp-greyscale"></em>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/mainwp-add-ons/add-on-category/monitoring/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Monitoring', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( '4 Add-ons', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+                <div class="ui card">
+                    <div class="content">
+                        <em data-emoji=":zap:" class="medium mainwp-greyscale"></em>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/mainwp-add-ons/add-on-category/performance/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Performance', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( '4 Add-ons', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+                <div class="ui card">
+                    <div class="content">
+                        <em data-emoji=":shield:" class="medium mainwp-greyscale"></em>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/mainwp-add-ons/add-on-category/security/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Security', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( '11 Add-ons', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+                <div class="ui card">
+                    <div class="content">
+                        <em data-emoji=":chart_with_upwards_trend:" class="medium mainwp-greyscale"></em>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/mainwp-add-ons/add-on-category/analytics/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Analytics', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( '4 Add-ons', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+                <div class="ui card">
+                    <div class="content">
+                        <em data-emoji=":arrow_upper_right:" class="medium mainwp-greyscale"></em>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/mainwp-add-ons/add-on-category/updates/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Updates', 'mainwp' ); ?>  →</a>
+                            <div class="sub header"><?php esc_html_e( '2 Add-ons', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+                <div class="ui card">
+                    <div class="content">
+                        <em data-emoji=":jigsaw:" class="medium"></em>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/mainwp-add-ons/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'All Add-ons', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( '40+ Add-ons', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+            </div>
+            <div class="ui hidden section divider"></div>
+            <div class="ui two column grid">
+                <div class="column"><?php esc_html_e( 'POPULAR ADD-ONS', 'mainwp' ); ?></div>
+                <div class="right aligned column"><a href="https://mainwp.com/mainwp-add-ons/" rel="noopener noreferrer" target="_blank"><span class="ui grey small text"><?php esc_html_e( 'View all', 'mainwp' ); ?> →</span></a></div>
+            </div>
+            <div class="ui five mini cards" id="mainwp-popular-add-ons-cards">
+                <div class="ui card">
+                    <div class="content">
+                        <div class="ui mini grey right floated label"><?php esc_html_e( 'FREE', 'mainwp' ); ?></div>
+                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'advanced-uptime-monitor.png' ); ?>"></div>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/add-on/advanced-uptime-monitor/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Advanced Uptime Monitor', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( 'Real-time up time monitoring', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+                <div class="ui card">
+                    <div class="content">
+                        <div class="ui mini green right floated label"><?php esc_html_e( 'PRO', 'mainwp' ); ?></div>
+                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'branding.png' ); ?>"></div>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/add-on/white-label/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'White Label', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( 'White label MainWP Child', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+                <div class="ui card">
+                    <div class="content">
+                        <div class="ui mini green right floated label"><?php esc_html_e( 'PRO', 'mainwp' ); ?></div>
+                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'pro-reports.png' ); ?>"></div>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/add-on/pro-reports/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Pro Reports', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( 'Client reporting', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+                <div class="ui card">
+                    <div class="content">
+                        <div class="ui mini grey right floated label"><?php esc_html_e( 'FREE', 'mainwp' ); ?></div>
+                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'updraftplus.png' ); ?>"></div>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/add-on/updraftplus/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'UpdraftPlus', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( 'UpdraftPlus backups', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+                <div class="ui card">
+                    <div class="content">
+                        <div class="ui mini green right floated label"><?php esc_html_e( 'PRO', 'mainwp' ); ?></div>
+                        <div class="ui small circular image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'maintenance.png' ); ?>"></div>
+                        <h3 class="ui header">
+                            <a href="https://mainwp.com/add-on/maintenance/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Maintenance', 'mainwp' ); ?> →</a>
+                            <div class="sub header"><?php esc_html_e( 'Database optimization', 'mainwp' ); ?></div>
+                        </h3>
+                    </div>
+                </div>
+            </div>
         </div>
         <?php
     }
@@ -503,18 +755,8 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
             </div>
 
             <div class="meta">
-                <?php echo '<i class="code branch icon"></i>' . esc_html( $extension['version'] ); ?> <?php echo isset( $extension['DocumentationURI'] ) && ! empty( $extension['DocumentationURI'] ) ? ' - <a href="' . esc_url( str_replace( array( 'http:', 'https:' ), '', $extension['DocumentationURI'] ) ) . '" target="_blank">' . esc_html__( 'Documentation', 'mainwp' ) . '</a> <i class="external alternate icon"></i>' : ''; ?>
+                <span class="ui small grey text"><?php echo '<i class="code branch grey icon"></i> ' . esc_html( $extension['version'] ); ?> <?php echo isset( $extension['DocumentationURI'] ) && ! empty( $extension['DocumentationURI'] ) ? ' - <a href="' . esc_url( str_replace( array( 'http:', 'https:' ), '', $extension['DocumentationURI'] ) ) . '" target="_blank" rel="noopener noreferrer" class="ui grey text"><i class="book grey icon"></i> ' . esc_html__( 'Docs', 'mainwp' ) . '</a>' : ''; ?> - <a class="extension-privacy-info-link ui grey text" base-slug="<?php echo esc_attr( $item_slug ); ?>"><?php echo $privacy_class; ?> <?php esc_html_e( 'Privacy', 'mainwp' ); ?></a></span> <?php // phpcs:ignore WordPress.Security.EscapeOutput ?>
             </div>
-
-            <?php if ( isset( $extension['apiManager'] ) && $extension['apiManager'] ) { ?>
-                <?php if ( ! $active && ! $disabled ) { ?>
-                    <span class="ui red ribbon label"><?php esc_html_e( 'License not activated', 'mainwp' ); ?></span>
-                <?php } ?>
-            <?php } ?>
-
-            <?php if ( isset( $extension_update->response[ $extension['slug'] ] ) ) { ?>
-                <a href="<?php echo esc_url( admin_url( 'plugins.php' ) ); ?>" class="ui yellow ribbon label"><?php esc_html_e( 'Update available', 'mainwp' ); ?></a>
-            <?php } ?>
 
             <div class="description">
                 <?php echo esc_html( preg_replace( '/\<cite\>.*\<\/cite\>/', '', $extension['description'] ) ); ?>
@@ -529,44 +771,41 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 <?php if ( \mainwp_current_user_can( 'dashboard', 'manage_extensions' ) ) { ?>
                 <a class="ui mini basic button extension-the-plugin-action" plugin-action="<?php echo $disabled ? 'active' : 'disable'; ?>"><?php echo $disabled ? '<i class="toggle off icon"></i> ' . __( 'Enable', 'mainwp' ) : '<i class="toggle on green icon"></i> ' . __( 'Disable', 'mainwp' ); ?></a>
                 <?php } ?>
-                <a class="ui mini extension-privacy-info-link basic button" base-slug="<?php echo esc_attr( $item_slug ); ?>"><?php echo $privacy_class; ?> <?php esc_html_e( 'Privacy', 'mainwp' ); ?></a> <?php // phpcs:ignore WordPress.Security.EscapeOutput ?>
                 <?php if ( $disabled && \mainwp_current_user_can( 'dashboard', 'manage_extensions' ) ) { ?>
-                <a class="ui mini basic right floated button extension-the-plugin-action" plugin-action="remove"><?php esc_html_e( 'Remove', 'mainwp' ); ?></a>
+                <a class="ui mini basic right floated button extension-the-plugin-action" plugin-action="remove"><i class="trash icon"></i> <?php esc_html_e( 'Remove', 'mainwp' ); ?></a>
                 <?php } ?>
                 <?php if ( isset( $extension['apiManager'] ) && $extension['apiManager'] && \mainwp_current_user_can( 'dashboard', 'manage_extensions' ) ) { ?>
-                <a class="ui mini activate-api-status mainwp-manage-extension-license basic right floated button" data-tooltip="<?php echo $active ? esc_html__( 'License activated.', 'mainwp' ) : esc_html__( 'License not activated. Click activate.', 'mainwp' ); ?>" api-actived="<?php echo $active ? '1' : '0'; ?>" data-position="top right" data-inverted=""><?php echo $license_class; ?> <?php esc_html_e( 'License', 'mainwp' ); ?></a> <?php // phpcs:ignore WordPress.Security.EscapeOutput ?>
+                <a class="ui mini activate-api-status mainwp-manage-extension-license basic right floated button" data-tooltip="<?php echo $active ? esc_html__( 'License activated.', 'mainwp' ) : esc_html__( 'License not activated. Click activate.', 'mainwp' ); ?>" api-actived="<?php echo $active ? '1' : '0'; ?>" data-position="top right" data-inverted=""><?php echo $license_class; ?> <?php echo $active ? esc_html__( 'Licensed', 'mainwp' ) : esc_html__( 'Activate License', 'mainwp' ); ?></a> <?php // phpcs:ignore WordPress.Security.EscapeOutput ?>
                 <?php } ?>
             </div>
         </div>
         <?php } ?>
 
-        <div class="extra content action-feedback" style="display:none;">
+        <!--<div class="extra content action-feedback" style="display:none;">
             <div class="ui mini message"></div>
+        </div>-->
+        <div class="ui active dimmer action-feedback" style="display:none;">
+            <div class="ui text loader"></div>
         </div>
 
         <?php if ( isset( $extension['apiManager'] ) && $extension['apiManager'] ) { ?>
             <?php if ( $active ) { ?>
-                <div class="extra content" id="mainwp-extensions-api-form" style="display: none;">
-                    <div class="ui form">
-                        <div class="field">
-                            <div class="ui input fluid">
-                                <input type="text" class="extension-api-key" placeholder="<?php esc_attr_e( 'API license key', 'mainwp' ); ?>" value="<?php echo esc_attr( $extension['api_key'] ); ?>"/>
-                            </div>
-                        </div>
-                        <div class="field">
-                            <div class="ui checkbox">
-                                <input type="checkbox" id="extension-deactivate-cb" class="mainwp-extensions-deactivate-chkbox" <?php echo 'on' === $extension['deactivate_checkbox'] ? 'checked' : ''; ?>>
-                                <label for="extension-deactivate-cb"><?php esc_html_e( 'Deactivate License Key', 'mainwp' ); ?></label>
-                            </div>
-                        </div>
-                        <input type="button" class="ui basic red fluid button mainwp-extensions-deactivate" value="<?php esc_html_e( 'Deactivate License', 'mainwp' ); ?>">
+                <div class="ui active dimmer" id="mainwp-extensions-api-form" style="display: none;">
+                    <input type="hidden" class="extension-api-key" value="<?php echo esc_attr( $extension['api_key'] ); ?>"/>
+                    <div class="ui center aligned secondary segment">
+                        <p><?php esc_html_e( 'Deactivate license for this add-on?', 'mainwp' ); ?></p>
+                        <button class="ui red mini button mainwp-extensions-deactivate"><?php esc_html_e( 'Deactivate', 'mainwp' ); ?></button>
+                        <button class="ui button mini mainwp-extension-license-cancel"><?php esc_html_e( 'Cancel', 'mainwp' ); ?></button>
                     </div>
                 </div>
             <?php } ?>
 
             <?php if ( isset( $extension['apiManager'] ) && $extension['apiManager'] ) { ?>
-            <div class="extra content api-feedback" style="display:none;">
+            <!--<div class="extra content api-feedback" style="display:none;">
                 <div class="ui mini message"></div>
+            </div>-->
+            <div class="ui active dimmer api-feedback" style="display:none;">
+                <div class="ui text loader"></div>
             </div>
             <?php } ?>
         <?php } ?>
@@ -657,51 +896,105 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
     }
 
     /**
-     * Render the Sidebar.
+     * Render licensing actions bar.
      *
-     * @param string $mainwp_api_key MainWP.com api key.
+     * Displays the licensing status header and action buttons for managing add-ons,
+     * including license validation, bulk installation, and activation options.
+     *
+     * @param string|false $mainwp_api_key The MainWP API key or false if not set.
+     * @return void
      */
-    public static function render_side_box( $mainwp_api_key ) {
+    public static function render_licensing_actions_bar( $mainwp_api_key ) {
+        $extensions = MainWP_Extensions_Handler::get_extensions();
+        
+        $count_enabled = is_array( $extensions ) ? count( $extensions ) : 0;
+        
+        $has_api_key = ! empty( $mainwp_api_key );
+        
+        $count_not_activated = 0;
+        if ( $has_api_key && is_array( $extensions ) ) {
+            foreach ( $extensions as $extension ) {
+                if ( isset( $extension['apiManager'] ) && $extension['apiManager'] && empty( $extension['api_key'] ) ) {
+                    $count_not_activated++;
+                }
+            }
+        }
+        $count_activated = $count_enabled - $count_not_activated;
         ?>
-        <div class="mainwp-search-options ui fluid accordion mainwp-sidebar-accordion">
-            <div class="title active">
-                <i class="dropdown icon"></i>
-                <?php esc_html_e( 'MainWP License Settings', 'mainwp' ); ?>
-            </div>
-            <div class="content active">
-                <div class="ui form" id="mainwp-extensions-api-fields">
-                    <div class="field">
-                        <label for="mainwp_com_api_key"></label>
-                        <div class="ui left icon fluid input">
-                            <input type="password" id="mainwp_com_api_key" autocomplete="one-time-code" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="<?php esc_attr_e( 'Enter your MainWP Main API Key', 'mainwp' ); ?>" value="<?php echo esc_attr( $mainwp_api_key ); ?>"/>
-                            <i class="key icon"></i>
-                        </div>
-                        <?php if ( empty( $mainwp_api_key ) ) { ?>
-                            <span class="ui small text">
-                                <?php printf( esc_html__( 'Not sure how to find your MainWP Main API Key? %1$sClick here to get it.%2$s', 'mainwp' ), '<a href="https://mainwp.com/my-account/my-api-keys/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
-                            </span>
-                        <?php } ?>
+        <div class="mainwp-actions-bar">
+            <div class="ui stacking two column grid">
+                <div class="left aligned middle aligned column" id="mainwp-extensions-status-header">
+                    <?php if ( ! $has_api_key ) : ?>
+                        <h2 class="ui small header">
+                            <i class="large yellow warning icon"></i>
+                            <div class="content">
+                            <?php esc_html_e( 'License Inactive', 'mainwp' ); ?>
+                            <div class="sub header">
+                                <?php
+                                printf(
+                                    esc_html__( '%s add-ons enabled • Missing License key • Updates Disabled', 'mainwp' ),
+                                    esc_html( $count_enabled )
+                                );
+                                ?>
+                            </div>
+                            </div>
+                        </h2>
+                    <?php elseif ( $count_not_activated > 0 ) : ?>
+                        <h2 class="ui small header">
+                            <i class="large yellow warning icon"></i>
+                            <div class="content">
+                            <?php
+                            printf(
+                                esc_html( _n( '%s add-on not activated', '%s add-ons not activated', $count_not_activated, 'mainwp' ) ),
+                                esc_html( $count_not_activated )
+                            );
+                            ?>
+                            <div class="sub header">
+                                <?php
+                                printf(
+                                    esc_html__( '%1$s add-ons enabled • %2$s activated • Updates enabled for activated add-ons', 'mainwp' ),
+                                    esc_html( $count_enabled ),
+                                    esc_html( $count_activated )
+                                );
+                                ?>
+                            </div>
+                            </div>
+                        </h2>
+                    <?php else : ?>
+                        <h2 class="ui small header">
+                            <i class="large green check icon"></i>
+                            <div class="content">
+                            <?php esc_html_e( 'License Active', 'mainwp' ); ?>
+                            <div class="sub header">
+                                <?php
+                                printf(
+                                    esc_html__( '%s add-ons enabled • All activated • Updates enabled', 'mainwp' ),
+                                    esc_html( $count_enabled )
+                                );
+                                ?>
+                            </div>
+                            </div>
+                        </h2>
+                    <?php endif; ?>
+                </div>
+                <div class="right aligned middle aligned column">
+                    <div id="mainwp-manage-add-ons-buttons">
+                        <a href="javascript:void(0);" class="ui grey basic tiny button" id="mainwp-extensions-bulkinstall"><i class="download icon"></i> <?php esc_html_e( 'Install Add-ons', 'mainwp' ); ?></a>
+                        <a href="javascript:void(0);" class="ui grey basic tiny button" id="mainwp-extensions-grabkeys"><i class="unlock icon"></i> <?php esc_html_e( 'Activate Add-ons', 'mainwp' ); ?></a>
+                        <a href="javascript:void(0);" class="ui green basic tiny button" id="mainwp-extensions-manage-toggle-on"><i class="key icon"></i> <?php echo empty( $mainwp_api_key ) ? esc_html__( 'Add License Key', 'mainwp' ) : esc_html__( 'Manage License', 'mainwp' ); ?></a>
                     </div>
-                    <div class="field">
+                    <div id="mainwp-manage-license-buttons" class="hidden">
+                        <span class="ui left icon tiny input"><i class="key icon"></i><input type="password" id="mainwp_com_api_key" autocomplete="one-time-code" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="<?php esc_attr_e( 'Enter your MainWP Main API Key', 'mainwp' ); ?>" value="<?php echo esc_attr( $mainwp_api_key ); ?>"/></span>&nbsp;&nbsp;
                         <div class="ui checkbox">
                             <input type="checkbox" <?php echo '' !== $mainwp_api_key ? 'checked="checked"' : ''; ?> name="extensions_api_savemylogin_chk" id="extensions_api_savemylogin_chk">
-                            <label for="extensions_api_savemylogin_chk"><small><?php esc_html_e( 'Remember MainWP Main API Key', 'mainwp' ); ?></small></label>
-                        </div>
+                            <label for="extensions_api_savemylogin_chk"><small><?php esc_html_e( 'Remember Key', 'mainwp' ); ?></small></label>
+                        </div>&nbsp;&nbsp;
+                        <a href="javascript:void(0);" class="ui green basic tiny button" id="mainwp-extensions-savelogin"><i class="check icon"></i> <?php esc_html_e( 'Validate License', 'mainwp' ); ?></a>
+                        <a href="javascript:void(0);" class="ui grey basic tiny button" id="mainwp-extensions-manage-toggle-off"><?php esc_html_e( 'Close', 'mainwp' ); ?></a>
                     </div>
                 </div>
-                <div class="ui hidden divider"></div>
-
-                <input type="button" class="ui fluid basic button" id="mainwp-extensions-savelogin" value="<?php esc_attr_e( 'Validate License', 'mainwp' ); ?>">
             </div>
         </div>
-        <div class="ui fitted divider"></div>
-        <div class="mainwp-search-options">
-            <input type="button" class="ui green fluid button" id="mainwp-extensions-bulkinstall" value="<?php esc_attr_e( 'Install Add-ons', 'mainwp' ); ?>">
-            <br/>
-            <input type="button" class="ui basic green fluid button" id="mainwp-extensions-grabkeys" value="<?php esc_attr_e( 'Activate Add-ons', 'mainwp' ); ?>">
-        </div>
-
-
         <?php
         $install_ext_slug = '';
         if ( isset( $_GET['message'] ) && 0 === strpos( wp_unslash( $_GET['message'] ), 'install-ext-' ) ) { //phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized

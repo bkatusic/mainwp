@@ -410,7 +410,7 @@
 
 .mainwp-ui.mainwp-custom-theme .ui.info.mini.message:before,
 .mainwp-ui.mainwp-custom-theme .ui.blue.mini.message:before {
-  top: 9rem;
+  top: 0.9em;
 }
 
 .mainwp-ui.mainwp-custom-theme .ui.green.message {
@@ -430,7 +430,7 @@
 }
 
 .mainwp-ui.mainwp-custom-theme .ui.green.mini.message:before {
-  top: 1rem;
+  top: 0.9em;
 }
 
 .mainwp-ui.mainwp-custom-theme .ui.yellow.message {
@@ -450,7 +450,7 @@
 }
 
 .mainwp-ui.mainwp-custom-theme .ui.yellow.mini.message:before {
-  top: 1rem;
+  top: 0.9em;
 }
 
 .mainwp-ui.mainwp-custom-theme .ui.red.message {
@@ -470,7 +470,7 @@
 }
 
 .mainwp-ui.mainwp-custom-theme .ui.red.mini.message:before {
-  top: 1rem;
+  top: 0.9em;
 }
 
 .mainwp-ui.mainwp-custom-theme .ui.attention.message {
@@ -489,7 +489,7 @@
   left: 1.5rem;
 }
 .mainwp-ui.mainwp-custom-theme .ui.attention.mini.message:before {
-  top: 1rem;
+  top: 0.9em;
 }
 
 .mainwp-ui.mainwp-custom-theme .ui.message a {
@@ -813,6 +813,7 @@
 
 .mainwp-ui.mainwp-custom-theme .ui.cards .card .content {
   color: var(--mainwp-text);
+  background: none !important;
 }
 
 .mainwp-ui.mainwp-custom-theme .ui.cards .card .extra a:not(.ui) {
@@ -1591,6 +1592,13 @@ body.mainwp-ui.mainwp-custom-theme,
 .mainwp-ui.mainwp-custom-theme .ui.inverted.dimmer.modals {
   background-color: #20222095 !important;
   backdrop-filter: blur(5px) !important;
+}
+
+.mainwp-ui.mainwp-custom-theme .ui.extension.card .ui.dimmer,
+.mainwp-ui.mainwp-custom-theme .ui.extension.card .ui.inverted.dimmer {
+  background-color: #20222095 !important;
+  backdrop-filter: blur(5px) !important;
+  border-radius: var(--area-radius) !important;
 }
 
 .mainwp-ui.mainwp-custom-theme .ui.loader:after {
