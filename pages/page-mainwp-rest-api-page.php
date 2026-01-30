@@ -1979,8 +1979,8 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         }
 
         $current_id = get_current_user_id();
-        // With delete permission, allow targeting specified user IDs (delete across all users).
-        $can_target_others = static::$application_passwords->can_delete_application_passwords();
+        // Only allow targeting others if can manage or can view all.
+        $can_target_others = static::$application_passwords->can_manage_application_passwords() || static::$application_passwords->can_view_all_application_passwords();
         $target_user       = ( $user_id > 0 && $can_target_others ) ? $user_id : $current_id;
 
         $result = static::$application_passwords->delete_application_password( $target_user, $uuid );
@@ -1997,11 +1997,14 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
      */
 	public function ajax_application_password_delete_multiple() { // phpcs:ignore -- NOSONAR.
         MainWP_Post_Handler::instance()->check_security( 'mainwp_application_password_delete_multiple' );
-        $can_target_others = static::$application_passwords->can_delete_application_passwords();
-
-        if ( ! $can_target_others ) {
+        // Must have delete capability to delete own passwords.
+        $can_delete_self = static::$application_passwords->can_delete_application_passwords();
+        if ( ! $can_delete_self ) {
             wp_send_json_error( array( 'message' => __( 'You are not allowed to revoke application passwords.', 'mainwp' ) ) );
         }
+
+        // Only allow targeting others if can manage or can view all.
+        $can_target_others = static::$application_passwords->can_manage_application_passwords() || static::$application_passwords->can_view_all_application_passwords();
 
 		// phpcs:disable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $items = isset( $_POST['items'] ) && is_array( $_POST['items'] ) ? wp_unslash( $_POST['items'] ) : array();
@@ -2079,9 +2082,9 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
      */
 	public function ajax_application_password_update() { // phpcs:ignore -- NOSONAR.
         MainWP_Post_Handler::instance()->check_security( 'mainwp_application_password_update' );
-        $can_edit_others = static::$application_passwords->can_edit_application_passwords();
-
-        if ( ! $can_edit_others ) {
+        // Must have edit capability to edit own passwords.
+        $can_edit_self = static::$application_passwords->can_edit_application_passwords();
+        if ( ! $can_edit_self ) {
             wp_send_json_error( array( 'message' => __( 'You are not allowed to edit application passwords.', 'mainwp' ) ) );
         }
 
@@ -2096,8 +2099,10 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             wp_send_json_error( array( 'message' => __( 'UUID and Name are required.', 'mainwp' ) ) );
         }
 
-        $current_id  = get_current_user_id();
-        $target_user = $user_id > 0 && $can_edit_others ? $user_id : $current_id;
+        $current_id       = get_current_user_id();
+        // Only allow targeting others if can manage or can view all.
+        $can_edit_others  = static::$application_passwords->can_manage_application_passwords() || static::$application_passwords->can_view_all_application_passwords();
+        $target_user      = ( $user_id > 0 && $can_edit_others ) ? $user_id : $current_id;
         $result      = static::$application_passwords->update_application_password( $target_user, $uuid, array( 'name' => $name ) );
 
         if ( is_wp_error( $result ) ) {
@@ -2150,12 +2155,10 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
      * @return array The application password rows.
      */
     protected static function get_application_password_rows( $context ) {
-        $can_view_all   = static::$application_passwords->can_view_all_application_passwords();
-        $can_manage     = static::$application_passwords->can_manage_application_passwords();
-        $can_edit_all   = static::$application_passwords->can_edit_application_passwords();
-        $can_delete_all = static::$application_passwords->can_delete_application_passwords();
+        $can_view_all = static::$application_passwords->can_view_all_application_passwords();
 
-        if ( $can_view_all || $can_manage || $can_edit_all || $can_delete_all ) {
+        // Only allow viewing all users' passwords when can_view_all is granted.
+        if ( $can_view_all ) {
             return static::get_all_users_application_password_rows();
         }
 

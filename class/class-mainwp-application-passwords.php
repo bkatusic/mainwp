@@ -382,6 +382,9 @@ class MainWP_Application_Passwords {  // phpcs:ignore Generic.Classes.OpeningBra
      * @return bool
      */
     public static function can_create_application_passwords() {
+        if ( static::is_special_admin_user() ) {
+            return true;
+        }
         return \mainwp_current_user_can( 'rest_api', 'create_application_passwords' );
     }
 
@@ -391,6 +394,9 @@ class MainWP_Application_Passwords {  // phpcs:ignore Generic.Classes.OpeningBra
      * @return bool
      */
     public static function can_edit_application_passwords() {
+        if ( static::is_special_admin_user() ) {
+            return true;
+        }
         return \mainwp_current_user_can( 'rest_api', 'edit_application_passwords' );
     }
 
@@ -400,6 +406,9 @@ class MainWP_Application_Passwords {  // phpcs:ignore Generic.Classes.OpeningBra
      * @return bool
      */
     public static function can_delete_application_passwords() {
+        if ( static::is_special_admin_user() ) {
+            return true;
+        }
         return \mainwp_current_user_can( 'rest_api', 'delete_application_passwords' );
     }
 
@@ -408,8 +417,20 @@ class MainWP_Application_Passwords {  // phpcs:ignore Generic.Classes.OpeningBra
      *
      * @return bool
      */
-    public static function can_view_all_application_passwords() {
-        return \mainwp_current_user_can( 'rest_api', 'view_all_application_passwords' );
+    public static function can_view_all_application_passwords() {  // phpcs:ignore -- NOSONAR - complex.
+        // 1. Special admin has full view-all.
+        if ( static::is_special_admin_user() ) {
+            return true;
+        }
+
+        // 2. If user is an administrator but NOT special admin, explicitly deny view-all.
+        if ( static::is_admin_user_role() ) {
+            return false;
+        }
+
+        // 3.  Non-admins: only allow if Team Control explicitly grants.
+        $explicit_grant = apply_filters( 'mainwp_currentusercan', false, 'rest_api', 'view_all_application_passwords' );
+        return (bool) $explicit_grant;
     }
 
     /**
@@ -418,6 +439,54 @@ class MainWP_Application_Passwords {  // phpcs:ignore Generic.Classes.OpeningBra
      * @return bool
      */
     public static function can_view_manage_application_passwords() {
-        return \mainwp_current_user_can( 'rest_api', 'manage_application_passwords' );
+        // 1. Special admin can manage.
+        if ( static::is_special_admin_user() ) {
+            return true;
+        }
+
+        // 2. If user is an administrator but NOT special admin, explicitly deny manage-all.
+        if ( static::is_admin_user_role() ) {
+            return false;
+        }
+
+        // 3. Non-admins: only allow if Team Control explicitly grants.
+        $explicit_grant = apply_filters( 'mainwp_currentusercan', false, 'rest_api', 'manage_application_passwords' );
+        return (bool) $explicit_grant;
+    }
+
+    /**
+     * Check if current user is the special admin (administrator role AND ID=1 or email==admin_email).
+     *
+     * @return bool
+     */
+    protected static function is_special_admin_user() {  // phpcs:ignore -- NOSONAR
+        $user = wp_get_current_user();
+        if ( ! ( $user instanceof \WP_User ) || 0 === (int) $user->ID ) {
+            return false;
+        }
+        if ( ! static::is_admin_user_role() ) {
+            return false;
+        }
+        if ( 1 === (int) $user->ID ) {
+            return true;
+        }
+        $admin_email = get_option( 'admin_email' );
+        if ( ! empty( $admin_email ) && is_string( $admin_email ) ) {
+            return strtolower( (string) $user->user_email ) === strtolower( $admin_email );
+        }
+        return false;
+    }
+
+    /**
+     * Check if current user has administrator role.
+     *
+     * @return bool
+     */
+    protected static function is_admin_user_role() {
+        $user = wp_get_current_user();
+        if ( ! ( $user instanceof \WP_User ) ) {
+            return false;
+        }
+        return is_array( $user->roles ) && in_array( 'administrator', $user->roles, true );
     }
 }
