@@ -243,7 +243,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                             <h2 class="ui header" style="display:inline-block;margin:0;">
                                 <div class="content" style="background:none!important;">
                                     <?php esc_html_e( 'Disabled Add-ons', 'mainwp' ); ?>
-                                    <div class="sub header"><?php esc_html_e( 'These add-ons are installed but turned off. Enabled them anytime to unlock more features.', 'mainwp' ); ?></div>
+                                    <div class="sub header"><?php esc_html_e( 'These add-ons are installed but turned off. Enable them anytime to unlock more features.', 'mainwp' ); ?></div>
                                 </div>
                             </h2>
                         </div>
@@ -755,7 +755,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
             </div>
 
             <div class="meta">
-                <span class="ui small grey text"><?php echo '<i class="code branch grey icon"></i> ' . esc_html( $extension['version'] ); ?> <?php echo isset( $extension['DocumentationURI'] ) && ! empty( $extension['DocumentationURI'] ) ? ' - <a href="' . esc_url( str_replace( array( 'http:', 'https:' ), '', $extension['DocumentationURI'] ) ) . '" target="_blank" class="ui grey text"><i class="book grey icon"></i> ' . esc_html__( 'Docs', 'mainwp' ) . '</a>' : ''; ?> - <a class="extension-privacy-info-link ui grey text" base-slug="<?php echo esc_attr( $item_slug ); ?>"><?php echo $privacy_class; ?> <?php esc_html_e( 'Privacy', 'mainwp' ); ?></a></span> <?php // phpcs:ignore WordPress.Security.EscapeOutput ?>
+                <span class="ui small grey text"><?php echo '<i class="code branch grey icon"></i> ' . esc_html( $extension['version'] ); ?> <?php echo isset( $extension['DocumentationURI'] ) && ! empty( $extension['DocumentationURI'] ) ? ' - <a href="' . esc_url( str_replace( array( 'http:', 'https:' ), '', $extension['DocumentationURI'] ) ) . '" target="_blank" rel="noopener noreferrer" class="ui grey text"><i class="book grey icon"></i> ' . esc_html__( 'Docs', 'mainwp' ) . '</a>' : ''; ?> - <a class="extension-privacy-info-link ui grey text" base-slug="<?php echo esc_attr( $item_slug ); ?>"><?php echo $privacy_class; ?> <?php esc_html_e( 'Privacy', 'mainwp' ); ?></a></span> <?php // phpcs:ignore WordPress.Security.EscapeOutput ?>
             </div>
 
             <div class="description">
@@ -991,7 +991,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                         </div>&nbsp;&nbsp;
                         <a href="javascript:void(0);" class="ui green basic tiny button" id="mainwp-extensions-savelogin"><i class="check icon"></i> <?php esc_html_e( 'Validate License', 'mainwp' ); ?></a>
                         <a href="javascript:void(0);" class="ui grey basic tiny button" id="mainwp-extensions-manage-toggle-off"><?php esc_html_e( 'Close', 'mainwp' ); ?></a>
-                    </span>
+                    </div>
                 </div>
             </div>
         </div>
