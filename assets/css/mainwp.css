@@ -29,7 +29,8 @@
 }
 
 .mainwp-show-all-updates-button,
-table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
+table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
+.mainwp-ui.mainwp-custom-theme #mainwp-second-level-navigation #mainwp-main-menu.ui.inverted.menu #mainwp-restapi-active-item.item {
     display: none !important;
 }
 .mainwp-manage-updates-table td .mainwp-site-display {

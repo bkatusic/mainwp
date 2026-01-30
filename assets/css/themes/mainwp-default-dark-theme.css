@@ -1218,7 +1218,7 @@
 }
 
 .mainwp-ui.mainwp-custom-theme #mainwp-second-level-navigation .ui.inverted.menu .item {
-  font-weight: 600;
+  font-weight: 300;
   font-size: 1rem !important;
   padding: 0.8rem !important;
   box-shadow: none !important;
