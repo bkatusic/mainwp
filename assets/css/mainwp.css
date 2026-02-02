@@ -29,7 +29,8 @@
 }
 
 .mainwp-show-all-updates-button,
-table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
+table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
+.mainwp-ui.mainwp-custom-theme #mainwp-second-level-navigation #mainwp-main-menu.ui.inverted.menu #mainwp-restapi-active-item.item {
     display: none !important;
 }
 .mainwp-manage-updates-table td .mainwp-site-display {
@@ -110,6 +111,11 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
     font-weight: 900 !important;
     margin-bottom: 0.5rem;
     margin-top: 0.15rem;
+}
+
+.mainwp-ui em.mainwp-greyscale {
+    filter: grayscale(100%) !important;
+    opacity: 0.4;
 }
 
 /* QSW */
@@ -640,6 +646,24 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button {
     margin-bottom: 2rem;
 }
 
+/* Cards */
+
+.mainwp-ui #mainwp-browse-add-ons-by-category-cards .ui.header {
+    font-size: 1em;
+}
+.mainwp-ui #mainwp-browse-add-ons-by-category-cards .ui.header .sub.header {
+    font-size: 0.78571429em !important;
+}
+
+@media only screen and (min-width: 1368px) {
+    .mainwp-ui #mainwp-browse-add-ons-by-category-cards {
+        flex-wrap: nowrap;
+    }
+
+    .mainwp-ui #mainwp-browse-add-ons-by-category-cards .ui.card {
+        min-width: calc(100% / 13);
+    }
+}
 
 @media only screen and (min-width: 1368px) {
     #mainwp-plugin-privacy {
@@ -952,6 +976,10 @@ table.mainwp-manage-wpsites-table .error a {
 
 
 /* Manage Extensions */
+
+.mainwp-ui #mainwp_com_api_key {
+    width: 300px;
+}
 
 .mainwp-disabled-extension .header,
 .mainwp-disabled-extension .content:not(.extra) {

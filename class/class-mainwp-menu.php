@@ -256,11 +256,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             $menus_items[] = array(
                 'slug'               => 'RESTAPI',
                 'menu_level'         => 2,
-                'menu_rights'        => array(
-                    'dashboard' => array(
-                        'manage_dashboard_restapi',
-                    ),
-                ),
+                'menu_rights'        => true,
                 'init_menu_callback' => array( MainWP_Rest_Api_Page::class, 'init_menu' ),
                 'leftbar_order'      => 4,
             );
@@ -1539,8 +1535,3 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         return $san_path === $san_href;
     }
 }
-
-
-
-
-

@@ -42,7 +42,7 @@ class MainWP_Application_Passwords {  // phpcs:ignore Generic.Classes.OpeningBra
      *
      * @return mixed $instance The single instance of the class.
      */
-    public static function get_instance() {
+    public static function instance() {
         if ( is_null( static::$instance ) ) {
             static::$instance = new self();
         }
@@ -347,5 +347,146 @@ class MainWP_Application_Passwords {  // phpcs:ignore Generic.Classes.OpeningBra
      */
     public static function get_error_message() {
         return esc_html__( 'Could not find an application password with that id.', 'mainwp' );
+    }
+
+    /**
+     * Determine if user can view Application Passwords.
+     *
+     * @return bool
+     */
+    public static function can_access_application_passwords() { // phpcs:ignore -- used outside.
+        if (
+            static::can_view_manage_application_passwords() ||
+            static::can_view_all_application_passwords() ||
+            static::can_create_application_passwords() ||
+            static::can_delete_application_passwords() ||
+            static::can_edit_application_passwords()
+        ) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Determine if user can manage Application Passwords (create/delete).
+     *
+     * @return bool
+     */
+    public static function can_manage_application_passwords() {
+        return static::can_view_manage_application_passwords();
+    }
+
+    /**
+     * Determine if user can add Application Passwords.
+     *
+     * @return bool
+     */
+    public static function can_create_application_passwords() {
+        if ( static::is_special_admin_user() ) {
+            return true;
+        }
+        return \mainwp_current_user_can( 'rest_api', 'create_application_passwords' );
+    }
+
+    /**
+     * Check if the current user can editApplication Passwords.
+     *
+     * @return bool
+     */
+    public static function can_edit_application_passwords() {
+        if ( static::is_special_admin_user() ) {
+            return true;
+        }
+        return \mainwp_current_user_can( 'rest_api', 'edit_application_passwords' );
+    }
+
+    /**
+     * Determine if user can revoke Application Passwords.
+     *
+     * @return bool
+     */
+    public static function can_delete_application_passwords() {
+        if ( static::is_special_admin_user() ) {
+            return true;
+        }
+        return \mainwp_current_user_can( 'rest_api', 'delete_application_passwords' );
+    }
+
+    /**
+     * Check if the current user can view all application passwords.
+     *
+     * @return bool
+     */
+    public static function can_view_all_application_passwords() {  // phpcs:ignore -- NOSONAR - complex.
+        // 1. Special admin has full view-all.
+        if ( static::is_special_admin_user() ) {
+            return true;
+        }
+
+        // 2. If user is an administrator but NOT special admin, explicitly deny view-all.
+        if ( static::is_admin_user_role() ) {
+            return false;
+        }
+
+        // 3.  Non-admins: only allow if Team Control explicitly grants.
+        $explicit_grant = apply_filters( 'mainwp_currentusercan', false, 'rest_api', 'view_all_application_passwords' );
+        return (bool) $explicit_grant;
+    }
+
+    /**
+     * Check if the current user can view and manage application passwords.
+     *
+     * @return bool
+     */
+    public static function can_view_manage_application_passwords() {
+        // 1. Special admin can manage.
+        if ( static::is_special_admin_user() ) {
+            return true;
+        }
+
+        // 2. If user is an administrator but NOT special admin, explicitly deny manage-all.
+        if ( static::is_admin_user_role() ) {
+            return false;
+        }
+
+        // 3. Non-admins: only allow if Team Control explicitly grants.
+        $explicit_grant = apply_filters( 'mainwp_currentusercan', false, 'rest_api', 'manage_application_passwords' );
+        return (bool) $explicit_grant;
+    }
+
+    /**
+     * Check if current user is the special admin (administrator role AND ID=1 or email==admin_email).
+     *
+     * @return bool
+     */
+    protected static function is_special_admin_user() {  // phpcs:ignore -- NOSONAR
+        $user = wp_get_current_user();
+        if ( ! ( $user instanceof \WP_User ) || 0 === (int) $user->ID ) {
+            return false;
+        }
+        if ( ! static::is_admin_user_role() ) {
+            return false;
+        }
+        if ( 1 === (int) $user->ID ) {
+            return true;
+        }
+        $admin_email = get_option( 'admin_email' );
+        if ( ! empty( $admin_email ) && is_string( $admin_email ) ) {
+            return strtolower( (string) $user->user_email ) === strtolower( $admin_email );
+        }
+        return false;
+    }
+
+    /**
+     * Check if current user has administrator role.
+     *
+     * @return bool
+     */
+    protected static function is_admin_user_role() {
+        $user = wp_get_current_user();
+        if ( ! ( $user instanceof \WP_User ) ) {
+            return false;
+        }
+        return is_array( $user->roles ) && in_array( 'administrator', $user->roles, true );
     }
 }
