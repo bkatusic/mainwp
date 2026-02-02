@@ -279,8 +279,8 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
 
         if ( empty( $filter_db_websites ) || ! is_array( $filter_db_websites ) ) {
             return new WP_Error(
-                'no_website_found',
-                $this->get_common_message( 'no_website_found' )
+                'website_not_found',
+                $this->get_common_message( 'website_not_found' )
             );
         }
 
@@ -289,8 +289,8 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
 
         if ( empty( $db_websites ) ) {
             return new WP_Error(
-                'no_website_found',
-                $this->get_common_message( 'no_website_found' )
+                'website_not_found',
+                $this->get_common_message( 'website_not_found' )
             );
         }
 

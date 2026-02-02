@@ -1883,6 +1883,7 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
     protected function get_db_websites_by_filter( $sites, $groups, $clients ) {  // phpcs:ignore -- NOSONAR - complex.
         $utility        = MainWP_Utility::instance();
         $system_utility = new MainWP_System_Utility();
+        $db             = MainWP_DB::instance();
         $data_fields    = $system_utility->get_default_map_site_fields();
         $data_fields[]  = 'users';
 
@@ -1893,7 +1894,7 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
         if ( ! empty( $sites ) && is_array( $sites ) ) {
             foreach ( $sites as $v ) {
                 if ( $utility->ctype_digit( $v ) ) {
-                    $website = $this->db->get_website_by_id( $v );
+                    $website = $db->get_website_by_id( $v );
                     if ( $website && empty( $website->sync_errors ) && ! $system_utility->is_suspended_site( $website ) ) {
                         $db_websites[ $website->id ] = $utility->map_site(
                             $website,
@@ -1907,8 +1908,8 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
         if ( ! empty( $groups ) && is_array( $groups ) ) {
             foreach ( $groups as $v ) {
                 if ( $utility->ctype_digit( $v ) ) {
-                    $websites = $this->db->query( $this->db->get_sql_websites_by_group_id( $v ) );
-                    while ( $websites && ( $website = $this->db->fetch_object( $websites ) ) ) {
+                    $websites = $db->query( $db->get_sql_websites_by_group_id( $v ) );
+                    while ( $websites && ( $website = $db->fetch_object( $websites ) ) ) {
                         if ( ! empty( $website->sync_errors ) || $system_utility->is_suspended_site( $website ) ) {
                             continue;
                         }
@@ -1918,7 +1919,7 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
                         );
                         $website_url[ $website->id ] = $website->url;
                     }
-                    $this->db->free_result( $websites );
+                    $db->free_result( $websites );
                 }
             }
         }
