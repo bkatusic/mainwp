@@ -280,12 +280,19 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
         if ( empty( $filter_db_websites ) || ! is_array( $filter_db_websites ) ) {
             return new WP_Error(
                 'no_website_found',
-                __( 'No website found.', 'mainwp' ) // NOSONAR.
+                $this->get_common_message( 'no_website_found' )
             );
         }
 
         $db_websites = $filter_db_websites['db_websites'] ?? array();
         $website_url = $filter_db_websites['website_url'] ?? array();
+
+        if ( empty( $db_websites ) ) {
+            return new WP_Error(
+                'no_website_found',
+                $this->get_common_message( 'no_website_found' )
+            );
+        }
 
         $posts = apply_filters( 'mainwp_getallposts', $db_websites, $post_data );
         if ( empty( $posts ) || empty( $posts->results ) ) {
