@@ -519,7 +519,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             'update_translations'    => esc_html__( 'Update Translations', 'mainwp' ),
             'update_everything'      => esc_html__( 'Update Everything', 'mainwp' ),
             'check_abandoned_plugin' => esc_html__( 'Check Abandoned Plugins', 'mainwp' ),
-            'check_abandoned_theme'  => esc_html__( 'Check Abandoned Phemes', 'mainwp' ),
+            'check_abandoned_theme'  => esc_html__( 'Check Abandoned Themes', 'mainwp' ),
         );
 
         /**

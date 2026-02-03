@@ -1371,7 +1371,7 @@ class MainWP_System { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
         MainWP_System_View::admin_footer();
         MainWP_System_View::render_plugins_install_check();
 
-        MainWP_Menu::init_sub_pages();
+        //MainWP_Menu::init_sub_pages();
 
         /**
          * MainWP disabled menu items array.

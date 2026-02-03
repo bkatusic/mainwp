@@ -472,7 +472,7 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
 
         if ( $client_id ) {
             $renderItems[] = array(
-                'title'  => $client ? $client->name : esc_html__( 'Overview', 'mainwp' ),
+                'title'  => $client ? $client->name : esc_html__( 'Operations', 'mainwp' ),
                 'href'   => 'admin.php?page=ManageClients&client_id=' . $client_id,
                 'active' => ( 'overview' === $shownPage ),
             );

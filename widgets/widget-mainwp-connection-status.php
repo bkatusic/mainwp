@@ -2,7 +2,7 @@
 /**
  * MainWP Connection Status
  *
- * Build the MainWP Overview page Connection Status Widget.
+ * Build the MainWP Operations page Connection Status Widget.
  *
  * @package     MainWP/Dashboard
  */
@@ -142,7 +142,7 @@ class MainWP_Connection_Status { // phpcs:ignore Generic.Classes.OpeningBraceSam
     }
 
     /**
-     * The renders the MainWP Overview page Connection Status Widget Header and Drop down Box.
+     * The renders the MainWP Operations page Connection Status Widget Header and Drop down Box.
      *
      * @param int $count_connected    Number of connected sites.
      * @param int $count_disconnected Number of disconnected sites.

@@ -754,7 +754,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                             <div class="ui fluid relaxed list">
                                 <div class="item" >
                                     <i class="grid layout icon"></i>
-                                    <a href="<?php echo 'admin.php?page=managesites&dashboard=' . intval( $website->id ); ?>"><?php esc_html_e( 'Overview', 'mainwp' ); ?></a>
+                                    <a href="<?php echo 'admin.php?page=managesites&dashboard=' . intval( $website->id ); ?>"><?php esc_html_e( 'Operations', 'mainwp' ); ?></a>
                                 </div>
                                 <div class="item" >
                                     <i class="redo icon"></i>
@@ -870,7 +870,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 /**
                  * Action: mainwp_overview_screen_options_top
                  *
-                 * Fires at the top of the Sceen Options modal on the Overview page.
+                 * Fires at the top of the Sceen Options modal on the Operations page.
                  *
                  * @since 4.1
                  */
@@ -884,7 +884,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                     /**
                      * Action: mainwp_overview_screen_options_bottom
                      *
-                     * Fires at the bottom of the Sceen Options modal on the Overview page.
+                     * Fires at the bottom of the Sceen Options modal on the Operations page.
                      *
                      * @since 4.1
                      */
@@ -2698,7 +2698,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
      *
      * Render modal window for Page Settings.
      *
-     * @param bool $setting_page Default: True. Widgets that you want to hide in the MainWP Overview page.
+     * @param bool $setting_page Default: True. Widgets that you want to hide in the MainWP Operations page.
      *
      * @return void  Render modal window for Page Settings html.
      */
@@ -2708,18 +2708,18 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                     'overview'                        => esc_html__( 'Updates Overview', 'mainwp' ),
                     'recent_posts'                    => esc_html__( 'Recent Posts', 'mainwp' ),
                     'recent_pages'                    => esc_html__( 'Recent Pages', 'mainwp' ),
-                    'plugins'                         => esc_html__( 'Plugins (Individual Site Overview page)', 'mainwp' ),
-                    'themes'                          => esc_html__( 'Themes (Individual Site Overview page)', 'mainwp' ),
+                    'plugins'                         => esc_html__( 'Plugins (Individual Site Operations page)', 'mainwp' ),
+                    'themes'                          => esc_html__( 'Themes (Individual Site Operations page)', 'mainwp' ),
                     'connection_status'               => esc_html__( 'Connection Status', 'mainwp' ),
                     'security_issues'                 => esc_html__( 'Site Hardening', 'mainwp' ),
-                    'notes'                           => esc_html__( 'Notes (Individual Site Overview page)', 'mainwp' ),
+                    'notes'                           => esc_html__( 'Notes (Individual Site Operations page)', 'mainwp' ),
                     'clients'                         => esc_html__( 'Clients', 'mainwp' ),
-                    'child_site_info'                 => esc_html__( 'Child site info (Individual Site Overview page)', 'mainwp' ),
-                    'client_info'                     => esc_html__( 'Client info (Individual Site Overview page)', 'mainwp' ),
+                    'child_site_info'                 => esc_html__( 'Child site info (Individual Site Operations page)', 'mainwp' ),
+                    'client_info'                     => esc_html__( 'Client info (Individual Site Operations page)', 'mainwp' ),
                     'non_mainwp_changes'              => esc_html__( 'Network Activity', 'mainwp' ),
                     'get-started'                     => esc_html__( 'Get Started with MainWP', 'mainwp' ),
                     'uptime_monitoring_status'        => esc_html__( 'Uptime Monitoring', 'mainwp' ),
-                    'uptime_monitoring_response_time' => esc_html__( 'Uptime Monitoring (Individual Site Overview page)', 'mainwp' ),
+                    'uptime_monitoring_response_time' => esc_html__( 'Uptime Monitoring (Individual Site Operations page)', 'mainwp' ),
                 );
 
                 if ( ! MainWP_Uptime_Monitoring_Edit::is_enable_global_monitoring() ) {
@@ -2732,7 +2732,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 /**
                  * Filter: mainwp_widgets_screen_options
                  *
-                 * Filters available widgets on the Overview page allowing users to unsent unwanted widgets.
+                 * Filters available widgets on the Operations page allowing users to unset unwanted widgets.
                  *
                  * @since 4.0
                  */
@@ -2816,7 +2816,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
             esc_html_e( 'Show widgets', 'mainwp' );
             ?>
             </label>
-            <div class="ten wide column" <?php echo $setting_page ? 'data-tooltip="' . esc_attr__( 'Select widgets that you want to hide in the MainWP Overview page.', 'mainwp' ) . '"' : ''; ?> data-inverted="" data-position="top left">
+            <div class="ten wide column" <?php echo $setting_page ? 'data-tooltip="' . esc_attr__( 'Select widgets that you want to hide in the MainWP Operations page.', 'mainwp' ) . '"' : ''; ?> data-inverted="" data-position="top left">
                 <ul class="mainwp_hide_wpmenu_checkboxes">
                     <?php
                     foreach ( $default_widgets as $name => $title ) {
@@ -2935,7 +2935,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 <div class="header"><?php esc_html_e( 'Install Add-ons', 'mainwp' ); ?></div>
                 <div class="content">
                 <div class="ui header"><?php esc_html_e( 'Add-on not activated', 'mainwp' ); ?></div>
-                <div><?php esc_html_e( 'Go to the ', 'mainwp' ); ?><a href="admin.php?page=Extensions">MainWP > Extensions</a><?php esc_html_e( ' page to install and activate add-ons.', 'mainwp' ); ?></div>
+                <div><?php esc_html_e( 'Go to the ', 'mainwp' ); ?><a href="admin.php?page=Extensions">MainWP > Add-ons</a><?php esc_html_e( ' page to install and activate add-ons.', 'mainwp' ); ?></div>
                 </div>
             <?php endif; ?>
         </div>

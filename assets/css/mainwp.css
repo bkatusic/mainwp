@@ -378,11 +378,13 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
 
 #mainwp-support-menu a#mainwp-help-menu-item {
     color: #ffffff !important;
+    font-size: 0.75em !important;
+    font-weight: 300;
 }
 
-#mainwp-support-menu .icon {
+#mainwp-support-menu a#mainwp-help-menu-item .icon {
     margin: 0px !important;
-    font-size: 1.71428571em !important;
+    font-size: 2em !important;
     color: #ffffff !important;
 }
 
@@ -400,9 +402,21 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
     min-height: 420px;
 }
 
+#mainwp-first-level-navigation-menu .item:before {
+    display: none !important;
+}
+
 #mainwp-first-level-navigation-menu .item {
-    padding-left: 5px;
-    padding-right: 5px;
+    margin: .5em !important;
+    padding: .785em 0 !important;
+    min-width: 0px !important;
+}
+
+#mainwp-first-level-navigation-menu .item .icon {
+    font-size: 1.4em !important;
+}
+#mainwp-first-level-navigation-menu .item .text {
+    font-weight: 300 !important;
 }
 
 #mainwp-first-level-navigation-menu .item.active {
@@ -427,28 +441,46 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
     margin: 0px !important;
 }
 
-#mainwp-collapse-second-level-navigation {
-    position: fixed;
-    left: 272px;
-    bottom: 30px;
-    padding: 7px 4px 7px 2px;
-    border-radius: 0 8px 8px 0 !important;
-    min-width: auto !important;
-    background-color: #3E3F3D;
+#mainwp-divider-handle {
+    width: 8px;
+    margin-left: 0px;
+    margin-right: -8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 20;
+    flex-shrink: 0;
 }
 
+#mainwp-divider-handle:hover {
+    background: #495A6520;
+}
+
+#mainwp-collapse-second-level-navigation {
+    background: #495A65;
+    border: 1px solid #3A4C58;
+    border-radius: 4px;
+    opacity: 0;
+    transition: all 0.15s ease;
+    color: #fff;
+    padding: 1em .05em;
+}
+
+
+
 #mainwp-collapse-second-level-navigation .icon {
-    padding: 0px !important;
-    margin: 0px !important;
-    font-size: 14px !important;
+    margin: 0 !important;
+}
+
+#mainwp-divider-handle:hover #mainwp-collapse-second-level-navigation {
+  opacity: 1 !important;
 }
 
 #mainwp-second-level-navigation {
     background-color: #3E3F3D;
     width: 200px;
-    box-shadow: 20px 0px 20px -18px rgba(0, 0, 0, 0.15) inset;
-    -webkit-box-shadow: 20px 0px 20px -18px rgba(0, 0, 0, 0.15) inset;
-    -moz-box-shadow: 20px 0px 20px -18px rgba(0, 0, 0, 0.15) inset;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -460,17 +492,11 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
 
 #mainwp-second-level-navigation .ui.inverted.menu {
     background-color: #3E3F3D;
-    box-shadow: 20px 0px 20px -18px rgba(0, 0, 0, 0.15) inset;
-    -webkit-box-shadow: 20px 0px 20px -18px rgba(0, 0, 0, 0.15) inset;
-    -moz-box-shadow: 20px 0px 20px -18px rgba(0, 0, 0, 0.15) inset;
 }
 
 #mainwp-second-level-navigation .ui.inverted.menu .item {
     padding: 0.7em 1.14285714em;
     color: #ffffff !important;
-    box-shadow: 20px 0px 20px -18px rgba(0, 0, 0, 0.15) inset;
-    -webkit-box-shadow: 20px 0px 20px -18px rgba(0, 0, 0, 0.15) inset;
-    -moz-box-shadow: 20px 0px 20px -18px rgba(0, 0, 0, 0.15) inset;
 }
 
 #mainwp-second-level-navigation .ui.inverted.menu .item .icon {

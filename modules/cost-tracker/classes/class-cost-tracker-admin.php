@@ -410,7 +410,7 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
 
         if ( \mainwp_current_user_can( 'dashboard', 'manage_cost_tracker' ) ) {
             $renderItems[] = array(
-                'title'  => esc_html__( 'Overview', 'mainwp' ),
+                'title'  => esc_html__( 'Operations', 'mainwp' ),
                 'href'   => 'admin.php?page=ManageCostTracker',
                 'active' => ( '' === $shownPage ) ? true : false,
             );

@@ -100,17 +100,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             add_action( 'load-' . $_page, array( static::get_class_name(), 'on_load_add_edit' ) );
         }
 
-        add_submenu_page(
-            'mainwp_tab',
-            'Posting new bulkpost',
-            '<div class="mainwp-hidden">' . esc_html__( 'Posts', 'mainwp' ) . '</div>',
-            'read',
-            'PostingBulkPost',
-            array(
-                MainWP_Post_Page_Handler::get_class_name(),
-                'posting_bulk',
-            )
-        );
+        add_submenu_page( 'mainwp_tab', 'Posting new bulkpost', '<div class="mainwp-hidden">' . esc_html__( 'Posts', 'mainwp' ) . '</div>', 'read', 'PostingBulkPost', array( MainWP_Post_Page_Handler::get_class_name(), 'posting_bulk' ) );
 
         /**
          * Posts Subpages
@@ -133,6 +123,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         }
         static::init_left_menu( static::$subPages );
     }
+
 
     /**
      * Method on_load_page()
@@ -185,7 +176,6 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      * @return void static::on_load_bulkpost( $post_id ).
      */
     public static function on_load_add_edit() {
-        global $_mainwp_menu_active_slugs;
         if ( isset( $_GET['page'] ) && 'PostBulkAdd' === $_GET['page'] ) { // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
             /**
@@ -200,8 +190,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             $post_id                      = $_mainwp_default_post_to_edit ? $_mainwp_default_post_to_edit->ID : 0;
         } else {
             $post_id                                   = isset( $_GET['post_id'] ) ? intval( $_GET['post_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-            $_mainwp_menu_active_slugs['PostBulkEdit'] = 'PostBulkManage'; // to fix hidden second menu level.
-        }
+        }        
 
         if ( ! $post_id ) {
             wp_die( esc_html__( 'Invalid post.', 'mainwp' ) );
@@ -344,47 +333,6 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
     }
 
     /**
-     * Method init_subpages_menu()
-     *
-     * Initiate subpages menu.
-     *
-     * @return void Render subpages menu.
-     *
-     * @uses \MainWP\Dashboard\MainWP_Menu::is_disable_menu_item()
-     */
-    public static function init_subpages_menu() { // phpcs:ignore -- NOSONAR - complex.
-        ?>
-        <div id="menu-mainwp-Posts" class="mainwp-submenu-wrapper">
-            <div class="wp-submenu sub-open">
-                <div class="mainwp_boxout">
-                    <div class="mainwp_boxoutin"></div>
-                    <?php if ( \mainwp_current_user_can( 'dashboard', 'manage_posts' ) ) { ?>
-                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=PostBulkManage' ) ); ?>" class="mainwp-submenu"><?php esc_html_e( 'Manage Posts', 'mainwp' ); ?></a>
-                        <?php if ( ! MainWP_Menu::is_disable_menu_item( 3, 'PostBulkAdd' ) ) { ?>
-                            <a href="<?php echo esc_url( admin_url( 'admin.php?page=PostBulkAdd' ) ); ?>" class="mainwp-submenu"><?php esc_html_e( 'Add New', 'mainwp' ); ?></a>
-                        <?php } ?>
-                    <?php } ?>
-                    <?php
-                    if ( isset( static::$subPages ) && is_array( static::$subPages ) ) {
-                        foreach ( static::$subPages as $subPage ) {
-                            if ( ! isset( $subPage['menu_hidden'] ) || ( isset( $subPage['menu_hidden'] ) && true !== $subPage['menu_hidden'] ) ) {
-                                if ( MainWP_Menu::is_disable_menu_item( 3, 'Post' . $subPage['slug'] ) ) {
-                                    continue;
-                                }
-                                ?>
-                                <a href="<?php echo esc_url( admin_url( 'admin.php?page=Post' . $subPage['slug'] ) ); ?>" class="mainwp-submenu"><?php echo esc_html( $subPage['title'] ); ?></a>
-                                <?php
-                            }
-                        }
-                    }
-                    ?>
-                </div>
-            </div>
-        </div>
-        <?php
-    }
-
-    /**
      * Method init_left_menu()
      *
      * Initiate left menu.
@@ -398,35 +346,34 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      * @uses \MainWP\Dashboard\MainWP_Menu::is_disable_menu_item()
      */
     public static function init_left_menu( $subPages = array() ) {
-
-        MainWP_Menu::add_left_menu(
-            array(
-                'title'         => esc_html__( 'Posts', 'mainwp' ),
-                'parent_key'    => 'managesites',
-                'slug'          => 'PostBulkManage',
-                'href'          => 'admin.php?page=PostBulkManage',
-                'icon'          => '<i class="file alternate icon"></i>',
-                'leftsub_order' => 8,
-            ),
-            1
-        );
-
         $init_sub_subleftmenu = array(
             array(
                 'title'                => esc_html__( 'Manage Posts', 'mainwp' ),
-                'parent_key'           => 'PostBulkManage',
+                'parent_key'           => 'Extensions-Mainwp-Content-Operations',
                 'href'                 => 'admin.php?page=PostBulkManage',
                 'slug'                 => 'PostBulkManage',
                 'right'                => 'manage_posts',
                 'leftsub_order_level2' => 1,
+                'active_path'          => array(
+                    'PostBulkEdit' => 'PostBulkManage',
+                    'PostBulkAdd'  => 'PostBulkManage',
+                ),
             ),
             array(
                 'title'                => esc_html__( 'Add New', 'mainwp' ),
-                'parent_key'           => 'PostBulkManage',
+                'parent_key'           => 'Extensions-Mainwp-Content-Operations',
                 'href'                 => 'admin.php?page=PostBulkAdd',
                 'slug'                 => 'PostBulkAdd',
                 'right'                => 'manage_posts',
-                'leftsub_order_level2' => 2,
+                'leftsub_order_level2' => 1,
+            ),
+            array(
+                'title'                => esc_html__( 'Edit Post', 'mainwp' ),
+                'parent_key'           => 'Extensions-Mainwp-Content-Operations',
+                'href'                 => 'admin.php?page=PostBulkEdit',
+                'slug'                 => 'PostBulkEdit',
+                'right'                => 'manage_posts',
+                'leftsub_order_level2' => 1,
             ),
         );
         MainWP_Menu::init_subpages_left_menu( $subPages, $init_sub_subleftmenu, 'PostBulkManage', 'Post' );
@@ -435,7 +382,8 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             if ( MainWP_Menu::is_disable_menu_item( 3, $item['slug'] ) ) {
                 continue;
             }
-            MainWP_Menu::add_left_menu( $item, 2 );
+            $level = ( 'PostBulkManage' === $item['slug'] ) ? 2 : 3;
+            MainWP_Menu::add_left_menu( $item, $level );
         }
     }
 
@@ -621,6 +569,10 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                                  */
                                 do_action( 'mainwp_posts_actions_bar_right' );
                                 ?>
+                                <a href="admin.php?page=PostBulkAdd" class="ui mini green button"><?php esc_html_e( 'Create New Post', 'mainwp' ); ?></a>
+                                <?php if ( MainWP_Extensions_Handler::is_extension_available( 'boilerplate-extension' ) ) : ?>
+                                    <a href="admin.php?page=PostBulkAdd&boilerplate=1" class="ui mini green basic button"><?php esc_html_e( 'Create New Boilerplate', 'mainwp' ); ?></a>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -629,7 +581,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-manage-posts-info-message' ) ) : ?>
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-manage-posts-info-message"></i>
-                            <?php printf( esc_html__( 'Manage existing posts on your child sites.  Here you can edit, view and delete pages.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/content/manage-posts" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
+                            <?php printf( esc_html__( 'Monitor and manage the lifecycle of content across all connected sites. Perform safe, bulk operations without editing layouts or page design. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/content/manage-posts" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
                         </div>
                     <?php endif; ?>
                     <?php static::render_table( true ); ?>
@@ -2131,16 +2083,12 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         <?php endif; ?>
                     <?php endif; ?>
 
-
-                    <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-create-new-bulkpost-info-message' ) ) : ?>
+                    <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-legacy-content-editor-info-message' ) ) : ?>
                         <?php if ( ! isset( $_GET['boilerplate'] ) ) : ?>
-                        <div class="ui message info">
-                            <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-create-new-bulkpost-info-message"></i>
-                            <?php if ( 'bulkpost' === $post_type ) : ?>
-                                <?php printf( esc_html__( 'Create a new bulk post. Scheduling posts on Child Sites is almost the same as publishing it. The only difference is before clicking the Publish button is setting it to Scheduled status and setting the time. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/content/manage-posts#create-a-new-post" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
-                            <?php else : ?>
-                                <?php printf( esc_html__( 'Create a new bulk page. Scheduling pages on Child Sites is almost the same as publishing it. The only difference is before clicking the Publish button is setting it to Scheduled status and setting the time. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/content/manage-pages#create-a-new-page" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
-                            <?php endif; ?>
+                        <div class="ui blue message">
+                            <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-legacy-content-editor-info-message"></i>
+                            <div class="header"><?php esc_html_e( 'Legacy Editing Mode', 'mainwp' ); ?></div>
+                            <p><?php esc_html_e( 'This editor supports basic classic content editing only. Block and layout editing is intentionally handled inside each site.', 'mainwp' ); ?></p>
                         </div>
                         <?php endif; ?>
                     <?php endif; ?>

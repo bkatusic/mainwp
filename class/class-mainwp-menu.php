@@ -380,76 +380,6 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
     }
 
     /**
-     * Method init_sub_pages()
-     *
-     * Init subpages MainWP menus.
-     *
-     * @uses \MainWP\Dashboard\MainWP_Extensions::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Manage_Backups::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Manage_Sites::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Page::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Post::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Settings::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Themes::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Themes::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Plugins::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_User::init_subpages_menu()
-     */
-    public static function init_sub_pages() {
-
-        if ( ! static::is_disable_menu_item( 2, 'PostBulkManage' ) ) {
-            MainWP_Post::init_subpages_menu();
-        }
-        if ( ! static::is_disable_menu_item( 2, 'managesites' ) ) {
-            MainWP_Manage_Sites::init_subpages_menu();
-        }
-
-        if ( ! static::is_disable_menu_item( 2, 'RESTAPI' ) ) {
-            MainWP_Rest_Api_Page::init_subpages_menu();
-        }
-
-        if ( ! static::is_disable_menu_item( 2, 'Settings' ) ) {
-            MainWP_Settings::init_subpages_menu();
-        }
-
-        if ( ! static::is_disable_menu_item( 2, 'Extensions' ) ) {
-            MainWP_Extensions::init_subpages_menu();
-        }
-        if ( ! static::is_disable_menu_item( 2, 'PageBulkManage' ) ) {
-            MainWP_Page::init_subpages_menu();
-        }
-        if ( ! static::is_disable_menu_item( 2, 'ThemesManage' ) ) {
-            MainWP_Themes::init_subpages_menu();
-        }
-        if ( ! static::is_disable_menu_item( 2, 'PluginsManage' ) ) {
-            MainWP_Plugins::init_subpages_menu();
-        }
-        if ( ! static::is_disable_menu_item( 2, 'UserBulkManage' ) ) {
-            MainWP_User::init_subpages_menu();
-        }
-        if ( ! static::is_disable_menu_item( 2, 'ManageClients' ) ) {
-            MainWP_Client::init_subpages_menu();
-        }
-        if ( get_option( 'mainwp_enableLegacyBackupFeature' ) && ! static::is_disable_menu_item( 2, 'ManageBackups' ) ) {
-            MainWP_Manage_Backups::init_subpages_menu();
-        }
-
-
-        /**
-         * Action: mainwp_admin_menu_sub
-         *
-         * Hooks main navigation sub-menu items.
-         *
-         * @since 4.0
-         */
-        do_action( 'mainwp_admin_menu_sub' );
-
-        if ( ! static::is_disable_menu_item( 2, 'ServerInformation' ) ) {
-            MainWP_Server_Information::init_subpages_menu();
-        }
-    }
-
-    /**
      * Method set_menu_active_slugs
      *
      * @param string $item Menu item.
@@ -821,40 +751,35 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 ?>
                 </div>
                 <?php
-                    $all_updates         = wp_get_update_data();
-                    $go_back_wpadmin_url = admin_url( 'index.php' );
+                $all_updates         = wp_get_update_data();
+                $go_back_wpadmin_url = admin_url( 'index.php' );
 
-                    $link = array(
-                        'url'  => $go_back_wpadmin_url,
-                        'text' => esc_html__( 'WP Admin', 'mainwp' ),
-                        'tip'  => esc_html__( 'Click to go back to the site WP Admin area.', 'mainwp' ),
-                    );
-                    /**
-                     * Filter: mainwp_go_back_wpadmin_link
-                     *
-                     * Filters URL for the Go to WP Admin button in Main navigation.
-                     *
-                     * @since 4.0
-                     */
-                    $go_back_link = apply_filters( 'mainwp_go_back_wpadmin_link', $link );
+                $link = array(
+                    'url'  => $go_back_wpadmin_url,
+                    'text' => esc_html__( 'WP Admin', 'mainwp' ),
+                    'tip'  => esc_html__( 'Click to go back to the site WP Admin area.', 'mainwp' ),
+                );
+                /**
+                 * Filter: mainwp_go_back_wpadmin_link
+                 *
+                 * Filters URL for the Go to WP Admin button in Main navigation.
+                 *
+                 * @since 4.0
+                 */
+                $go_back_link = apply_filters( 'mainwp_go_back_wpadmin_link', $link );
 
-                    if ( false !== $go_back_link && is_array( $go_back_link ) ) {
-                        if ( isset( $go_back_link['url'] ) ) {
-                            $link['url'] = $go_back_link['url'];
-                        }
-                        if ( isset( $go_back_link['text'] ) ) {
-                            $link['text'] = $go_back_link['text'];
-                        }
-                        if ( isset( $go_back_link['tip'] ) ) {
-                            $link['tip'] = $go_back_link['tip'];
-                        }
+                if ( false !== $go_back_link && is_array( $go_back_link ) ) {
+                    if ( isset( $go_back_link['url'] ) ) {
+                        $link['url'] = $go_back_link['url'];
                     }
-                    ?>
-                <div id="mainwp-first-level-wpitems-menu" class="ui vertical labeled inverted icon mini menu">
-                    <a class="item" href="#" id="mainwp-collapse-second-level-navigation" aria-label="<?php esc_attr_e( 'Collapse menu.', 'mainwp' ); ?>">
-                        <i class="double angle left icon"></i>
-                    </a>
-                </div>
+                    if ( isset( $go_back_link['text'] ) ) {
+                        $link['text'] = $go_back_link['text'];
+                    }
+                    if ( isset( $go_back_link['tip'] ) ) {
+                        $link['tip'] = $go_back_link['tip'];
+                    }
+                }
+                ?>
                 <div id="mainwp-support-menu">
                     <a id="mainwp-help-menu-item" title="<?php esc_attr_e( 'Support', 'mainwp' ); ?>" href="#">
                         <i class="question circle outline icon"></i><br/>
@@ -892,6 +817,11 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     </a>
                     <?php endif; ?>
                     <div id="mainwp-version-label" class="ui tiny green fluid centered label"><?php echo esc_html( $version ); ?></div>
+                </div>
+            </div>
+            <div id="mainwp-divider-handle">
+                <div id="mainwp-collapse-second-level-navigation" aria-label="<?php esc_attr_e( 'Collapse menu.', 'mainwp' ); ?>">
+                    <i class="double angle left small icon"></i>
                 </div>
             </div>
             <div id="mainwp-second-level-navigation">
@@ -1052,7 +982,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             jQuery( '#mainwp-main-navigation-container' ).css( "width", "272px" );
                             jQuery( lbar ).find( '.icon' ).removeClass( 'right' );
                             jQuery( lbar ).find( '.icon' ).addClass( 'left' );
-                            jQuery( lbar ).css( "left", "272px" );
+                            jQuery( lbar ).parent('#mainwp-divider-handle').css( "left", "200px" );
                             jQuery( lbar ).removeClass( 'collapsed' );
                             if( ( typeof mainwp_ui_state_save !== 'undefined' ) ) {
                                 mainwp_ui_state_save( 'showmenu', 1 );
@@ -1064,7 +994,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             jQuery( '#mainwp-main-navigation-container' ).css( "width", "72px" );
                             jQuery( lbar ).find( '.icon' ).removeClass( 'left' );
                             jQuery( lbar ).find( '.icon' ).addClass( 'right' );
-                            jQuery( lbar ).css( "left", "72px" );
+                            jQuery( lbar ).parent('#mainwp-divider-handle').css( "left", "0px" );
                             jQuery( lbar ).addClass( 'collapsed' );
                             jQuery( '#mainwp-top-header' ).css( "width", "100%" );
                             if( ( typeof mainwp_ui_state_save !== 'undefined' ) ) {
@@ -1424,10 +1354,11 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             if ( ! $set_actived ) {
                 $level2_active = static::is_level2_menu_item_active( $href ) ? true : false;
                 if ( is_array( $active_path ) && ! empty( $active_path ) ) {
-                    reset( $active_path );
-                    $item = key( $active_path );
-                    if ( $item === $plugin_page ) {
-                        $level2_active = true;
+                    foreach ( $active_path as $item => $value ) {
+                        if ( $item === $plugin_page ) {
+                            $level2_active = true;
+                            break;
+                        }
                     }
                 }
                 // hard fix managesite menu items active status.
@@ -1440,7 +1371,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         $level2_active = true;
                     }
 
-                    if ( ! $level2_active && isset( $_GET['do'] ) && 'bulknew' === $_GET['do'] && false !== strpos( $href, 'admin.php?page=managesites&do=bulknew' ) ) {
+                    if ( ! $level2_active && isset( $_GET['do'] ) && 'bulknew' === $_GET['do'] && ( false !== strpos( $href, 'admin.php?page=managesites&do=bulknew' ) || 'managesites-addnew' === $id ) ) {
                         $level2_active = true;
                     }
 

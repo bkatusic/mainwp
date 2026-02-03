@@ -138,7 +138,7 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             add_submenu_page(
                 'mainwp_tab',
                 'MainWP',
-                __( 'Overview', 'mainwp' ),
+                __( 'Operations', 'mainwp' ),
                 'read',
                 'mainwp_tab',
                 array(
@@ -165,7 +165,7 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
     public static function init_left_menu() {
         MainWP_Menu::add_left_menu(
             array(
-                'title'      => esc_html__( 'Overview', 'mainwp' ),
+                'title'      => esc_html__( 'Operations', 'mainwp' ),
                 'parent_key' => 'mainwp_tab',
                 'slug'       => 'mainwp_tab',
                 'href'       => 'admin.php?page=mainwp_tab',
@@ -211,7 +211,7 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
         /**
          * Get getmetaboxes
          *
-         * Adds metaboxes (widgets) to the Overview page.
+         * Adds metaboxes (widgets) to the Operations page.
          *
          * @since Unknown
          */
@@ -323,7 +323,7 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
         global $screen_layout_columns;
 
         $params = array(
-            'title' => esc_html__( 'Overview', 'mainwp' ),
+            'title' => esc_html__( 'Operations', 'mainwp' ),
         );
 
         MainWP_UI::render_top_header( $params );
@@ -388,7 +388,7 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             /**
              * Action: mainwp_before_overview_widgets
              *
-             * Fires at the top of the Overview page (before first widget).
+             * Fires at the top of the Operations page (before first widget).
              *
              * @since 4.1
              */
@@ -409,7 +409,7 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             /**
              * Action: 'mainwp_after_overview_widgets'
              *
-             * Fires at the bottom of the Overview page (after the last widget).
+             * Fires at the bottom of the Operations page (after the last widget).
              *
              * @since 4.1
              */
@@ -469,7 +469,7 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
                 /**
                  * Action: mainwp_overview_help_item
                  *
-                 * Fires at the bottom of the help articles list in the Help sidebar on the Overview page.
+                 * Fires at the bottom of the help articles list in the Help sidebar on the Operations page.
                  *
                  * Suggested HTML markup:
                  *

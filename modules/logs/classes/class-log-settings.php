@@ -190,7 +190,7 @@ class Log_Settings {
     /**
      * Method init_menu()
      *
-     * Add Insights Overview sub menu "Insights".
+     * Add Insights Operations sub menu "Insights".
      */
     public static function init_menu() {
 
