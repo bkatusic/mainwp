@@ -150,8 +150,17 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             @curl_multi_add_handle( $mh, $ch );
 
             do {
-                curl_multi_exec( $mh, $running );
-                curl_multi_select( $mh );
+                do {
+                    $mrc = curl_multi_exec( $mh, $running );
+                } while ( CURLM_CALL_MULTI_PERFORM === $mrc );
+
+                if ( $running ) {
+                    $rc = curl_multi_select( $mh, 1.0 );
+                    if ( -1 === $rc ) {
+                        usleep( 100000 );
+                    }
+                }
+
                 while ( $info = curl_multi_info_read( $mh ) ) {
                     $data        = curl_multi_getcontent( $info['handle'] );
                     $err         = curl_error( $info['handle'] );
@@ -162,12 +171,13 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                     }
 
                     curl_multi_remove_handle( $mh, $info['handle'] );
+                    curl_close( $info['handle'] );
                 }
                 usleep( 10000 );
 
             } while ( $running > 0 );
 
-            if ( 'resource' === gettype( $mh ) ) {
+            if ( static::is_valid_curl_handle( $mh ) ) {
                 curl_multi_close( $mh );
             }
         } else {
@@ -180,7 +190,7 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                 $http_version = curl_getinfo( $ch, CURLINFO_HTTP_VERSION );
             }
 
-            if ( 'resource' === gettype( $ch ) ) {
+            if ( static::is_valid_curl_handle( $ch ) ) {
                 curl_close( $ch );
             }
         }
@@ -963,13 +973,18 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                     $data     = curl_multi_getcontent( $info['handle'] );
                     $contains = ( 0 < preg_match( '/<mainwp>(.*)<\/mainwp>/', $data, $results ) );
                     curl_multi_remove_handle( $mh, $info['handle'] );
+                    curl_close( $info['handle'] );
 
                     if ( ! $contains && isset( $requestUrls[ static::get_resource_id( $info['handle'] ) ] ) ) {
-                        curl_setopt( $info['handle'], CURLOPT_URL, $requestUrls[ static::get_resource_id( $info['handle'] ) ] );
+                        curl_reset( $info['handle'] ); // IMPORTANT.
+                        curl_setopt(
+                            $info['handle'],
+                            CURLOPT_URL,
+                            $requestUrls[ static::get_resource_id( $info['handle'] ) ]
+                        );
                         curl_multi_add_handle( $mh, $info['handle'] );
                         unset( $requestUrls[ static::get_resource_id( $info['handle'] ) ] );
-                        ++$running;
-                        continue;
+                        continue; // libcurl updates $running automatically.
                     }
 
                     if ( null !== $handler ) {
@@ -978,7 +993,7 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                     }
 
                     unset( $handleToWebsite[ static::get_resource_id( $info['handle'] ) ] );
-                    if ( 'resource' === gettype( $info['handle'] ) ) {
+                    if ( static::is_valid_curl_handle( $info['handle'] ) ) {
                         curl_close( $info['handle'] );
                     }
                     unset( $info['handle'] );
@@ -986,7 +1001,7 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                 usleep( 10000 );
             } while ( $running > 0 );
 
-            if ( 'resource' === gettype( $mh ) ) {
+            if ( static::is_valid_curl_handle( $mh ) ) {
                 curl_multi_close( $mh );
             }
         } else {
@@ -1644,13 +1659,24 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             @curl_multi_add_handle( $mh, $ch );
 
             $lastRun = 0;
+            $running = null;
+
             do {
                 if ( 20 < time() - $lastRun ) {
                     MainWP_System_Utility::set_time_limit( $timeout );
                     $lastRun = time();
                 }
-                @curl_multi_exec( $mh, $running );
-                @curl_multi_select( $mh );
+
+                do {
+                    $mrc = curl_multi_exec( $mh, $running );
+                } while ( CURLM_CALL_MULTI_PERFORM === $mrc );
+
+
+                $rc = curl_multi_select( $mh, 1.0 );
+                if ( -1 === $rc ) {
+                    usleep( 100000 );
+                }
+
                 while ( $info = @curl_multi_info_read( $mh ) ) {
                     $data        = @curl_multi_getcontent( $info['handle'] );
                     $http_status = @curl_getinfo( $info['handle'], CURLINFO_HTTP_CODE );
@@ -1658,10 +1684,12 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                     $real_url    = @curl_getinfo( $info['handle'], CURLINFO_EFFECTIVE_URL );
 
                     @curl_multi_remove_handle( $mh, $info['handle'] );
+                    curl_close( $info['handle'] );
                 }
                 usleep( 10000 );
             } while ( $running > 0 );
-            if ( 'resource' === gettype( $mh ) ) {
+
+            if ( static::is_valid_curl_handle( $mh ) ) {
                 @curl_multi_close( $mh );
             }
         } else {
@@ -1669,6 +1697,7 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             $http_status = @curl_getinfo( $ch, CURLINFO_HTTP_CODE );
             $err         = @curl_error( $ch );
             $real_url    = @curl_getinfo( $ch, CURLINFO_EFFECTIVE_URL );
+            curl_close( $ch );
         }
 
         $host = wp_parse_url( $real_url, PHP_URL_HOST );
@@ -1948,7 +1977,7 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             curl_setopt( $ch, CURLOPT_USERPWD, "$http_user:$http_pass" );
         }
         curl_exec( $ch );
-        if ( 'resource' === gettype( $ch ) ) {
+        if ( static::is_valid_curl_handle( $ch ) ) {
             curl_close( $ch );
         }
         fclose( $fp );
@@ -2046,7 +2075,7 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
 
         $data     = @curl_exec( $ch );
         $httpCode = @curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-        if ( 'resource' === gettype( $ch ) ) {
+        if ( static::is_valid_curl_handle( $ch ) ) {
             curl_close( $ch );
         }
         if ( 200 === (int) $httpCode ) {
@@ -2054,6 +2083,20 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         } else {
             return false;
         }
+    }
+
+    /**
+     * Method is_valid_curl_handle
+     *
+     * @param  mixed $ch
+     * @return bool Valid curl handle.
+     */
+    public static function is_valid_curl_handle( $ch ) {
+        return is_resource( $ch )
+            || ( is_object( $ch )
+                && class_exists( 'CurlHandle', false )
+                && $ch instanceof \CurlHandle
+            );
     }
 
     /**

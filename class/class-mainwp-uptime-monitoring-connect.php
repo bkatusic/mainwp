@@ -552,6 +552,8 @@ class MainWP_Uptime_Monitoring_Connect { // phpcs:ignore Generic.Classes.Opening
         if ( empty( $disabled_functions ) || ( false === stristr( $disabled_functions, 'curl_multi_exec' ) ) ) {
 
             $lastRun = 0;
+            $running = null;
+
             do {
                 if ( 20 < time() - $lastRun ) {
                     MainWP_System_Utility::set_time_limit( 3600 );
@@ -565,6 +567,7 @@ class MainWP_Uptime_Monitoring_Connect { // phpcs:ignore Generic.Classes.Opening
                     $resource_id = MainWP_Connect::get_resource_id( $info['handle'] );
                     curl_multi_remove_handle( $mh, $info['handle'] );
                     $http_code = curl_getinfo( $info['handle'], CURLINFO_HTTP_CODE );
+                    curl_close( $info['handle'] );
 
                     $down_count = 0;
                     $set_retry  = false;
@@ -591,9 +594,14 @@ class MainWP_Uptime_Monitoring_Connect { // phpcs:ignore Generic.Classes.Opening
                         }
 
                         if ( $_try_second ) {
+                            curl_reset( $info['handle'] ); // IMPORTANT.
+                            curl_setopt(
+                                $info['handle'],
+                                CURLOPT_URL,
+                                $requestUrls[ $resource_id ]
+                            );
                             curl_multi_add_handle( $mh, $info['handle'] );
                             unset( $requestUrls[ $resource_id ] );
-                            ++$running;
                             continue;
                         }
                     }
@@ -619,14 +627,14 @@ class MainWP_Uptime_Monitoring_Connect { // phpcs:ignore Generic.Classes.Opening
                     }
 
                     unset( $handleToWebsite[ $resource_id ] );
-                    if ( 'resource' === gettype( $info['handle'] ) ) {
+                    if ( MainWP_Connect::is_valid_curl_handle( $info['handle'] ) ) {
                         curl_close( $info['handle'] );
                     }
                 }
                 usleep( 10000 );
             } while ( $running > 0 );
 
-            if ( 'resource' === gettype( $mh ) ) {
+            if ( MainWP_Connect::is_valid_curl_handle( $mh ) ) {
                 curl_multi_close( $mh );
             }
         } else {
@@ -723,7 +731,7 @@ class MainWP_Uptime_Monitoring_Connect { // phpcs:ignore Generic.Classes.Opening
             call_user_func_array( $handler, array( $data, $website, &$output, $params ) );
         }
 
-        if ( 'resource' === gettype( $ch ) ) {
+        if ( MainWP_Connect::is_valid_curl_handle( $ch ) ) {
             curl_close( $ch );
         }
     }
@@ -847,7 +855,7 @@ class MainWP_Uptime_Monitoring_Connect { // phpcs:ignore Generic.Classes.Opening
             $max_retries = static::get_apply_setting( 'maxretries', (int) $monitor->maxretries, $global_settings, -1, 0 );
             if ( $max_retries > 0 && $monitor->retries < $max_retries ) {
                 $status = static::PENDING; // to retry.
-                $down_count++;
+                ++$down_count;
                 MainWP_DB_Uptime_Monitoring::instance()->update_monitor_increase_retry( $monitor->monitor_id );
             }
         }
