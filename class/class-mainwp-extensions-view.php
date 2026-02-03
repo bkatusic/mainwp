@@ -528,17 +528,8 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     <div class="content">
                         <em data-emoji=":newspaper:" class="medium mainwp-greyscale"></em>
                         <h3 class="ui header">
-                            <a href="https://mainwp.com/mainwp-add-ons/add-on-category/content/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Posts/Pages', 'mainwp' ); ?> →</a>
+                            <a href="https://mainwp.com/mainwp-add-ons/add-on-category/content/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Content Operations', 'mainwp' ); ?> →</a>
                             <div class="sub header"><?php esc_html_e( '7 Add-ons', 'mainwp' ); ?></div>
-                        </h3>
-                    </div>
-                </div>
-                <div class="ui card">
-                    <div class="content">
-                        <em data-emoji=":desktop:" class="medium mainwp-greyscale"></em>
-                        <h3 class="ui header">
-                            <a href="https://mainwp.com/mainwp-add-ons/add-on-category/development/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Development', 'mainwp' ); ?> →</a>
-                            <div class="sub header"><?php esc_html_e( '12 Add-ons', 'mainwp' ); ?></div>
                         </h3>
                     </div>
                 </div>
@@ -1054,8 +1045,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
             'agency'      => esc_html__( 'Agency', 'mainwp' ),
             'backup'      => esc_html__( 'Backups', 'mainwp' ),
             'client'      => esc_html__( 'Client', 'mainwp' ),
-            'content'     => esc_html__( 'Posts/Pages', 'mainwp' ),
-            'development' => esc_html__( 'Development', 'mainwp' ),
+            'content'     => esc_html__( 'Content Operations', 'mainwp' ),
             'monitoring'  => esc_html__( 'Monitoring', 'mainwp' ),
             'performance' => esc_html__( 'Performance', 'mainwp' ),
             'security'    => esc_html__( 'Security', 'mainwp' ),
@@ -1143,7 +1133,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 'product_id'           => 'MainWP Atarim Extension',
                 'product_item_id'      => 0,
                 'catalog_id'           => '1251161',
-                'group'                => array( 'development' ),
+                'group'                => array( 'admin' ),
                 'privacy'              => 1,
                 'integration'          => 'Atarim API',
                 'integration_url'      => 'https://atarim.io/',
@@ -1223,7 +1213,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 'product_id'           => 'MainWP Bulk Settings Manager',
                 'product_item_id'      => 0,
                 'catalog_id'           => '347704',
-                'group'                => array( 'development' ),
+                'group'                => array( 'admin' ),
                 'privacy'              => 0,
                 'integration'          => '',
                 'integration_url'      => '',
@@ -1264,7 +1254,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 'product_id'           => 'MainWP Clone Extension',
                 'product_item_id'      => 0,
                 'catalog_id'           => '1555',
-                'group'                => array( 'development' ),
+                'group'                => array( 'admin' ),
                 'privacy'              => 0,
                 'integration'          => '',
                 'integration_url'      => '',
@@ -1284,7 +1274,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 'product_id'           => 'MainWP Code Snippets Extension',
                 'product_item_id'      => 0,
                 'catalog_id'           => '11196',
-                'group'                => array( 'development' ),
+                'group'                => array( 'admin' ),
                 'privacy'              => 0,
                 'integration'          => '',
                 'integration_url'      => '',
@@ -1324,7 +1314,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 'product_id'           => 'MainWP Custom Dashboard Extension',
                 'product_item_id'      => 0,
                 'catalog_id'           => '1080528',
-                'group'                => array( 'development' ),
+                'group'                => array( 'admin' ),
                 'privacy'              => 0,
                 'integration'          => '',
                 'integration_url'      => '',
@@ -1344,7 +1334,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 'product_id'           => 'MainWP Custom Post Types',
                 'product_item_id'      => 0,
                 'catalog_id'           => '1002564',
-                'group'                => array( 'development' ),
+                'group'                => array( 'admin' ),
                 'privacy'              => 0,
                 'integration'          => '',
                 'integration_url'      => '',
@@ -1425,7 +1415,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 'product_id'           => 'MainWP Early Access Extension',
                 'product_item_id'      => 0,
                 'catalog_id'           => '1318737',
-                'group'                => array( 'development' ),
+                'group'                => array( 'admin' ),
                 'privacy'              => 0,
                 'integration'          => '',
                 'integration_url'      => '',
@@ -1445,7 +1435,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 'product_id'           => 'MainWP Favorites Extension',
                 'product_item_id'      => 0,
                 'catalog_id'           => '1379',
-                'group'                => array( 'development' ),
+                'group'                => array( 'admin' ),
                 'privacy'              => 0,
                 'integration'          => '',
                 'integration_url'      => '',
@@ -1485,7 +1475,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 'product_id'           => 'MainWP File Uploader Extension',
                 'product_item_id'      => 0,
                 'catalog_id'           => '11637',
-                'group'                => array( 'development' ),
+                'group'                => array( 'admin' ),
                 'privacy'              => 0,
                 'integration'          => '',
                 'integration_url'      => '',
@@ -1667,7 +1657,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 'product_id'           => 'MainWP Pressable Extension',
                 'product_item_id'      => 0,
                 'catalog_id'           => '1271427',
-                'group'                => array( 'development' ),
+                'group'                => array( 'admin' ),
                 'privacy'              => 1,
                 'integration'          => 'Pressable API',
                 'integration_url'      => 'https://pressable.com/',
@@ -1808,7 +1798,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 'product_id'           => 'MainWP Staging Extension',
                 'product_item_id'      => 0,
                 'catalog_id'           => '1034878',
-                'group'                => array( 'development' ),
+                'group'                => array( 'admin' ),
                 'privacy'              => 2,
                 'integration'          => 'WP STAGING Backup Duplicator & Migration Plugin',
                 'integration_url'      => 'https://wp-staging.com/',
@@ -1949,7 +1939,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 'product_id'           => 'MainWP Url Extractor Extension',
                 'product_item_id'      => 0,
                 'catalog_id'           => '11965',
-                'group'                => array( 'development' ),
+                'group'                => array( 'admin' ),
                 'privacy'              => 0,
                 'integration'          => '',
                 'integration_url'      => '',

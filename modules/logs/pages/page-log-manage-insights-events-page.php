@@ -97,7 +97,7 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
     /**
      * Method init_menu()
      *
-     * Add Insights Overview sub menu "Insights".
+     * Add Insights Operations sub menu "Insights".
      */
     public function init_menu() {
         static::$page_current = add_submenu_page(

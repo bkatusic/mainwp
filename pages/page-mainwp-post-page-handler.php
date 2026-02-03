@@ -466,11 +466,7 @@ class MainWP_Post_Page_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSam
                         static::posting_posts( $p_id, 'posting' );
                     } else {
                         ?>
-                    <div class="error">
-                        <p>
-                            <strong><?php esc_html_e( 'ERROR', 'mainwp' ); ?></strong>: <?php esc_html_e( 'An undefined error occured!', 'mainwp' ); ?>
-                        </p>
-                    </div>
+                        <div class="ui red message"><?php esc_html_e( 'Undefined error occured!', 'mainwp' ); ?></div>
                         <?php
                     }
                 }

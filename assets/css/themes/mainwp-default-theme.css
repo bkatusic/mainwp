@@ -712,21 +712,32 @@
 }
 
 .mainwp-ui.mainwp-custom-theme #mainwp-first-level-navigation {
-  padding-top: 25px;
+  padding-top: 1em;
+}
+
+.mainwp-ui.mainwp-custom-theme #mainwp-first-level-navigation .ui.vertical.inverted.menu .item {
+  border: 1px solid rgba(255, 255, 255, 0) !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
 }
 
 .mainwp-ui.mainwp-custom-theme #mainwp-first-level-navigation .ui.vertical.inverted.menu .item,
 .mainwp-ui.mainwp-custom-theme #mainwp-first-level-navigation .ui.vertical.inverted.menu .item .text,
 .mainwp-ui.mainwp-custom-theme #mainwp-first-level-navigation .ui.vertical.inverted.menu .item .icon {
   color: var(--mainwp-light) !important;
-
 }
 
+.mainwp-ui.mainwp-custom-theme #mainwp-first-level-navigation .ui.vertical.inverted.menu .item:hover,
+.mainwp-ui.mainwp-custom-theme #mainwp-first-level-navigation .ui.vertical.inverted.menu .item.active {
+  background: var(--mainwp-dark-alt) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+.mainwp-ui.mainwp-custom-theme #mainwp-first-level-navigation .ui.vertical.inverted.menu .item:hover,
 .mainwp-ui.mainwp-custom-theme #mainwp-first-level-navigation .ui.vertical.inverted.menu .item.active,
 .mainwp-ui.mainwp-custom-theme #mainwp-first-level-navigation .ui.vertical.inverted.menu .item.active .text,
 .mainwp-ui.mainwp-custom-theme #mainwp-first-level-navigation .ui.vertical.inverted.menu .item.active .icon {
   color: #fff !important;
-  background-color: var(--mainwp-blue) !important;
 }
 
 .mainwp-ui.mainwp-custom-theme #mainwp-second-level-navigation,
@@ -793,7 +804,7 @@
 }
 
 .mainwp-ui.mainwp-custom-theme #mainwp-collapse-second-level-navigation {
-  background-color: var(--mainwp-dark-alt) !important;
+  border:1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .mainwp-ui.mainwp-custom-theme #mainwp-page-navigation-wrapper .menu .item.active,

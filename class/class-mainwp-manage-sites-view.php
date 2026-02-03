@@ -126,16 +126,6 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 'id'                   => 'managesites-addnew',
                 'leftsub_order_level2' => 2,
             ),
-            array(
-                'title'                => esc_html__( 'Import Sites', 'mainwp' ),
-                'parent_key'           => 'managesites',
-                'href'                 => 'admin.php?page=managesites&do=bulknew',
-                'slug'                 => 'managesites',
-                'right'                => 'add_sites',
-                'item_slug'            => 'managesites_import',
-                'id'                   => 'managesites-bulknew',
-                'leftsub_order_level2' => 3,
-            ),
         );
 
         MainWP_Menu::init_subpages_left_menu( $subPages, $items_menu, 'managesites', 'ManageSites' );
@@ -146,7 +136,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     continue;
                 }
             } elseif ( MainWP_Menu::is_disable_menu_item( 3, $item['slug'] ) ) {
-                    continue;
+                continue;
             }
             MainWP_Menu::add_left_menu( $item, 2 );
         }
@@ -649,11 +639,11 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
     /**
      * Method render_dashboard()
      *
-     * Render individual Child Site Overview page.
+     * Render individual Child Site Operations page.
      *
      * @param mixed $website Child Site.
      *
-     * @return string Sites Overview Page.
+     * @return string Sites Operations Page.
      *
      * @uses \MainWP\Dashboard\MainWP_Overview::render_dashboard_body()
      */

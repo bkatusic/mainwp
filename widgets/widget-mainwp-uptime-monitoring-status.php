@@ -2,7 +2,7 @@
 /**
  * MainWP Connection Status
  *
- * Build the MainWP Overview page Connection Status Widget.
+ * Build the MainWP Operations page Connection Status Widget.
  *
  * @package     MainWP/Dashboard
  */

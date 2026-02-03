@@ -170,23 +170,23 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         $label_color_total        = '';
 
         if ( isset( $updates_count['plugins'] ) && 0 < $updates_count['plugins'] ) {
-            $label_color_plugins = ' blue ';
+            $label_color_plugins = 'green';
         }
 
         if ( isset( $updates_count['wp'] ) && 0 < $updates_count['wp'] ) {
-            $label_color_wp = ' blue ';
+            $label_color_wp = 'green';
         }
 
         if ( isset( $updates_count['themes'] ) && 0 < $updates_count['themes'] ) {
-            $label_color_themes = ' blue ';
+            $label_color_themes = 'green';
         }
 
         if ( isset( $updates_count['translations'] ) && 0 < $updates_count['translations'] ) {
-            $label_color_translations = ' blue ';
+            $label_color_translations = 'green';
         }
 
         if ( isset( $updates_count['total'] ) && 0 < $updates_count['total'] ) {
-            $label_color_total = ' blue ';
+            $label_color_total = 'green';
         }
 
         MainWP_Menu::add_left_menu(
@@ -204,21 +204,21 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
 
         $init_sub_subleftmenu = array(
             array(
-                'title'      => esc_html__( 'Plugins', 'mainwp' ) . ' <span class="ui ' . $label_color_plugins . ' label">' . intval( $updates_count['plugins'] ) . '</span>',
+                'title'      => esc_html__( 'Plugins', 'mainwp' ) . ' <span class="ui ' . $label_color_plugins . ' tiny label">' . intval( $updates_count['plugins'] ) . '</span>',
                 'parent_key' => 'UpdatesManage',
                 'href'       => 'admin.php?page=UpdatesManage&tab=plugins-updates',
                 'slug'       => 'UpdatesManage',
                 'right'      => '',
             ),
             array(
-                'title'      => esc_html__( 'Themes', 'mainwp' ) . ' <span class="ui ' . $label_color_themes . ' label">' . intval( $updates_count['themes'] ) . '</span>',
+                'title'      => esc_html__( 'Themes', 'mainwp' ) . ' <span class="ui ' . $label_color_themes . ' tiny label">' . intval( $updates_count['themes'] ) . '</span>',
                 'parent_key' => 'UpdatesManage',
                 'href'       => 'admin.php?page=UpdatesManage&tab=themes-updates',
                 'slug'       => 'UpdatesManage',
                 'right'      => '',
             ),
             array(
-                'title'         => esc_html__( 'WordPress', 'mainwp' ) . ' <span class="ui ' . $label_color_wp . ' label">' . intval( $updates_count['wp'] ) . '</span>',
+                'title'         => esc_html__( 'WordPress', 'mainwp' ) . ' <span class="ui ' . $label_color_wp . ' tiny label">' . intval( $updates_count['wp'] ) . '</span>',
                 'parent_key'    => 'UpdatesManage',
                 'href'          => 'admin.php?page=UpdatesManage&tab=wordpress-updates',
                 'slug'          => 'UpdatesManage&tab=wordpress-updates',
@@ -237,7 +237,7 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         $show_language_updates = get_option( 'mainwp_show_language_updates', 1 );
         if ( $show_language_updates ) {
             $init_sub_subleftmenu[] = array(
-                'title'      => esc_html__( 'Translation', 'mainwp' ) . ' <span class="ui ' . $label_color_translations . ' label">' . intval( $updates_count['translations'] ) . '</span>',
+                'title'      => esc_html__( 'Translation', 'mainwp' ) . ' <span class="ui ' . $label_color_translations . ' tiny label">' . intval( $updates_count['translations'] ) . '</span>',
                 'parent_key' => 'UpdatesManage',
                 'href'       => 'admin.php?page=UpdatesManage&tab=translations-updates',
                 'slug'       => 'UpdatesManage&tab=translations-updates',

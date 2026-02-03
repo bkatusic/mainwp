@@ -195,7 +195,7 @@ class Cost_Tracker_Summary {
     /**
      * Method add_meta_boxes()
      *
-     * Add MainWP Overview Page Widgets.
+     * Add MainWP Operations Page Widgets.
      *
      * @param array $page Current page.
      *
@@ -212,7 +212,7 @@ class Cost_Tracker_Summary {
         /**
          * Get getmetaboxes
          *
-         * Adds metaboxes (widgets) to the Overview page.
+         * Adds metaboxes (widgets) to the Operations page.
          *
          * @since 4.6
          */
@@ -234,7 +234,7 @@ class Cost_Tracker_Summary {
          * Contains the list of enabled widgets and allows user to unset unwanted widgets.
          *
          * @param array $enable_widgets           Array containing enabled widgets.
-         * @param int   $dashboard_siteid Child site (Overview) ID.
+         * @param int   $dashboard_siteid Child site (Operations) ID.
          *
          * @since 4.6
          */
@@ -399,7 +399,7 @@ class Cost_Tracker_Summary {
             /**
              * Action: mainwp_before_overview_widgets
              *
-             * Fires at the top of the Overview page (before first widget).
+             * Fires at the top of the Operations page (before first widget).
              *
              * @since 4.6
              */
@@ -427,7 +427,7 @@ class Cost_Tracker_Summary {
             /**
              * Action: 'mainwp_after_overview_widgets'
              *
-             * Fires at the bottom of the Overview page (after the last widget).
+             * Fires at the bottom of the Operations page (after the last widget).
              *
              * @since 4.6
              */
@@ -471,7 +471,7 @@ class Cost_Tracker_Summary {
                     /**
                      * Action: mainwp_module_cost_tracker_summary_screen_options_top
                      *
-                     * Fires at the top of the Sceen Options modal on the Overview page.
+                     * Fires at the top of the Sceen Options modal on the Operations page.
                      *
                      * @since 4.6
                      */
@@ -485,7 +485,7 @@ class Cost_Tracker_Summary {
                         /**
                          * Action: mainwp_module_cost_tracker_summary_screen_options_bottom
                          *
-                         * Fires at the bottom of the Sceen Options modal on the Overview page.
+                         * Fires at the bottom of the Sceen Options modal on the Operations page.
                          *
                          * @since 4.6
                          */
@@ -531,7 +531,7 @@ class Cost_Tracker_Summary {
         /**
          * Filter: mainwp_module_cost_tracker_summary_widgets_screen_options
          *
-         * Filters available widgets on the Overview page allowing users to unsent unwanted widgets.
+         * Filters available widgets on the Operations page allowing users to unsent unwanted widgets.
          *
          * @since 4.6
          */
@@ -558,7 +558,7 @@ class Cost_Tracker_Summary {
         <?php if ( isset( $_GET['page'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized ?>
         <div class="ui grid field">
             <label class="six wide column"><?php esc_html_e( 'Show widgets', 'mainwp' ); ?></label>
-            <div class="ten wide column" <?php echo 'data-tooltip="' . esc_attr__( 'Select widgets that you want to hide in the MainWP Overview page.', 'mainwp' ); ?> data-inverted="" data-position="top left">
+            <div class="ten wide column" <?php echo 'data-tooltip="' . esc_attr__( 'Select widgets that you want to hide in the MainWP Operations page.', 'mainwp' ); ?> data-inverted="" data-position="top left">
                 <ul class="mainwp_hide_wpmenu_checkboxes">
                 <?php
                 foreach ( $default_widgets as $name => $title ) {

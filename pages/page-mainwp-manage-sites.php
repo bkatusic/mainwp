@@ -1370,48 +1370,57 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
             static::render_import_sites_modal( 'admin.php?page=managesites&do=bulknew', $title_page );
         } else {
             ?>
-            <div id="mainwp-import-sites">
-                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-import-sites-info-message' ) ) : ?>
-                    <div class="ui segment">
-                        <div class="ui info message">
-                            <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-import-sites-info-message"></i>
-                            <?php printf( esc_html__( 'You can download the sample CSV file to see how to format the import file properly. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/management/manage-child-sites?search=Test+Connection#import-sites-csv-import" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
-                        </div>
+            <div class="ui labeled icon inverted menu mainwp-sub-submenu" id="mainwp-add-sites-tabular-menu">
+                <a class="item" href="admin.php?page=managesites&do=new">
+                    <i class="wordpress icon"></i><?php //phpcs:ignore -- WP icon. ?>
+                    <?php esc_html_e( 'Single Site', 'mainwp' ); ?>
+                </a>
+                <a class="item" href="admin.php?page=managesites&do=new">
+                    <div class="icons" style="margin:0.5rem auto">
+                        <i class="icon wordpress"></i><?php //phpcs:ignore -- WP icon. ?>
+                        <i class="icon wordpress"></i><?php //phpcs:ignore -- WP icon. ?>
+                    </div>
+                    <?php esc_html_e( 'Multiple Sites', 'mainwp' ); ?>
+                </a>
+                <a class="item active" href="admin.php?page=managesites&do=bulknew">
+                    <i class="file upload icon"></i>
+                    <?php esc_html_e( 'Import Sites', 'mainwp' ); ?>
+                </a>
+            </div>
+            <div id="mainwp-import-sites" class="ui padded segment">
+                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-import-new-sites-info-message' ) ) : ?>
+                    <div class="ui message">
+                        <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-import-new-sites-info-message"></i>
+                        <?php printf( esc_html__( '%1$s Tip: If you\'re importing 10 or fewer sites, we recommend using the %2$sAdd Multiple Sites%3$s screen instead , it\'s faster and doesn\'t require a CSV file.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<a href="admin.php?page=managesites&do=new&data-tab=multiple-site">', '</a>' ); ?>
                     </div>
                 <?php endif; ?>
-                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-import-new-sites-info-message' ) ) : ?>
-                    <div class="ui segment">
-                        <div class="ui message">
-                            <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-import-new-sites-info-message"></i>
-                            <?php printf( esc_html__( '%1$s Tip: If you\'re importing 10 or fewer sites, we recommend using the %2$sAdd Multiple Sites%3$s screen instead , it\'s faster and doesn\'t require a CSV file.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<a href="admin.php?page=managesites&do=new&data-tab=multiple-site">', '</a>' ); ?>
-                        </div>
+                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-import-sites-info-message' ) ) : ?>
+                    <div class="ui info message">
+                        <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-import-sites-info-message"></i>
+                        <?php printf( esc_html__( 'You can download the sample CSV file to see how to format the import file properly. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/management/manage-child-sites?search=Test+Connection#import-sites-csv-import" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
                     </div>
                 <?php endif; ?>
                 <form method="POST" action="" enctype="multipart/form-data" id="mainwp_managesites_bulkadd_form" class="ui form">
-                    <div class="ui segment">
-                        <div id="mainwp-message-zone" class="ui message" style="display:none"></div>
-                        <h2 class="ui dividing header">
-                            <?php echo esc_html( $title_page ); ?>
-                            <div class="sub header"><?php esc_html_e( 'Import multiple websites to your MainWP Dashboard.', 'mainwp' ); ?></div>
-                        </h2>
-                        <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
-                        <div class="ui grid field">
-                            <label class="three wide column middle aligned" for="mainwp_managesites_file_bulkupload"><?php esc_html_e( 'Upload CSV', 'mainwp' ); ?> (<a href="<?php echo esc_url( MAINWP_PLUGIN_URL . 'assets/csv/sample.csv' ); ?>"><?php esc_html_e( 'Download Sample', 'mainwp' ); ?></a>)</label>
-                            <div class="nine wide column">
-                                <div class="ui file input">
-                                <input type="file" name="mainwp_managesites_file_bulkupload" id="mainwp_managesites_file_bulkupload" accept="text/comma-separated-values"/>
-                                </div>
-                            </div>
-                            <div class="ui toggle checkbox four wide column middle aligned">
-                                <input type="checkbox" name="mainwp_managesites_chk_header_first" checked="checked" id="mainwp_managesites_chk_header_first" value="1"/>
-                                <label for="mainwp_managesites_chk_header_first"><?php esc_html_e( 'CSV file contains a header', 'mainwp' ); ?></label>
+                    <div id="mainwp-message-zone" class="ui message" style="display:none"></div>
+                    <h2 class="ui dividing header">
+                        <?php echo esc_html( $title_page ); ?>
+                        <div class="sub header"><?php esc_html_e( 'Import multiple websites to your MainWP Dashboard.', 'mainwp' ); ?></div>
+                    </h2>
+                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
+                    <div class="ui grid field">
+                        <label class="three wide column middle aligned" for="mainwp_managesites_file_bulkupload"><?php esc_html_e( 'Upload CSV', 'mainwp' ); ?> (<a href="<?php echo esc_url( MAINWP_PLUGIN_URL . 'assets/csv/sample.csv' ); ?>"><?php esc_html_e( 'Download Sample', 'mainwp' ); ?></a>)</label>
+                        <div class="nine wide column">
+                            <div class="ui file input">
+                            <input type="file" name="mainwp_managesites_file_bulkupload" id="mainwp_managesites_file_bulkupload" accept="text/comma-separated-values"/>
                             </div>
                         </div>
+                        <div class="ui toggle checkbox four wide column middle aligned">
+                            <input type="checkbox" name="mainwp_managesites_chk_header_first" checked="checked" id="mainwp_managesites_chk_header_first" value="1"/>
+                            <label for="mainwp_managesites_chk_header_first"><?php esc_html_e( 'CSV file contains a header', 'mainwp' ); ?></label>
+                        </div>
                     </div>
-                    <div class="ui segment">
-                        <div class="ui divider"></div>
-                        <input type="button" name="mainwp_managesites_add" id="mainwp_managesites_bulkadd" class="ui big green button" value="<?php echo esc_attr( $title_page ); ?>"/>
-                    </div>
+                    <div class="ui divider"></div>
+                    <input type="button" name="mainwp_managesites_add" id="mainwp_managesites_bulkadd" class="ui big green button" value="<?php echo esc_attr( $title_page ); ?>"/>
                 </form>
             </div>
             <?php
@@ -1449,7 +1458,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
         /**
          * Get getmetaboxes
          *
-         * Adds metaboxes (widgets) to the Overview page.
+         * Adds metaboxes (widgets) to the Operations page.
          *
          * @since Unknown
          */
