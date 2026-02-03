@@ -248,9 +248,8 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
      * @return WP_Error|WP_REST_Response
      */
 	public function list_posts( $request ) { // phpcs:ignore -- NOSONAR - complex.
-        $post_data      = array();
-        $utility        = MainWP_Utility::instance();
-        $system_utility = new MainWP_System_Utility();
+        $post_data = array();
+        $utility   = MainWP_Utility::instance();
         // Get params.
         $args      = $this->prepare_objects_query( $request, 'posts_fields' );
         $post_type = ! empty( $args['post_type'] ) ? $args['post_type'] : 'post';
@@ -258,14 +257,13 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
         $groups    = ! empty( $args['groups'] ) ? $args['groups'] : '';
         $sites     = ! empty( $args['websites'] ) ? $args['websites'] : '';
 
-        $search    = ! empty( $args['s'] ) ? $args['s'] : '';
         $post_data = array(
-            'keyword'    => $search,
+            'keyword'    => ! empty( $args['s'] ) ? $args['s'] : '',
             'search_on'  => ! empty( $args['search_on'] ) ? $args['search_on'] : '',
             'dtsstart'   => ! empty( $args['dtsstart'] ) ? $args['dtsstart'] : '',
             'dtsstop'    => ! empty( $args['dtsstop'] ) ? $args['dtsstop'] : '',
             'status'     => ! empty( $args['status'] ) ? $args['status'] : '',
-            'maxRecords' => ! empty( $args['maximum'] ) ? $args['maximum'] : 10,
+            'maxRecords' => ! empty( $args['maximum'] ) ? $args['maximum'] : 50,
         );
 
         if ( is_plugin_active( 'mainwp-custom-post-types/mainwp-custom-post-types.php' ) && 'any' === $post_type ) {
@@ -277,58 +275,22 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
             $post_data['WPSEOEnabled'] = 1;
         }
 
-        $website_url = array();
-        $db_websites = array();
-        if ( '' !== $sites ) {
-            foreach ( $sites as $v ) {
-                if ( $utility->ctype_digit( $v ) ) {
-                    $website = $this->db->get_website_by_id( $v );
-                    if ( empty( $website->sync_errors ) && ! $system_utility->is_suspended_site( $website ) ) {
-                        $db_websites[]               = $website->id;
-                        $website_url[ $website->id ] = $website->url;
-                    }
-                }
-            }
-        }
+        $filter_db_websites = $this->get_db_websites_by_filter( $sites, $groups, $clients );
 
-        if ( '' !== $groups ) {
-            foreach ( $groups as $v ) {
-                if ( $utility->ctype_digit( $v ) ) {
-                    $websites = $this->db->query( $this->db->get_sql_websites_by_group_id( $v ) );
-                    while ( $websites && ( $website = $this->db->fetch_object( $websites ) ) ) {
-                        if ( '' !== $website->sync_errors || $system_utility->is_suspended_site( $website ) ) {
-                            continue;
-                        }
-                        $db_websites[]               = $website->id;
-                        $website_url[ $website->id ] = $website->url;
-                    }
-                    $this->db->free_result( $websites );
-                }
-            }
-        }
-
-        if ( '' !== $clients && is_array( $clients ) ) {
-            $data_fields = $system_utility->get_default_map_site_fields();
-            $websites    = MainWP_DB_Client::instance()->get_websites_by_client_ids(
-                $clients,
-                array(
-                    'select_data' => $data_fields,
-                )
+        if ( empty( $filter_db_websites ) || ! is_array( $filter_db_websites ) ) {
+            return new WP_Error(
+                'website_not_found',
+                $this->get_common_message( 'website_not_found' )
             );
-
-            foreach ( $websites as $website ) {
-                if ( '' !== $website->sync_errors || $system_utility->is_suspended_site( $website ) ) {
-                    continue;
-                }
-                $db_websites[]               = $website->id;
-                $website_url[ $website->id ] = $website->url;
-            }
         }
+
+        $db_websites = $filter_db_websites['db_websites'] ?? array();
+        $website_url = $filter_db_websites['website_url'] ?? array();
 
         if ( empty( $db_websites ) ) {
             return new WP_Error(
-                'no_website_found',
-                __( 'No website found.', 'mainwp' ),
+                'website_not_found',
+                $this->get_common_message( 'website_not_found' )
             );
         }
 
@@ -834,7 +796,7 @@ class MainWP_Rest_Posts_Controller extends MainWP_REST_Controller { //phpcs:igno
                 'sanitize_callback' => 'absint',
                 'minimum'           => 1,
                 'maximum'           => 200,
-                'default'           => 10,
+                'default'           => 50,
                 'description'       => __( 'Maximum number of posts to return.', 'mainwp' ),
             ),
             'post_type' => array(

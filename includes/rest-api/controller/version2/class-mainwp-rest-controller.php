@@ -45,6 +45,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_DB_Client;
 use MainWP\Dashboard\MainWP_Utility;
+use MainWP\Dashboard\MainWP_System_Utility;
 use MainWP\Dashboard\MainWP_Connect;
 use MainWP\Dashboard\MainWP_Exception;
 use MainWP\Dashboard\MainWP_Error_Helper;
@@ -1868,5 +1869,82 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
             }
         }
         return true;
+    }
+
+    /**
+     * Get websites by filter.
+     *
+     * @param array $sites   Sites.
+     * @param array $groups  Groups.
+     * @param array $clients Clients.
+     *
+     * @return array
+     */
+    protected function get_db_websites_by_filter( $sites, $groups, $clients ) {  // phpcs:ignore -- NOSONAR - complex.
+        $utility        = MainWP_Utility::instance();
+        $system_utility = new MainWP_System_Utility();
+        $db             = MainWP_DB::instance();
+        $data_fields    = $system_utility->get_default_map_site_fields();
+        $data_fields[]  = 'users';
+
+        // Default result.
+        $website_url = array();
+        $db_websites = array();
+
+        if ( ! empty( $sites ) && is_array( $sites ) ) {
+            foreach ( $sites as $v ) {
+                if ( $utility->ctype_digit( $v ) ) {
+                    $website = $db->get_website_by_id( $v );
+                    if ( $website && empty( $website->sync_errors ) && ! $system_utility->is_suspended_site( $website ) ) {
+                        $db_websites[ $website->id ] = $utility->map_site(
+                            $website,
+                            $data_fields
+                        );
+                        $website_url[ $website->id ] = $website->url;
+                    }
+                }
+            }
+        }
+        if ( ! empty( $groups ) && is_array( $groups ) ) {
+            foreach ( $groups as $v ) {
+                if ( $utility->ctype_digit( $v ) ) {
+                    $websites = $db->query( $db->get_sql_websites_by_group_id( $v ) );
+                    while ( $websites && ( $website = $db->fetch_object( $websites ) ) ) {
+                        if ( ! empty( $website->sync_errors ) || $system_utility->is_suspended_site( $website ) ) {
+                            continue;
+                        }
+                        $db_websites[ $website->id ] = $utility->map_site(
+                            $website,
+                            $data_fields
+                        );
+                        $website_url[ $website->id ] = $website->url;
+                    }
+                    $db->free_result( $websites );
+                }
+            }
+        }
+
+        if ( ! empty( $clients ) && is_array( $clients ) ) {
+            $websites = MainWP_DB_Client::instance()->get_websites_by_client_ids(
+                $clients,
+                array(
+                    'select_data' => $data_fields,
+                )
+            );
+            if ( $websites ) {
+                foreach ( $websites as $website ) {
+                    if ( ! empty( $website->sync_errors ) || $system_utility->is_suspended_site( $website ) ) {
+                        continue;
+                    }
+                    $db_websites[ $website->id ] = $utility->map_site(
+                        $website,
+                        $data_fields
+                    );
+                    $website_url[ $website->id ] = $website->url;
+                }
+            }
+        }
+
+        return compact( 'db_websites', 'website_url' );
     }
 }
