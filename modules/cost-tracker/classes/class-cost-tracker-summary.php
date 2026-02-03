@@ -531,7 +531,7 @@ class Cost_Tracker_Summary {
         /**
          * Filter: mainwp_module_cost_tracker_summary_widgets_screen_options
          *
-         * Filters available widgets on the Operations page allowing users to unsent unwanted widgets.
+         * Filters available widgets on the Operations page allowing users to unset unwanted widgets.
          *
          * @since 4.6
          */

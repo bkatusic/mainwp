@@ -450,7 +450,7 @@ class MainWP_Client_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameL
         /**
          * Filter: mainwp_clients_widgets_screen_options
          *
-         * Filters available widgets on the Operations page allowing users to unsent unwanted widgets.
+         * Filters available widgets on the Operations page allowing users to unset unwanted widgets.
          *
          * @since 4.0
          */

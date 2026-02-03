@@ -1118,7 +1118,7 @@ class Log_Insights_Page { //phpcs:ignore -- NOSONAR - multi methods.
         /**
          * Filter: mainwp_module_log_widgets_screen_options
          *
-         * Filters available widgets on the Operations page allowing users to unsent unwanted widgets.
+         * Filters available widgets on the Operations page allowing users to unset unwanted widgets.
          *
          * @since 4.6
          */

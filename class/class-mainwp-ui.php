@@ -2732,7 +2732,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 /**
                  * Filter: mainwp_widgets_screen_options
                  *
-                 * Filters available widgets on the Operations page allowing users to unsent unwanted widgets.
+                 * Filters available widgets on the Operations page allowing users to unset unwanted widgets.
                  *
                  * @since 4.0
                  */

@@ -147,7 +147,7 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 'title'         => esc_html__( 'Content Operations', 'mainwp' ),
                 'parent_key'    => 'managesites',
                 'slug'          => 'Extensions-Mainwp-Content-Operations',
-                'href'          => 'admin.php?page=Extensions-Mainwp-Content-Operation',
+                'href'          => 'admin.php?page=Extensions-Mainwp-Content-Operations',
                 'leftsub_order' => 8,
                 'id'            => 'mainwp-content-operations-extensions-category',
                 'level'         => 1,
