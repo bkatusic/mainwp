@@ -2307,7 +2307,7 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
      * @param  bool   $more_entropy More entropy False if a robust prefix is required, default false.
      * @return string Random ID 8 characters.
      */
-    public static function gen_rand_id( $str, $more_entropy = false ) {
+    public static function gen_rand_id( $str = "", $more_entropy = false ) {
         return hash( 'crc32b', uniqid( $str, $more_entropy ? true : false ) );
     }
 }
