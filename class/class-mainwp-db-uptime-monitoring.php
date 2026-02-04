@@ -572,7 +572,7 @@ KEY idx_wpid_issub (wpid, issub)";
      * @return mixed
      */
     public function get_uptime_notification_to_start_send( $limit = 50, $global_active = 1 ) {
-        $table_monitors          = esc_sql( $this->table_name( 'monitors' ) );
+        $table_monitors           = esc_sql( $this->table_name( 'monitors' ) );
         $table_schedule_processes = esc_sql( $this->table_name( 'schedule_processes' ) );
 
         $sql = $this->wpdb->prepare(
@@ -1655,5 +1655,35 @@ KEY idx_wpid_issub (wpid, issub)";
         );
 
         return $this->wpdb->get_results( $sql );
+    }
+
+    /**
+     * Cleanup monitoring data.
+     *
+     * @param int $days Days to keep monitoring data.
+     *
+     * @return int Deleted results.
+     */
+    public function cleanup_heartbeat_data( $days ) {
+        $table_monitor_heartbeat = esc_sql( $this->table_name( 'monitor_heartbeat' ) );
+        $time                    = time() - $days * DAY_IN_SECONDS;
+        $datetime                = gmdate( 'Y-m-d H:i:s', $time );
+
+        $max_batches = 10; // max 10k rows per run.
+        $batches     = 0;
+
+        do {
+            $rows = $this->wpdb->query(
+                $this->wpdb->prepare(
+                    "DELETE FROM {$table_monitor_heartbeat}
+                    WHERE `time` < %s
+                    ORDER BY `time`
+                    LIMIT %d",
+                    $datetime,
+                    1000
+                )
+            );
+            ++$batches;
+        } while ( 1000 === $rows && $batches < $max_batches );
     }
 }

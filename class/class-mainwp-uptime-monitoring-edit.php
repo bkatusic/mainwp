@@ -197,6 +197,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                     exit();
                 }
             } else {
+                $update['retention_limits'] = isset( $_POST['mainwp_edit_monitor_retention_days'] ) ? intval( $_POST['mainwp_edit_monitor_retention_days'] ) : 180;
                 MainWP_Uptime_Monitoring_Handle::update_uptime_global_settings( $update );
             }
         }
@@ -579,8 +580,39 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                     </div>
             </div>
 
-            <?php if ( $individual ) { ?>
+            <?php if ( ! $individual ) {
+                if( ! isset( $mo_settings['retention_limits'] ) ) {
+                    $mo_settings['retention_limits'] = 180;
+                }
+                ?>
+             <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-monitor-general" default-indi-value="180">
+                <label class="six wide column middle aligned">
                 <?php
+                $show_indi = 180 !== (int) $mo_settings['retention_limits'] ? 1 : 0;
+                MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $show_indi );
+                esc_html_e( 'Monitoring Data Retention', 'mainwp' );
+                ?>
+                </label>
+                <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Automatically remove old heartbeat monitoring data to keep the Dashboard database size under control.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                    <select name="mainwp_edit_monitor_retention_days" id="mainwp_edit_monitor_retention_days" class="ui dropdown settings-field-value-change-handler">
+                    <?php
+                    $retention_options = array(
+                        0   => __( 'Keep forever (no automatic cleanup)', 'mainwp' ),
+                        30  => __( '30 days', 'mainwp' ),
+                        90  => __( '90 days (3 months)', 'mainwp' ),
+                        180 => __( '180 days (6 months)', 'mainwp' ),
+                        365 => __( '365 days (1 year)', 'mainwp' ),
+                    );
+                    foreach ( $retention_options as $val => $label ) {
+                        ?>
+                        <option value="<?php echo esc_attr( $val ); ?>" <?php echo intval( $mo_settings['retention_limits'] ) === $val ? 'selected' : ''; ?>><?php echo esc_html( $label ); ?></option>
+                        <?php
+                    }
+                    ?>
+                    </select>
+                </div>
+            </div>
+            <?php }  else {
 
                 if ( ! $edit_sub_monitor ) {
 
