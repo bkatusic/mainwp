@@ -856,7 +856,8 @@ class MainWP_Uptime_Monitoring_Connect { // phpcs:ignore Generic.Classes.Opening
             if ( $max_retries > 0 && $monitor->retries < $max_retries ) {
                 $status = static::PENDING; // to retry.
                 ++$down_count;
-                MainWP_DB_Uptime_Monitoring::instance()->update_monitor_increase_retry( $monitor->monitor_id );
+                $set_retry = true;
+                MainWP_Logger::instance()->log_uptime_check( 'Uptime Down status - set retry :: [site-id=' . (string) $monitor->wpid . ']' );
             }
         }
 
