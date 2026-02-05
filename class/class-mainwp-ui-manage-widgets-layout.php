@@ -45,7 +45,7 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
     /**
      * Constructor.
      *
-     * Pupblic constructor to enforce singleton pattern.
+     * Public constructor to enforce singleton pattern.
      */
     public function __construct() {
     }
