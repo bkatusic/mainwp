@@ -29,7 +29,7 @@ class MainWP_System { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
      *
      * @var string Current plugin version.
      */
-    public static $version = '6.0-er.10'; // NOSONAR.
+    public static $version = '6.0-er.11'; // NOSONAR.
 
     /**
      * Private static variable to hold the single instance of the class.
