@@ -199,6 +199,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
             } else {
                 $update['retention_limits'] = isset( $_POST['mainwp_edit_monitor_retention_days'] ) ? intval( $_POST['mainwp_edit_monitor_retention_days'] ) : 180;
                 MainWP_Uptime_Monitoring_Handle::update_uptime_global_settings( $update );
+                MainWP_Utility::update_option( 'mainwp_uptime_monitor_cleanup_heartbeat_at', 0 ); // reset cleanup heartbeat to run on next process.
             }
         }
     }
