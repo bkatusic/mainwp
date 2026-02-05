@@ -89,7 +89,7 @@ class MainWP_Manage_Screenshots { // phpcs:ignore Generic.Classes.OpeningBraceSa
             </div>
 
             <div class="row ui mini form manage-sites-screenshots-filter-top" id="mainwp-sites-filters-row" style="<?php echo esc_attr( $filters_row_style ); ?>">
-                <div class="thirteen wide middle aligned column ui grid">
+                <div class="twelve wide middle aligned column ui grid">
                     <div class="ui selection dropdown seg_is_not" id="mainwp_is_not_site">
                             <input type="hidden" value="<?php echo $is_not ? 'yes' : ''; ?>">
                             <i class="dropdown icon"></i>
@@ -236,7 +236,7 @@ class MainWP_Manage_Screenshots { // phpcs:ignore Generic.Classes.OpeningBraceSa
 
         ?>
 
-        <div id="mainwp-screenshots-sites" class="ui segment">
+        <div id="mainwp-screenshots-sites" class="ui padded segment">
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-grid-view-mode-info-message' ) ) : ?>
             <div class="ui info message">
                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-grid-view-mode-info-message"></i>

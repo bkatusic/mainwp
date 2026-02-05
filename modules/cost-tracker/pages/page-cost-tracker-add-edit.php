@@ -161,7 +161,7 @@ class Cost_Tracker_Add_Edit {
 
         ?>
         <div class="mainwp-main-content">
-            <div>
+            <div class="ui segment">
                 <?php
                 if ( isset( $_GET['message'] ) && ! empty( $_GET['message'] ) ) { //phpcs:ignore WordPress.Security.NonceVerification.Recommended
                     $msg     = (int) $_GET['message']; //phpcs:ignore WordPress.Security.NonceVerification.Recommended

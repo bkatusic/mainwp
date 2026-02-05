@@ -235,13 +235,7 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
             <?php else : ?>
             <?php $this->render_actions_bar(); ?>
             <?php static::render_manage_tasks_table_top( $sel_ids ); ?>
-            <div class="ui segment">
-                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'manage-cost-info-notice' ) ) : ?>
-                    <div class="ui info message" style="margin-bottom:0px;">
-                        <i class="close icon mainwp-notice-dismiss" notice-id="manage-cost-info-notice"></i>
-                        <?php esc_html_e( 'View and manage all your tracked costs and renewals.', 'mainwp' ); ?>
-                    </div>
-                    <?php endif; ?>
+            <div class="ui padded segment">
                 <?php $this->render_dashboard_body(); ?>
             </div>
             <?php endif; ?>
@@ -659,12 +653,22 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
                                 dt.rows(indexes)
                                 .nodes()
                                 .to$().find('td.check-column .ui.checkbox' ).checkbox('set checked');
+                                let selectedCount = dt.rows({ selected: true }).count();
+                                if (selectedCount > 0) {
+                                    jQuery('#mwp_cost_tracker_bulk_action').parent('.ui.dropdown').removeClass('disabled');
+                                    jQuery('#mainwp_module_cost_tracker_action_btn').removeClass('disabled');
+                                }
                             }
                         }).on('deselect', function (e, dt, type, indexes) {
                             if( 'row' == type ){
                                 dt.rows(indexes)
                                 .nodes()
                                 .to$().find('td.check-column .ui.checkbox' ).checkbox('set unchecked');
+                                let selectedCount = dt.rows({ selected: true }).count();
+                                if (selectedCount === 0) {
+                                    jQuery('#mwp_cost_tracker_bulk_action').parent('.ui.dropdown').addClass('disabled');
+                                    jQuery('#mainwp_module_cost_tracker_action_btn').addClass('disabled');
+                                }
                             }
                         }).on( 'columns-reordered', function () {
                             setTimeout(() => {
@@ -1144,11 +1148,11 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
         <div class="mainwp-sub-header">
             <div class="ui two columns grid">
                 <div class="column ui mini form">
-                    <select class="ui dropdown" id="mwp_cost_tracker_bulk_action">
+                    <select class="ui dropdown disabled" id="mwp_cost_tracker_bulk_action">
                         <option value="-1"><?php esc_html_e( 'Bulk actions', 'mainwp' ); ?></option>
                         <option value="delete-sub"><?php esc_html_e( 'Delete', 'mainwp' ); ?></option>
                     </select>
-                    <input type="button" name="mainwp_module_cost_tracker_action_btn" id="mainwp_module_cost_tracker_action_btn" class="ui basic mini button" value="<?php esc_html_e( 'Apply', 'mainwp' ); ?>"/>
+                    <input type="button" name="mainwp_module_cost_tracker_action_btn" id="mainwp_module_cost_tracker_action_btn" class="ui basic mini button disabled" value="<?php esc_html_e( 'Apply', 'mainwp' ); ?>"/>
                     <?php do_action( 'mainwp_module_cost_tracker_actions_bar_left' ); ?>
                 </div>
                 <div class="right aligned middle aligned column">

@@ -89,7 +89,7 @@ class MainWP_Manage_Sites_Update_View { // phpcs:ignore Generic.Classes.OpeningB
         // phpcs:enable
         MainWP_Manage_Sites_View::render_header_tabs( $active_tab, $active_text, $mainwp_show_language_updates )
         ?>
-        <div class="ui segment" id="mainwp-manage-<?php echo intval( $id ); ?>-updates">
+        <div class="ui padded segment" id="mainwp-manage-<?php echo intval( $id ); ?>-updates">
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-manage-updates-site-message' ) ) : ?>
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-manage-updates-site-message"></i>

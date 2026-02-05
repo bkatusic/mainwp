@@ -482,7 +482,7 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         </div>
                     </div>
                 </div>
-                <div class="ui segment" id="mainwp_pages_wrap_table">
+                <div class="ui padded segment" id="mainwp_pages_wrap_table">
                     <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-manage-pages-info-message' ) ) : ?>
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-manage-pages-info-message"></i>

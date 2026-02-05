@@ -683,7 +683,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
      */
     public static function render_header_tabs( $active_tab, $active_text, $show_language_updates ) {
         ?>
-        <div class="mainwp-sub-header">
+        <div class="mainwp-actions-bar">
             <div class="ui grid">
                 <div class="equal width row">
                     <div class="middle aligned column">
@@ -720,8 +720,8 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     ?>
                     </div>
                     <div class="middle aligned right aligned column select-buttons-individual-updates">
-                            <?php echo '<a href="javascript:void(0)" data-tooltip="' . esc_html__( 'Update Selected Plugins.', 'mainwp' ) . '" onClick="updatesoverview_plugins_global_upgrade_all( false, true ); return false;" class="ui mini green basic button plugins ' . ( 'plugins' === $active_tab ? '' : 'hidden' ) . '  "data-inverted="" data-position="top right">' . esc_html__( 'Update Selected', 'mainwp' ) . '</a>'; ?>
-                            <?php echo '<a href="javascript:void(0)" onClick="updatesoverview_themes_global_upgrade_all( false, true );return false;" class="ui mini green basic button themes ' . ( 'themes' === $active_tab ? '' : 'hidden' ) . '" data-tooltip="' . esc_html__( 'Update Selected Themes.', 'mainwp' ) . '" data-inverted="" data-position="top right">' . esc_html__( 'Update Selected', 'mainwp' ) . '</a>'; ?>
+                        <?php echo '<a href="javascript:void(0)" data-tooltip="' . esc_html__( 'Update Selected Plugins.', 'mainwp' ) . '" onClick="updatesoverview_plugins_global_upgrade_all( false, true ); return false;" class="ui mini green basic button plugins ' . ( 'plugins' === $active_tab ? '' : 'hidden' ) . '  "data-inverted="" data-position="top right">' . esc_html__( 'Update Selected', 'mainwp' ) . '</a>'; ?>
+                        <?php echo '<a href="javascript:void(0)" onClick="updatesoverview_themes_global_upgrade_all( false, true );return false;" class="ui mini green basic button themes ' . ( 'themes' === $active_tab ? '' : 'hidden' ) . '" data-tooltip="' . esc_html__( 'Update Selected Themes.', 'mainwp' ) . '" data-inverted="" data-position="top right">' . esc_html__( 'Update Selected', 'mainwp' ) . '</a>'; ?>
                     </div>
                 </div>
             </div>
@@ -744,14 +744,14 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
             return;
         }
         ?>
-        <div class="mainwp-sub-header">
+        <div class="mainwp-actions-bar">
             <div class="ui one column grid">
-                <div class="right aligned column">
-                    <input type="button" id="securityIssues_refresh" class="ui mini green basic button" value="<?php esc_html_e( 'Scan Site', 'mainwp' ); ?>"/>
+                <div class="column">
+                    <input type="button" id="securityIssues_refresh" class="ui mini green button" value="<?php esc_html_e( 'Scan Site', 'mainwp' ); ?>"/>
                 </div>
             </div>
         </div>
-        <div class="ui segment">
+        <div class="ui padded segment">
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-manage-security-info-message' ) ) { ?>
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-manage-security-info-message"></i>
@@ -873,7 +873,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
         $text_use_global = esc_html__( 'Use global setting', 'mainwp' );
         $style_checked   = 'checked="true"';
         ?>
-        <div class="ui segment mainwp-edit-site-<?php echo intval( $website->id ); ?>" id="mainwp-edit-site">
+        <div class="ui padded segment mainwp-edit-site-<?php echo intval( $website->id ); ?>" id="mainwp-edit-site">
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-edit-site-info-message' ) ) { ?>
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-edit-site-info-message"></i>

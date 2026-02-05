@@ -750,299 +750,294 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
 
         static::render_header( '' );
         ?>
-        <div id="mainwp-general-settings" class="ui segment">
-            <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-general-settings-info-message' ) ) : ?>
-                <div class="ui info message">
-                    <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-general-settings-info-message"></i>
-                    <?php printf( esc_html__( 'Manage MainWP general settings.  For additional help, review this %1$shelp document%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/management/mainwp-dashboard-settings" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
-                </div>
+        <div id="mainwp-general-settings" class="ui padded segment">
+            
+            <?php if ( isset( $_GET['message'] ) && 'saved' === $_GET['message'] ) : // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized ?>
+                <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'Settings have been saved successfully!', 'mainwp' ); ?></div>
             <?php endif; ?>
-                <?php if ( isset( $_GET['message'] ) && 'saved' === $_GET['message'] ) : // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized ?>
-                    <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'Settings have been saved successfully!', 'mainwp' ); ?></div>
-                <?php endif; ?>
-                <div class="ui form">
-                    <form method="POST" action="admin.php?page=Settings" id="mainwp-settings-page-form">
-                        <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
-                        <input type="hidden" name="wp_nonce" value="<?php echo esc_attr( wp_create_nonce( 'Settings' ) ); ?>" />
-                        <?php
-                        /**
-                         * Action: mainwp_settings_form_top
-                         *
-                         * Fires at the top of settings form.
-                         *
-                         * @since 4.1
-                         */
-                        do_action( 'mainwp_settings_form_top' );
-                        ?>
-                        <h3 class="ui dividing header">
-                        <?php MainWP_Settings_Indicator::render_indicator( 'header', 'settings-field-indicator-general' ); ?>
-                        <?php esc_html_e( 'General Settings', 'mainwp' ); ?></h3>
-                        <?php
-                        $timeDailyUpdate      = get_option( 'mainwp_timeDailyUpdate' );
-                        $frequencyDailyUpdate = (int) get_option( 'mainwp_frequencyDailyUpdate', 2 );
-                        $run_timestamp        = MainWP_System_Cron_Jobs::get_timestamp_from_hh_mm( $timeDailyUpdate );
-                        $delay_autoupdate     = (int) get_option( 'mainwp_delay_autoupdate', 1 );
+            <div class="ui form">
+                <form method="POST" action="admin.php?page=Settings" id="mainwp-settings-page-form">
+                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
+                    <input type="hidden" name="wp_nonce" value="<?php echo esc_attr( wp_create_nonce( 'Settings' ) ); ?>" />
+                    <?php
+                    /**
+                     * Action: mainwp_settings_form_top
+                     *
+                     * Fires at the top of settings form.
+                     *
+                     * @since 4.1
+                     */
+                    do_action( 'mainwp_settings_form_top' );
+                    ?>
+                    <h3 class="ui dividing header">
+                    <?php MainWP_Settings_Indicator::render_indicator( 'header', 'settings-field-indicator-general' ); ?>
+                    <?php esc_html_e( 'General Settings', 'mainwp' ); ?></h3>
+                    <?php
+                    $timeDailyUpdate      = get_option( 'mainwp_timeDailyUpdate' );
+                    $frequencyDailyUpdate = (int) get_option( 'mainwp_frequencyDailyUpdate', 2 );
+                    $run_timestamp        = MainWP_System_Cron_Jobs::get_timestamp_from_hh_mm( $timeDailyUpdate );
+                    $delay_autoupdate     = (int) get_option( 'mainwp_delay_autoupdate', 1 );
 
+                    ?>
+                    <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-general">
+                        <label class="six wide column middle aligned">
+                        <?php
+                        MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_timeDailyUpdate', $timeDailyUpdate );
+                        esc_html_e( 'Daily sync time', 'mainwp' );
                         ?>
-                        <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-general">
-                            <label class="six wide column middle aligned">
-                            <?php
-                            MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_timeDailyUpdate', $timeDailyUpdate );
-                            esc_html_e( 'Daily sync time', 'mainwp' );
-                            ?>
-                            </label>
-                            <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Choose a specific time to initiate the first daily synchronization process.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
-                                <div class="time-selector">
-                                    <div class="ui input left icon">
-                                        <i class="clock icon"></i>
-                                        <input type="text" class="settings-field-value-change-handler" current-utc-datetime="<?php echo esc_attr( gmdate( 'Y-m-d H:i:s' ) ); ?>" sync-time-local-datetime="<?php echo esc_attr( gmdate( 'Y-m-d H:i:s', $run_timestamp ) ); ?>" local-datetime="<?php echo esc_attr( gmdate( 'Y-m-d H:i:s', MainWP_Utility::get_timestamp() ) ); // phpcs:ignore -- to get local time. ?>" name="mainwp_timeDailyUpdate" id="mainwp_timeDailyUpdate" value="<?php echo esc_attr( $timeDailyUpdate ); ?>" />
-                                    </div>
+                        </label>
+                        <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Choose a specific time to initiate the first daily synchronization process.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                            <div class="time-selector">
+                                <div class="ui input left icon">
+                                    <i class="clock icon"></i>
+                                    <input type="text" class="settings-field-value-change-handler" current-utc-datetime="<?php echo esc_attr( gmdate( 'Y-m-d H:i:s' ) ); ?>" sync-time-local-datetime="<?php echo esc_attr( gmdate( 'Y-m-d H:i:s', $run_timestamp ) ); ?>" local-datetime="<?php echo esc_attr( gmdate( 'Y-m-d H:i:s', MainWP_Utility::get_timestamp() ) ); // phpcs:ignore -- to get local time. ?>" name="mainwp_timeDailyUpdate" id="mainwp_timeDailyUpdate" value="<?php echo esc_attr( $timeDailyUpdate ); ?>" />
                                 </div>
                             </div>
                         </div>
-                        <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-general" default-indi-value="2">
-                            <label class="six wide column middle aligned">
-                            <?php
-                            MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_frequencyDailyUpdate', $frequencyDailyUpdate );
-                            esc_html_e( 'Frequency of auto sync', 'mainwp' );
-                            ?>
-                            </label>
-                            <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Set the frequency for automatic synchronization throughout the day.', 'mainwp' ); ?>" data-inverted="" data-position="top left" >
-                                <select name="mainwp_frequencyDailyUpdate" id="mainwp_frequencyDailyUpdate" class="ui dropdown settings-field-value-change-handler">
-                                    <option value="1" <?php echo 1 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Once per day', 'mainwp' ); ?></option>
-                                    <option value="2" <?php echo 2 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Twice per day', 'mainwp' ); ?></option>
-                                    <option value="3" <?php echo 3 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Three times per day', 'mainwp' ); ?></option>
-                                    <option value="4" <?php echo 4 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Four times per day', 'mainwp' ); ?></option>
-                                    <option value="5" <?php echo 5 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Five times per day', 'mainwp' ); ?></option>
-                                    <option value="6" <?php echo 6 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Six times per day', 'mainwp' ); ?></option>
-                                    <option value="7" <?php echo 7 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Seven times per day', 'mainwp' ); ?></option>
-                                    <option value="8" <?php echo 8 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Eight times per day', 'mainwp' ); ?></option>
-                                    <option value="9" <?php echo 9 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Nine times per day', 'mainwp' ); ?></option>
-                                    <option value="10" <?php echo 10 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Ten times per day', 'mainwp' ); ?></option>
-                                    <option value="11" <?php echo 11 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Eleven times per day', 'mainwp' ); ?></option>
-                                    <option value="12" <?php echo 12 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Twelve times per day', 'mainwp' ); ?></option>
-                                </select>
-                            </div>
+                    </div>
+                    <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-general" default-indi-value="2">
+                        <label class="six wide column middle aligned">
+                        <?php
+                        MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_frequencyDailyUpdate', $frequencyDailyUpdate );
+                        esc_html_e( 'Frequency of auto sync', 'mainwp' );
+                        ?>
+                        </label>
+                        <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Set the frequency for automatic synchronization throughout the day.', 'mainwp' ); ?>" data-inverted="" data-position="top left" >
+                            <select name="mainwp_frequencyDailyUpdate" id="mainwp_frequencyDailyUpdate" class="ui dropdown settings-field-value-change-handler">
+                                <option value="1" <?php echo 1 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Once per day', 'mainwp' ); ?></option>
+                                <option value="2" <?php echo 2 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Twice per day', 'mainwp' ); ?></option>
+                                <option value="3" <?php echo 3 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Three times per day', 'mainwp' ); ?></option>
+                                <option value="4" <?php echo 4 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Four times per day', 'mainwp' ); ?></option>
+                                <option value="5" <?php echo 5 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Five times per day', 'mainwp' ); ?></option>
+                                <option value="6" <?php echo 6 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Six times per day', 'mainwp' ); ?></option>
+                                <option value="7" <?php echo 7 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Seven times per day', 'mainwp' ); ?></option>
+                                <option value="8" <?php echo 8 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Eight times per day', 'mainwp' ); ?></option>
+                                <option value="9" <?php echo 9 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Nine times per day', 'mainwp' ); ?></option>
+                                <option value="10" <?php echo 10 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Ten times per day', 'mainwp' ); ?></option>
+                                <option value="11" <?php echo 11 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Eleven times per day', 'mainwp' ); ?></option>
+                                <option value="12" <?php echo 12 === $frequencyDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Twelve times per day', 'mainwp' ); ?></option>
+                            </select>
                         </div>
-                        <script type="text/javascript">
-                            jQuery( document ).ready( function() {
-                                jQuery( '.time-selector' ).calendar( {
-                                    type: 'time',
-                                    ampm: false,
-                                    formatter: {
-                                        time: 'H:mm',
-                                        cellTime: 'H:mm'
-                                    }
-                                } );
+                    </div>
+                    <script type="text/javascript">
+                        jQuery( document ).ready( function() {
+                            jQuery( '.time-selector' ).calendar( {
+                                type: 'time',
+                                ampm: false,
+                                formatter: {
+                                    time: 'H:mm',
+                                    cellTime: 'H:mm'
+                                }
                             } );
-                        </script>
+                        } );
+                    </script>
 
+                    <?php
+
+                    static::render_timezone_settings();
+                    static::render_datetime_settings();
+
+                    $sidebarPosition = get_user_option( 'mainwp_sidebarPosition' );
+                    if ( false === $sidebarPosition ) {
+                        $sidebarPosition = 1;
+                    }
+
+                    ?>
+                    <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-general" default-indi-value="1">
+                        <label class="six wide column middle aligned">
                         <?php
-
-                        static::render_timezone_settings();
-                        static::render_datetime_settings();
-
-                        $sidebarPosition = get_user_option( 'mainwp_sidebarPosition' );
-                        if ( false === $sidebarPosition ) {
-                            $sidebarPosition = 1;
-                        }
-
+                        MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_sidebarPosition', (int) $sidebarPosition );
+                        esc_html_e( 'Sidebar position', 'mainwp' );
                         ?>
-                        <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-general" default-indi-value="1">
-                            <label class="six wide column middle aligned">
-                            <?php
-                            MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_sidebarPosition', (int) $sidebarPosition );
-                            esc_html_e( 'Sidebar position', 'mainwp' );
-                            ?>
-                            </label>
-                            <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Select if you want to show sidebar with option on left or right.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
-                                <select name="mainwp_sidebarPosition" id="mainwp_sidebarPosition" class="ui dropdown settings-field-value-change-handler">
-                                    <option value="1" <?php echo 1 === (int) $sidebarPosition ? 'selected' : ''; ?>><?php esc_html_e( 'Right (default)', 'mainwp' ); ?></option>
-                                    <option value="0" <?php echo 0 === (int) $sidebarPosition ? 'selected' : ''; ?>><?php esc_html_e( 'Left', 'mainwp' ); ?></option>
-                                </select>
-                            </div>
+                        </label>
+                        <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Select if you want to show sidebar with option on left or right.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
+                            <select name="mainwp_sidebarPosition" id="mainwp_sidebarPosition" class="ui dropdown settings-field-value-change-handler">
+                                <option value="1" <?php echo 1 === (int) $sidebarPosition ? 'selected' : ''; ?>><?php esc_html_e( 'Right (default)', 'mainwp' ); ?></option>
+                                <option value="0" <?php echo 0 === (int) $sidebarPosition ? 'selected' : ''; ?>><?php esc_html_e( 'Left', 'mainwp' ); ?></option>
+                            </select>
                         </div>
-                        <?php MainWP_UI::render_screen_options(); ?>
+                    </div>
+                    <?php MainWP_UI::render_screen_options(); ?>
 
-                        <h3 class="ui dividing header">
-                        <?php MainWP_Settings_Indicator::render_indicator( 'header', 'settings-field-indicator-updates' ); ?>
-                        <?php esc_html_e( 'Updates Settings', 'mainwp' ); ?></h3>
+                    <h3 class="ui dividing header">
+                    <?php MainWP_Settings_Indicator::render_indicator( 'header', 'settings-field-indicator-updates' ); ?>
+                    <?php esc_html_e( 'Updates Settings', 'mainwp' ); ?></h3>
+                    <?php
+                    $snAutomaticDailyUpdate       = (int) get_option( 'mainwp_automaticDailyUpdate', 0 );
+                    $snPluginAutomaticDailyUpdate = (int) get_option( 'mainwp_pluginAutomaticDailyUpdate', 0 );
+                    $snThemeAutomaticDailyUpdate  = (int) get_option( 'mainwp_themeAutomaticDailyUpdate', 0 );
+                    $snTransAutomaticUpdate       = (int) get_option( 'mainwp_transAutomaticDailyUpdate', 0 );
+
+                    $backup_before_upgrade             = get_option( 'mainwp_backup_before_upgrade' );
+                    $mainwp_backup_before_upgrade_days = get_option( 'mainwp_backup_before_upgrade_days' );
+                    if ( empty( $mainwp_backup_before_upgrade_days ) || ! ctype_digit( $mainwp_backup_before_upgrade_days ) ) {
+                        $mainwp_backup_before_upgrade_days = 7;
+                    }
+                    $mainwp_show_language_updates = get_option( 'mainwp_show_language_updates', 1 );
+                    $enableLegacyBackupFeature    = get_option( 'mainwp_enableLegacyBackupFeature' );
+                    $primaryBackup                = get_option( 'mainwp_primaryBackup' );
+                    $disableUpdateConfirmations   = (int) get_option( 'mainwp_disable_update_confirmations', 0 );
+                    ?>
+                    <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates">
+                        <label class="six wide column middle aligned">
                         <?php
-                        $snAutomaticDailyUpdate       = (int) get_option( 'mainwp_automaticDailyUpdate', 0 );
-                        $snPluginAutomaticDailyUpdate = (int) get_option( 'mainwp_pluginAutomaticDailyUpdate', 0 );
-                        $snThemeAutomaticDailyUpdate  = (int) get_option( 'mainwp_themeAutomaticDailyUpdate', 0 );
-                        $snTransAutomaticUpdate       = (int) get_option( 'mainwp_transAutomaticDailyUpdate', 0 );
-
-                        $backup_before_upgrade             = get_option( 'mainwp_backup_before_upgrade' );
-                        $mainwp_backup_before_upgrade_days = get_option( 'mainwp_backup_before_upgrade_days' );
-                        if ( empty( $mainwp_backup_before_upgrade_days ) || ! ctype_digit( $mainwp_backup_before_upgrade_days ) ) {
-                            $mainwp_backup_before_upgrade_days = 7;
-                        }
-                        $mainwp_show_language_updates = get_option( 'mainwp_show_language_updates', 1 );
-                        $enableLegacyBackupFeature    = get_option( 'mainwp_enableLegacyBackupFeature' );
-                        $primaryBackup                = get_option( 'mainwp_primaryBackup' );
-                        $disableUpdateConfirmations   = (int) get_option( 'mainwp_disable_update_confirmations', 0 );
+                        MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_pluginAutomaticDailyUpdate', $snPluginAutomaticDailyUpdate );
+                        esc_html_e( 'Plugin advanced automatic updates', 'mainwp' );
                         ?>
-                        <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates">
-                            <label class="six wide column middle aligned">
-                            <?php
-                            MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_pluginAutomaticDailyUpdate', $snPluginAutomaticDailyUpdate );
-                            esc_html_e( 'Plugin advanced automatic updates', 'mainwp' );
-                            ?>
-                            </label>
-                            <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Enable or disable automatic plugin updates. If enabled, MainWP will update only plugins that you have marked as Trusted.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
-                                <select name="mainwp_pluginAutomaticDailyUpdate" id="mainwp_pluginAutomaticDailyUpdate" class="ui dropdown settings-field-value-change-handler">
-                                    <option value="1" <?php echo 1 === $snPluginAutomaticDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Install Trusted Updates', 'mainwp' ); ?></option>
-                                    <option value="0" <?php echo 0 === $snPluginAutomaticDailyUpdate || 2 === $snPluginAutomaticDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Disabled', 'mainwp' ); ?></option>
-                                </select>
-                            </div>
+                        </label>
+                        <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Enable or disable automatic plugin updates. If enabled, MainWP will update only plugins that you have marked as Trusted.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                            <select name="mainwp_pluginAutomaticDailyUpdate" id="mainwp_pluginAutomaticDailyUpdate" class="ui dropdown settings-field-value-change-handler">
+                                <option value="1" <?php echo 1 === $snPluginAutomaticDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Install Trusted Updates', 'mainwp' ); ?></option>
+                                <option value="0" <?php echo 0 === $snPluginAutomaticDailyUpdate || 2 === $snPluginAutomaticDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Disabled', 'mainwp' ); ?></option>
+                            </select>
                         </div>
-                        <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates">
-                            <label class="six wide column middle aligned">
-                            <?php
-                            MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_themeAutomaticDailyUpdate', $snThemeAutomaticDailyUpdate );
-                            esc_html_e( 'Theme advanced automatic updates', 'mainwp' );
-                            ?>
-                            </label>
-                            <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Enable or disable automatic theme updates. If enabled, MainWP will update only themes that you have marked as Trusted.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
-                                <select name="mainwp_themeAutomaticDailyUpdate" id="mainwp_themeAutomaticDailyUpdate" class="ui dropdown settings-field-value-change-handler">
-                                    <option value="1" <?php echo 1 === $snThemeAutomaticDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Install Trusted Updates', 'mainwp' ); ?></option>
-                                    <option value="0" <?php echo 0 === $snThemeAutomaticDailyUpdate || 2 === $snThemeAutomaticDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Disabled', 'mainwp' ); ?></option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates">
-                            <label class="six wide column middle aligned">
-                            <?php
-                            MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_stransAutomaticUpdate', $snTransAutomaticUpdate );
-                            esc_html_e( 'Translation advanced automatic updates', 'mainwp' );
-                            ?>
-                            </label>
-                            <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Enable or disable automatic Translation updates.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
-                                <select name="mainwp_transAutomaticDailyUpdate" id="mainwp_transAutomaticDailyUpdate" class="ui dropdown settings-field-value-change-handler">
-                                    <option value="1" <?php echo 1 === $snTransAutomaticUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Install Trusted Updates', 'mainwp' ); ?></option>
-                                    <option value="0" <?php echo 0 === $snTransAutomaticUpdate || 2 === (int) $snTransAutomaticUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Disabled', 'mainwp' ); ?></option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates">
-                            <label class="six wide column middle aligned">
-                            <?php
-                            MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_automaticDailyUpdate', $snAutomaticDailyUpdate );
-                            esc_html_e( 'WP Core advanced automatic updates', 'mainwp' );
-                            ?>
-                            </label>
-                            <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Enable or disable automatic WordPress core updates.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
-                                <select name="mainwp_automaticDailyUpdate" id="mainwp_automaticDailyUpdate" class="ui dropdown settings-field-value-change-handler">
-                                    <option value="1" <?php echo 1 === $snAutomaticDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Install Trusted Updates', 'mainwp' ); ?></option>
-                                    <option value="0" <?php echo 0 === $snAutomaticDailyUpdate || 2 === (int) $snAutomaticDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Disabled', 'mainwp' ); ?></option>
-                                </select>
-                            </div>
-                        </div>
-                        <?php static::render_auto_updates_settings(); ?>
-                        <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates" default-indi-value="1">
-                            <label class="six wide column middle aligned">
-                            <?php
-                            MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_delay_autoupdate', $delay_autoupdate );
-                            esc_html_e( 'Advanced automatic updates delay', 'mainwp' );
-                            ?>
-                            </label>
-                            <div class="ten wide column ui input" data-tooltip="<?php esc_attr_e( 'Set the number of days to delay automatic updates.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
-                                <select name="mainwp_delay_autoupdate" id="mainwp_delay_autoupdate" class="ui dropdown settings-field-value-change-handler">
-                                    <option value="0" <?php echo 0 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( 'Delay off', 'mainwp' ); ?></option>
-                                    <option value="1" <?php echo 1 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '1 day', 'mainwp' ); ?></option>
-                                    <option value="2" <?php echo 2 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '2 days', 'mainwp' ); ?></option>
-                                    <option value="3" <?php echo 3 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '3 days', 'mainwp' ); ?></option>
-                                    <option value="4" <?php echo 4 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '4 days', 'mainwp' ); ?></option>
-                                    <option value="5" <?php echo 5 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '5 days', 'mainwp' ); ?></option>
-                                    <option value="6" <?php echo 6 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '6 days', 'mainwp' ); ?></option>
-                                    <option value="7" <?php echo 7 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '7 days', 'mainwp' ); ?></option>
-                                    <option value="14" <?php echo 14 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '14 days', 'mainwp' ); ?></option>
-                                    <option value="30" <?php echo 30 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '30 days', 'mainwp' ); ?></option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates" default-indi-value="1">
-                            <label class="six wide column middle aligned">
-                            <?php
-                            MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_show_language_updates', $mainwp_show_language_updates );
-                            esc_html_e( 'Show WordPress language updates', 'mainwp' );
-                            ?>
-                            </label>
-                            <div class="ten wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'Enable if you want to manage Translation updates', 'mainwp' ); ?>" data-inverted="" data-position="top left">
-                                <input type="checkbox" name="mainwp_show_language_updates" class="settings-field-value-change-handler" id="mainwp_show_language_updates" <?php echo 1 === (int) $mainwp_show_language_updates ? 'checked="true"' : ''; ?>/>
-                            </div>
-                        </div>
-                        <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates">
-                            <label class="six wide column middle aligned">
-                            <?php
-                            MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_disable_update_confirmations', $disableUpdateConfirmations );
-                            esc_html_e( 'Update confirmations', 'mainwp' );
-                            ?>
-                            </label>
-                            <div class="ten wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'Choose if you want to disable the popup confirmations when performing updates.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
-                                <select name="mainwp_disable_update_confirmations" id="mainwp_disable_update_confirmations" class="ui dropdown settings-field-value-change-handler">
-                                    <option value="0" <?php echo 0 === $disableUpdateConfirmations ? 'selected' : ''; ?>><?php esc_html_e( 'Enable', 'mainwp' ); ?></option>
-                                    <option value="2" <?php echo 2 === $disableUpdateConfirmations ? 'selected' : ''; ?>><?php esc_html_e( 'Disable', 'mainwp' ); ?></option>
-                                    <option value="1" <?php echo 1 === $disableUpdateConfirmations ? 'selected' : ''; ?>><?php esc_html_e( 'Disable for single updates', 'mainwp' ); ?></option>
-                                </select>
-                            </div>
-                        </div>
-                        <?php if ( ( $enableLegacyBackupFeature && empty( $primaryBackup ) ) || ( empty( $enableLegacyBackupFeature ) && ! empty( $primaryBackup ) ) ) { ?>
-                        <div class="ui grid field mainwp-parent-toggle settings-field-indicator-wrapper settings-field-indicator-updates">
-                            <label class="six wide column middle aligned">
-                            <?php
-                            MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_backup_before_upgrade', (int) $backup_before_upgrade );
-                            esc_html_e( 'Require a backup before an update', 'mainwp' );
-                            ?>
-                            </label>
-                            <div class="ten wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'If enabled, your MainWP Dashboard will check if full backups exists before updating.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
-                                <input type="checkbox" class="settings-field-value-change-handler" name="mainwp_backup_before_upgrade" id="mainwp_backup_before_upgrade" <?php echo 1 === (int) $backup_before_upgrade ? 'checked="true"' : ''; ?>/>
-                            </div>
-                        </div>
-                        <div class="ui grid field mainwp-child-field settings-field-indicator-wrapper settings-field-indicator-updates" default-indi-value="7" <?php echo 1 === (int) $backup_before_upgrade ? '' : 'style="display:none"'; ?> >
-                            <label class="six wide column middle aligned">
-                            <?php
-                            MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_backup_before_upgrade_days', (int) $mainwp_backup_before_upgrade_days );
-                            esc_html_e( 'Days without of a full backup tolerance', 'mainwp' );
-                            ?>
-                            </label>
-                            <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Set the number of days without of backup tolerance.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
-                                <input type="text"  class="settings-field-value-change-handler" name="mainwp_backup_before_upgrade_days" id="mainwp_backup_before_upgrade_days" value="<?php echo esc_attr( $mainwp_backup_before_upgrade_days ); ?>" />
-                            </div>
-                        </div>
-                        <?php } ?>
-
-                        <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates" default-indi-value="365">
-                            <label class="six wide column middle aligned">
-                            <?php
-                            MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_numberdays_Outdate_Plugin_Theme', (int) get_option( 'mainwp_numberdays_Outdate_Plugin_Theme', 365 ) );
-
-                            esc_html_e( 'Abandoned plugins/themes tolerance', 'mainwp' );
-                            ?>
-                            </label>
-                            <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Set how many days without an update before plugin or theme will be considered as abandoned.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
-                                <input type="text" class="settings-field-value-change-handler" name="mainwp_numberdays_Outdate_Plugin_Theme" id="mainwp_numberdays_Outdate_Plugin_Theme" value="<?php echo false === get_option( 'mainwp_numberdays_Outdate_Plugin_Theme' ) ? 365 : intval( get_option( 'mainwp_numberdays_Outdate_Plugin_Theme' ) ); ?>"/>
-                            </div>
-                        </div>
-
-                        <?php MainWP_Manage_Backups::render_settings(); ?>
+                    </div>
+                    <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates">
+                        <label class="six wide column middle aligned">
                         <?php
-                        /**
-                         * Action: mainwp_settings_form_bottom
-                         *
-                         * Fires at the bottom of settings form.
-                         *
-                         * @since 4.1
-                         */
-                        do_action( 'mainwp_settings_form_bottom' );
+                        MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_themeAutomaticDailyUpdate', $snThemeAutomaticDailyUpdate );
+                        esc_html_e( 'Theme advanced automatic updates', 'mainwp' );
                         ?>
-                        <div class="ui divider"></div>
-                        <input type="submit" name="submit" id="submit" class="ui button green big" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
-                        <div style="clear:both"></div>
-                    </form>
-                </div>
+                        </label>
+                        <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Enable or disable automatic theme updates. If enabled, MainWP will update only themes that you have marked as Trusted.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                            <select name="mainwp_themeAutomaticDailyUpdate" id="mainwp_themeAutomaticDailyUpdate" class="ui dropdown settings-field-value-change-handler">
+                                <option value="1" <?php echo 1 === $snThemeAutomaticDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Install Trusted Updates', 'mainwp' ); ?></option>
+                                <option value="0" <?php echo 0 === $snThemeAutomaticDailyUpdate || 2 === $snThemeAutomaticDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Disabled', 'mainwp' ); ?></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates">
+                        <label class="six wide column middle aligned">
+                        <?php
+                        MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_stransAutomaticUpdate', $snTransAutomaticUpdate );
+                        esc_html_e( 'Translation advanced automatic updates', 'mainwp' );
+                        ?>
+                        </label>
+                        <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Enable or disable automatic Translation updates.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                            <select name="mainwp_transAutomaticDailyUpdate" id="mainwp_transAutomaticDailyUpdate" class="ui dropdown settings-field-value-change-handler">
+                                <option value="1" <?php echo 1 === $snTransAutomaticUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Install Trusted Updates', 'mainwp' ); ?></option>
+                                <option value="0" <?php echo 0 === $snTransAutomaticUpdate || 2 === (int) $snTransAutomaticUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Disabled', 'mainwp' ); ?></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates">
+                        <label class="six wide column middle aligned">
+                        <?php
+                        MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_automaticDailyUpdate', $snAutomaticDailyUpdate );
+                        esc_html_e( 'WP Core advanced automatic updates', 'mainwp' );
+                        ?>
+                        </label>
+                        <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Enable or disable automatic WordPress core updates.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                            <select name="mainwp_automaticDailyUpdate" id="mainwp_automaticDailyUpdate" class="ui dropdown settings-field-value-change-handler">
+                                <option value="1" <?php echo 1 === $snAutomaticDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Install Trusted Updates', 'mainwp' ); ?></option>
+                                <option value="0" <?php echo 0 === $snAutomaticDailyUpdate || 2 === (int) $snAutomaticDailyUpdate ? 'selected' : ''; ?>><?php esc_html_e( 'Disabled', 'mainwp' ); ?></option>
+                            </select>
+                        </div>
+                    </div>
+                    <?php static::render_auto_updates_settings(); ?>
+                    <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates" default-indi-value="1">
+                        <label class="six wide column middle aligned">
+                        <?php
+                        MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_delay_autoupdate', $delay_autoupdate );
+                        esc_html_e( 'Advanced automatic updates delay', 'mainwp' );
+                        ?>
+                        </label>
+                        <div class="ten wide column ui input" data-tooltip="<?php esc_attr_e( 'Set the number of days to delay automatic updates.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                            <select name="mainwp_delay_autoupdate" id="mainwp_delay_autoupdate" class="ui dropdown settings-field-value-change-handler">
+                                <option value="0" <?php echo 0 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( 'Delay off', 'mainwp' ); ?></option>
+                                <option value="1" <?php echo 1 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '1 day', 'mainwp' ); ?></option>
+                                <option value="2" <?php echo 2 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '2 days', 'mainwp' ); ?></option>
+                                <option value="3" <?php echo 3 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '3 days', 'mainwp' ); ?></option>
+                                <option value="4" <?php echo 4 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '4 days', 'mainwp' ); ?></option>
+                                <option value="5" <?php echo 5 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '5 days', 'mainwp' ); ?></option>
+                                <option value="6" <?php echo 6 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '6 days', 'mainwp' ); ?></option>
+                                <option value="7" <?php echo 7 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '7 days', 'mainwp' ); ?></option>
+                                <option value="14" <?php echo 14 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '14 days', 'mainwp' ); ?></option>
+                                <option value="30" <?php echo 30 === $delay_autoupdate ? 'selected' : ''; ?>><?php esc_html_e( '30 days', 'mainwp' ); ?></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates" default-indi-value="1">
+                        <label class="six wide column middle aligned">
+                        <?php
+                        MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_show_language_updates', $mainwp_show_language_updates );
+                        esc_html_e( 'Show WordPress language updates', 'mainwp' );
+                        ?>
+                        </label>
+                        <div class="ten wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'Enable if you want to manage Translation updates', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                            <input type="checkbox" name="mainwp_show_language_updates" class="settings-field-value-change-handler" id="mainwp_show_language_updates" <?php echo 1 === (int) $mainwp_show_language_updates ? 'checked="true"' : ''; ?>/>
+                        </div>
+                    </div>
+                    <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates">
+                        <label class="six wide column middle aligned">
+                        <?php
+                        MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_disable_update_confirmations', $disableUpdateConfirmations );
+                        esc_html_e( 'Update confirmations', 'mainwp' );
+                        ?>
+                        </label>
+                        <div class="ten wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'Choose if you want to disable the popup confirmations when performing updates.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                            <select name="mainwp_disable_update_confirmations" id="mainwp_disable_update_confirmations" class="ui dropdown settings-field-value-change-handler">
+                                <option value="0" <?php echo 0 === $disableUpdateConfirmations ? 'selected' : ''; ?>><?php esc_html_e( 'Enable', 'mainwp' ); ?></option>
+                                <option value="2" <?php echo 2 === $disableUpdateConfirmations ? 'selected' : ''; ?>><?php esc_html_e( 'Disable', 'mainwp' ); ?></option>
+                                <option value="1" <?php echo 1 === $disableUpdateConfirmations ? 'selected' : ''; ?>><?php esc_html_e( 'Disable for single updates', 'mainwp' ); ?></option>
+                            </select>
+                        </div>
+                    </div>
+                    <?php if ( ( $enableLegacyBackupFeature && empty( $primaryBackup ) ) || ( empty( $enableLegacyBackupFeature ) && ! empty( $primaryBackup ) ) ) { ?>
+                    <div class="ui grid field mainwp-parent-toggle settings-field-indicator-wrapper settings-field-indicator-updates">
+                        <label class="six wide column middle aligned">
+                        <?php
+                        MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_backup_before_upgrade', (int) $backup_before_upgrade );
+                        esc_html_e( 'Require a backup before an update', 'mainwp' );
+                        ?>
+                        </label>
+                        <div class="ten wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'If enabled, your MainWP Dashboard will check if full backups exists before updating.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                            <input type="checkbox" class="settings-field-value-change-handler" name="mainwp_backup_before_upgrade" id="mainwp_backup_before_upgrade" <?php echo 1 === (int) $backup_before_upgrade ? 'checked="true"' : ''; ?>/>
+                        </div>
+                    </div>
+                    <div class="ui grid field mainwp-child-field settings-field-indicator-wrapper settings-field-indicator-updates" default-indi-value="7" <?php echo 1 === (int) $backup_before_upgrade ? '' : 'style="display:none"'; ?> >
+                        <label class="six wide column middle aligned">
+                        <?php
+                        MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_backup_before_upgrade_days', (int) $mainwp_backup_before_upgrade_days );
+                        esc_html_e( 'Days without of a full backup tolerance', 'mainwp' );
+                        ?>
+                        </label>
+                        <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Set the number of days without of backup tolerance.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                            <input type="text"  class="settings-field-value-change-handler" name="mainwp_backup_before_upgrade_days" id="mainwp_backup_before_upgrade_days" value="<?php echo esc_attr( $mainwp_backup_before_upgrade_days ); ?>" />
+                        </div>
+                    </div>
+                    <?php } ?>
+
+                    <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-updates" default-indi-value="365">
+                        <label class="six wide column middle aligned">
+                        <?php
+                        MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_numberdays_Outdate_Plugin_Theme', (int) get_option( 'mainwp_numberdays_Outdate_Plugin_Theme', 365 ) );
+
+                        esc_html_e( 'Abandoned plugins/themes tolerance', 'mainwp' );
+                        ?>
+                        </label>
+                        <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Set how many days without an update before plugin or theme will be considered as abandoned.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                            <input type="text" class="settings-field-value-change-handler" name="mainwp_numberdays_Outdate_Plugin_Theme" id="mainwp_numberdays_Outdate_Plugin_Theme" value="<?php echo false === get_option( 'mainwp_numberdays_Outdate_Plugin_Theme' ) ? 365 : intval( get_option( 'mainwp_numberdays_Outdate_Plugin_Theme' ) ); ?>"/>
+                        </div>
+                    </div>
+
+                    <?php MainWP_Manage_Backups::render_settings(); ?>
+                    <?php
+                    /**
+                     * Action: mainwp_settings_form_bottom
+                     *
+                     * Fires at the bottom of settings form.
+                     *
+                     * @since 4.1
+                     */
+                    do_action( 'mainwp_settings_form_bottom' );
+                    ?>
+                    <div class="ui divider"></div>
+                    <input type="submit" name="submit" id="submit" class="ui button green big" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>"/>
+                    <div style="clear:both"></div>
+                </form>
             </div>
+        </div>
         <?php
         static::render_footer( '' );
     }
@@ -1527,7 +1522,7 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
         static::render_header( 'Advanced' );
         ?>
 
-        <div id="mainwp-advanced-settings" class="ui segment">
+        <div id="mainwp-advanced-settings" class="ui padded segment">
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-advanced-settings-info-notice' ) ) : ?>
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-advanced-settings-info-notice"></i>
@@ -2119,9 +2114,8 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             return;
         }
         static::render_header( 'MainWPTools' );
-        $is_demo = MainWP_Demo_Handle::is_demo_mode();
         ?>
-        <div id="mainwp-tools-settings" class="ui segment">
+        <div id="mainwp-tools-settings" class="ui padded segment">
             <div id="mainwp-message-zone" style="display:none;" class="ui message"></div>
         <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-tools-info-message' ) ) : ?>
                 <div class="ui info message">
@@ -2156,27 +2150,25 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             <?php endif; ?>
                 <div class="ui form">
                     <form method="POST" action="">
-        <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
+                        <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                         <input type="hidden" name="wp_nonce" value="<?php echo esc_attr( wp_create_nonce( 'MainWPTools' ) ); ?>" />
-                        <h3 class="ui dividing header">
-        <?php MainWP_Settings_Indicator::render_indicator( 'header', 'settings-field-indicator-tools' ); ?>
-        <?php esc_html_e( 'MainWP Dashboard Tools', 'mainwp' ); ?></h3>
-        <?php
-        /**
-         * Action: mainwp_tools_form_top
-         *
-         * Fires at the top of MainWP tools form.
-         *
-         * @since 4.1
-         */
-        do_action( 'mainwp_tools_form_top' );
+                        
+                        <?php
+                        /**
+                         * Action: mainwp_tools_form_top
+                         *
+                         * Fires at the top of MainWP tools form.
+                         *
+                         * @since 4.1
+                         */
+                        do_action( 'mainwp_tools_form_top' );
 
-        $show_qsw = apply_filters( 'mainwp_show_qsw', true );
+                        $show_qsw = apply_filters( 'mainwp_show_qsw', true );
 
-        static::get_instance()->render_select_custom_themes();
+                        static::get_instance()->render_select_custom_themes();
 
-        ?>
-        <?php if ( get_option( 'mainwp_not_start_encrypt_keys' ) ) { ?>
+                        ?>
+                        <?php if ( get_option( 'mainwp_not_start_encrypt_keys' ) ) { ?>
                         <div class="ui grid field">
                             <label class="six wide column middle aligned"><?php esc_html_e( 'OpenSSL Key Encryption', 'mainwp' ); ?></label>
                             <div class="ten wide column"  data-tooltip="<?php esc_attr_e( 'To enhance security, we\'ve added a feature to encrypt your private keys stored in the database.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
@@ -2187,28 +2179,16 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
                         <div class="ui grid field">
                             <label class="six wide column middle aligned"><?php esc_html_e( 'Force your MainWP Dashboard to establish a new connection', 'mainwp' ); ?></label>
                             <div class="ten wide column"  data-tooltip="<?php esc_attr_e( 'Force your MainWP Dashboard to reconnect with your child sites. Only needed if suggested by MainWP Support.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
-        <?php
-        if ( $is_demo ) {
-            MainWP_Demo_Handle::get_instance()->render_demo_disable_button( '<input type="button" disabled="disabled" class="ui green basic button disabled" value="' . esc_attr__( 'Re-establish Connections', 'mainwp' ) . '" />' );
-        } else {
-            ?>
                                 <input type="button" name="" id="force-destroy-sessions-button"  data-inverted="" data-position="top right" data-tooltip="<?php esc_attr_e( 'Forces your dashboard to reconnect with your child sites. This feature will log out any currently logged in users on the Child sites and require them to re-log in. Only needed if suggested by MainWP Support.', 'mainwp' ); ?>" class="ui green basic button" value="<?php esc_attr_e( 'Re-establish Connections', 'mainwp' ); ?>" />
-            <?php } ?>
-                            </div>
-                        </div>
-                        <div class="ui grid field">
-                            <label class="six wide column middle aligned"><?php esc_html_e( 'Force your MainWP Dashboard to set a new pair of OpenSSL Keys', 'mainwp' ); ?></label>
-                            <div class="ten wide column" id="mainwp-renew-connections-tool" data-content="<?php esc_attr_e( 'This will function renew connection and reconnect site right away.', 'mainwp' ); ?>" data-variation="inverted" data-position="top left">
-        <?php
-        if ( $is_demo ) {
-                MainWP_Demo_Handle::get_instance()->render_demo_disable_button( '<a href="javascript:void(0)" disabled="disabled" class="ui button green basic disabled">' . esc_html__( 'Reset OpenSSL Key Pair', 'mainwp' ) . '</a>' );
-        } else {
-            ?>
-                                    <a href="javascript:void(0)" onclick="mainwp_tool_renew_connections_show(); return false;" class="ui button green basic"><?php esc_html_e( 'Reset OpenSSL Key Pair', 'mainwp' ); ?></a>
-                <?php } ?>
-                            </div>
-                        </div>
-            <?php if ( $show_qsw ) { ?>
+                                                </div>
+                                            </div>
+                                            <div class="ui grid field">
+                                                <label class="six wide column middle aligned"><?php esc_html_e( 'Force your MainWP Dashboard to set a new pair of OpenSSL Keys', 'mainwp' ); ?></label>
+                                                <div class="ten wide column" id="mainwp-renew-connections-tool" data-content="<?php esc_attr_e( 'This will function renew connection and reconnect site right away.', 'mainwp' ); ?>" data-variation="inverted" data-position="top left">
+                                                        <a href="javascript:void(0)" onclick="mainwp_tool_renew_connections_show(); return false;" class="ui button green basic"><?php esc_html_e( 'Reset OpenSSL Key Pair', 'mainwp' ); ?></a>
+                                                </div>
+                                            </div>
+                                <?php if ( $show_qsw ) { ?>
                         <div class="ui grid field">
                             <label class="six wide column middle aligned"><?php esc_html_e( 'Start the MainWP Quick Setup Wizard', 'mainwp' ); ?></label>
                             <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Click this button to start the Quick Setup Wizard', 'mainwp' ); ?>" data-inverted="" data-position="top left"><a href="admin.php?page=mainwp-setup" class="ui green button basic" ><?php esc_html_e( 'Start Quick Setup Wizard', 'mainwp' ); ?></a></div>
@@ -2225,13 +2205,7 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
                         <div class="ui grid field">
                             <label class="six wide column middle aligned"><?php esc_html_e( 'Disconnect all child sites', 'mainwp' ); ?></label>
                         <div class="ten wide column" id="mainwp-disconnect-sites-tool" data-content="<?php esc_attr_e( 'This will function will break the connection and leave the MainWP Child plugin active and which makes your sites vulnerable. Use only if you attend to reconnect site to the same or a different dashboard right away.', 'mainwp' ); ?>" data-variation="inverted" data-position="top left">
-            <?php
-            if ( $is_demo ) {
-                    MainWP_Demo_Handle::get_instance()->render_demo_disable_button( '<a href="#" class="ui button green basic disabled" disabled="disabled">' . esc_html__( 'Disconnect Sites', 'mainwp' ) . '</a>' );
-            } else {
-                ?>
                             <a href="admin.php?page=MainWPTools&disconnectSites=yes&_wpnonce=<?php echo esc_attr( wp_create_nonce( 'disconnect_sites' ) ); ?>" onclick="mainwp_tool_disconnect_sites(); return false;" class="ui button green basic"><?php esc_html_e( 'Disconnect Sites', 'mainwp' ); ?></a>
-                    <?php } ?>
                     </div>
                     </div>
                     <div class="ui grid field">
@@ -2601,7 +2575,7 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
         }
         static::render_header( 'Monitoring' );
         ?>
-            <div id="mainwp-monitoring-settings" class="ui segment">
+            <div id="mainwp-monitoring-settings" class="ui padded segment">
                 <?php if ( isset( $_GET['message'] ) && 'saved' === sanitize_text_field( wp_unslash( $_GET['message'] ) ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
                     <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'Monitoring settings have been saved successfully!', 'mainwp' ); ?></div>
                 <?php endif; ?>

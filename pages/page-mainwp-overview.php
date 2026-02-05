@@ -356,97 +356,67 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             $website = $websites[0];
         }
         $screen = get_current_screen();
-
-        MainWP_Demo_Handle::get_instance()->init_data_demo();
-        static::render_layout_selection();
         ?>
         <div class="mainwp-primary-content-wrap">
-            <div class="ui segment" style="padding-top:0px;padding-bottom:0px;margin-bottom:0px;">
-            <div id="mainwp-dashboard-info-box"></div>
-            <?php
-            if ( ! empty( $current_wp_id ) && ! empty( $website->sync_errors ) ) {
+            <div class="ui segment">
+                <?php if ( ! empty( $current_wp_id ) && ! empty( $website->sync_errors ) ) : ?>
+                    <div class="ui red message" style="margin: 1em;">
+                        <?php echo '<strong>' . esc_html( stripslashes( $website->name ) ) . '</strong>' . esc_html__( ' is Disconnected. Click the Reconnect button to establish the connection again.', 'mainwp' ); ?>
+                    </div>
+                <?php endif; ?>
+                <div id="mainwp-message-zone" class="ui message" style="display:none;">dfsdf</div>
+                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'widgets' ) ) : ?>
+                    <div class="ui message" style="margin: 1em;">
+                        <i class="close icon mainwp-notice-dismiss" notice-id="widgets"></i>
+                        <?php printf( esc_html__( '%1$s Tip: You can drag and drop widgets to reorder your dashboard, use Page Settings (%2$s) to show or hide widgets, and use Layout (%3$s) in the header to save and load your widget layouts.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<i class="cog fitted icon"></i>', '<i class="all border fitted icon"></i>' ); ?>
+                    </div>
+                <?php endif; ?>
+                <?php do_action( 'mainwp_module_log_render_db_update_notice' ); ?>
+                <?php do_action( 'mainwp_module_log_render_db_size_notice' ); ?>
+            
+                <?php
+                /**
+                 * Action: mainwp_before_overview_widgets
+                 *
+                 * Fires at the top of the Operations page (before first widget).
+                 *
+                 * @since 4.1
+                 */
+                do_action( 'mainwp_before_overview_widgets', 'dashboard' );
                 ?>
-                <div class="ui red message">
-                    <p><?php echo '<strong>' . esc_html( stripslashes( $website->name ) ) . '</strong>' . esc_html__( ' is Disconnected. Click the Reconnect button to establish the connection again.', 'mainwp' ); ?></p>
+                <div id="mainwp-grid-wrapper" class="gridster">
+                    <div id="mainwp-widgets-placeholder" class="ui page dimmer">
+                        <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
+                    </div>
+                    <script>
+                        jQuery( document ).ready( function () {
+                            jQuery('#mainwp-widgets-placeholder').dimmer('show');
+                        });
+                    </script>
+                    <?php MainWP_UI::do_widget_boxes( $screen->id ); ?>
                 </div>
                 <?php
-            }
-            ?>
-            <div id="mainwp-message-zone" class="ui message" style="display:none;"></div>
-            <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'widgets' ) ) : ?>
-                <div class="ui message" style="margin-bottom: 0px;">
-                    <i class="close icon mainwp-notice-dismiss" notice-id="widgets"></i>
-                    <?php printf( esc_html__( '%1$s Tip: You can drag and drop widgets to reorder your dashboard or use the Page Settings (%2$s) to show/hide widgets.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<i class="cog fitted icon"></i>' ); ?>
-                </div>
-            <?php endif; ?>
-            <?php
-            do_action( 'mainwp_module_log_render_db_update_notice' );
-            do_action( 'mainwp_module_log_render_db_size_notice' );
-            ?>
+                /**
+                 * Action: 'mainwp_after_overview_widgets'
+                 *
+                 * Fires at the bottom of the Operations page (after the last widget).
+                 *
+                 * @since 4.1
+                 */
+                do_action( 'mainwp_after_overview_widgets', 'dashboard' );
+                ?>
             </div>
-            <?php
-            /**
-             * Action: mainwp_before_overview_widgets
-             *
-             * Fires at the top of the Operations page (before first widget).
-             *
-             * @since 4.1
-             */
-            do_action( 'mainwp_before_overview_widgets', 'dashboard' );
-            ?>
-            <div id="mainwp-grid-wrapper" class="gridster">
-                <div id="mainwp-widgets-placeholder" class="ui page dimmer">
-                    <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
-                </div>
-                <script>
-                    jQuery( document ).ready( function () {
-                        jQuery('#mainwp-widgets-placeholder').dimmer('show');
-                    });
-                </script>
-                <?php MainWP_UI::do_widget_boxes( $screen->id ); ?>
-            </div>
-            <?php
-            /**
-             * Action: 'mainwp_after_overview_widgets'
-             *
-             * Fires at the bottom of the Operations page (after the last widget).
-             *
-             * @since 4.1
-             */
-            do_action( 'mainwp_after_overview_widgets', 'dashboard' );
-            ?>
-    <script type="text/javascript">
-        jQuery( document ).ready( function( $ ) {
-            jQuery( '.mainwp-widget .mainwp-dropdown-tab .item' ).tab();
-            mainwp_get_icon_start();
-        } );
-    </script>
+            <script type="text/javascript">
+                jQuery( document ).ready( function( $ ) {
+                    jQuery( '.mainwp-widget .mainwp-dropdown-tab .item' ).tab();
+                    mainwp_get_icon_start();
+                } );
+            </script>
         <?php
+        MainWP_Ui_Manage_Widgets_Layout::render_modal_save_layout();
         MainWP_UI::render_modal_upload_icon();
         MainWP_Updates::render_plugin_details_modal();
         MainWP_Updates::render_changes_history_modal();
-    }
-
-    /**
-     * Render layout selection.
-     */
-    public static function render_layout_selection() { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAfterBrace -- NOSONAR - complexity.
-        $screen = get_current_screen();
-        ?>
-        <div class="mainwp-sub-header" id="mainwp-manage-widgets-layout-row">
-            <div class="ui stackable two column grid">
-                <div class="column">
-                    <?php if ( isset( $_GET['page'] ) && 'CostSummary' === $_GET['page'] ) : ?>
-                    <a href="admin.php?page=CostTrackerAdd" class="ui mini green button"><?php esc_html_e( 'Add New Cost', 'mainwp' ); ?></a>
-                    <?php endif; ?>
-                </div>
-                <div class="right aligned column">
-                    <?php MainWP_Ui_Manage_Widgets_Layout::render_edit_layout( $screen->id ); ?>
-                </div>
-            </div>
-        </div>
-        <?php
-        MainWP_Ui_Manage_Widgets_Layout::render_modal_save_layout();
     }
 
     /**

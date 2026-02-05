@@ -198,7 +198,6 @@ window.mainwp_confirm = function (msg, confirmed_callback, cancelled_callback, u
     }
 }
 
-
 /**
  * Select sites
  */
@@ -969,3 +968,284 @@ jQuery(document).on('click', '#mainwp-select-dark-theme-button', function(e) {
     url.searchParams.set('_wpnonce', mainwpParams.quickThemeChangeNonce);
     window.location.href = url.toString();
 });
+
+/**
+ * Widget layout UI handler object.
+ *
+ * Provides methods for managing the widget layout modal UI state and status messages.
+ */
+if (!window.mainwpUIHandleWidgetsLayout) {
+    window.mainwpUIHandleWidgetsLayout = (function () {
+        const statusElemId = '#mainwp-common-edit-widgets-layout-status';
+        let _instance = {
+            loadingStatus: function () {
+                jQuery(statusElemId).html('<i class="notched circle loading icon"></i> ' + __('Loading layouts. Please wait...')).show();
+            },
+            savingStatus: function () {
+                jQuery(statusElemId).html('<i class="notched circle loading icon"></i> ' + __('Saving layout. Please wait...')).show();
+            },
+            deletingStatus: function () {
+                jQuery(statusElemId).html('<i class="notched circle loading icon"></i> ' + __('Deleting layout. Please wait...')).show();
+
+            },
+            showWorkingStatus: function (status, addClass) {
+                if (addClass) {
+                    jQuery(statusElemId).removeClass('red green yellow');
+                    jQuery(statusElemId).addClass(addClass);
+                }
+                jQuery(statusElemId).html(status).show();
+            },
+            hideWorkingStatus: function () {
+                jQuery(statusElemId).removeClass('red green').hide();
+            },
+            showLayout: function (showBtn) {
+                jQuery('#mainwp-common-edit-widgets-layout-modal > div.header').html(__('Save Layout'));
+                jQuery('#mainwp-common-edit-widgets-layout-edit-fields').show();
+                jQuery('#mainwp-common-edit-widgets-layout-save-button').show();
+                jQuery('#mainwp-common-layout-widgets-select-fields').hide();
+                jQuery('#mainwp-common-edit-widgets-select-layout-button').hide();
+                jQuery('#mainwp-common-edit-widgets-layout-delete-button').hide();
+
+                if (jQuery('#mainwp-widgets-selected-layout').length > 0) {
+                    let name = jQuery('#mainwp-widgets-selected-layout').attr('layout-name');
+                    let lay_idx = jQuery('#mainwp-widgets-selected-layout').attr('layout-idx');
+                    jQuery('#mainwp-common-edit-widgets-layout-name').val(name);
+                    jQuery(showBtn).attr('selected-layout-id', lay_idx);
+                }
+                this.hideWorkingStatus();
+                mainwp_common_show_edit_widgets_layout_modal();
+            },
+            loadSegment: function (loadCallback) {
+                jQuery('#mainwp-common-edit-widgets-layout-edit-fields').hide();
+                jQuery('#mainwp-common-edit-widgets-layout-save-button').hide();
+                jQuery('#mainwp-common-edit-widgets-layout-modal > div.header').html(__('Load Layout'));
+                jQuery('#mainwp-common-layout-widgets-select-fields').show();
+                jQuery('#mainwp-common-edit-widgets-select-layout-button').show();
+                jQuery('#mainwp-common-edit-widgets-layout-delete-button').show();
+                this.hideWorkingStatus();
+                mainwp_common_show_edit_widgets_layout_modal(loadCallback);
+            },
+            showResults: function (result) {
+                jQuery(statusElemId).hide();
+                jQuery('#mainwp-common-edit-widgets-layout-lists-wrapper').html(result);
+                jQuery('#mainwp-common-edit-widgets-layout-lists-wrapper .ui.dropdown').dropdown();
+                jQuery('#mainwp-common-layout-widgets-select-fields').show();
+            }
+        }
+        return _instance;
+    })();
+}
+
+/**
+ * Show the widget layout modal.
+ *
+ * Opens the modal dialog for managing widget layouts with optional callback.
+ *
+ * @param {Function} loadCallback - Optional callback function to execute when modal shows.
+ */
+let mainwp_common_show_edit_widgets_layout_modal = function (loadCallback) {
+    jQuery('#mainwp-common-edit-widgets-layout-modal').modal({
+        allowMultiple: false,
+        onShow: function () {
+            if (typeof loadCallback == 'function') {
+                loadCallback();
+            }
+        }
+    }).modal('show');
+};
+
+/**
+ * Save widget layout configuration.
+ *
+ * Collects grid stack item positions and sizes, then saves the layout via AJAX.
+ *
+ * @param {string} itemClass - CSS selector for grid items (e.g., '.grid-stack-item').
+ * @param {Object} data - Data object containing layout metadata (name, seg_id, settings_slug).
+ * @param {Function} callBack - Callback function to execute after save completes.
+ */
+let mainwp_common_ui_widgets_save_layout = function (itemClass, data, callBack) {
+
+    let orders = [];
+    let wgIds = [];
+
+    const $items = document.querySelectorAll(itemClass);
+
+    if ($items.length == 0) {
+        return;
+    }
+
+    $items.forEach(function (item) {
+        let obj = {};
+        obj["x"] = item.getAttribute('gs-x');
+        obj["y"] = item.getAttribute('gs-y');
+        obj["w"] = item.getAttribute('gs-w');
+        obj["h"] = item.getAttribute('gs-h');
+        orders.push(obj);
+        wgIds.push(item.id);
+    });
+
+    data.action = 'mainwp_ui_save_widgets_layout';
+    data.order = orders;
+    data.wgids = wgIds;
+
+    jQuery.post(ajaxurl, mainwp_secure_data(data), function (res) {
+        if (typeof callBack !== "undefined" && false !== callBack) {
+            callBack(res);
+        }
+    }, 'json');
+}
+
+/**
+ * Initialize widget layout management handlers.
+ *
+ * Sets up event handlers for saving, loading, and deleting widget layout configurations.
+ * Manages button states based on user input and selections.
+ */
+function mainwp_init_widget_layout_handlers() {
+    mainwp_load_manage_widgets_layout = function () {
+        jQuery('#mainwp-common-layout-widgets-select-fields').hide();
+        let data = mainwp_secure_data({
+            action: 'mainwp_ui_load_widgets_layout',
+            settings_slug: jQuery('#mainwp-manage-widgets-load-saved-layout-button').attr('settings-slug')
+        });
+        mainwpUIHandleWidgetsLayout.showWorkingStatus('<i class="notched circle loading icon"></i> ' + __('Loading layouts. Please wait...'), '');
+        jQuery.post(ajaxurl, data, function (response) {
+            if (response.error != undefined) {
+                mainwpUIHandleWidgetsLayout.showWorkingStatus(response.error, 'red');
+            } else if (response.result) {
+                mainwpUIHandleWidgetsLayout.showResults(response.result);
+                jQuery('#mainwp-common-edit-widgets-select-layout-button').addClass('disabled');
+                jQuery('#mainwp-common-edit-widgets-layout-delete-button').addClass('disabled');
+            } else {
+                mainwpUIHandleWidgetsLayout.showWorkingStatus(__('No saved layouts found.'), 'yellow');
+            }
+        }, 'json');
+    };
+
+    jQuery('#mainwp-manage-widgets-load-saved-layout-button').on( 'click', function () {
+        jQuery('#mainwp-common-edit-widgets-layout-save-button').addClass('disabled');
+        jQuery('#mainwp-common-edit-widgets-layout-name').val('');
+        mainwpUIHandleWidgetsLayout.showLayout(this);
+    } );
+
+    jQuery('#mainwp-manage-widgets-ui-choose-layout').on( 'click', function () {
+        let field_name = '';
+        mainwpUIHandleWidgetsLayout.loadSegment(mainwp_load_manage_widgets_layout);
+    } );
+
+    jQuery(document).on('input', '#mainwp-common-edit-widgets-layout-name', function() {
+        if (jQuery(this).val().trim().length > 0) {
+            jQuery('#mainwp-common-edit-widgets-layout-save-button').removeClass('disabled');
+        } else {
+            jQuery('#mainwp-common-edit-widgets-layout-save-button').addClass('disabled');
+        }
+    });
+
+    jQuery(document).on('change', '#mainwp-common-layout-widgets-select-fields .ui.dropdown', function() {
+        let selected_value = jQuery(this).dropdown('get value');
+        if (selected_value && selected_value !== '') {
+            jQuery('#mainwp-common-edit-widgets-select-layout-button').removeClass('disabled');
+            jQuery('#mainwp-common-edit-widgets-layout-delete-button').removeClass('disabled');
+        } else {
+            jQuery('#mainwp-common-edit-widgets-select-layout-button').addClass('disabled');
+            jQuery('#mainwp-common-edit-widgets-layout-delete-button').addClass('disabled');
+        }
+    });
+
+    jQuery('#mainwp-common-edit-widgets-layout-save-button').on( 'click', function () {
+        if (jQuery(this).hasClass('disabled')) {
+            return false;
+        }
+
+        mainwpUIHandleWidgetsLayout.hideWorkingStatus();
+
+        let seg_name = jQuery('#mainwp-common-edit-widgets-layout-name').val().trim();
+
+        if('' == seg_name){
+            mainwpUIHandleWidgetsLayout.showWorkingStatus(__('Please enter a layout name.'), 'yellow' );
+            return false;
+        }
+
+        let data = {
+            name: seg_name,
+            seg_id: jQuery('#mainwp-manage-widgets-load-saved-layout-button').attr('selected-layout-id'),
+            settings_slug: jQuery('#mainwp-manage-widgets-load-saved-layout-button').attr('settings-slug')
+        };
+
+        mainwpUIHandleWidgetsLayout.showWorkingStatus( '<i class="notched circle loading icon"></i> ' + __('Saving layout. Please wait...'), '' );
+
+        mainwp_common_ui_widgets_save_layout( '.grid-stack-item', data, function(response){
+            if (response.error != undefined) {
+                mainwpUIHandleWidgetsLayout.showWorkingStatus(response.error, 'red');
+            } else if (response.result == 'SUCCESS') {
+                mainwpUIHandleWidgetsLayout.showWorkingStatus(__('Layout saved successfully.'), 'green');
+                setTimeout(function () {
+                    jQuery('#mainwp-common-edit-widgets-layout-status').fadeOut(300);
+                    jQuery( '#mainwp-common-edit-widgets-layout-modal' ).modal('hide');
+                    mainwp_forceReload();
+                }, 2000);
+            } else {
+                mainwpUIHandleWidgetsLayout.showWorkingStatus(__('An error occurred while saving the layout.'), 'red');
+            }
+        });
+        return false;
+    });
+
+    jQuery('#mainwp-common-edit-widgets-select-layout-button').on( 'click', function () {
+        if (jQuery(this).hasClass('disabled')) {
+            return false;
+        }
+
+        mainwpUIHandleWidgetsLayout.hideWorkingStatus();
+        let seg_id = jQuery( '#mainwp-common-layout-widgets-select-fields .ui.dropdown').dropdown('get value');
+        let screen_slug = jQuery('#mainwp-manage-widgets-load-saved-layout-button').attr('settings-slug');
+        let loc_url = removeUrlParams(location.href, [ 'screen_slug', 'updated', '_opennonce'] );
+        if('' == loc_url){
+            loc_url = location.href;
+        }
+        window.location.href = loc_url + '&select_layout=1&screen_slug=' + encodeURIComponent( screen_slug ) + '&updated=' + encodeURIComponent( seg_id ) + '&_opennonce=' + mainwpWidgetLayout.openNonce;
+    });
+
+    jQuery('#mainwp-common-edit-widgets-layout-delete-button').on( 'click', function () {
+        if (jQuery(this).hasClass('disabled')) {
+            return false;
+        }
+
+        mainwpUIHandleWidgetsLayout.hideWorkingStatus();
+        let delBtn = this;
+        let seg_id = jQuery( '#mainwp-common-layout-widgets-select-fields .ui.dropdown').dropdown('get value');
+        if('' == seg_id){
+            return false;
+        }
+
+        if('yes' === jQuery(delBtn).attr('running')){
+            return false;
+        }
+
+        jQuery(seg_id).attr('running', 'yes');
+        let data = mainwp_secure_data({
+            action: 'mainwp_ui_delete_widgets_layout',
+            seg_id: seg_id,
+            settings_slug: jQuery('#mainwp-manage-widgets-load-saved-layout-button').attr('settings-slug')
+        });
+        mainwpUIHandleWidgetsLayout.showWorkingStatus('<i class="notched circle loading icon"></i> ' + __('Deleting layout. Please wait...'), '' );
+        jQuery.post(ajaxurl, data, function (response) {
+
+            jQuery(delBtn).removeAttr('running');
+
+            if (response.error != undefined) {
+                mainwpUIHandleWidgetsLayout.showWorkingStatus(response.error, 'red');
+            } else if (response.result == 'SUCCESS') {
+                mainwpUIHandleWidgetsLayout.showWorkingStatus(__('Layout deleted successfully.'), 'green');
+                setTimeout(function () {
+                    jQuery('#mainwp-common-edit-widgets-layout-status').fadeOut(300);
+                    jQuery( '#mainwp-common-edit-widgets-layout-modal' ).modal('hide');
+                }, 2000);
+            } else {
+                mainwpUIHandleWidgetsLayout.showWorkingStatus(__('An error occurred while deleting the layout.'), 'red');
+            }
+        }, 'json');
+
+        return false;
+    });
+}

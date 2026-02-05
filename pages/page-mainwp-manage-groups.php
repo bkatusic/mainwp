@@ -304,18 +304,18 @@ class MainWP_Manage_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
          */
         do_action( 'mainwp_pageheader_tags', 'ManageGroups' );
         ?>
-        <div id="mainwp-manage-groups" class="ui alt segment">
-            <div class="mainwp-main-content" style="padding-top: 3px;">
+        <div id="mainwp-manage-groups">
+            <div class="mainwp-main-content ui padded segment">
+                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_groups_info' ) ) { ?>
+                    <div class="ui message info" style="margin-top:0">
+                        <i class="close icon mainwp-notice-dismiss" notice-id="mainwp_groups_info"></i>
+                        <div><?php esc_html_e( 'Use tags to organize and quickly filter your connected sites. You can apply multiple tags to one site.', 'mainwp' ); ?></div>
+                        <div><?php printf( esc_html__( 'for more information check the %1$sKnowledgebase %2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/management/manage-child-sites#manage-child-site-tags" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?></div>
+                    </div>
+                <?php } ?>
                 <div id="mainwp-message-zone" style="display: none;">
                     <div class="ui message green"><?php esc_html_e( 'Selection saved successfully.', 'mainwp' ); ?></div>
                 </div>
-                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_groups_info' ) ) { ?>
-                <div class="ui message info">
-                    <i class="close icon mainwp-notice-dismiss" notice-id="mainwp_groups_info"></i>
-                        <div><?php esc_html_e( 'Use tags to organize and quickly filter your connected sites. You can apply multiple tags to one site.', 'mainwp' ); ?></div>
-                        <div><?php printf( esc_html__( 'for more information check the %1$sKnowledgebase %2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/management/manage-child-sites#manage-child-site-tags" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?></div>
-                </div>
-                <?php } ?>
                 <?php
                 /**
                  * Action: mainwp_before_groups_table

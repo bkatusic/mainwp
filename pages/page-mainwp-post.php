@@ -577,7 +577,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         </div>
                     </div>
                 </div>
-                <div class="ui segment" id="mainwp-posts-table-wrapper">
+                <div class="ui padded segment" id="mainwp-posts-table-wrapper">
                     <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-manage-posts-info-message' ) ) : ?>
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-manage-posts-info-message"></i>
@@ -2062,7 +2062,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 }
                 echo $form_extra; // phpcs:ignore WordPress.Security.EscapeOutput
                 ?>
-                <div class="mainwp-main-content">
+                <div class="mainwp-main-content ui padded segment">
                     <?php do_action( 'mainwp_top_bulkpost_edit_content', $post ); ?>
                     <div class="ui red message" id="mainwp-message-zone" style="display:none"></div>
                     <?php

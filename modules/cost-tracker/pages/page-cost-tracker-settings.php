@@ -71,7 +71,7 @@ class Cost_Tracker_Settings {
         }
         MainWP_Settings::render_header( 'CostTrackerSettings' );
         ?>
-        <div class="ui segment" id="mainwp-module-cost-tracker-settings-tab">
+        <div class="ui padded segment" id="mainwp-module-cost-tracker-settings-tab">
             <h2 class="ui dividing header">
                 <?php esc_html_e( 'Cost Tracker Settings ', 'mainwp' ); ?>
                 <div class="sub header"><?php esc_html_e( 'Customize how you track and manage costs. Adjust currency, categories, and other settings to fit your workflow.', 'mainwp' ); ?></div>

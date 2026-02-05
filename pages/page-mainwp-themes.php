@@ -461,7 +461,7 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                         </div>
                     </div>
                 </div>
-                <div class="ui segment" id="mainwp_themes_wrap_table">
+                <div class="ui padded segment" id="mainwp_themes_wrap_table">
                     <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-manage-themes-info-message' ) ) : ?>
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-manage-themes-info-message"></i>
@@ -1835,7 +1835,7 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
 
                     </div>
                 </div>
-                <div class="ui segment">
+                <div class="ui padded segment">
                     <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-install-themes-info-message' ) ) : ?>
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-install-themes-info-message"></i>
@@ -2082,7 +2082,7 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                         <div class="ui message green"><?php esc_html_e( 'Settings have been saved.', 'mainwp' ); ?></div>
                     <?php endif; ?>
                     <div id="mainwp-message-zone" class="ui message" style="display:none"></div>
-                    <div id="mainwp-auto-updates-themes-content" class="ui segment">
+                    <div id="mainwp-auto-updates-themes-content" class="ui padded segment">
                         <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-themes-auto-updates-info-message' ) ) : ?>
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-themes-auto-updates-info-message"></i>
@@ -2095,7 +2095,7 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                         <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-disable-auto-updates-info-message' ) ) : ?>
                         <div class="ui message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-disable-auto-updates-info-message"></i>
-                            <div><em data-emoji=":bulb:" class="small"></em> <?php printf( esc_html__( 'Check out %1$show to disable the WordPress built in auto-updates feature%2$s.', 'mainwp' ), '<a href="https://mainwp.com/how-to-disable-automatic-plugin-and-theme-updates-on-your-child-sites/" target="_blank">', '</a>' ); // NOSONAR - noopener - open safe. ?></div>
+                            <div><em data-emoji=":bulb:" class="small"></em> <?php printf( esc_html__( 'Tip: Check out %1$show to disable the WordPress built in auto-updates feature%2$s.', 'mainwp' ), '<a href="https://mainwp.com/how-to-disable-automatic-plugin-and-theme-updates-on-your-child-sites/" target="_blank">', '</a>' ); // NOSONAR - noopener - open safe. ?></div>
                         </div>
                         <?php endif; ?>
 
@@ -2479,7 +2479,7 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
 
         static::render_header( 'Ignore' );
         ?>
-        <div id="mainwp-ignored-plugins" class="ui segment">
+        <div id="mainwp-ignored-plugins" class="ui padded segment">
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-ignored-themes-info-message' ) ) : ?>
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-ignored-themes-info-message"></i>
@@ -2746,7 +2746,7 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
 
         static::render_header( 'IgnoreAbandoned' );
         ?>
-        <div id="mainwp-ignored-abandoned-themes" class="ui segment">
+        <div id="mainwp-ignored-abandoned-themes" class="ui padded segment">
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-ignored-abandoned-themes-info-message' ) ) : ?>
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-ignored-abandoned-themes-info-message"></i>

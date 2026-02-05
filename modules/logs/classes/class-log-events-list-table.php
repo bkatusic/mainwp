@@ -960,7 +960,7 @@ class Log_Events_List_Table { //phpcs:ignore -- NOSONAR - complex.
 
         if ( 'manage-events' === $this->table_id_prefix ) {
         ?>
-        <div class="ui segment">
+        <div class="ui padded segment">
         <?php
         }
         ?>

@@ -658,7 +658,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                             <?php esc_html_e( 'Import Sites', 'mainwp' ); ?>
                         </a>
                     </div>
-                    <div class="ui bottom attached tab segment active" data-tab="single-site">
+                    <div class="ui bottom attached tab padded segment active" data-tab="single-site">
                         <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-add-site-info-message' ) ) : ?>
                             <div class="ui info message">
                                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-add-site-info-message"></i>
@@ -691,7 +691,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                         <?php static::render_new_site_add_new_site( $groups );  // NOSONAR - render html form. ?>
                     </div>
 
-                    <div class="ui bottom attached tab segment" data-tab="multiple-site">
+                    <div class="ui bottom attached tab padded segment" data-tab="multiple-site">
                         <?php static::render_new_site_add_multi_new_site(); // NOSONAR - render html form. ?>
                     </div>
                 </form>
@@ -1165,7 +1165,6 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
      */
     public static function render_new_site_add_multi_new_site() {
         ?>
-        <div class="ui fitted hidden divider"></div>
         <h2 class="ui dividing header">
             <?php echo esc_html__( 'Connect Multiple Sites', 'mainwp' ); ?>
             <div class="sub header"><?php echo esc_html__( 'Connect multiple sites to your MainWP Dashboard for centralized management.', 'mainwp' ); ?></div>
@@ -1182,7 +1181,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
         <?php static::mainwp_managesites_form_import_sites(); // NOSONAR - render html form. ?>
 
         <div class="ui divider"></div>
-        <input type="button" name="mainwp_managesites_add" id="mainwp_managesites_add_multi_site" class="ui big green button left floated" value="<?php esc_html_e( 'Add Sites', 'mainwp' ); ?>"/>
+        <input type="button" name="mainwp_managesites_add" id="mainwp_managesites_add_multi_site" class="ui big green button" value="<?php esc_html_e( 'Add Sites', 'mainwp' ); ?>"/>
         <div class="ui hidden divider"></div>
         <?php
     }
@@ -1753,7 +1752,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
         static::render_header( '' );
 
         ?>
-        <div id="mainwp-manage-sites-content" class="ui segment">
+        <div id="mainwp-manage-sites-content" class="ui padded segment">
             <div id="mainwp-message-zone" class="ui message" style="display: none;"></div>
             <form method="post" class="mainwp-table-container">
                 <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
