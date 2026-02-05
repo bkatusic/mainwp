@@ -356,13 +356,15 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     continue;
                 }
                 $item          = array();
-                $item['title'] = $subPage['title'];
+                $item['title'] = isset( $subPage['title'] ) ? $subPage['title'] : '';
+                $sub_slug      = isset( $subPage['slug'] ) ? $subPage['slug'] : '';
+
                 if ( ! empty( $subPage['href'] ) ) {
                     $item['href'] = $subPage['href'];
                 } else {
-                    $item['href'] = 'admin.php?page=ManageSites' . $subPage['slug'] . ( $site_id ? '&id=' . esc_attr( $site_id ) : '' );
+                    $item['href'] = 'admin.php?page=ManageSites' . $sub_slug . ( $site_id ? '&id=' . esc_attr( $site_id ) : '' );
                 }
-                $item['active'] = isset( $subPage['slug'] ) && ( $subPage['slug'] === $shownPage ) ? true : false;
+                $item['active'] = ( $sub_slug === $shownPage ) ? true : false;
                 $renderItems[]  = $item;
             }
         }
