@@ -1495,7 +1495,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
             </div>
         </div>
         
-        <?php if ( ( 'mainwp_tab' === $page ) || isset( $_GET['dashboard'] ) || ( ( 'ManageClients' === $page ) && isset( $_GET['client_id'] ) ) || ( 'CostSummary' === $page ) || ( 'InsightsOverview' === $page ) ) : ?>
+        <?php if ( $screen && ( ( 'mainwp_tab' === $page ) || isset( $_GET['dashboard'] ) || ( ( 'ManageClients' === $page ) && isset( $_GET['client_id'] ) ) || ( 'CostSummary' === $page ) || ( 'InsightsOverview' === $page ) ) ) : ?>
             <span id="mainwp-header-layout-actions">
                 <?php MainWP_Ui_Manage_Widgets_Layout::render_edit_layout( $screen->id ); ?>
             </span>
