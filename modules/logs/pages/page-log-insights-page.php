@@ -791,7 +791,6 @@ class Log_Insights_Page { //phpcs:ignore -- NOSONAR - multi methods.
      * Render layout selection.
      */
     public static function render_layout_selection() { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAfterBrace -- NOSONAR - complexity.
-        $screen = get_current_screen();
         ?>
         <div class="mainwp-sub-header" id="module-logs-widgets-layout-row">
             <div class="ui two column grid">
@@ -799,13 +798,11 @@ class Log_Insights_Page { //phpcs:ignore -- NOSONAR - multi methods.
                     <a href="admin.php?page=SettingsInsights" class="ui mini green button"><?php esc_html_e( 'Manage Network Activity Settings', 'mainwp' ); ?></a>
                 </div>
                 <div class="right aligned column">
-                    <?php MainWP_Ui_Manage_Widgets_Layout::render_edit_layout( $screen->id ); ?>
                     <a href="#" class="ui mini button" id="mainwp-insights-filter-toggle-button"><i class="filter icon"></i> <?php esc_html_e( 'Show Filters', 'mainwp' ); ?></a>
                 </div>
             </div>
         </div>
         <?php
-        MainWP_Ui_Manage_Widgets_Layout::render_modal_save_layout();
     }
 
     /**
@@ -947,7 +944,7 @@ class Log_Insights_Page { //phpcs:ignore -- NOSONAR - multi methods.
         MainWP_Logger::instance()->debug( 'Network Activity DB Size: ' . $size . ' MB' );
 
         ?>
-        <div class="mainwp-primary-content-wrap">
+        <div class="mainwp-primary-content-wrap ui segment">
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-insights-welcome-message' ) ) : ?>
             <div class="ui segment" style="margin-bottom:0px;padding-bottom:0px;">
                 <div class="ui icon message mainwp-welcome-message" style="margin-bottom:0px;">
@@ -966,15 +963,13 @@ class Log_Insights_Page { //phpcs:ignore -- NOSONAR - multi methods.
             <div class="ui segment" style="padding-bottom:0;margin-bottom:0;">
                 <div class="ui message" style="margin-bottom:0">
                     <i class="close icon mainwp-notice-dismiss" notice-id="insights-widgets"></i>
-                    <?php printf( esc_html__( '%1$s Tip: You can drag and drop widgets to reorder your dashboard or use the Page Settings (%2$s) to show/hide widgets.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<i class="cog fitted icon"></i>' ); ?>
+                    <?php printf( esc_html__( '%1$s Tip: You can drag and drop widgets to reorder your dashboard, use Page Settings (%2$s) to show or hide widgets, and use Layout (%3$s) in the header to save and load your widget layouts.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<i class="cog fitted icon"></i>', '<i class="all border fitted icon"></i>' ); ?>
                 </div>
             </div>
             <?php endif; ?>
             <div class="ui segment" style="margin-bottom:0;padding-top:0;padding-bottom:0;">
-            <?php
-            do_action( 'mainwp_module_log_render_db_update_notice' );
-            do_action( 'mainwp_module_log_render_db_size_notice' );
-            ?>
+            <?php do_action( 'mainwp_module_log_render_db_update_notice' );?>
+            <?php do_action( 'mainwp_module_log_render_db_size_notice' ); ?>
             </div>
             <?php
             /**
@@ -1040,6 +1035,7 @@ class Log_Insights_Page { //phpcs:ignore -- NOSONAR - multi methods.
                     });
                 } );
             </script>
+        <?php MainWP_Ui_Manage_Widgets_Layout::render_modal_save_layout(); ?>
         <div class="ui modal" id="mainwp-module-log-overview-screen-options-modal">
             <i class="close icon"></i>
                 <div class="header"><?php esc_html_e( 'Page Settings', 'mainwp' ); ?></div>

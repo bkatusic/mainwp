@@ -154,7 +154,7 @@ class MainWP_Notification_Settings { // phpcs:ignore Generic.Classes.OpeningBrac
         }
 
         ?>
-        <div id="mainwp-all-emails-settings" class="ui segment">
+        <div id="mainwp-all-emails-settings" class="ui padded segment">
         <?php if ( $updated ) : ?>
             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'Settings have been saved successfully!', 'mainwp' ); ?></div>
             <?php endif; ?>

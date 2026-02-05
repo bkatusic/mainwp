@@ -491,6 +491,7 @@ jQuery(document).on('click', '#mainwp-clients-new-custom-field-button', function
   jQuery(parent).find('input[name="field-name"]').val('');
   jQuery(parent).find('input[name="field-description"]').val('');
   jQuery(parent).find('input[name="field-id"]').val(0);
+  jQuery(parent).find('#mainwp-clients-save-new-custom-field').addClass('disabled').prop('disabled', true);
   jQuery('#mainwp-clients-custom-field-modal').modal({
     closable: false,
   }).modal('show');
@@ -509,6 +510,13 @@ jQuery(document).on('click', '#mainwp-clients-edit-custom-field', function () {
   jQuery('#mainwp-clients-custom-field-modal input[name="field-description"]').val(field_desc);
   jQuery('#mainwp-clients-custom-field-modal input[name="field-id"]').val(field_id);
 
+  let saveButton = jQuery('#mainwp-clients-custom-field-modal').find('#mainwp-clients-save-new-custom-field');
+  if (field_name.trim() !== '' && field_desc.trim() !== '') {
+    saveButton.removeClass('disabled').prop('disabled', false);
+  } else {
+    saveButton.addClass('disabled').prop('disabled', true);
+  }
+
   jQuery('#mainwp-clients-custom-field-modal').modal({
     closable: false,
   }).modal('show');
@@ -519,6 +527,20 @@ jQuery(document).on('click', '#mainwp-clients-edit-custom-field', function () {
 jQuery(document).on('click', '#mainwp-clients-save-new-custom-field', function () {
   mainwp_clients_update_custom_field(this);
   return false;
+});
+
+// Validate required fields for custom field modal
+jQuery(document).on('input', '#mainwp-clients-custom-field-modal input[name="field-name"], #mainwp-clients-custom-field-modal input[name="field-description"]', function () {
+  let parent = jQuery('#mainwp-clients-custom-field-modal');
+  let fieldName = parent.find('input[name="field-name"]').val().trim();
+  let fieldDesc = parent.find('input[name="field-description"]').val().trim();
+  let saveButton = parent.find('#mainwp-clients-save-new-custom-field');
+
+  if (fieldName !== '' && fieldDesc !== '') {
+    saveButton.removeClass('disabled').prop('disabled', false);
+  } else {
+    saveButton.addClass('disabled').prop('disabled', true);
+  }
 });
 
 let mainwp_clients_update_custom_field = function (me) {

@@ -291,7 +291,7 @@ class MainWP_Monitoring { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.C
         /** This action is documented in ../pages/page-mainwp-manage-sites.php */
         do_action( 'mainwp_pageheader_sites', 'MonitoringSites' );
         ?>
-        <div id="mainwp-manage-sites-content" class="ui segment">
+        <div id="mainwp-manage-monitors-content" class="ui padded segment">
             <div id="mainwp-message-zone" style="display:none;" class="ui message"></div>
             <form method="post" class="mainwp-table-container">
                 <?php

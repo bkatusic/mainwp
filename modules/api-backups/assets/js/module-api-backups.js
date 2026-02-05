@@ -141,3 +141,22 @@ let mainwp_api_backups_do_backups_specific = function (pObj, bulk, selector) {
     return false;
 }
 
+let mainwp_api_backups_update_button_state = function () {
+    let checkedCount = jQuery('#mainwp-3rd-party-backups-table tbody td.check-column INPUT[type=checkbox]:checked').length;
+    if (checkedCount > 0) {
+        jQuery('#action_backup_selected_sites').removeClass('disabled');
+    } else {
+        jQuery('#action_backup_selected_sites').addClass('disabled');
+    }
+}
+
+jQuery(document).ready(function () {
+    jQuery('#mainwp-3rd-party-backups-table').on('change', 'tbody td.check-column INPUT[type=checkbox]', function () {
+        mainwp_api_backups_update_button_state();
+    });
+
+    jQuery('#cb-select-all-top').on('change', function () {
+        mainwp_api_backups_update_button_state();
+    });
+});
+

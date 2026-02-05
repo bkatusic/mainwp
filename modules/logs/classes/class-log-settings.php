@@ -261,7 +261,7 @@ class Log_Settings {
         $enabled_auto_archive = isset( $this->options['auto_archive'] ) && ! empty( $this->options['auto_archive'] ) ? true : false;
 
         ?>
-        <div id="mainwp-module-log-settings-wrapper" class="ui segment">
+        <div id="mainwp-module-log-settings-wrapper" class="ui padded segment">
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-network-activity-settings-info-message' ) ) : ?>
             <div class="ui info message">
                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-network-activity-settings-info-message"></i>

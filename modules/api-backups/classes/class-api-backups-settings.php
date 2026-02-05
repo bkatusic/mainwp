@@ -132,7 +132,7 @@ class Api_Backups_Settings {
         $_nonce_slug = $individual ? 'cloudways_api_form_individual' : 'cloudways_api_form_general';
         ?>
         <div id="3rd-party-api-manager">
-            <div class="ui segment">
+            <div class="ui padded segment">
 
                 <div class="ui stackable grid">
                     <div class="sixteen wide column">

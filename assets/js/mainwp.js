@@ -4165,6 +4165,23 @@ jQuery(function ($) {
     $(document).on('click', '.insights-actions-row-dismiss', function () {
         return mainwp_insights_row_actions_dismiss(this);
     });
+
+    let mainwp_sites_changes_update_dismiss_button_state = function () {
+        let checkedCount = jQuery('#mainwp-module-log-records-body-table tr').find('input[type="checkbox"]:checked').length;
+        if (checkedCount > 0) {
+            jQuery('#mainwp_sites_changes_bulk_dismiss_selected_btn').removeClass('disabled');
+        } else {
+            jQuery('#mainwp_sites_changes_bulk_dismiss_selected_btn').addClass('disabled');
+        }
+    }
+
+    jQuery(document).on('change', '#mainwp-module-log-records-body-table input[type="checkbox"]', function () {
+        mainwp_sites_changes_update_dismiss_button_state();
+    });
+
+    jQuery(document).on('change', '#cb-select-all-top, #cb-select-all-bottom', function () {
+        mainwp_sites_changes_update_dismiss_button_state();
+    });
 })
 
 let mainwp_insights_row_actions_dismiss = function (obj) {
@@ -5060,113 +5077,7 @@ jQuery(function ($) {
         })();
     }
 
-    if (!window.mainwpUIHandleWidgetsLayout) {
-        window.mainwpUIHandleWidgetsLayout = (function () {
-            const statusElemId = '#mainwp-common-edit-widgets-layout-status';
-            let _instance = {
-                loadingStatus: function () {
-                    $(statusElemId).html('<i class="notched circle loading icon"></i> ' + __('Loading layouts. Please wait...')).show();
-                },
-                savingStatus: function () {
-                    $(statusElemId).html('<i class="notched circle loading icon"></i> ' + __('Saving layout. Please wait...')).show();
-                },
-                deletingStatus: function () {
-                    $(statusElemId).html('<i class="notched circle loading icon"></i> ' + __('Deleting layout. Please wait...')).show();
-
-                },
-                showWorkingStatus: function (status, addClass) {
-                    if (addClass) {
-                        $(statusElemId).removeClass('red green yellow');
-                        $(statusElemId).addClass(addClass);
-                    }
-                    $(statusElemId).html(status).show();
-                },
-                hideWorkingStatus: function () {
-                    $(statusElemId).removeClass('red green').hide();
-                },
-                showLayout: function (showBtn) {
-                    jQuery('#mainwp-common-edit-widgets-layout-modal > div.header').html(__('Save Layout'));
-                    jQuery('#mainwp-common-edit-widgets-layout-edit-fields').show();
-                    jQuery('#mainwp-common-edit-widgets-layout-save-button').show();
-                    jQuery('#mainwp-common-layout-widgets-select-fields').hide();
-                    jQuery('#mainwp-common-edit-widgets-select-layout-button').hide();
-                    jQuery('#mainwp-common-edit-widgets-layout-delete-button').hide();
-
-                    if (jQuery('#mainwp-widgets-selected-layout').length > 0) {
-                        let name = jQuery('#mainwp-widgets-selected-layout').attr('layout-name');
-                        let lay_idx = jQuery('#mainwp-widgets-selected-layout').attr('layout-idx');
-                        jQuery('#mainwp-common-edit-widgets-layout-name').val(name);
-                        jQuery(showBtn).attr('selected-layout-id', lay_idx);
-                    }
-                    this.hideWorkingStatus();
-                    mainwp_common_show_edit_widgets_layout_modal();
-                },
-                loadSegment: function (loadCallback) {
-                    jQuery('#mainwp-common-edit-widgets-layout-edit-fields').hide();
-                    jQuery('#mainwp-common-edit-widgets-layout-save-button').hide();
-                    jQuery('#mainwp-common-edit-widgets-layout-modal > div.header').html(__('Load Layout'));
-                    jQuery('#mainwp-common-layout-widgets-select-fields').show();
-                    jQuery('#mainwp-common-edit-widgets-select-layout-button').show();
-                    jQuery('#mainwp-common-edit-widgets-layout-delete-button').show();
-                    this.hideWorkingStatus();
-                    mainwp_common_show_edit_widgets_layout_modal(loadCallback);
-                },
-                showResults: function (result) {
-                    jQuery(statusElemId).hide();
-                    jQuery('#mainwp-common-edit-widgets-layout-lists-wrapper').html(result);
-                    jQuery('#mainwp-common-edit-widgets-layout-lists-wrapper .ui.dropdown').dropdown();
-                    jQuery('#mainwp-common-layout-widgets-select-fields').show();
-                }
-            }
-            return _instance;
-        })();
-    }
-
 });
-
-
-let mainwp_common_show_edit_widgets_layout_modal = function (loadCallback) {
-    jQuery('#mainwp-common-edit-widgets-layout-modal').modal({
-        allowMultiple: false,
-        onShow: function () {
-            if (typeof loadCallback == 'function') {
-                loadCallback();
-            }
-        }
-    }).modal('show');
-};
-
-let mainwp_common_ui_widgets_save_layout = function (itemClass, data, callBack) {
-
-    let orders = [];
-    let wgIds = [];
-
-    const $items = document.querySelectorAll(itemClass);
-
-    if ($items.length == 0) {
-        return;
-    }
-
-    $items.forEach(function (item) {
-        let obj = {};
-        obj["x"] = item.getAttribute('gs-x');
-        obj["y"] = item.getAttribute('gs-y');
-        obj["w"] = item.getAttribute('gs-w');
-        obj["h"] = item.getAttribute('gs-h');
-        orders.push(obj);
-        wgIds.push(item.id);
-    });
-
-    data.action = 'mainwp_ui_save_widgets_layout';
-    data.order = orders;
-    data.wgids = wgIds;
-
-    jQuery.post(ajaxurl, mainwp_secure_data(data), function (res) {
-        if (typeof callBack !== "undefined" && false !== callBack) {
-            callBack(res);
-        }
-    }, 'json');
-}
 
 let mainwp_overview_gridstack_save_layout = function (item_id) {
 

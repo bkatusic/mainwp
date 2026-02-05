@@ -471,7 +471,7 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                         </div>
                     </div>
                 </div>
-                <div class="ui segment" id="mainwp-plugins-table-wrapper">
+                <div class="ui padded segment" id="mainwp-plugins-table-wrapper">
                     <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-manage-plugins-info-message' ) ) : ?>
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-manage-plugins-info-message"></i>
@@ -2007,7 +2007,7 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             </div>
 
 
-            <div class="ui segment">
+            <div class="ui padded segment">
                 <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-install-plugins-info-message' ) ) : ?>
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-install-plugins-info-message"></i>
@@ -2185,7 +2185,7 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                     <div class="ui message green"><?php esc_html_e( 'Settings have been saved.', 'mainwp' ); ?></div>
                 <?php endif; ?>
                 <div id="mainwp-message-zone" class="ui message" style="display:none"></div>
-                <div id="mainwp-auto-updates-plugins-content" class="ui segment">
+                <div id="mainwp-auto-updates-plugins-content" class="ui padded segment">
                     <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-plugins-auto-updates-info-message' ) ) : ?>
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-plugins-auto-updates-info-message"></i>
@@ -2611,7 +2611,7 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
 
         static::render_header( 'Ignore' );
         ?>
-        <div id="mainwp-ignored-plugins" class="ui segment">
+        <div id="mainwp-ignored-plugins" class="ui padded segment">
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-ignored-plugins-info-message' ) ) : ?>
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-ignored-plugins-info-message"></i>
@@ -2897,7 +2897,7 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
 
         static::render_header( 'IgnoreAbandoned' );
         ?>
-        <div id="mainwp-ignored-abandoned-plugins" class="ui segment">
+        <div id="mainwp-ignored-abandoned-plugins" class="ui padded segment">
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-ignored-abandoned-plugins-info-message' ) ) : ?>
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-ignored-abandoned-plugins-info-message"></i>

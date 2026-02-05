@@ -365,14 +365,6 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
         $pagelength_val   = implode( ',', array_keys( $pages_length ) );
         $pagelength_title = implode( ',', array_values( $pages_length ) );
 
-        ?>
-        <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-client-info-message' ) ) : ?>
-            <div class="ui info message">
-                <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-client-info-message"></i>
-                <?php printf( esc_html__( 'Manage your clients. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/clients/manage-clients" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
-            </div>
-        <?php endif; ?>
-        <?php
         MainWP_Client_Handler::show_notice_existed_contact_emails();
         ?>
         <table id="mainwp-manage-clients-table" style="width:100%" class="ui single line selectable unstackable table mainwp-with-preview-table mainwp-manage-wpsites-table">

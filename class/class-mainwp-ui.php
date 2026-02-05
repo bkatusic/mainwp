@@ -1375,6 +1375,8 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
         $sidebar_pages = apply_filters( 'mainwp_sidebar_pages', $sidebar_pages );
         $current_user  = get_current_user_id();
         $custom_theme  = MainWP_Settings::get_instance()->get_current_user_theme();
+        $screen        = get_current_screen();
+
         if ( false === $custom_theme ) {
             $compat_theme = null;
             // to compatible with Custom Dashboard extension settings.
@@ -1394,7 +1396,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
         // phpcs:disable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $page = isset( $_GET['page'] ) ? wp_unslash( $_GET['page'] ) : '';
         ob_start();
-        if ( isset( $_GET['dashboard'] ) || isset( $_GET['id'] ) || isset( $_GET['updateid'] ) || isset( $_GET['emailsettingsid'] ) || isset( $_GET['scanid'] ) ) :
+        if ( isset( $_GET['dashboard'] ) || ( isset( $_GET['id'] ) && 'CostTrackerAdd' !== $page ) || isset( $_GET['updateid'] ) || isset( $_GET['emailsettingsid'] ) || isset( $_GET['scanid'] ) ) :
             $id = 0;
             if ( isset( $_GET['dashboard'] ) ) {
                 $id = intval( $_GET['dashboard'] );
@@ -1492,6 +1494,12 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 <a class="item" href="<?php echo esc_url( admin_url( 'admin.php?page=UserBulkAdd' ) ); ?>"><?php esc_html_e( ' Create User', 'mainwp' ); ?></a>
             </div>
         </div>
+        
+        <?php if ( $screen && ( ( 'mainwp_tab' === $page ) || isset( $_GET['dashboard'] ) || ( ( 'ManageClients' === $page ) && isset( $_GET['client_id'] ) ) || ( 'CostSummary' === $page ) || ( 'InsightsOverview' === $page ) ) ) : ?>
+            <span id="mainwp-header-layout-actions">
+                <?php MainWP_Ui_Manage_Widgets_Layout::render_edit_layout( $screen->id ); ?>
+            </span>
+        <?php endif; ?>
 
         <span id="mainwp-header-secondary-actions">
             <?php if ( ( 'mainwp_tab' === $page ) || isset( $_GET['dashboard'] ) || in_array( $page, $sidebar_pages ) ) : // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended ?>
@@ -1701,11 +1709,8 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
         <?php
         $is_site = MainWP_System::is_mainwp_site_page();
         if ( $is_site ) {
-            ?>
-            <div id="mainwp-site-mode-wrap">
-        <?php } ?>
-
-        <?php
+            echo '<div id="mainwp-site-mode-wrap">';
+        }
     }
 
     /**
@@ -2690,8 +2695,6 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
         </script>
         <?php
     }
-
-
 
     /**
      * Method render_screen_options()

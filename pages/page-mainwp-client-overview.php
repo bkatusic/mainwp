@@ -300,119 +300,119 @@ class MainWP_Client_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameL
      */
     public static function render_dashboard_body() {
 
-        MainWP_Overview::render_layout_selection();
+        MainWP_Ui_Manage_Widgets_Layout::render_modal_save_layout();
 
         $screen = get_current_screen();
         ?>
         <div class="mainwp-primary-content-wrap">
-        <div id="mainwp-message-zone" class="ui message" style="display:none;"></div>
-        <?php
-            do_action( 'mainwp_module_log_render_db_update_notice' );
-            do_action( 'mainwp_module_log_render_db_size_notice' );
-        ?>
-        <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'client-widgets' ) ) : ?>
-                <div class="ui message">
+            <div class="ui segment">
+                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'client-widgets' ) ) : ?>
+                <div class="ui message" style="margin:1em;">
                     <i class="close icon mainwp-notice-dismiss" notice-id="client-widgets"></i>
-                    <?php printf( esc_html__( '%1$s Tip: You can drag and drop widgets to reorder your dashboard or use the Page Settings (%2$s) to show/hide widgets.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<i class="cog fitted icon"></i>' ); ?>
+                    <?php printf( esc_html__( '%1$s Tip: You can drag and drop widgets to reorder your dashboard, use Page Settings (%2$s) to show or hide widgets, and use Layout (%3$s) in the header to save and load your widget layouts.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<i class="cog fitted icon"></i>', '<i class="all border fitted icon"></i>' ); ?>
                 </div>
-            <?php endif; ?>
-            <?php
-            /**
-             * Action: mainwp_before_overview_widgets
-             *
-             * Fires at the top of the Operations page (before first widget).
-             *
-             * @since 4.3
-             */
-            do_action( 'mainwp_before_overview_widgets', 'clients' );
-            ?>
-            <div id="mainwp-grid-wrapper" class="gridster">
-                <div id="mainwp-widgets-placeholder" class="ui page dimmer">
-                    <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
-                </div>
-                <script>
-                    jQuery( document ).ready( function () {
-                        jQuery('#mainwp-widgets-placeholder').dimmer('show');
-                    });
-                </script>
-                <?php MainWP_UI::do_widget_boxes( $screen->id ); ?>
-        </div>
-            <?php
-            /**
-             * Action: 'mainwp_after_overview_widgets'
-             *
-             * Fires at the bottom of the Operations page (after the last widget).
-             *
-             * @since 4.3
-             */
-            do_action( 'mainwp_after_overview_widgets', 'clients' );
-            ?>
-    <script type="text/javascript">
-        jQuery( document ).ready( function( $ ) {
-
-            jQuery( '.mainwp-widget .mainwp-dropdown-tab .item' ).tab();
-
-            mainwp_clients_overview_screen_options = function () {
-                jQuery( '#mainwp-clients-overview-screen-options-modal' ).modal( {
-                    allowMultiple: true,
-                    onHide: function () {
-                    }
-                } ).modal( 'show' );
-                return false;
-            };
-            jQuery('#reset-clients-overview-settings').on('click', function () {
-                mainwp_confirm(__('Are you sure?'), function(){
-                    jQuery('.mainwp_hide_wpmenu_checkboxes input[name="mainwp_show_widgets[]"]').prop('checked', true);
-                    jQuery('input[name=reset_client_overview_settings]').attr('value', 1);
-                    jQuery('#submit-client-overview-settings').click();
-                }, false, false, true);
-                return false;
-            });
-        } );
-    </script>
-    <div class="ui modal" id="mainwp-clients-overview-screen-options-modal">
-    <i class="close icon"></i>
-            <div class="header"><?php esc_html_e( 'Page Settings', 'mainwp' ); ?></div>
-            <div class="content ui form">
+                <?php endif; ?>
+                <div id="mainwp-message-zone" class="ui message" style="display:none;"></div>
+                <?php do_action( 'mainwp_module_log_render_db_update_notice' ); ?>
+                <?php do_action( 'mainwp_module_log_render_db_size_notice' ); ?>
                 <?php
                 /**
-                 * Action: mainwp_clients_overview_screen_options_top
+                 * Action: mainwp_before_overview_widgets
                  *
-                 * Fires at the top of the Sceen Options modal on the Operations page.
+                 * Fires at the top of the Operations page (before first widget).
                  *
-                 * @since 4.1
+                 * @since 4.3
                  */
-                do_action( 'mainwp_clients_overview_screen_options_top' );
+                do_action( 'mainwp_before_overview_widgets', 'clients' );
                 ?>
-                <form method="POST" action="" name="mainwp_clients_overview_screen_options_form" id="mainwp-clients-overview-screen-options-form">
-                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
-                    <input type="hidden" name="wp_scr_options_nonce" value="<?php echo esc_attr( wp_create_nonce( 'MainWPClientsScrOptions' ) ); ?>" />
-                    <?php static::render_screen_options( false ); ?>
+                <div id="mainwp-grid-wrapper" class="gridster">
+                    <div id="mainwp-widgets-placeholder" class="ui page dimmer">
+                        <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
+                    </div>
+                    <script>
+                        jQuery( document ).ready( function () {
+                            jQuery('#mainwp-widgets-placeholder').dimmer('show');
+                        });
+                    </script>
+                    <?php MainWP_UI::do_widget_boxes( $screen->id ); ?>
+                </div>
+                <?php
+                /**
+                 * Action: 'mainwp_after_overview_widgets'
+                 *
+                 * Fires at the bottom of the Operations page (after the last widget).
+                 *
+                 * @since 4.3
+                 */
+                do_action( 'mainwp_after_overview_widgets', 'clients' );
+                ?>
+            </div>
+            <script type="text/javascript">
+                jQuery( document ).ready( function( $ ) {
+
+                    jQuery( '.mainwp-widget .mainwp-dropdown-tab .item' ).tab();
+
+                    mainwp_clients_overview_screen_options = function () {
+                        jQuery( '#mainwp-clients-overview-screen-options-modal' ).modal( {
+                            allowMultiple: true,
+                            onHide: function () {
+                            }
+                        } ).modal( 'show' );
+                        return false;
+                    };
+                    jQuery('#reset-clients-overview-settings').on('click', function () {
+                        mainwp_confirm(__('Are you sure?'), function(){
+                            jQuery('.mainwp_hide_wpmenu_checkboxes input[name="mainwp_show_widgets[]"]').prop('checked', true);
+                            jQuery('input[name=reset_client_overview_settings]').attr('value', 1);
+                            jQuery('#submit-client-overview-settings').click();
+                        }, false, false, true);
+                        return false;
+                    });
+                } );
+            </script>
+            <div class="ui modal" id="mainwp-clients-overview-screen-options-modal">
+                <i class="close icon"></i>
+                <div class="header"><?php esc_html_e( 'Page Settings', 'mainwp' ); ?></div>
+                <div class="content ui form">
                     <?php
                     /**
-                     * Action: mainwp_clients_overview_screen_options_bottom
+                     * Action: mainwp_clients_overview_screen_options_top
                      *
-                     * Fires at the bottom of the Sceen Options modal on the Operations page.
+                     * Fires at the top of the Sceen Options modal on the Operations page.
                      *
                      * @since 4.1
                      */
-                    do_action( 'mainwp_clients_overview_screen_options_bottom' );
+                    do_action( 'mainwp_clients_overview_screen_options_top' );
                     ?>
-            </div>
-            <div class="actions">
-                <div class="ui two columns grid">
-                    <div class="left aligned column">
-                        <span data-tooltip="<?php esc_attr_e( 'Resets the page to its original layout and reinstates relocated widgets.', 'mainwp' ); ?>" data-inverted="" data-position="top left"><input type="button" class="ui button" name="reset" id="reset-clients-overview-settings" value="<?php esc_attr_e( 'Reset Page', 'mainwp' ); ?>" /></span>
+                    <form method="POST" action="" name="mainwp_clients_overview_screen_options_form" id="mainwp-clients-overview-screen-options-form">
+                        <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
+                        <input type="hidden" name="wp_scr_options_nonce" value="<?php echo esc_attr( wp_create_nonce( 'MainWPClientsScrOptions' ) ); ?>" />
+                        <?php static::render_screen_options( false ); ?>
+                        <?php
+                        /**
+                         * Action: mainwp_clients_overview_screen_options_bottom
+                         *
+                         * Fires at the bottom of the Sceen Options modal on the Operations page.
+                         *
+                         * @since 4.1
+                         */
+                        do_action( 'mainwp_clients_overview_screen_options_bottom' );
+                        ?>
                     </div>
-                    <div class="ui right aligned column">
-                        <input type="submit" class="ui green button" id="submit-client-overview-settings" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>" />
+                    <div class="actions">
+                        <div class="ui two columns grid">
+                            <div class="left aligned column">
+                                <span data-tooltip="<?php esc_attr_e( 'Resets the page to its original layout and reinstates relocated widgets.', 'mainwp' ); ?>" data-inverted="" data-position="top left"><input type="button" class="ui button" name="reset" id="reset-clients-overview-settings" value="<?php esc_attr_e( 'Reset Page', 'mainwp' ); ?>" /></span>
+                            </div>
+                            <div class="ui right aligned column">
+                                <input type="submit" class="ui green button" id="submit-client-overview-settings" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>" />
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <input type="hidden" name="reset_client_overview_settings" value="" />
+                <input type="hidden" name="reset_client_overview_settings" value="" />
             </form>
-        </div>
+            </div>
         </div>
         <?php
     }

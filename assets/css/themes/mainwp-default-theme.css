@@ -922,6 +922,12 @@ body.mainwp-ui.mainwp-custom-theme,
   background: var(--mainwp-dark);
 }
 
+.mainwp-ui.mainwp-custom-theme #mainwp-header-layout-actions {
+  padding: 7px 0 7px 10px;
+  margin-left: 10px;
+  border-left: 1px solid var(--mainwp-border) !important;
+}
+
 .mainwp-ui.mainwp-custom-theme #mainwp-header-secondary-actions {
   padding: 7px 10px;
   margin: 0 10px;

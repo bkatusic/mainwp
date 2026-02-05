@@ -561,7 +561,7 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
         static::render_second_top_header();
 
         ?>
-        <div id="mainwp-manage-sites-content" class="ui segment">
+        <div id="mainwp-manage-clients-content" class="ui padded segment">
             <div id="mainwp-message-zone" style="display:none;" class="ui message"></div>
             <form method="post" class="mainwp-table-container">
                 <?php
@@ -876,13 +876,7 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
             <form action="" method="post" enctype="multipart/form-data" name="createclient_form" id="createclient_form" class="add:clients: validate">
                 <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                 <div class="mainwp-main-content">
-                    <div class="ui segment">
-                        <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-add-client-info-message' ) ) : ?>
-                            <div class="ui info message">
-                                <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-add-client-info-message"></i>
-                                <?php printf( esc_html__( 'Use the provided form to create a new client on your child site. For additional help, please check this %1$shelp documentation %2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/clients/manage-clients#create-a-new-client" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
-                            </div>
-                        <?php endif; ?>
+                    <div class="ui padded segment">
                         <div class="ui message" id="mainwp-message-zone-client" style="display:none;"></div>
                         <div id="mainwp-add-new-client-form" >
                             <?php static::render_add_client_content( $edit_client ); ?>
@@ -957,7 +951,7 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
             static::render_import_client_modal();
         }
         ?>
-        <div class="ui segment"  id="mainwp-import-clients">
+        <div class="ui padded segment"  id="mainwp-import-clients">
             <form method="POST" action="" enctype="multipart/form-data" id="mainwp_client_import_form" class="ui form">
                 <div>
                             <?php $el_id_mes_zn_1 = 'mainwp-message-zone'; ?>
@@ -1173,17 +1167,8 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                 </div>
             </div>
         </div>
-        <div class="ui segment" id="mainwp-add-client-fields">
+        <div class="ui padded segment" id="mainwp-add-client-fields">
             <?php $fields = MainWP_DB_Client::instance()->get_client_fields(); ?>
-            <h2 class="ui dividing header">
-                <?php esc_html_e( 'Custom Client Fields', 'mainwp' ); ?>
-                <div class="sub header"><?php esc_html_e( 'Create and manage custom fields to store additional client details, ensuring you have all the information you need in one place.', 'mainwp' ); ?></div>
-            </h2>
-
-            <div class="ui info message" <?php echo ! MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-clients-manage-fields' ) ? 'style="display: none"' : ''; ?>>
-            <?php esc_html_e( 'Create and manage custom Client fields.', 'mainwp' ); ?>
-                <i class="ui close icon mainwp-notice-dismiss" notice-id="mainwp-clients-manage-fields"></i>
-            </div>
             <div class="ui message" id="mainwp-message-zone-client" style="display:none;"></div>
             <table id="mainwp-clients-custom-fields-table" class="ui table" style="width:100%">
                 <thead>
@@ -1258,22 +1243,22 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
          */
     public static function render_add_field_modal( $client_id = 0 ) {
         ?>
-        <div class="ui modal" id="mainwp-clients-custom-field-modal">
+        <div class="ui small modal" id="mainwp-clients-custom-field-modal">
         <i class="close icon"></i>
             <div class="header"><?php esc_html_e( 'Custom Field', 'mainwp' ); ?></div>
             <div class="content ui mini form">
                 <div class="ui yellow message" style="display:none"></div>
                 <div class="field">
-                    <label><?php esc_html_e( 'Field Name', 'mainwp' ); ?></label>
+                    <label><?php esc_html_e( 'Field Name', 'mainwp' ); ?> <span class="ui small red text"><?php esc_html_e( '(Required)', 'mainwp' ); ?></span></label>
                     <input type="text" value="" class="field-name" name="field-name" placeholder="<?php esc_attr_e( 'Enter field name (without of square brackets)', 'mainwp' ); ?>">
                 </div>
                 <div class="field">
-                    <label><?php esc_html_e( 'Field Description', 'mainwp' ); ?></label>
+                    <label><?php esc_html_e( 'Field Description', 'mainwp' ); ?> <span  class="ui small red text"><?php esc_html_e( '(Required)', 'mainwp' ); ?></span></label>
                     <input type="text" value="" class="field-description" name="field-description" placeholder="<?php esc_attr_e( 'Enter field description', 'mainwp' ); ?>">
                 </div>
             </div>
             <div class="actions">
-                <input type="button" class="ui green button" client-id="<?php echo intval( $client_id ); ?>" id="mainwp-clients-save-new-custom-field" value="<?php esc_attr_e( 'Save Field', 'mainwp' ); ?>">
+                <input type="button" class="ui green mini button disabled" client-id="<?php echo intval( $client_id ); ?>" id="mainwp-clients-save-new-custom-field" value="<?php esc_attr_e( 'Save Field', 'mainwp' ); ?>" disabled>
             </div>
             <input type="hidden" value="0" name="field-id">
         </div>

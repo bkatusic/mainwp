@@ -397,7 +397,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
 
         static::render_header( '' );
         ?>
-        <div id="mainwp-manage-users" class="ui alt segment">
+        <div id="mainwp-manage-users">
             <div class="mainwp-main-content">
                 <div class="mainwp-actions-bar ui mini form">
                     <div class="ui grid">
@@ -456,7 +456,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         </div>
                     </div>
                 </div>
-                <div class="ui segment" id="mainwp_users_wrap_table">
+                <div class="ui padded segment" id="mainwp_users_wrap_table">
                     <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-manage-users-info-message' ) ) : ?>
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-manage-users-info-message"></i>
@@ -1483,7 +1483,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         static::render_header( 'Add' );
         // phpcs:disable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         ?>
-        <div class="ui alt segment" id="mainwp-add-users">
+        <div id="mainwp-add-users">
             <?php
             /**
              * Action: mainwp_before_new_user_form
@@ -1496,8 +1496,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             ?>
             <form action="" method="post" name="createuser" id="createuser" class="add:users: validate">
                 <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
-                <div class="mainwp-main-content">
-                    <div class="ui hidden divider"></div>
+                <div class="mainwp-main-content ui padded segment">
                     <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-add-user-info-message' ) ) : ?>
                     <div class="ui info message">
                         <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-add-user-info-message"></i>
@@ -1759,7 +1758,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      */
     public static function render_import_users() {
         ?>
-        <div class="ui segment" id="mainwp-import-sites">
+        <div class="ui padded segment" id="mainwp-import-sites">
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-import-users-info-message' ) ) : ?>
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-import-users-info-message"></i>
@@ -1784,8 +1783,8 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     <form method="POST" action="" enctype="multipart/form-data" id="mainwp_managesites_bulkadd_form">
                         <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                         <div class="ui grid field">
-                            <label class="six wide column middle aligned"><?php esc_html_e( 'Upload the CSV file', 'mainwp' ); ?></label>
-                        <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Click to upload the import file.', 'mainwp' ); ?>" data-inverted="" data-position="left center">
+                            <label class="six wide column middle aligned"><?php esc_html_e( 'Upload the CSV file', 'mainwp' ); ?> (<a href="<?php echo esc_url( MAINWP_PLUGIN_URL . 'assets/csv/sample_users.csv' ); ?>" ><?php esc_html_e( 'Download Sample CSV file', 'mainwp' ); ?></a>)</label>
+                            <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Click to upload the import file.', 'mainwp' ); ?>" data-inverted="" data-position="left center">
                                 <div class="ui file input">
                                 <input type="file" name="import_user_file_bulkupload" id="import_user_file_bulkupload" accept="text/comma-separated-values" />
                                 </div>
@@ -1798,14 +1797,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             </div>
                         </div>
                         <div class="ui divider"></div>
-                        <?php
-                        if ( $is_demo ) {
-                                MainWP_Demo_Handle::get_instance()->render_demo_disable_button( '<input type="button" class="ui big green button disabled" disabled="disabled" value="' . esc_attr__( 'Import Users', 'mainwp' ) . '"/>' );
-                        } else {
-                            ?>
-                                <input type="button" name="createuser" id="bulk_import_createuser" class="ui big green button" value="<?php esc_attr_e( 'Import Users', 'mainwp' ); ?>" />
-                            <?php } ?>
-                            <a href="<?php echo esc_url( MAINWP_PLUGIN_URL . 'assets/csv/sample_users.csv' ); ?>" class="ui big green basic right floated button"><?php esc_html_e( 'Download Sample CSV file', 'mainwp' ); ?></a>
+                        <input type="button" name="createuser" id="bulk_import_createuser" class="ui big green button" value="<?php esc_attr_e( 'Import Users', 'mainwp' ); ?>" />
                     </form>
                 </div>
             <?php

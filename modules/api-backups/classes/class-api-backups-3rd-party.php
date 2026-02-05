@@ -304,7 +304,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                 <div class="ui grid">
                     <div class="ui two column row">
                         <div class="middle aligned column ui">
-                            <button id="action_backup_selected_sites" class="ui green mini button"><?php esc_html_e( 'Backup Selected Sites', 'mainwp' ); ?></button>
+                            <button id="action_backup_selected_sites" class="ui green mini button disabled"><?php esc_html_e( 'Backup Selected Sites', 'mainwp' ); ?></button>
                         </div>
                         <div class="right aligned middle aligned column">
                             <a href="admin.php?page=SettingsApiBackups" class="ui mini green basic button"><?php esc_html_e( 'Manage API Backups Settings', 'mainwp' ); ?></a>
@@ -312,7 +312,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                     </div>
                 </div>
             </div>
-            <div class="ui segment" id="mainwp-3rd-party-api-backups">
+            <div class="ui padded segment" id="mainwp-3rd-party-api-backups">
             <?php static::action_notifications(); ?>
             <?php static::render_api_backups_table( '3rd-party-api-backups' ); ?>
             </div>
@@ -543,7 +543,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                 $columns = 'two';
             }
             ?>
-                <div class="mainwp-sub-header">
+                <div class="mainwp-actions-bar">
                     <div class="ui grid">
                         <div class="ui <?php echo esc_html( $columns ); ?> column row">
                                 <div class="middle aligned column ui">
@@ -634,7 +634,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                         </div>
                     </div>
                 </div>
-                <div class="ui segment">
+                <div class="ui padded segment">
 
                     <?php // Render action notifications. I get replaced by JS. ?>
                     <div id="mainwp-api-backups-message-zone" class="ui message" style="display: none;">

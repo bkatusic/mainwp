@@ -789,7 +789,7 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         static::render_header_tabs( $mainwp_show_language_updates, $current_tab, $total_wp_upgrades, $total_plugin_upgrades, $total_theme_upgrades, $total_translation_upgrades, $total_plugins_outdate, $total_themes_outdate, $site_view );
 
         ?>
-        <div class="ui segment" id="mainwp-manage-updates">
+        <div class="ui padded segment" id="mainwp-manage-updates">
         <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-manage-updates-message' ) ) { ?>
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-manage-updates-message"></i>
