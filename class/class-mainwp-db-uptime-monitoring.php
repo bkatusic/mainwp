@@ -1685,5 +1685,9 @@ KEY idx_wpid_issub (wpid, issub)";
             );
             ++$batches;
         } while ( 1000 === $rows && $batches < $max_batches );
+
+        if ( 1000 === $rows && $batches >= $max_batches ) {
+            MainWP_Utility::update_option( 'mainwp_uptime_monitor_cleanup_heartbeat_at', 0 ); // reset cleanup heartbeat to process on next run.
+        }
     }
 }
