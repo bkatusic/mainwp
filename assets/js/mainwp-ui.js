@@ -246,14 +246,63 @@ jQuery(function () {
     });
 });
 
+let mainwp_update_selection_counter = function () {
+    let parent = jQuery('.mainwp_select_sites_wrapper');
+    let tab = parent.find('input[name="select_sites_tab"]').val();
+    let count = 0;
+    
+    if (tab == 'site') {
+        count = parent.find('.mainwp-select-sites-list INPUT:checkbox:checked').length;
+    } else if (tab == 'staging') {
+        count = parent.find('#mainwp-select-staging-sites-list INPUT:checkbox:checked').length;
+    } else if (tab == 'client') {
+        count = parent.find('#mainwp-select-clients-list INPUT:checkbox:checked').length;
+    } else if (tab == 'group') {
+        count = parent.find('.mainwp-select-groups-list INPUT:checkbox:checked').length;
+    }
+    
+    let counter = parent.find('.mainwp-sites-selection-counter');
+    counter.text(count);
+    
+    let wrapper = parent.find('.mainwp-selection-counter-wrapper');
+    let selectedText = parent.find('.mainwp-selected-text');
+    
+    if (wrapper.length > 0) {
+        if (count > 0) {
+            counter.removeClass('grey').addClass('green');
+            selectedText.removeClass('grey').addClass('green');
+            wrapper.css('cursor', 'pointer')
+                   .attr('data-tooltip', 'Create a tag with selected sites')
+                   .attr('data-position', 'bottom right')
+                   .attr('data-inverted', '');
+            
+            if (!wrapper.find('.tag.icon').length) {
+                counter.before('<i class="tag small green icon"></i> ');
+            }
+        } else {
+            counter.removeClass('green').addClass('grey');
+            selectedText.removeClass('green').addClass('grey');
+            wrapper.css('cursor', 'default')
+                   .removeAttr('data-tooltip')
+                   .removeAttr('data-position')
+                   .removeAttr('data-inverted');
+            
+            wrapper.find('.tag.icon').remove();
+        }
+    }
+};
+
 let mainwp_site_select = function () {
     mainwp_newpost_updateCategories();
+    mainwp_update_selection_counter();
 };
 let mainwp_group_select = function () {
     mainwp_newpost_updateCategories();
+    mainwp_update_selection_counter();
 };
 let mainwp_client_select = function () {
     mainwp_newpost_updateCategories();
+    mainwp_update_selection_counter();
 };
 
 let mainwp_ss_select = function (me, val) {
@@ -301,14 +350,8 @@ let mainwp_ss_select = function (me, val) {
             }
         });
     }
-    if (val) {
-        jQuery('.mainwp-ss-select').hide();
-        jQuery('.mainwp-ss-deselect').show();
-    } else {
-        jQuery('.mainwp-ss-select').show();
-        jQuery('.mainwp-ss-deselect').hide();
-    }
     mainwp_newpost_updateCategories();
+    mainwp_update_selection_counter();
     return false;
 };
 
@@ -327,14 +370,8 @@ let mainwp_ss_select_disconnected = function (me, val) {
             }
         });
     }
-    if (val) {
-        jQuery('.mainwp-ss-select-disconnected').hide();
-        jQuery('.mainwp-ss-deselect-disconnected').show();
-    } else {
-        jQuery('.mainwp-ss-select-disconnected').show();
-        jQuery('.mainwp-ss-deselect-disconnected').hide();
-    }
     mainwp_newpost_updateCategories();
+    mainwp_update_selection_counter();
     return false;
 };
 
@@ -366,13 +403,12 @@ window.mainwp_sites_selection_onvisible_callback = function (me) {
         select_by = 'client';
     }
 
-    jQuery('.mainwp-ss-select').show();
-    jQuery('.mainwp-ss-deselect').hide();
-
     console.log('select by: ' + select_by);
 
     parent.find('input[name="select_by"]').val(select_by);
     parent.find('input[name="select_sites_tab"]').val(selected_tab);
+    
+    mainwp_update_selection_counter();
 }
 
 

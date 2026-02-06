@@ -266,8 +266,6 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
     width: 199px;
     border-radius: 0px !important;
     border: none !important;
-    box-shadow: 20px 0px 15px -18px rgba(0, 0, 0, 0.15) inset !important;
-    -webkit-box-shadow: 20px 0px 15px -18px rgba(0, 0, 0, 0.15) inset !important;
 }
 
 .mainwp-individual-site-view #mainwp-page-navigation-wrapper .mainwp-page-navigation .item {
@@ -445,7 +443,6 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
     width: 8px;
     margin-left: 0px;
     margin-right: -8px;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -466,6 +463,7 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
     transition: all 0.15s ease;
     color: #fff;
     padding: 1em .05em;
+    cursor: pointer;
 }
 
 
@@ -723,14 +721,17 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
 
 /* Select Sites */
 
+#mainwp-select-sites-menu {
+    margin-bottom: 1em;
+}
+
 .mainwp-select-sites-items-body {
-    height: 220px;
+    height: 300px;
     overflow: auto;
 }
 
 .mainwp-select-sites-select-all-actions {
-    background: #dadada;
-    margin-top: 0;
+    margin: 0.785em 0 1.785em 0;
 }
 
 .mainwp-select-sites-select-all-actions .item {

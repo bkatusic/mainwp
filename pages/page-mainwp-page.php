@@ -646,24 +646,26 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         }
         ?>
         <div class="ui mini form">
-            <div class="field">
-                <div class="ui input fluid">
-                    <input type="text" placeholder="<?php esc_attr_e( 'Containing keyword', 'mainwp' ); ?>" id="mainwp_page_search_by_keyword" class="text" value="<?php echo ( null !== $cachedSearch ) ? esc_attr( $cachedSearch['keyword'] ) : ''; ?>" />
+            <div class="two fields">
+                <div class="field">
+                    <div class="ui input fluid">
+                        <input type="text" placeholder="<?php esc_attr_e( 'Containing keyword', 'mainwp' ); ?>" id="mainwp_page_search_by_keyword" class="text" value="<?php echo ( null !== $cachedSearch ) ? esc_attr( $cachedSearch['keyword'] ) : ''; ?>" />
+                    </div>
                 </div>
-            </div>
-            <div class="field">
-                <?php
-                $searchon = 'all';
-                if ( null !== $cachedSearch ) {
-                    $searchon = $cachedSearch['search_on'];
-                }
-                ?>
-                <select class="ui dropdown fluid" id="mainwp_page_search_on">
-                    <option value=""><?php esc_html_e( 'Search in...', 'mainwp' ); ?></option>
-                    <option value="title" <?php echo 'title' === $searchon ? 'selected' : ''; ?>><?php esc_html_e( 'Title', 'mainwp' ); ?></option>
-                    <option value="content" <?php echo 'content' === $searchon ? 'selected' : ''; ?>><?php esc_html_e( 'Body', 'mainwp' ); ?></option>
-                    <option value="all" <?php echo 'all' === $searchon ? 'selected' : ''; ?>><?php esc_html_e( 'Title and Body', 'mainwp' ); ?></option>
-                </select>
+                <div class="field">
+                    <?php
+                    $searchon = 'all';
+                    if ( null !== $cachedSearch ) {
+                        $searchon = $cachedSearch['search_on'];
+                    }
+                    ?>
+                    <select class="ui dropdown fluid" id="mainwp_page_search_on">
+                        <option value=""><?php esc_html_e( 'Search in...', 'mainwp' ); ?></option>
+                        <option value="title" <?php echo 'title' === $searchon ? 'selected' : ''; ?>><?php esc_html_e( 'Title', 'mainwp' ); ?></option>
+                        <option value="content" <?php echo 'content' === $searchon ? 'selected' : ''; ?>><?php esc_html_e( 'Body', 'mainwp' ); ?></option>
+                        <option value="all" <?php echo 'all' === $searchon ? 'selected' : ''; ?>><?php esc_html_e( 'Title and Body', 'mainwp' ); ?></option>
+                    </select>
+                </div>
             </div>
             <div class="field">
                 <label><?php esc_html_e( 'Date range', 'mainwp' ); ?></label>

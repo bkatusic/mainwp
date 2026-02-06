@@ -516,11 +516,6 @@
   background: var(--mainwp-bg-base) !important;
 }
 
-.mainwp-ui.mainwp-custom-theme #mainwp-select-sites-filter {
-  border-radius: 16px !important;
-  -webkit-border-radius: 16px !important;
-}
-
 .mainwp-ui.mainwp-custom-theme .mainwp-actions-bar .ui.dropdown,
 .mainwp-ui.mainwp-custom-theme .mainwp-actions-bar .ui.search input,
 .mainwp-ui.mainwp-custom-theme .mainwp-sub-header .ui.dropdown,
@@ -909,10 +904,6 @@ body.mainwp-ui.mainwp-custom-theme,
   background-color: var(--mainwp-bg-base) !important;
   color: var(--mainwp-text-primary);
   min-height: calc(100vh - 68px);
-}
-
-.mainwp-ui.mainwp-custom-theme .mainwp-side-content .mainwp-select-sites-select-all-actions {
-  background-color: var(--mainwp-light) !important;
 }
 
 /* Header Element

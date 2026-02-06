@@ -133,6 +133,7 @@ class MainWP_Post_Handler extends MainWP_Post_Base_Handler { // phpcs:ignore -- 
 
         $this->add_action( 'mainwp_clients_save_field', array( &$this, 'mainwp_clients_save_field' ) );
         $this->add_action( 'mainwp_clients_delete_general_field', array( &$this, 'mainwp_clients_delete_general_field' ) );
+        $this->add_action( 'mainwp_clients_bulk_delete_fields', array( &$this, 'mainwp_clients_bulk_delete_fields' ) );
         $this->add_action( 'mainwp_clients_delete_field', array( &$this, 'mainwp_clients_delete_field' ) );
         $this->add_action( 'mainwp_clients_notes_save', array( &$this, 'mainwp_clients_notes_save' ) );
         $this->add_action( 'mainwp_clients_suspend_client', array( &$this, 'mainwp_clients_suspend_client' ) );
@@ -1042,6 +1043,43 @@ class MainWP_Post_Handler extends MainWP_Post_Base_Handler { // phpcs:ignore -- 
         }
         MainWP_Client::invalidate_warm_cache();
         // phpcs:enable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        echo wp_json_encode( $ret );
+        exit;
+    }
+
+    /**
+     * Method mainwp_clients_bulk_delete_fields()
+     *
+     * Bulk delete client general fields.
+     */
+    public function mainwp_clients_bulk_delete_fields() {
+        $this->check_security( 'mainwp_clients_bulk_delete_fields' );
+        $ret = array( 'success' => false );
+        // phpcs:disable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $field_ids = isset( $_POST['field_ids'] ) && is_array( $_POST['field_ids'] ) ? array_map( 'intval', $_POST['field_ids'] ) : array();
+        // phpcs:enable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        
+        if ( empty( $field_ids ) ) {
+            $ret['data'] = array( 'message' => __( 'No fields selected.', 'mainwp' ) );
+            echo wp_json_encode( $ret );
+            exit;
+        }
+
+        $client_id      = 0; // 0 general fields.
+        $deleted_count  = 0;
+        foreach ( $field_ids as $field_id ) {
+            if ( MainWP_DB_Client::instance()->delete_client_field_by( 'field_id', $field_id, $client_id ) ) {
+                ++$deleted_count;
+            }
+        }
+
+        if ( $deleted_count > 0 ) {
+            $ret['success'] = true;
+            MainWP_Client::invalidate_warm_cache();
+        } else {
+            $ret['data'] = array( 'message' => __( 'Failed to delete fields.', 'mainwp' ) );
+        }
+
         echo wp_json_encode( $ret );
         exit;
     }

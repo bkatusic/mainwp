@@ -557,23 +557,57 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
 
         static::$itemsTable->prepare_items();
 
+        $has_no_clients = ( 0 === static::$itemsTable->total_items );
+
         static::render_header( '' );
-        static::render_second_top_header();
+
+        if ( ! $has_no_clients ) {
+            static::render_second_top_header();
+        }
 
         ?>
         <div id="mainwp-manage-clients-content" class="ui padded segment">
-            <div id="mainwp-message-zone" style="display:none;" class="ui message"></div>
-            <form method="post" class="mainwp-table-container">
-                <?php
-                MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' );
-                static::$itemsTable->display();
-                static::$itemsTable->clear_items();
-                ?>
-            </form>
+            <?php if ( $has_no_clients && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-clients-welcome-message' ) ) : ?>
+                <div class="ui icon message mainwp-welcome-message">
+                    <em data-emoji=":wave:" class="big"></em>
+                    <div class="content">
+                        <div class="ui massive header"><?php esc_html_e( 'Welcome to MainWP Clients', 'mainwp' ); ?></div>
+                        <p><?php esc_html_e( 'Organize and manage your customers with client profiles, contact information, and site associations.', 'mainwp' ); ?>
+                        </p>
+                        <p><?php printf( esc_html__( 'Start by %1$sadding your first client%2$s or %3$simporting existing clients%4$s from a CSV file.', 'mainwp' ), '<a href="admin.php?page=ClientAddNew">', '</a>', '<a href="admin.php?page=ClientImport">', '</a>' ); ?>
+                        </p>
+                    </div>
+                    <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-clients-welcome-message"></i>
+                </div>
+            <?php else : ?>
+                <div id="mainwp-message-zone" style="display:none;" class="ui message"></div>
+                <?php if ( static::$itemsTable->total_items > 0 && static::$itemsTable->total_items <= 5 && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-clients-add-more-clients-tip' ) ) : ?>
+                    <div class="ui message">
+                        <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-clients-add-more-clients-tip"></i>
+                        <?php printf( esc_html__( '%s Tip: Add more Clients. Use %2$sAdd Client%3$s to continue organizing your network.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<a href="admin.php?page=ClientAddNew">', '</a>' ); ?>
+                    </div>
+                <?php endif; ?>
+                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-clients-columns-order-tip' ) ) : ?>
+                    <div class="ui message">
+                        <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-clients-columns-order-tip"></i>
+                        <?php printf( esc_html__( '%s Tip: Drag columns to reorder or use (%2$s) Page Settings to show/hide columns. Your column layout is saved automatically.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<i class="cog fitted icon"></i>' ); ?>
+                    </div>
+                <?php endif; ?>
+                <form method="post" class="mainwp-table-container">
+                    <?php
+                    MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' );
+                    static::$itemsTable->display();
+                    static::$itemsTable->clear_items();
+                    ?>
+                </form>
+            <?php endif; ?>
         </div>
         <?php
         static::render_footer( '' );
-        static::render_screen_options();
+        
+        if ( ! $has_no_clients ) {
+            static::render_screen_options();
+        }
     }
 
     /**
@@ -1158,75 +1192,123 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
      */
     public static function render_client_fields() {
 
+        $fields         = MainWP_DB_Client::instance()->get_client_fields();
+        $has_no_fields  = empty( $fields );
+
         static::render_header( 'AddField' );
-        ?>
-        <div class="mainwp-sub-header">
-            <div class="ui one column grid">
-                <div class="right aligned column">
-                    <a class="ui mini green button" href="javascript:void(0);" id="mainwp-clients-new-custom-field-button"><?php esc_html_e( 'New Field', 'mainwp' ); ?></a>
+
+        if ( ! $has_no_fields ) {
+            ?>
+            <div class="mainwp-sub-header">
+                <div class="ui grid">
+                    <div class="equal width row ui mini form">
+                        <div class="middle aligned column">
+                            <div id="mainwp-client-fields-bulk-actions-menu" class="ui selection dropdown disabled">
+                                <div class="default text"><?php esc_html_e( 'Bulk actions', 'mainwp' ); ?></div>
+                                <i class="dropdown icon"></i>
+                                <div class="menu">
+                                    <div class="item" data-value="delete"><?php esc_html_e( 'Delete', 'mainwp' ); ?></div>
+                                </div>
+                            </div>
+                            <button class="ui mini basic button" id="mainwp-do-client-fields-bulk-actions" disabled="disabled"><?php esc_html_e( 'Apply', 'mainwp' ); ?></button>
+                        </div>
+                        <div class="right aligned middle aligned column">
+                            <a class="ui mini green basic button" href="javascript:void(0);" id="mainwp-clients-new-custom-field-button"><i class="plus icon"></i><?php esc_html_e( 'Add Client Field', 'mainwp' ); ?></a>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+            <?php
+        }
+        ?>
         <div class="ui padded segment" id="mainwp-add-client-fields">
-            <?php $fields = MainWP_DB_Client::instance()->get_client_fields(); ?>
-            <div class="ui message" id="mainwp-message-zone-client" style="display:none;"></div>
-            <table id="mainwp-clients-custom-fields-table" class="ui table" style="width:100%">
-                <thead>
-                    <tr>
-                        <th scope="col" class="collapsing"><?php esc_html_e( 'Field Name', 'mainwp' ); ?></th>
-                        <th scope="col"><?php esc_html_e( 'Field Description', 'mainwp' ); ?></th>
-                        <th scope="col" class="no-sort collapsing"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php if ( is_array( $fields ) && ! empty( $fields ) ) : ?>
-                    <?php foreach ( $fields as $field ) : ?>
-                        <?php
-                        if ( ! $field ) {
-                            continue;
-                        }
-                        ?>
-                            <tr class="mainwp-field none-selected-color" field-id="<?php echo intval( $field->field_id ); ?>">
-                                <td class="field-name">[<?php echo esc_html( stripslashes( $field->field_name ) ); ?>]</td>
-                                <td class="field-description"><?php echo esc_html( stripslashes( $field->field_desc ) ); ?></td>
-                                <td>
-                                    <div class="ui right pointing dropdown">
-                                        <i class="ellipsis vertical icon"></i>
-                                        <div class="menu">
-                                            <a class="item" id="mainwp-clients-edit-custom-field" href="#"><?php esc_html_e( 'Edit', 'mainwp' ); ?></a>
-                                            <a class="item" id="mainwp-clients-delete-general-field" href="#"><?php esc_html_e( 'Delete', 'mainwp' ); ?></a>
+            <?php if ( $has_no_fields ) : ?>
+                <?php MainWP_UI::render_empty_page_placeholder( esc_html__( 'No custom fields created yet.', 'mainwp' ), esc_html__( 'Create custom fields to capture additional information about your clients. Click the New Field button to get started.', 'mainwp' ), '<em data-emoji=":compass:" class="big"></em>' ); ?>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a class="ui green button" href="javascript:void(0);" id="mainwp-clients-new-custom-field-button"><?php esc_html_e( 'Add Client Field', 'mainwp' ); ?></a>
+                </div>
+            <?php else : ?>
+                <div class="ui message" id="mainwp-message-zone-client" style="display:none;"></div>
+                <?php if ( count( $fields ) < 5 && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-client-fields-tip' ) ) : ?>
+                    <div class="ui message">
+                        <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-client-fields-tip"></i>
+                        <?php printf( esc_html__( '%s Tip: Custom Client Fields let you store extra details unique to your workflow, such as billing info, project type, or renewal dates. Once added, these fields will appear when adding or editing a client. %2$sLearn more%3$s about how custom fields work.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<a href="https://docs.mainwp.com/clients/manage-clients#client-fields" target="_blank">', '</a>' ); ?>
+                    </div>
+                <?php endif; ?>
+                <table id="mainwp-clients-custom-fields-table" class="ui table" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="no-sort collapsing check-column">
+                                <div class="ui checkbox">
+                                    <input type="checkbox" id="mainwp-client-fields-select-all">
+                                    <label></label>
+                                </div>
+                            </th>
+                            <th scope="col"><?php esc_html_e( 'Field Name', 'mainwp' ); ?></th>
+                            <th scope="col"><?php esc_html_e( 'Field Description', 'mainwp' ); ?></th>
+                            <th scope="col" class="no-sort collapsing"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php if ( is_array( $fields ) && ! empty( $fields ) ) : ?>
+                        <?php foreach ( $fields as $field ) : ?>
+                            <?php
+                            if ( ! $field ) {
+                                continue;
+                            }
+                            ?>
+                                <tr class="mainwp-field none-selected-color" field-id="<?php echo intval( $field->field_id ); ?>">
+                                    <td class="check-column">
+                                        <div class="ui checkbox">
+                                            <input type="checkbox" class="mainwp-client-field-checkbox" value="<?php echo intval( $field->field_id ); ?>">
+                                            <label></label>
                                         </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                                    </td>
+                                    <td class="field-name">[<?php echo esc_html( stripslashes( $field->field_name ) ); ?>]</td>
+                                    <td class="field-description"><?php echo esc_html( stripslashes( $field->field_desc ) ); ?></td>
+                                    <td>
+                                        <div class="ui right pointing dropdown">
+                                            <i class="ellipsis vertical icon"></i>
+                                            <div class="menu">
+                                                <a class="item" id="mainwp-clients-edit-custom-field" href="#"><?php esc_html_e( 'Edit', 'mainwp' ); ?></a>
+                                                <a class="item" id="mainwp-clients-delete-general-field" href="#"><?php esc_html_e( 'Delete', 'mainwp' ); ?></a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
 
-        <script type="text/javascript">
-        // Init datatables
-        jQuery( '#mainwp-clients-custom-fields-table' ).DataTable( {
-            "stateSave": true,
-            "stateDuration": 0,
-            "lengthMenu": [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ],
-            "columnDefs": [ { "orderable": false, "targets": "no-sort" } ],
-            "order": [ [ 0, "asc" ] ],
-            "language": { "emptyTable": "No fields found." },
-            "drawCallback" : function( settings ) {
-                jQuery( '#mainwp-clients-custom-fields-table .ui.dropdown').dropdown();
-            },
-            stateSaveParams: function (settings, data) {
-                data._mwpv = mainwpParams.mainwpVersion || 'dev';
-            },
-            stateLoadParams: function (settings, data) {
-                if ((mainwpParams.mainwpVersion || 'dev') !== data._mwpv) return false;
-            },
-            search: { regex: false, smart: false },
-            orderMulti: false,
-            searchDelay: 350
-        } );
-        </script>
+                <script type="text/javascript">
+                // Init datatables
+                jQuery( '#mainwp-clients-custom-fields-table' ).DataTable( {
+                    "stateSave": true,
+                    "stateDuration": 0,
+                    "lengthMenu": [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ],
+                    "columnDefs": [ { "orderable": false, "targets": "no-sort" } ],
+                    "order": [ [ 0, "asc" ] ],
+                    "language": { "emptyTable": "No fields found." },
+                    "drawCallback" : function( settings ) {
+                        jQuery( '#mainwp-clients-custom-fields-table .ui.dropdown').dropdown();
+                        jQuery( '#mainwp-clients-custom-fields-table .ui.checkbox').checkbox();
+                    },
+                    stateSaveParams: function (settings, data) {
+                        data._mwpv = mainwpParams.mainwpVersion || 'dev';
+                    },
+                    stateLoadParams: function (settings, data) {
+                        if ((mainwpParams.mainwpVersion || 'dev') !== data._mwpv) return false;
+                    },
+                    search: { regex: false, smart: false },
+                    orderMulti: false,
+                    searchDelay: 350
+                } );
+                
+                // Initialize header checkbox
+                jQuery( '#mainwp-clients-custom-fields-table thead .ui.checkbox' ).checkbox();
+                </script>
+            <?php endif; ?>
         </div>
 
             <?php
@@ -1646,21 +1728,32 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
             $uploaded_icon_src = MainWP_Client_Handler::get_client_contact_image( $icon_info_array, 'client', 'uploaded_icon' );
         }
 
+        $field_groups = array(
+            'client_info'      => array( 'client.name', 'client.email', 'client.suspended' ),
+            'contact_details'  => array( 'client.phone', 'client.contact.address.1', 'client.contact.address.2', 'client.city', 'client.state', 'client.zip', 'client.country' ),
+            'social_links'     => array( 'client.facebook', 'client.twitter', 'client.instagram', 'client.linkedin' ),
+            'notes_meta'       => array( 'client.note', 'client.created' ),
+        );
+
         ?>
-        <h2 class="ui dividing header">
-            <?php if ( $client_id ) : ?>
-                <?php MainWP_Settings_Indicator::render_indicator( 'header', 'settings-field-indicator-edit-client' ); ?>
-                <?php echo esc_html__( 'Edit Client', 'mainwp' ); ?>
-                <div class="sub header"><?php esc_html_e( 'Update client details, manage linked websites, and keep important information organized in one place.', 'mainwp' ); ?></div>
-            <?php else : ?>
-                <?php esc_html_e( 'Add New Client', 'mainwp' ); ?>
-                <div class="sub header"><?php esc_html_e( 'Manage your client relationships by adding a new client and linking their websites for better organization.', 'mainwp' ); ?></div>
-            <?php endif; ?>
-        </h2>
         <div class="ui form">
             <input type="hidden" name="nonce_client_id" value="<?php echo esc_attr( wp_create_nonce( 'editing-client-' . $client_id ) ); ?>">
+            
+            <div class="ui basic accordion mainwp-blank-accordion mainwp-sidebar-accordion" id="mainwp-client-info-accordion">
+                <h2 class="ui dividing header active title">
+                    <i class="right dropdown icon"></i>
+                    <?php esc_html_e( 'Client Info', 'mainwp' ); ?>
+                    <div class="sub header">
+                        <?php esc_html_e( 'Set the basics used to identify this client in your dashboard, name and email are primary, logo is optional, and status controls whether they\'re active.', 'mainwp' ); ?>
+                    </div>
+                </h2>
+                <div class="content active">
             <?php
-            foreach ( $default_client_fields as $field_name => $field ) {
+            foreach ( $field_groups['client_info'] as $field_name ) {
+                if ( ! isset( $default_client_fields[ $field_name ] ) ) {
+                    continue;
+                }
+                $field    = $default_client_fields[ $field_name ];
                 $db_field = isset( $field['db_field'] ) ? $field['db_field'] : '';
                 $val      = $edit_client && '' !== $db_field && property_exists( $edit_client, $db_field ) ? $edit_client->{$db_field} : '';
                 $tip      = isset( $field['tooltip'] ) ? $field['tooltip'] : '';
@@ -1671,19 +1764,15 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                     $indi_val = $val && $edit_client ? 1 : 0;
                     MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $indi_val );
                     echo esc_html( $field['title'] );
+                    if ( ! empty( $field['required'] ) ) {
+                        echo ' <span class="ui small red text">' . esc_html__( '(Required)', 'mainwp' ) . '</span>';
+                    }
                     ?>
                     </label>
                     <div class="ui six wide column">
                         <div class="ui left labeled input">
                     <?php
-                    if ( 'client.note' === $field_name ) {
-                        $el_id_fln_1 = $field_name;
-                        ?>
-                            <div class="editor">
-                            <textarea class="code settings-field-value-change-handler" cols="80" rows="10" id="client_fields[default_field][<?php echo esc_attr( $el_id_fln_1 ); ?>]" name="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]"><?php echo esc_html( $val ); ?></textarea>
-                            </div>
-                            <?php
-                    } elseif ( 'client.suspended' === $field_name ) {
+                    if ( 'client.suspended' === $field_name ) {
                         $el_id_fln_2 = $field_name;
                         ?>
                             <select class="ui dropdown settings-field-value-change-handler" name="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]" id="client_fields[default_field][<?php echo esc_attr( $el_id_fln_2 ); ?>]" >
@@ -1692,16 +1781,6 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                                 <option value="2" <?php echo '2' === $val ? 'selected' : ''; ?>><?php esc_html_e( 'Lead', 'mainwp' ); ?></option>
                                 <option value="3" <?php echo '3' === $val ? 'selected' : ''; ?>><?php esc_html_e( 'Lost', 'mainwp' ); ?></option>
                             </select>
-                        <?php
-                    } elseif ( $client_id && 'client.created' === $field_name ) {
-                        $created = empty( $val ) ? time() : $val;
-                        ?>
-                        <div class="ui calendar mainwp_datepicker" >
-                            <div class="ui input left icon">
-                                <i class="calendar icon"></i>
-                                <input type="text" autocomplete="off" name="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]" placeholder="<?php esc_attr_e( 'Added date', 'mainwp' ); ?>" id="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]" value="<?php echo esc_attr( date( 'Y-m-d', $created ) ); // phpcs:ignore -- local time. ?>"/>
-                            </div>
-                        </div>
                         <?php
                     } else {
                         ?>
@@ -1749,8 +1828,6 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                             </div>
                         </div>
 
-
-
                         <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-edit-client" default-indi-indi-value="wordpress">
                             <label class="six wide column middle aligned">
                             <?php
@@ -1790,6 +1867,170 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                     </div>
                         <?php
                 }
+            }
+            ?>
+                </div>
+            </div>
+
+            <div class="ui basic accordion mainwp-blank-accordion mainwp-sidebar-accordion" id="mainwp-contact-details-accordion">
+                <h2 class="ui dividing header active title">
+                    <i class="right dropdown icon"></i>
+                    <?php esc_html_e( 'Contact Details', 'mainwp' ); ?>
+                    <div class="sub header">
+                        <?php esc_html_e( 'Add the best ways to reach the client and where they\'re located. Include phone and full address details to keep records consistent.', 'mainwp' ); ?>
+                    </div>
+                </h2>
+                <div class="content active">
+            <?php
+            foreach ( $field_groups['contact_details'] as $field_name ) {
+                if ( ! isset( $default_client_fields[ $field_name ] ) ) {
+                    continue;
+                }
+                $field    = $default_client_fields[ $field_name ];
+                $db_field = isset( $field['db_field'] ) ? $field['db_field'] : '';
+                $val      = $edit_client && '' !== $db_field && property_exists( $edit_client, $db_field ) ? $edit_client->{$db_field} : '';
+                $tip      = isset( $field['tooltip'] ) ? $field['tooltip'] : '';
+                ?>
+                <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-edit-client">
+                    <label class="six wide column middle aligned" for="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]" <?php echo ! empty( $tip ) ? 'data-tooltip="' . esc_attr( $tip ) . '" data-inverted="" data-position="top left"' : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?>>
+                    <?php
+                    $indi_val = $val && $edit_client ? 1 : 0;
+                    MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $indi_val );
+                    echo esc_html( $field['title'] );
+                    if ( ! empty( $field['required'] ) ) {
+                        echo ' <span class="ui small red text">' . esc_html__( '(Required)', 'mainwp' ) . '</span>';
+                    }
+                    ?>
+                    </label>
+                    <div class="ui six wide column">
+                        <div class="ui left labeled input">
+                            <input type="text" id="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]" class="regular-text settings-field-value-change-handler" value="<?php echo esc_html( $val ); ?>" name="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]"/>
+                        </div>
+                    </div>
+                    <?php if ( $client_id ) : ?>
+                    <div class="ui four wide middle aligned hidden token column" style="display:none">
+                        [<?php echo esc_html( $field_name ); ?>]
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php
+            }
+            ?>
+                </div>
+            </div>
+
+            <div class="ui basic accordion mainwp-blank-accordion mainwp-sidebar-accordion" id="mainwp-social-links-accordion">
+                <h2 class="ui dividing header active title">
+                    <i class="right dropdown icon"></i>
+                    <?php esc_html_e( 'Social Links', 'mainwp' ); ?>
+                    <div class="sub header">
+                        <?php esc_html_e( 'Link the client\'s public profiles for quick access. Paste full URLs (including https://) and leave anything you don\'t use blank.', 'mainwp' ); ?>
+                    </div>
+                </h2>
+                <div class="content active">
+            <?php
+            foreach ( $field_groups['social_links'] as $field_name ) {
+                if ( ! isset( $default_client_fields[ $field_name ] ) ) {
+                    continue;
+                }
+                $field    = $default_client_fields[ $field_name ];
+                $db_field = isset( $field['db_field'] ) ? $field['db_field'] : '';
+                $val      = $edit_client && '' !== $db_field && property_exists( $edit_client, $db_field ) ? $edit_client->{$db_field} : '';
+                $tip      = isset( $field['tooltip'] ) ? $field['tooltip'] : '';
+                ?>
+                <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-edit-client">
+                    <label class="six wide column middle aligned" for="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]" <?php echo ! empty( $tip ) ? 'data-tooltip="' . esc_attr( $tip ) . '" data-inverted="" data-position="top left"' : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?>>
+                    <?php
+                    $indi_val = $val && $edit_client ? 1 : 0;
+                    MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $indi_val );
+                    echo esc_html( $field['title'] );
+                    if ( ! empty( $field['required'] ) ) {
+                        echo ' <span class="ui small red text">' . esc_html__( '(Required)', 'mainwp' ) . '</span>';
+                    }
+                    ?>
+                    </label>
+                    <div class="ui six wide column">
+                        <div class="ui left labeled input">
+                            <input type="text" id="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]" class="regular-text settings-field-value-change-handler" value="<?php echo esc_html( $val ); ?>" name="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]"/>
+                        </div>
+                    </div>
+                    <?php if ( $client_id ) : ?>
+                    <div class="ui four wide middle aligned hidden token column" style="display:none">
+                        [<?php echo esc_html( $field_name ); ?>]
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php
+            }
+            ?>
+                </div>
+            </div>
+
+            <div class="ui basic accordion mainwp-blank-accordion mainwp-sidebar-accordion" id="mainwp-notes-meta-accordion">
+                <h2 class="ui dividing header active title">
+                    <i class="right dropdown icon"></i>
+                    <?php esc_html_e( 'Notes & Meta', 'mainwp' ); ?>
+                    <div class="sub header">
+                        <?php esc_html_e( 'Store internal context for your team, notes, when the client was added, and any extra contact details that don\'t fit elsewhere.', 'mainwp' ); ?>
+                    </div>
+                </h2>
+                <div class="content active">
+            <?php
+            foreach ( $field_groups['notes_meta'] as $field_name ) {
+                if ( ! isset( $default_client_fields[ $field_name ] ) ) {
+                    continue;
+                }
+                $field    = $default_client_fields[ $field_name ];
+                $db_field = isset( $field['db_field'] ) ? $field['db_field'] : '';
+                $val      = $edit_client && '' !== $db_field && property_exists( $edit_client, $db_field ) ? $edit_client->{$db_field} : '';
+                $tip      = isset( $field['tooltip'] ) ? $field['tooltip'] : '';
+                ?>
+                <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-edit-client">
+                    <label class="six wide column middle aligned" for="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]" <?php echo ! empty( $tip ) ? 'data-tooltip="' . esc_attr( $tip ) . '" data-inverted="" data-position="top left"' : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?>>
+                    <?php
+                    $indi_val = $val && $edit_client ? 1 : 0;
+                    MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $indi_val );
+                    echo esc_html( $field['title'] );
+                    if ( ! empty( $field['required'] ) ) {
+                        echo ' <span class="ui small red text">' . esc_html__( '(Required)', 'mainwp' ) . '</span>';
+                    }
+                    ?>
+                    </label>
+                    <div class="ui six wide column">
+                        <div class="ui left labeled input">
+                    <?php
+                    if ( 'client.note' === $field_name ) {
+                        $el_id_fln_1 = $field_name;
+                        ?>
+                            <div class="editor">
+                            <textarea class="code settings-field-value-change-handler" cols="80" rows="10" id="client_fields[default_field][<?php echo esc_attr( $el_id_fln_1 ); ?>]" name="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]"><?php echo esc_html( $val ); ?></textarea>
+                            </div>
+                            <?php
+                    } elseif ( $client_id && 'client.created' === $field_name ) {
+                        $created = empty( $val ) ? time() : $val;
+                        ?>
+                        <div class="ui calendar mainwp_datepicker" >
+                            <div class="ui input left icon">
+                                <i class="calendar icon"></i>
+                                <input type="text" autocomplete="off" name="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]" placeholder="<?php esc_attr_e( 'Added date', 'mainwp' ); ?>" id="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]" value="<?php echo esc_attr( date( 'Y-m-d', $created ) ); // phpcs:ignore -- local time. ?>"/>
+                            </div>
+                        </div>
+                        <?php
+                    } else {
+                        ?>
+                            <input type="text" id="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]" class="regular-text settings-field-value-change-handler" value="<?php echo esc_html( $val ); ?>" name="client_fields[default_field][<?php echo esc_attr( $field_name ); ?>]"/>
+                        <?php
+                    }
+                    ?>
+                        </div>
+                    </div>
+                    <?php if ( $client_id ) : ?>
+                    <div class="ui four wide middle aligned hidden token column" style="display:none">
+                        [<?php echo esc_html( $field_name ); ?>]
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php
             }
 
             $client_contacts = array();
@@ -1887,10 +2128,14 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
             </div>
         </div>
         <div class="ui section hidden divider after-add-contact-field"></div>
+                </div>
+            </div>
         </div>
         <input type="hidden" name="client_fields[client_id]" value="<?php echo intval( $client_id ); ?>">
         <script type="text/javascript">
                 jQuery( document ).ready( function () {
+                    mainwp_sidebar_accordion_init();
+
                     // to fix issue not loaded calendar js library
                     if (jQuery('.ui.calendar').length > 0) {
                         if (mainwpParams.use_wp_datepicker == 1) {
@@ -1978,7 +2223,7 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                                 }
                             }
                             setTimeout(function () {
-                                jQuery('#mainwp-upload-custom-icon-modal').modal('hide')
+                                jQuery('#mainwp-upload-custom-icon-modal').modal('hide');
                             }, 1000);
                         });
                         return false;
@@ -2127,6 +2372,9 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                     $indi_val = $edit_contact && $val ? 1 : 0;
                     MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $indi_val );
                     echo esc_html( $field['title'] );
+                    if ( ! empty( $field['required'] ) ) {
+                        echo ' <span class="ui small red text">' . esc_html__( '(Required)', 'mainwp' ) . '</span>';
+                    }
                     ?>
                     </label>
                     <div class="ui six wide column">
