@@ -367,7 +367,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     } else {
                         jQuery( '#mainwp-extensions-search-no-results' ).hide();
                     }
-                }            
+                }
             } );
             jQuery( '#mainwp-search-extensions .remove.icon' ).on( 'click', function () {
                 jQuery( '#mainwp-search-extensions-input' ).val('');
@@ -716,7 +716,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
         ?>
 
         <!-- Fixed the issue extension missing model type. -->
-        <div class="ui fluid card extension <?php echo $disabled ? 'grey mainwp-disabled-extension' : 'green mainwp-enabled-extension'; ?> extension-card-<?php echo esc_attr( $extension['name'] ?? '' ); ?>" extension-model="<?php echo esc_attr( $extensions_data['model'] ?? '' ); ?>" extension-title="<?php echo esc_attr( MainWP_Extensions_Handler::polish_ext_name( $extension, true ) ); ?>" base-slug="<?php echo esc_attr( $item_slug ); ?>" extension-slug="<?php echo esc_attr( $extension['slug'] ?? '' ); ?>" status="<?php echo esc_attr( $queue_status ); ?>" license-status="<?php echo $active ? 'activated' : 'deactivated'; ?>">
+        <div class="ui fluid card extension <?php echo $disabled ? 'grey mainwp-disabled-extension' : 'green mainwp-enabled-extension'; ?> extension-card-<?php echo esc_attr( sanitize_title( $extension['name'] ) ?? '' ); ?>" extension-model="<?php echo esc_attr( $extensions_data['model'] ?? '' ); ?>" extension-title="<?php echo esc_attr( MainWP_Extensions_Handler::polish_ext_name( $extension, true ) ); ?>" base-slug="<?php echo esc_attr( $item_slug ); ?>" extension-slug="<?php echo esc_attr( $extension['slug'] ?? '' ); ?>" status="<?php echo esc_attr( $queue_status ); ?>" license-status="<?php echo $active ? 'activated' : 'deactivated'; ?>">
         <?php
         /**
          * Action: mainwp_extension_card_top
@@ -891,11 +891,11 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
      */
     public static function render_licensing_actions_bar( $mainwp_api_key ) {
         $extensions = MainWP_Extensions_Handler::get_extensions();
-        
+
         $count_enabled = is_array( $extensions ) ? count( $extensions ) : 0;
-        
+
         $has_api_key = ! empty( $mainwp_api_key );
-        
+
         $count_not_activated = 0;
         if ( $has_api_key && is_array( $extensions ) ) {
             foreach ( $extensions as $extension ) {
