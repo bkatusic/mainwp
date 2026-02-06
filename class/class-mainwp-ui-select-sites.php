@@ -224,25 +224,29 @@ class MainWP_UI_Select_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameL
 
         ++$rendered_count;
 
-        if ( $show_select_all || $show_selectall_disc || $show_new_tag ) :
-            ?>
-            <div id="mainwp-select-sites-select-all-actions<?php echo esc_attr( $rand_id_prefix ); // empty prefix to ensure compatibility with extensions. ?>" class="ui two column grid mainwp-select-sites-select-all-actions">
-                <div class="ui middle aligned twelve wide column">
+        ?>
+        <div id="mainwp-select-sites-select-all-actions<?php echo esc_attr( $rand_id_prefix ); ?>" class="mainwp-select-sites-select-all-actions">
+            <div class="ui grid">
+                <div class="ten wide middle aligned column">
+                    <span class="ui small grey text"><?php esc_html_e( 'Select:', 'mainwp' ); ?></span>
                     <?php if ( $show_select_all ) : ?>
-                    <button onClick="return mainwp_ss_select( this, true )" onKeyUp="" class="mainwp-ss-select mainwp-sites-select-deselect-button ui mini basic grey button"><i class="square outline icon"></i> <?php esc_attr_e( 'Select All', 'mainwp' ); ?></button>
-                    <button onClick="return mainwp_ss_select( this, false )" onKeyUp="" class="mainwp-ss-deselect mainwp-sites-select-deselect-button ui mini basic grey button" style="display:none;"><i class="check square outline icon"></i> <?php esc_attr_e( 'Deselect All', 'mainwp' ); ?></button>
+                    <a href="javascript:void(0)" onClick="return mainwp_ss_select( this, true )" class="mainwp-ss-select"><span class="ui small green text"><?php esc_html_e( 'All', 'mainwp' ); ?></span></a>
+                    <span class="mainwp-ss-select ui small grey text"> · </span>
+                    <a href="javascript:void(0)" onClick="return mainwp_ss_select( this, false )" class="mainwp-ss-deselect"><span class="ui small green text"><?php esc_html_e( 'None', 'mainwp' ); ?></span></a>
                     <?php endif; ?>
-                    <?php echo $select_all_disconnected; //phpcs:ignore WordPress.Security.EscapeOutput ?>
                 </div>
-                <div class="ui right aligned middle aligned four wide column">
-                    <?php if ( $show_new_tag ) { ?>
-                    <a class="ui mini basic icon button mainwp-create-new-tag-button" href="javascript:void(0)" id="mainwp-create-new-tag-button<?php echo esc_attr( $rand_id_prefix ); ?>" aria-label="<?php esc_attr_e( 'Create a tag with selected sites.', 'mainwp' ); ?>" data-tooltip="<?php esc_attr_e( 'Create a tag with selected sites.', 'mainwp' ); ?>" data-position="left center" data-inverted=""><i class="tag icon"></i></a>
-                    <?php } ?>
+                <div class="six wide right aligned middle aligned column">
+                    <?php if ( $show_new_tag ) : ?>
+                    <span class="mainwp-selection-counter-wrapper" id="mainwp-selection-counter-wrapper<?php echo esc_attr( $rand_id_prefix ); ?>" style="cursor:default;">
+                        <span class="mainwp-sites-selection-counter ui small grey text">0</span> <span class="ui small grey text mainwp-selected-text"><?php esc_html_e( 'selected', 'mainwp' ); ?></span>
+                    </span>
+                    <?php else : ?>
+                    <span class="mainwp-sites-selection-counter ui small grey text">0</span> <span class="ui small grey text"><?php esc_html_e( 'selected', 'mainwp' ); ?></span>
+                    <?php endif; ?>
                 </div>
             </div>
-            <div class="ui hidden divider"></div>
-            <?php
-            endif;
+        </div>
+        <?php
         ?>
         <div class="ui tab <?php echo 'site' === $selectedby ? 'active' : ''; ?>" data-tab="mainwp-select-sites-<?php echo esc_attr( $tab_id ); ?>" id="mainwp-select-sites">
         <?php
@@ -291,14 +295,6 @@ class MainWP_UI_Select_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameL
         ?>
         <script type="text/javascript">
         jQuery( document ).ready( function () {
-            jQuery( '.mainwp-create-new-tag-button' ).on( 'click', function() {
-                jQuery( '.mainwp-create-group-sites-modal' ).modal( {
-                    onHide: function () {
-                        mainwp_forceReload();
-                        return false;
-                    },
-                } ).modal( 'show' );
-            } );
             // Create a new group (Select Sites UI)
             jQuery( document ).on( 'click', '.mainwp-save-new-tag-button', function () {
                 let newName = jQuery( '.mainwp-create-group-sites-modal' ).find( 'input[name="mainwp-group-name"]' ).val().trim();
@@ -329,6 +325,31 @@ class MainWP_UI_Select_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     jQuery( '.mainwp-create-group-sites-modal' ).modal( 'hide' );
                 }, 'json' );
                 return false;
+            } );
+            
+            if ( typeof mainwp_update_selection_counter === 'function' ) {
+                mainwp_update_selection_counter();
+            }
+            
+            jQuery( document ).on( 'click', '.mainwp-selection-counter-wrapper', function() {
+                let counter = jQuery( this ).find( '.mainwp-sites-selection-counter' );
+                let count = parseInt( counter.text() );
+                if ( count > 0 ) {
+                    jQuery( '.mainwp-create-group-sites-modal' ).modal( {
+                        onHide: function () {
+                            mainwp_forceReload();
+                            return false;
+                        },
+                    } ).modal( 'show' );
+                }
+            } );
+            
+            jQuery( '#mainwp-select-sites-menu .item.tab' ).on( 'click', function() {
+                setTimeout( function() {
+                    if ( typeof mainwp_update_selection_counter === 'function' ) {
+                        mainwp_update_selection_counter();
+                    }
+                }, 100 );
             } );
         } );
         </script>

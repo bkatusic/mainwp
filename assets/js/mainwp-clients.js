@@ -9,6 +9,31 @@ let import_client_count_fails = 0;
 let import_client_stop_by_user = false;
 jQuery(function () {
 
+  // Toggle bulk actions based on checkbox selection
+  jQuery(document).on('change', '#mainwp-manage-sites-body-table .check-column INPUT:checkbox', function () {
+    mainwp_clients_toggle_bulk_actions();
+  });
+
+  // Toggle bulk actions for client fields
+  jQuery(document).on('change', '#mainwp-clients-custom-fields-table .check-column INPUT:checkbox', function () {
+    mainwp_client_fields_toggle_bulk_actions();
+  });
+
+  // Select all client fields
+  jQuery(document).on('change', '#mainwp-client-fields-select-all', function () {
+    jQuery('.mainwp-client-field-checkbox').prop('checked', jQuery(this).prop('checked'));
+    mainwp_client_fields_toggle_bulk_actions();
+  });
+
+  // Handle bulk actions for client fields
+  jQuery(document).on('click', '#mainwp-do-client-fields-bulk-actions', function () {
+    const action = jQuery('#mainwp-client-fields-bulk-actions-menu').dropdown('get value');
+    if (action === 'delete') {
+      mainwp_client_fields_bulk_delete();
+    }
+    return false;
+  });
+
   // Delete single client.
   jQuery(document).on('click', '.client_deleteitem', function () {
     let confirmation = confirm('Are you sure you want to proceed?');
@@ -134,7 +159,6 @@ let bulkManageClientsTotal = 0;
 let bulkManageClientsFinished = 0;
 let bulkManageClientsTaskRunning = false;
 
-
 // Trigger Manage Bulk Actions
 jQuery(document).on('click', '#mainwp-do-clients-bulk-actions', function () {
   let action = jQuery("#mainwp-clients-bulk-actions-menu").dropdown("get value");
@@ -235,6 +259,79 @@ let manageclients_bulk_init = function () {
       jQuery(this).attr('status', 'queue')
     });
   }
+};
+
+let mainwp_clients_toggle_bulk_actions = function () {
+  const checkedCount = jQuery('#mainwp-manage-sites-body-table .check-column INPUT:checkbox:checked').length;
+  const bulkActionsMenu = jQuery('#mainwp-clients-bulk-actions-menu');
+  const applyButton = jQuery('#mainwp-do-clients-bulk-actions');
+
+  if (checkedCount > 0) {
+    bulkActionsMenu.removeClass('disabled');
+    applyButton.prop('disabled', false);
+  } else {
+    bulkActionsMenu.addClass('disabled');
+    applyButton.prop('disabled', true);
+  }
+};
+
+let mainwp_client_fields_toggle_bulk_actions = function () {
+  const checkedCount = jQuery('#mainwp-clients-custom-fields-table .check-column INPUT:checkbox:checked').length;
+  const bulkActionsMenu = jQuery('#mainwp-client-fields-bulk-actions-menu');
+  const applyButton = jQuery('#mainwp-do-client-fields-bulk-actions');
+
+  if (checkedCount > 0) {
+    bulkActionsMenu.removeClass('disabled');
+    applyButton.prop('disabled', false);
+  } else {
+    bulkActionsMenu.addClass('disabled');
+    applyButton.prop('disabled', true);
+  }
+};
+
+let mainwp_client_fields_bulk_delete = function () {
+  const selectedFields = [];
+  jQuery('.mainwp-client-field-checkbox:checked').each(function () {
+    selectedFields.push(jQuery(this).val());
+  });
+
+  if (selectedFields.length === 0) {
+    return false;
+  }
+
+  const confirmMessage = selectedFields.length === 1 
+    ? __('Are you sure you want to delete this field?')
+    : __('Are you sure you want to delete these %s fields?').replace('%s', selectedFields.length);
+
+  if (!confirm(confirmMessage)) {
+    return false;
+  }
+
+  mainwp_set_message_zone('#mainwp-message-zone-client');
+
+  jQuery.post(ajaxurl, mainwp_secure_data({
+    action: 'mainwp_clients_bulk_delete_fields',
+    field_ids: selectedFields,
+  }), function (response) {
+    if (response?.success) {
+      selectedFields.forEach(function (fieldId) {
+        jQuery('.mainwp-field[field-id="' + fieldId + '"]').fadeOut(300, function () {
+          jQuery(this).remove();
+          if (jQuery('#mainwp-clients-custom-fields-table tbody tr').length === 0) {
+            location.reload();
+          }
+        });
+      });
+      mainwp_set_message_zone('#mainwp-message-zone-client', __('Selected fields have been deleted successfully.'), 'green');
+      jQuery('#mainwp-client-fields-select-all').prop('checked', false);
+      mainwp_client_fields_toggle_bulk_actions();
+    } else {
+      const errorMessage = response?.data?.message || __('Fields could not be deleted.');
+      mainwp_set_message_zone('#mainwp-message-zone-client', errorMessage, 'red');
+    }
+  }, 'json');
+
+  return false;
 };
 
 // Handle tab QSW add client

@@ -227,7 +227,7 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
         <div class="ui grid">
             <div class="equal width row ui mini form">
                 <div class="middle aligned column">
-                    <div id="mainwp-clients-bulk-actions-menu" class="ui selection dropdown">
+                    <div id="mainwp-clients-bulk-actions-menu" class="ui selection dropdown disabled">
                         <div class="default text"><?php esc_html_e( 'Bulk actions', 'mainwp' ); ?></div>
                         <i class="dropdown icon"></i>
                         <div class="menu">
@@ -246,28 +246,36 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
                             ?>
                         </div>
                     </div>
-                    <button class="ui mini basic button" id="mainwp-do-clients-bulk-actions"><?php esc_html_e( 'Apply', 'mainwp' ); ?></button>
+                    <button class="ui mini basic button" id="mainwp-do-clients-bulk-actions" disabled="disabled"><?php esc_html_e( 'Apply', 'mainwp' ); ?></button>
                 </div>
                 <div class="right aligned middle aligned column">
-                    <div id="mainwp-filter-clients-group" class="ui selection multiple dropdown" style="vertical-align:bottom">
-                        <input type="hidden" value="<?php echo esc_html( $selected_group ); ?>">
-                        <i class="dropdown icon"></i>
-                        <div class="default text"><?php esc_html_e( 'All tags', 'mainwp' ); ?></div>
-                        <div class="menu">
-                            <?php
-                            $groups = MainWP_DB_Common::instance()->get_groups_for_manage_sites();
+                    <?php
+                    $groups = MainWP_DB_Common::instance()->get_groups_for_manage_sites();
 
-                            foreach ( $groups as $group ) {
-                                ?>
-                                <div class="item" data-value="<?php echo intval( $group->id ); ?>"><?php echo esc_html( stripslashes( $group->name ) ); ?></div>
-                                <?php
-                            }
-                            ?>
-                            <div class="item" data-value="nogroups"><?php esc_html_e( 'No Tags', 'mainwp' ); ?></div>
+                    if ( empty( $groups ) ) {
+                        ?>
+                        <a href="admin.php?page=ManageGroups" class="ui mini green basic button">
+                            <i class="tag icon"></i> <?php esc_html_e( 'Create Tags', 'mainwp' ); ?>
+                        </a>
+                        <?php
+                    } else {
+                        ?>
+                        <div id="mainwp-filter-clients-group" class="ui selection multiple dropdown" style="vertical-align:bottom">
+                            <input type="hidden" value="<?php echo esc_html( $selected_group ); ?>">
+                            <i class="dropdown icon"></i>
+                            <div class="default text"><?php esc_html_e( 'All tags', 'mainwp' ); ?></div>
+                            <div class="menu">
+                                <?php foreach ( $groups as $group ) : ?>
+                                    <div class="item" data-value="<?php echo intval( $group->id ); ?>"><?php echo esc_html( stripslashes( $group->name ) ); ?></div>
+                                <?php endforeach; ?>
+                                <div class="item" data-value="nogroups"><?php esc_html_e( 'No Tags', 'mainwp' ); ?></div>
+                            </div>
                         </div>
-                    </div>
-                    <button onclick="mainwp_manage_clients_filter()" class="ui mini basic green button"><i class="filter icon"></i> <?php esc_html_e( 'Filter', 'mainwp' ); ?></button>
-                    <a href="admin.php?page=ManageClients" class="ui mini button" <?php echo $default_filter ? 'disabled="disabled"' : ''; ?>><i class="times icon"></i> <?php esc_html_e( 'Reset', 'mainwp' ); ?></a>
+                        <button onclick="mainwp_manage_clients_filter()" class="ui mini basic green button"><i class="filter icon"></i> <?php esc_html_e( 'Filter', 'mainwp' ); ?></button>
+                        <a href="admin.php?page=ManageClients" class="ui mini button" <?php echo $default_filter ? 'disabled="disabled"' : ''; ?>><i class="times icon"></i> <?php esc_html_e( 'Reset', 'mainwp' ); ?></a>
+                        <?php
+                    }
+                    ?>
                 </div>
             </div>
         </div>
@@ -463,6 +471,7 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
                         "lengthMenu" : [ [<?php echo esc_js( $pagelength_val ); ?>, -1 ], [<?php echo esc_js( $pagelength_title ); ?>, "All" ] ],
                         "pageLength": <?php echo intval( $sites_per_page ); ?>,
                         "drawCallback": function( settings ) {
+                            jQuery( '#mainwp-manage-sites-body-table .ui.checkbox' ).checkbox();
                         },
                         select: {
                             items: 'row',
@@ -501,6 +510,10 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
                     // to fix js error.
                 }
                 mainwp_datatable_fix_menu_overflow('#mainwp-manage-clients-table');
+                
+                // Initialize header checkboxes
+                jQuery( '#mainwp-manage-clients-table thead .ui.checkbox' ).checkbox();
+                
                 _init_manage_sites_screen = function() {
                     jQuery( '#mainwp-manage-sites-screen-options-modal input[type=checkbox][id^="mainwp_show_column_"]' ).each( function() {
                         let col_id = jQuery( this ).attr( 'id' );
@@ -531,7 +544,7 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
         list( $columns, $sortable ) = $this->get_column_info();
 
         if ( ! empty( $columns['cb'] ) ) {
-            $columns['cb'] = '<div class="ui checkbox"><input id="' . ( $top ? 'cb-select-all-top' : 'cb-select-all-bottom' ) . '" type="checkbox" aria-label="Select all clients." /></div>';
+            $columns['cb'] = '<div class="ui checkbox"><input id="' . ( $top ? 'cb-select-all-top' : 'cb-select-all-bottom' ) . '" type="checkbox" aria-label="' . esc_attr__( 'Select all clients.', 'mainwp' ) . '" /><label></label></div>';
         }
 
         $def_columns                   = $this->get_default_columns();
@@ -708,6 +721,7 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
                 <td class="check-column">
                     <div class="ui checkbox">
                         <input type="checkbox" value="<?php echo intval( $item['client_id'] ); ?>" name="" aria-label="<?php esc_attr_e( 'Select the site.', 'mainwp' ); ?>"/>
+                        <label></label>
                     </div>
                 </td>
                 <?php

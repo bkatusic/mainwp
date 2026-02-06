@@ -187,31 +187,6 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
      */
     public static function render_select_sites_header( $tab_id, $staging_enabled, $selectedby, $show_group = true, $show_client = false ) {
 
-        /**
-         * Action: mainwp_before_select_sites_filters
-         *
-         * Fires before the Select Sites box filters.
-         *
-         * @since 4.1
-         */
-        do_action( 'mainwp_before_select_sites_filters' );
-        ?>
-        <div id="mainwp-select-sites-filters">
-            <div class="ui mini fluid icon input">
-                <input type="text" id="mainwp-select-sites-filter" value="" placeholder="<?php esc_attr_e( 'Type to filter your sites', 'mainwp' ); ?>" />
-                <i class="filter icon"></i>
-            </div>
-        </div>
-        <?php
-        /**
-         * Action: mainwp_after_select_sites_filters
-         *
-         * Fires after the Select Sites box filters.
-         *
-         * @since 4.1
-         */
-        do_action( 'mainwp_after_select_sites_filters' );
-
         static $rendered_count = 0;
 
         $rand_id_prefix = '';
@@ -225,21 +200,48 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
         ?>
         <input type="hidden" name="select_by" value="<?php echo esc_attr( $selectedby ); ?>" id="select_by<?php echo esc_attr( $rand_id_prefix ); // empty prefix to ensure compatibility with extensions. ?>"/>
         <input type="hidden" name="select_sites_tab" id="select_sites_tab<?php echo esc_attr( $rand_id_prefix ); // empty prefix to ensure compatibility with extensions. ?>" value="<?php echo esc_attr( $selectedby ); ?>"/>
+        
         <div class="mainwp-select-sites-header" id="mainwp-select-sites-header<?php echo esc_attr( $rand_id_prefix ); // empty prefix to ensure compatibility with extensions. ?>" >
-            <div class="ui secondary pointing centered fluid menu">
-                <a class="item ui text tab <?php echo ( 'site' === $selectedby ) ? 'active' : ''; ?>" data-tab="mainwp-select-sites-<?php echo esc_attr( $tab_id ); ?>" select-by="site"><?php esc_html_e( 'Sites', 'mainwp' ); ?></a>
+            <div class="ui secondary mini horizontal menu" id="mainwp-select-sites-menu">
+                <a class="item ui tab <?php echo ( 'site' === $selectedby ) ? 'active' : ''; ?>" data-tab="mainwp-select-sites-<?php echo esc_attr( $tab_id ); ?>" select-by="site"><?php esc_html_e( 'Sites', 'mainwp' ); ?></a>
                 <?php if ( $show_group ) : ?>
-                <a class="item ui text tab <?php echo ( 'group' === $selectedby ) ? 'active' : ''; ?>" data-tab="mainwp-select-groups-<?php echo esc_attr( $tab_id ); ?>" select-by="group"><?php esc_html_e( 'Tags', 'mainwp' ); ?></a>
+                <a class="item ui tab <?php echo ( 'group' === $selectedby ) ? 'active' : ''; ?>" data-tab="mainwp-select-groups-<?php echo esc_attr( $tab_id ); ?>" select-by="group"><?php esc_html_e( 'Tags', 'mainwp' ); ?></a>
                 <?php endif; ?>
                 <?php if ( $show_client ) : ?>
-                <a class="item ui text tab <?php echo ( 'client' === $selectedby ) ? 'active' : ''; ?>" data-tab="mainwp-select-clients-<?php echo esc_attr( $tab_id ); ?>" select-by="client"><?php esc_html_e( 'Clients', 'mainwp' ); ?></a>
+                <a class="item ui tab <?php echo ( 'client' === $selectedby ) ? 'active' : ''; ?>" data-tab="mainwp-select-clients-<?php echo esc_attr( $tab_id ); ?>" select-by="client"><?php esc_html_e( 'Clients', 'mainwp' ); ?></a>
                 <?php endif; ?>
                 <?php if ( $staging_enabled ) : ?>
                     <a class="item ui text tab" data-tab="mainwp-select-staging-sites-<?php echo esc_attr( $tab_id ); ?>" select-by="staging"><?php esc_html_e( 'Staging', 'mainwp' ); ?></a>
                 <?php endif; ?>
             </div>
         </div>
+        
+
         <?php
+        /**
+         * Action: mainwp_before_select_sites_filters
+         *
+         * Fires before the Select Sites box filters.
+         *
+         * @since 4.1
+         */
+        do_action( 'mainwp_before_select_sites_filters' );
+        ?>
+        <div id="mainwp-select-sites-filters">
+            <div class="ui mini fluid icon input">
+                <input type="text" id="mainwp-select-sites-filter" value="" placeholder="<?php esc_attr_e( 'Search...', 'mainwp' ); ?>" />
+                <i class="filter icon"></i>
+            </div>
+        </div>
+        <?php
+        /**
+         * Action: mainwp_after_select_sites_filters
+         *
+         * Fires after the Select Sites box filters.
+         *
+         * @since 4.1
+         */
+        do_action( 'mainwp_after_select_sites_filters' );
     }
 
     /**
@@ -287,7 +289,10 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 <div class="ui relaxed selection list mainwp-select-sites-list" id="mainwp-select-sites-list">
                     <?php if ( ! $websites ) : ?>
                         <div id="mainwp-select-sites-placeholder" class="ui segment">
-                            <?php static::render_empty_element_placeholder( __( 'No sites connected.', 'mainwp' ) ); ?>
+                            <?php static::render_empty_element_placeholder( __( 'No sites yet', 'mainwp' ), __( 'Connect your first WordPress site to start managing it from MainWP.', 'mainwp' ), '<em data-emoji=":link:" class="medium"></em>' ); ?>
+                            <div class="ui center aligned segment">
+                                <a href="admin.php?page=managesites&do=new" class="ui mini green button"><?php esc_html_e( 'Connect a Site', 'mainwp'); ?></a> <a href="https://docs.mainwp.com/getting-started/get-started-with-mainwp#add-a-site-to-your-dashboard" class="ui mini grey basic button" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Learn How', 'mainwp'); ?></a>
+                            </div>
                         </div>
                         <?php
                         else :

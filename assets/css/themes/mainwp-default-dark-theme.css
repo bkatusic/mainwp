@@ -587,8 +587,8 @@
 .mainwp-ui.mainwp-custom-theme .ui.input > input {
   background-color: var(--mainwp-element-background-secondary) !important;
   border: 1px solid var(--mainwp-border) !important;
-  border-radius: var(--input-radius);
-  -webkit-border-radius: var(--input-radius);
+  border-radius: var(--input-radius) !important;
+  -webkit-border-radius: var(--input-radius) !important;
   color: var(--mainwp-text);
 }
 
@@ -1336,43 +1336,38 @@
   ========================================================================== */
 
 .mainwp-ui.mainwp-custom-theme #mainwp-page-navigation-wrapper {
-  background-color: var(--mainwp-element-background);
-  padding: 0 !important;
-  border: 1px solid var(--mainwp-border);
+  background-color: var(--mainwp-element-background-secondary) !important;
+  border-left: 1px solid var(--mainwp-border);
+  border-right: 1px solid var(--mainwp-element-background-secondary);
   box-shadow: none !important;
   -webkit-box-shadow: none !important;
-  top: calc(58px + 2rem) !important;
-  bottom: 2rem !important;
-  margin-left: 2rem !important;
-  border-radius: var(--area-radius) !important;
+  border-radius: var(--area-radius) 0 0 var(--area-radius) !important;
 }
 
 .mainwp-ui.mainwp-custom-theme #mainwp-page-navigation-wrapper .menu {
-  background-color: var(--mainwp-element-background);
-  border-radius: var(--area-radius) !important;
+  background-color: var(--mainwp-element-background-secondary) !important;
+  padding: 1em;
   width: 198px !important;
 }
 .mainwp-ui.mainwp-custom-theme #mainwp-page-navigation-wrapper .menu .item {
   color: var(--mainwp-text-secondary) !important;
-  background-color: var(--mainwp-element-background);
-  font-weight: 400 !important;
+  background-color: var(--mainwp-element-background-secondary) !important;
+  font-size: 0.9em;
+  font-weight: 300;
 }
 .mainwp-ui.mainwp-custom-theme #mainwp-page-navigation-wrapper .menu .item.active {
-  color: var(--mainwp-text) !important;
-  background-color: var(--mainwp-element-background-secondary);
-  font-weight: 600 !important;
-}
-.mainwp-ui.mainwp-custom-theme #mainwp-page-navigation-wrapper .menu .item:first-child {
-  border-radius: var(--area-radius) var(--area-radius) 0 0 !important;
+  color: var(--mainwp-green) !important;
+  background-color: #7fb10010 !important; 
+  border-radius: 0.785rem !important;
+  -webkit-border-radius: 0.785rem !important;
 }
 
 .mainwp-ui.mainwp-custom-theme #mainwp-page-navigation-wrapper .menu .item::before {
-  background-color: var(--mainwp-border) !important;
-  opacity: .5;
+  background: none !important;
 }
 
 .mainwp-ui.mainwp-custom-theme #mainwp-page-navigation-wrapper #mainwp-site-preview-image {
-  border-radius: var(--area-radius) var(--area-radius) 0 0 !important;
+  border-radius: var(--area-radius) 0 0 0 !important;
 }
 
 .mainwp-ui.mainwp-custom-theme .menu .item#mainwp-collapse-fourth-level-navigation {
@@ -1458,6 +1453,15 @@
   display: none !important;
 }
 
+.mainwp-ui.mainwp-custom-theme #mainwp-select-sites-menu .item {
+  color: var(--mainwp-text) !important;
+}
+.mainwp-ui.mainwp-custom-theme #mainwp-select-sites-menu .item:hover,
+.mainwp-ui.mainwp-custom-theme #mainwp-select-sites-menu .item.active {
+  color: var(--mainwp-green) !important;
+  background-color: #7fb10010 !important; 
+}
+
 /* UI Menus and Tabs
   ========================================================================== */
 
@@ -1523,7 +1527,7 @@ body.mainwp-ui.mainwp-custom-theme,
 
 .mainwp-ui.mainwp-custom-theme #mainwp-module-cost-tracker-settings-tab,
 .mainwp-ui.mainwp-custom-theme #mainwp-site-mode-wrap {
-  width: calc(100% - 214px - 1em);
+  width: calc(100% - 200px);
 }
 
 /* Side Content Area
@@ -1543,10 +1547,6 @@ body.mainwp-ui.mainwp-custom-theme,
 .mainwp-ui.mainwp-custom-theme .mainwp-side-content  .ui.accordion .title,
 .mainwp-ui.mainwp-custom-theme .mainwp-side-content  .ui.accordion .content {
   background: none !important;
-}
-
-.mainwp-ui.mainwp-custom-theme .mainwp-side-content .mainwp-select-sites-select-all-actions {
-  background-color: var(--mainwp-base-background-secondary) !important;
 }
 
 /* Header Element
