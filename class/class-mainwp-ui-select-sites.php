@@ -231,7 +231,7 @@ class MainWP_UI_Select_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     <span class="ui small grey text"><?php esc_html_e( 'Select:', 'mainwp' ); ?></span>
                     <?php if ( $show_select_all ) : ?>
                     <a href="javascript:void(0)" onClick="return mainwp_ss_select( this, true )" class="mainwp-ss-select"><span class="ui small green text"><?php esc_html_e( 'All', 'mainwp' ); ?></span></a>
-                    <span class="mainwp-ss-select" class="ui small grey text"> · </span>
+                    <span class="mainwp-ss-select ui small grey text"> · </span>
                     <a href="javascript:void(0)" onClick="return mainwp_ss_select( this, false )" class="mainwp-ss-deselect"><span class="ui small green text"><?php esc_html_e( 'None', 'mainwp' ); ?></span></a>
                     <?php endif; ?>
                 </div>

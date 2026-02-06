@@ -267,7 +267,7 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
                             <div class="menu">
                                 <?php foreach ( $groups as $group ) : ?>
                                     <div class="item" data-value="<?php echo intval( $group->id ); ?>"><?php echo esc_html( stripslashes( $group->name ) ); ?></div>
-                                <?php endif; ?>
+                                <?php endforeach; ?>
                                 <div class="item" data-value="nogroups"><?php esc_html_e( 'No Tags', 'mainwp' ); ?></div>
                             </div>
                         </div>
@@ -544,7 +544,7 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
         list( $columns, $sortable ) = $this->get_column_info();
 
         if ( ! empty( $columns['cb'] ) ) {
-            $columns['cb'] = '<div class="ui checkbox"><input id="' . ( $top ? 'cb-select-all-top' : 'cb-select-all-bottom' ) . '" type="checkbox" aria-label="Select all clients." /><label></label></div>';
+            $columns['cb'] = '<div class="ui checkbox"><input id="' . ( $top ? 'cb-select-all-top' : 'cb-select-all-bottom' ) . '" type="checkbox" aria-label="' . esc_attr__( 'Select all clients.', 'mainwp' ) . '" /><label></label></div>';
         }
 
         $def_columns                   = $this->get_default_columns();

@@ -1363,7 +1363,7 @@
 }
 
 .mainwp-ui.mainwp-custom-theme #mainwp-page-navigation-wrapper .menu .item::before {
-  background: none !important
+  background: none !important;
 }
 
 .mainwp-ui.mainwp-custom-theme #mainwp-page-navigation-wrapper #mainwp-site-preview-image {
