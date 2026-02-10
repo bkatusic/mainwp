@@ -251,7 +251,7 @@ class MainWP_Cache_Warm_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSam
             $userId = 0;
         }
 
-        return sha1( 'v:' . static::WPC_VER . "|u:$userId|p:$page" );
+        return sha1( 'v:' . static::WPC_VER . "|u:$userId|p:$page" ); // NOSONAR - is sufficient for keys.
     }
 
 
@@ -320,7 +320,7 @@ class MainWP_Cache_Warm_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 $key_params .= $normalized_key;
             }
         }
-        return sha1( $key_params );
+        return sha1( $key_params ); // NOSONAR - is sufficient for keys.
     }
 
 

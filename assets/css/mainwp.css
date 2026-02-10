@@ -776,13 +776,6 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
 }
 
 /* Tables */
-/*
-.mainwp-ui table.dataTable thead>tr>th span.dt-column-order {
-    position: relative !important;
-    left: 8px !important;
-    right: 0px !important;
-}
-*/
 .mainwp-ui table.dataTable thead > tr > th .dt-column-header {
     justify-content: start !important;
     flex-direction: row !important;

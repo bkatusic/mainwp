@@ -142,7 +142,7 @@ KEY idx_wpid_issub (wpid, issub)";
         $this->update_db_90041( $current_version );
         $this->update_db_90043( $current_version );
 
-        if ( ! empty( $current_version ) && version_compare( $current_version, '9.0.1.2', '<' ) ) {
+        if ( ! empty( $current_version ) && version_compare( $current_version, '9.0.1.2', '<' ) ) { // NOSONAR - no ip.
             $this->wpdb->query( 'ALTER TABLE ' . $this->table_name( 'monitors' ) . ' ADD INDEX idx_wpid_issub (wpid, issub)' ); //phpcs:ignore -- ok.
         }
 

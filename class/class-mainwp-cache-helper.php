@@ -239,7 +239,7 @@ final class MainWP_Cache_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSa
      */
     private static function get_normalized_params( $params = array() ) {
         $normalized = wp_json_encode( self::clean_and_sort_params( $params ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
-        return sha1( $normalized );
+        return sha1( $normalized ); // NOSONAR - is sufficient for keys.
     }
 
     /**
