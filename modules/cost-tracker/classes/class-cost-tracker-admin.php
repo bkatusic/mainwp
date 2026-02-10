@@ -18,6 +18,7 @@ use MainWP\Dashboard\MainWP_Post_Handler;
 use MainWP\Dashboard\MainWP_Settings;
 use MainWP\Dashboard\MainWP_Settings_Indicator;
 use MainWP\Dashboard\MainWP_Exception;
+use MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Import;
 
 /**
  * Class Cost_Tracker_Admin
@@ -133,11 +134,12 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
     public function admin_init() {
 
         MainWP_Post_Handler::instance()->add_action( 'mainwp_module_cost_tracker_upload_product_icon', array( Cost_Tracker_Add_Edit::get_instance(), 'ajax_upload_product_icon' ) );
+        MainWP_Post_Handler::instance()->add_action( 'mainwp_cost_tracker_import_cost', array( static::class, 'ajax_import_cost' ) );
 
         $this->handle_edit_cost_tracker_post();
         $this->handle_settings_post();
 
-        $allow_pages = array( 'ManageCostTracker', 'CostTrackerAdd', 'CostTrackerSettings', 'CostSummary' );
+        $allow_pages = array( 'ManageCostTracker', 'CostTrackerAdd', 'CostTrackerSettings', 'CostSummary', 'CostTrackerImport' );
         if ( isset( $_GET['page'] ) && in_array( $_GET['page'], $allow_pages, true ) ) { //phpcs:ignore WordPress.Security.NonceVerification.Recommended
             $base_url = Cost_Tracker_Manager::get_location_path( 'url' );
             wp_enqueue_script( 'mainwp-module-cost-tracker-extension', $base_url . 'ui/js/cost-tracker.js', array( 'jquery' ), $this->version, true );
@@ -151,6 +153,9 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
                         return $scripts;
                     }
                 );
+            }
+            if ( 'CostTrackerImport' === $_GET['page'] ) { //phpcs:ignore WordPress.Security.NonceVerification.Recommended
+                wp_enqueue_script( 'mainwp-module-cost-tracker-import', $base_url . 'ui/js/cost-tracker-import.js', array( 'jquery' ), $this->version, true );
             }
         }
     }
@@ -224,8 +229,8 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
         );
         $product_types     = static::get_product_types();
         $payment_types     = array(
-            'subscription' => esc_html__( 'Subscription', 'mainwp' ),
-            'lifetime'     => esc_html__( 'Lifetime', 'mainwp' ),
+            'subscription' => esc_html__( 'Recurring (Subscription)', 'mainwp' ),
+            'lifetime'     => esc_html__( 'One-time (Lifetime)', 'mainwp' ),
         );
         $payment_methods   = static::get_payment_methods();
         $renewal_frequency = static::get_renewal_frequency();
@@ -290,6 +295,18 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
             )
         );
 
+        add_submenu_page(
+            'mainwp_tab',
+            esc_html__( 'Import Costs', 'mainwp' ),
+            '<div class="mainwp-hidden">' . esc_html__( 'Import Costs', 'mainwp' ) . '</div>',
+            'read',
+            'CostTrackerImport',
+            array(
+                Cost_Tracker_Import::get_instance(),
+                'render_import_costs',
+            )
+        );
+
         /**
          * This hook allows you to add extra sub pages to the client page via the 'mainwp_getsubpages_cost_tracker' filter.
          */
@@ -336,7 +353,7 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
     public static function init_left_menu( $subPages ) {
         MainWP_Menu::add_left_menu(
             array(
-                'title'      => esc_html__( 'Cost Tracker', 'mainwp' ),
+                'title'      => esc_html__( 'Costs', 'mainwp' ),
                 'parent_key' => 'mainwp_tab',
                 'slug'       => 'CostSummary',
                 'href'       => 'admin.php?page=CostSummary',
@@ -376,6 +393,13 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
                 'slug'       => 'CostTrackerAdd',
                 'right'      => '',
             ),
+            array(
+                'title'      => esc_html__( 'Import Costs', 'mainwp' ),
+                'parent_key' => 'CostSummary',
+                'href'       => 'admin.php?page=CostTrackerImport',
+                'slug'       => 'CostTrackerImport',
+                'right'      => 'manage_cost_tracker',
+            ),
         );
 
         MainWP_Menu::init_subpages_left_menu( $subPages, $init_sub_subleftmenu, 'ManageCostTracker', 'ManageCostTracker' );
@@ -398,8 +422,15 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
      * @param string $shownPage Current Page.
      */
     public static function render_header( $shownPage = '' ) { //phpcs:ignore -- NOSONAR - complex.
+        $title = esc_html__( 'Operational Costs', 'mainwp' );
+        if ( 'edit' === $shownPage ) {
+            $title = esc_html__( 'Edit Operational Cost', 'mainwp' );
+        } elseif ( 'add' === $shownPage ) {
+            $title = esc_html__( 'Add Operational Cost', 'mainwp' );
+        }
+
         $params = array(
-            'title'      => esc_html__( 'Cost Tracker', 'mainwp' ),
+            'title'      => $title,
             'which'      => 'page_cost_tracker_overview',
             'wrap_class' => 'mainwp-module-cost-tracker-content-wrapper',
         );
@@ -421,6 +452,14 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
                 'title'  => esc_html__( 'Add New', 'mainwp' ),
                 'href'   => 'admin.php?page=CostTrackerAdd',
                 'active' => ( 'add' === $shownPage ) ? true : false,
+            );
+        }
+
+        if ( ! MainWP_Menu::is_disable_menu_item( 3, 'CostTrackerImport' ) ) {
+            $renderItems[] = array(
+                'title'  => esc_html__( 'Import Costs', 'mainwp' ),
+                'href'   => 'admin.php?page=CostTrackerImport',
+                'active' => ( 'ImportCosts' === $shownPage ) ? true : false,
             );
         }
 
@@ -713,6 +752,101 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
             }
         }
         return $valid_arr;
+    }
+
+    /**
+     * AJAX handler for importing cost tracker entries.
+     *
+     * @return void
+     */
+    public static function ajax_import_cost() {
+        MainWP_Post_Handler::instance()->secure_request( 'mainwp_cost_tracker_import_cost' );
+
+        if ( ! isset( $_POST['encoded_data'] ) ) {
+            return wp_send_json_error( array(
+                'message' => esc_html__( 'No cost data provided', 'mainwp' ),
+            ) );
+        }
+
+        $encoded_data = wp_unslash( $_POST['encoded_data'] );
+        $cost_data_raw = json_decode( $encoded_data, true );
+
+        if ( null === $cost_data_raw || ! is_array( $cost_data_raw ) ) {
+            return wp_send_json_error( array(
+                'message' => esc_html__( 'Invalid cost data format', 'mainwp' ),
+            ) );
+        }
+
+        $cost_name = isset( $cost_data_raw['cost']['name'] ) ? sanitize_text_field( $cost_data_raw['cost']['name'] ) : '';
+
+        if ( empty( $cost_name ) ) {
+            return wp_send_json_error( array(
+                'message' => esc_html__( 'Cost name is required', 'mainwp' ),
+            ) );
+        }
+
+        $cost_data = array(
+            'name'         => $cost_name,
+            'url'          => isset( $cost_data_raw['cost']['url'] ) ? esc_url( $cost_data_raw['cost']['url'] ) : '',
+            'type'         => isset( $cost_data_raw['cost']['type'] ) ? sanitize_text_field( $cost_data_raw['cost']['type'] ) : '',
+            'product_type' => isset( $cost_data_raw['cost']['product_type'] ) ? sanitize_text_field( $cost_data_raw['cost']['product_type'] ) : '',
+            'license_type' => isset( $cost_data_raw['cost']['license_type'] ) ? sanitize_text_field( $cost_data_raw['cost']['license_type'] ) : '',
+            'price'        => isset( $cost_data_raw['cost']['price'] ) ? floatval( $cost_data_raw['cost']['price'] ) : 0,
+            'payment_method' => isset( $cost_data_raw['cost']['payment_method'] ) ? sanitize_text_field( $cost_data_raw['cost']['payment_method'] ) : '',
+            'renewal_type' => isset( $cost_data_raw['cost']['renewal_type'] ) ? sanitize_text_field( $cost_data_raw['cost']['renewal_type'] ) : '',
+            'last_renewal' => isset( $cost_data_raw['cost']['last_renewal'] ) ? intval( $cost_data_raw['cost']['last_renewal'] ) : 0,
+            'cost_status'  => isset( $cost_data_raw['cost']['cost_status'] ) ? sanitize_text_field( $cost_data_raw['cost']['cost_status'] ) : '',
+        );
+
+        $selected_sites = array();
+
+        if ( isset( $cost_data_raw['cost']['select_sites'] ) && is_array( $cost_data_raw['cost']['select_sites'] ) ) {
+            foreach ( $cost_data_raw['cost']['select_sites'] as $url ) {
+                $url = esc_url( trim( $url ) );
+                if ( empty( $url ) ) {
+                    continue;
+                }
+
+                if ( '/' !== substr( $url, -1 ) ) {
+                    $url .= '/';
+                }
+
+                $website = MainWP_DB::instance()->get_websites_by_url( $url );
+                $site_id = ! empty( $website ) ? current( $website )->id : null;
+
+                if ( ! empty( $site_id ) ) {
+                    $selected_sites[] = $site_id;
+                }
+            }
+        }
+
+        try {
+            $inserted = Cost_Tracker_DB::get_instance()->update_cost_tracker( $cost_data );
+        } catch ( \MainWP_Exception $e ) {
+            return wp_send_json_error( array(
+                'message' => $e->getMessage(),
+            ) );
+        }
+
+        if ( empty( $inserted ) || ! is_object( $inserted ) || ! isset( $inserted->id ) ) {
+            return wp_send_json_error( array(
+                'message' => esc_html__( 'Failed to create cost tracker entry', 'mainwp' ),
+            ) );
+        }
+
+        if ( ! empty( $selected_sites ) ) {
+            Cost_Tracker_DB::get_instance()->update_selected_lookup_cost(
+                $inserted->id,
+                $selected_sites,
+                false,
+                false
+            );
+        }
+
+        return wp_send_json_success( array(
+            'message' => esc_html__( 'Cost imported successfully.', 'mainwp' ),
+            'cost'    => $inserted,
+        ) );
     }
 
     /**

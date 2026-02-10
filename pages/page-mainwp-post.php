@@ -874,12 +874,14 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         $search_on = isset( $params['search_on'] ) ? $params['search_on'] : 'all';
         $clients   = isset( $params['clients'] ) ? $params['clients'] : '';
 
+        $has_cached_results = $cached && isset( $_SESSION['MainWPPostSearch'] ) && ! empty( $_SESSION['MainWPPostSearch'] );
+
         ?>
 
         <div id="mainwp-message-zone"></div>
 
         <div id="mainwp-loading-posts-row" style="display: none;">
-            <div class="ui active dimmer">
+            <div class="ui active page dimmer">
                 <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
             </div>
         </div>
@@ -893,7 +895,9 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
          * @since 4.1
          */
         do_action( 'mainwp_before_posts_table' );
-        ?>
+
+        if ( ! $cached || $has_cached_results ) :
+            ?>
         <table id="mainwp-posts-table" class="ui unstackable single line table" style="width:100%">
             <thead class="full-width">
                 <tr>
@@ -932,17 +936,24 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             </thead>
 
             <tbody id="mainwp-posts-list">
-        <?php
-        if ( $cached ) {
-            MainWP_Cache::echo_body( 'Post' );
-        } else {
-            MainWP_Cache::init_cache( 'Post' );
-            static::render_table_body( $keyword, $dtsstart, $dtsstop, $status, $groups, $sites, $postId, $userId, $post_type, $search_on, false, $clients );
-        }
-        ?>
+            <?php
+            if ( $cached ) {
+                MainWP_Cache::echo_body( 'Post' );
+            } else {
+                MainWP_Cache::init_cache( 'Post' );
+                static::render_table_body( $keyword, $dtsstart, $dtsstop, $status, $groups, $sites, $postId, $userId, $post_type, $search_on, false, $clients );
+            }
+            ?>
             </tbody>
         </table>
         <?php
+        else :
+            MainWP_UI::render_empty_page_placeholder(
+                esc_html__( 'Find Posts', 'mainwp' ),
+                esc_html__( 'Select the Child Sites you want, choose any filters, then click Show Posts.', 'mainwp' ),
+                '<em data-emoji=":page_facing_up:" class="big"></em>'
+            );
+        endif;
         /**
          * Action: mainwp_after_posts_table
          *
@@ -995,11 +1006,11 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             "targets": 'no-sort',
                             "orderable": false
                         } ],
-                        "language" : { "emptyTable": "<?php esc_html_e( 'Use the search options to find the post you want to manage.', 'mainwp' ); ?>" },
-                        "preDrawCallback": function( settings ) {
+                        "language" : { "emptyTable": "<?php esc_html_e( 'No posts found matching your search criteria.', 'mainwp' ); ?>" },
+                        "drawCallback": function( settings ) {
                             setTimeout(() => { // to fix.
-                                jQuery( '#mainwp-posts-table-wrapper table .ui.dropdown' ).dropdown();
-                                jQuery( '#mainwp-posts-table-wrapper table .ui.checkbox' ).checkbox();
+                                jQuery( '#mainwp-posts-table .ui.dropdown' ).dropdown();
+                                jQuery( '#mainwp-posts-table .ui.checkbox' ).checkbox();
                                 mainwp_datatable_fix_menu_overflow('#mainwp-posts-table');
                                 mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
                             }, 1000);
@@ -1315,7 +1326,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                      */
                     do_action( 'mainwp_posts_table_column', $post, $website );
                     ?>
-                    <td class="title column-title">
+                    <td class="title column-title not-selectable">
                         <strong>
                             <abbr title="<?php echo esc_attr( $post['title'] ); ?>">
                             <?php if ( 'trash' !== $post['status'] ) { ?>
@@ -1331,27 +1342,27 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         </strong>
                     </td>
 
-                    <td class="author column-author"><?php echo esc_html( $post['author'] ); ?></td>
+                    <td class="author column-author not-selectable"><?php echo esc_html( $post['author'] ); ?></td>
 
-                    <td class="categories column-categories"><?php echo esc_html( $post['categories'] ); ?></td>
+                    <td class="categories column-categories not-selectable"><?php echo esc_html( $post['categories'] ); ?></td>
 
-                    <td class="tags"><?php echo esc_html( '' === $post['tags'] ? 'No Tags' : $post['tags'] ); ?></td>
+                    <td class="tags not-selectable"><?php echo esc_html( '' === $post['tags'] ? 'No Tags' : $post['tags'] ); ?></td>
 
                     <?php if ( is_plugin_active( 'mainwp-custom-post-types/mainwp-custom-post-types.php' ) ) : ?>
-                        <td class="post-type column-post-type"><?php echo esc_html( $post['post_type'] ); ?></td>
+                        <td class="post-type column-post-type not-selectable"><?php echo esc_html( $post['post_type'] ); ?></td>
                     <?php endif; ?>
 
                     <?php if ( is_plugin_active( 'mainwp-comments-extension/mainwp-comments-extension.php' ) ) : ?>
-                        <td class="comments column-comments">
+                        <td class="comments column-comments not-selectable">
                             <div class="post-com-count-wrapper">
                                 <a href="<?php echo esc_url( admin_url( 'admin.php?page=CommentBulkManage&siteid=' . intval( $website->id ) ) . '&postid=' . $post['id'] ); ?>" title="0 pending" class="post-com-count"><span class="comment-count"><abbr title="<?php echo esc_attr( $post['comment_count'] ); ?>"><?php echo esc_html( $post['comment_count'] ); ?></abbr></span></a>
                             </div>
                         </td>
                     <?php endif; ?>
 
-                    <td class="date column-date" data-order="<?php echo esc_attr( $raw_dts ); ?>"><abbr raw_value="<?php echo esc_attr( $raw_dts ); ?>" title="<?php echo esc_attr( $post['dts'] ); ?>"><?php echo esc_html( $post['dts'] ); ?></abbr></td>
+                    <td class="date column-date not-selectable" data-order="<?php echo esc_attr( $raw_dts ); ?>"><abbr raw_value="<?php echo esc_attr( $raw_dts ); ?>" title="<?php echo esc_attr( $post['dts'] ); ?>"><?php echo esc_html( $post['dts'] ); ?></abbr></td>
 
-                    <td class="status column-status <?php echo 'trash' === $post['status'] ? 'post-trash' : ''; ?>"><?php echo esc_html( static::get_status( $post['status'] ) ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
+                    <td class="status column-status not-selectable <?php echo 'trash' === $post['status'] ? 'post-trash' : ''; ?>"><?php echo esc_html( static::get_status( $post['status'] ) ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
 
                     <?php
                     if ( MainWP_Utility::enabled_wp_seo() ) :
@@ -1367,13 +1378,13 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             $readability_score = MainWP_Utility::esc_content( $seo_data['readability_score'], 'mixed' );
                         }
                         ?>
-                        <td class="column-seo-links" ><abbr raw_value="<?php echo null !== $count_seo_links ? $count_seo_links : -1; ?>" title=""><?php echo null !== $count_seo_links ? $count_seo_links : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
-                        <td class="column-seo-linked"><abbr raw_value="<?php echo null !== $count_seo_linked ? $count_seo_linked : -1; ?>" title=""><?php echo null !== $count_seo_linked ? $count_seo_linked : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
-                        <td class="column-seo-score"><abbr raw_value="<?php echo $seo_score ? 1 : 0; ?>" title=""><?php echo $seo_score; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
-                        <td class="column-seo-readability"><abbr raw_value="<?php echo $readability_score ? 1 : 0; ?>" title=""><?php echo $readability_score; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
+                        <td class="column-seo-links not-selectable" ><abbr raw_value="<?php echo null !== $count_seo_links ? $count_seo_links : -1; ?>" title=""><?php echo null !== $count_seo_links ? $count_seo_links : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
+                        <td class="column-seo-linked not-selectable"><abbr raw_value="<?php echo null !== $count_seo_linked ? $count_seo_linked : -1; ?>" title=""><?php echo null !== $count_seo_linked ? $count_seo_linked : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
+                        <td class="column-seo-score not-selectable"><abbr raw_value="<?php echo $seo_score ? 1 : 0; ?>" title=""><?php echo $seo_score; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
+                        <td class="column-seo-readability not-selectable"><abbr raw_value="<?php echo $readability_score ? 1 : 0; ?>" title=""><?php echo $readability_score; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
                     <?php endif; ?>
 
-                    <td class="website column-website"><a href="<?php echo esc_url( $website->url ); ?>" target="_blank"><?php echo esc_html( $website->url ); ?></a></td>
+                    <td class="website column-website not-selectable"><a href="<?php echo esc_url( $website->url ); ?>" target="_blank"><?php echo esc_html( $website->url ); ?></a></td>
                     <td class="right aligned not-selectable">
                         <input class="postId" type="hidden" name="id" value="<?php echo esc_attr( $post['id'] ); ?>"/>
                         <input class="allowedBulkActions" type="hidden" name="allowedBulkActions" value="|get_edit|trash|delete|<?php echo 'publish' === $post['status'] ? 'unpublish|' : ''; ?><?php echo ( 'pending' === $post['status'] ) ? 'approve|' : ''; ?><?php echo ( 'trash' === $post['status'] ) ? 'restore|' : ''; ?><?php echo ( 'future' === $post['status'] || 'draft' === $post['status'] ) ? 'publish|' : ''; ?>" />

@@ -750,10 +750,12 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         $search_on = isset( $params['search_on'] ) ? $params['search_on'] : 'all';
         $clients   = isset( $params['clients'] ) ? $params['clients'] : '';
 
+        $has_cached_results = $cached && isset( $_SESSION['MainWPPageSearch'] ) && ! empty( $_SESSION['MainWPPageSearch'] );
+
         ?>
         <div id="mainwp_pages_error"></div>
         <div id="mainwp-loading-pages-row" style="display: none;">
-            <div class="ui active dimmer">
+            <div class="ui active page dimmer">
                 <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
             </div>
         </div>
@@ -766,6 +768,8 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
          * @since 4.1
          */
         do_action( 'mainwp_before_pages_table' );
+
+        if ( ! $cached || $has_cached_results ) :
         ?>
         <table id="mainwp-pages-table" class="ui unstackable single line table" style="width:100%">
             <thead>
@@ -807,6 +811,13 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             </tbody>
         </table>
         <?php
+        else :
+            MainWP_UI::render_empty_page_placeholder(
+                esc_html__( 'Find Pages', 'mainwp' ),
+                esc_html__( 'Select the Child Sites you want, choose any filters, then click Show Pages.', 'mainwp' ),
+                '<em data-emoji=":page_facing_up:" class="big"></em>'
+            );
+        endif;
         /**
          * Action: mainwp_after_pages_table
          *
@@ -858,12 +869,12 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         "targets": 'no-sort',
                         "orderable": false
                     } ],
-                    "language" : { "emptyTable": "<?php esc_html_e( 'Use the search options to find the page you want to manage.', 'mainwp' ); ?>" },
+                    "language" : { "emptyTable": "<?php esc_html_e( 'No pages found matching your search criteria.', 'mainwp' ); ?>" },
                     "drawCallback": function( settings ) {
                         setTimeout(() => { // to fix.
-                            jQuery( '#mainwp_pages_wrap_table table .ui.dropdown' ).dropdown();
-                            jQuery( '#mainwp_pages_wrap_table table .ui.checkbox' ).checkbox();
-                            mainwp_datatable_fix_menu_overflow('#mainwp_pages_wrap_table');
+                            jQuery( '#mainwp-pages-table .ui.dropdown' ).dropdown();
+                            jQuery( '#mainwp-pages-table .ui.checkbox' ).checkbox();
+                            mainwp_datatable_fix_menu_overflow('#mainwp-pages-table');
                             mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
                         }, 1000);
                     },
@@ -886,9 +897,9 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     }
                 }).on( 'columns-reordered', function () {
                     setTimeout(() => { // to fix.
-                        jQuery( '#mainwp_pages_wrap_table table .ui.dropdown' ).dropdown();
-                        jQuery( '#mainwp_pages_wrap_table table .ui.checkbox' ).checkbox();
-                        mainwp_datatable_fix_menu_overflow('#mainwp_pages_wrap_table table');
+                        jQuery( '#mainwp-pages-table .ui.dropdown' ).dropdown();
+                        jQuery( '#mainwp-pages-table .ui.checkbox' ).checkbox();
+                        mainwp_datatable_fix_menu_overflow('#mainwp-pages-table');
                         mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
                     }, 1000);
                 });
@@ -1121,7 +1132,7 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                      */
                     do_action( 'mainwp_pages_table_column', $page, $website );
                     ?>
-                    <td class="page-title  column-title">
+                    <td class="page-title  column-title not-selectable">
                         <strong>
                             <abbr title="<?php echo esc_html( $page['title'] ); ?>">
                                 <?php if ( 'trash' !== $page['status'] ) { ?>
@@ -1133,20 +1144,20 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         </strong>
 
                     </td>
-                    <td class="author column-author">
+                    <td class="author column-author not-selectable">
                         <?php echo esc_html( $page['author'] ); ?>
                     </td>
-                    <td class="comments">
+                    <td class="comments not-selectable">
                         <div class="page-com-count-wrapper">
                             <a href="#" title="0 pending" class="post-com-count">
                                 <span class="comment-count"><abbr title="<?php echo esc_attr( $page['comment_count'] ); ?>"><?php echo esc_html( $page['comment_count'] ); ?></abbr></span>
                             </a>
                         </div>
                     </td>
-                    <td class="date" data-order="<?php echo esc_attr( $raw_dts ); ?>">
+                    <td class="date not-selectable" data-order="<?php echo esc_attr( $raw_dts ); ?>">
                         <abbr raw_value="<?php echo esc_attr( $raw_dts ); ?>" title="<?php echo esc_attr( $page['dts'] ); ?>"><?php echo esc_html( $page['dts'] ); ?></abbr>
                     </td>
-                    <td class="status column-status <?php echo 'trash' === $page['status'] ? 'post-trash' : ''; ?>"><?php echo esc_html( static::get_status( $page['status'] ) ); ?>
+                    <td class="status column-status not-selectable <?php echo 'trash' === $page['status'] ? 'post-trash' : ''; ?>"><?php echo esc_html( static::get_status( $page['status'] ) ); ?>
                     </td>
                     <?php
                     if ( MainWP_Utility::enabled_wp_seo() ) {
@@ -1162,14 +1173,14 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             $readability_score = MainWP_Utility::esc_content( $seo_data['readability_score'], 'mixed' );
                         }
                         ?>
-                        <td class="column-seo-links"><abbr raw_value="<?php echo null !== $count_seo_links ? $count_seo_links : -1; ?>" title=""><?php echo null !== $count_seo_links ? $count_seo_links : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
-                        <td class="column-seo-linked"><abbr raw_value="<?php echo null !== $count_seo_linked ? $count_seo_linked : -1; ?>" title=""><?php echo null !== $count_seo_linked ? $count_seo_linked : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
-                        <td class="column-seo-score"><abbr raw_value="<?php echo $seo_score ? 1 : 0; ?>" title=""><?php echo $seo_score; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
-                        <td class="column-seo-readability"><abbr raw_value="<?php echo $readability_score ? 1 : 0; ?>" title=""><?php echo $readability_score; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
+                        <td class="column-seo-links not-selectable"><abbr raw_value="<?php echo null !== $count_seo_links ? $count_seo_links : -1; ?>" title=""><?php echo null !== $count_seo_links ? $count_seo_links : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
+                        <td class="column-seo-linked not-selectable"><abbr raw_value="<?php echo null !== $count_seo_linked ? $count_seo_linked : -1; ?>" title=""><?php echo null !== $count_seo_linked ? $count_seo_linked : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
+                        <td class="column-seo-score not-selectable"><abbr raw_value="<?php echo $seo_score ? 1 : 0; ?>" title=""><?php echo $seo_score; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
+                        <td class="column-seo-readability not-selectable"><abbr raw_value="<?php echo $readability_score ? 1 : 0; ?>" title=""><?php echo $readability_score; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
                         <?php
                     }
                     ?>
-                    <td class="website">
+                    <td class="website not-selectable">
                         <a href="<?php echo esc_html( $website->url ); ?>" class="mainwp-may-hide-referrer" target="_blank"><?php echo esc_html( $website->url ); ?></a>
                     </td>
                     <td class="right aligned  not-selectable">

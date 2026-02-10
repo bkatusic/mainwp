@@ -65,7 +65,7 @@ class MainWP_Settings_Indicator { // phpcs:ignore Generic.Classes.OpeningBraceSa
         if ( 'header' === $indi_type ) {
             return '<i style="display:none;" field-indicator-wrapper-class="' . esc_html( $wrapper_cls ) . '" class="ui circle icon tiny yellow settings-field-header-indicator ' . $cls . ' "></i>';
         } else {
-            return '<i class="ui circle icon tiny yellow settings-field-icon-indicator ' . $cls . '"></i>';
+            return '<span data-tooltip="' . esc_attr__( 'Changed from default', 'mainwp' ) . '" data-variation="mini" data-position="top center" data-inverted=""><i class="ui circle icon tiny yellow settings-field-icon-indicator ' . $cls . '"></i></span>';
         }
     }
 

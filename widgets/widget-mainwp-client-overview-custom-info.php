@@ -140,7 +140,7 @@ class MainWP_Client_Overview_Custom_Info { // phpcs:ignore Generic.Classes.Openi
                 </table>
                     <?php
                 } else {
-                    MainWP_UI::render_empty_element_placeholder();
+                    MainWP_UI::render_empty_element_placeholder( __( 'No Custom Client Info yet', 'mainwp' ), __( 'Create custom fields to capture additional information about your clients.', 'mainwp' ), '<em data-emoji=":pencil:" class="medium"></em>' );
                 }
                 ?>
                 <?php

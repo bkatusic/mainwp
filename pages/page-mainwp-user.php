@@ -403,7 +403,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     <div class="ui grid">
                         <div class="ui two column row">
                             <div class="column">
-                                <select class="ui mini dropdown" id="mainwp-bulk-actions">
+                                <select class="ui mini dropdown disabled" id="mainwp-bulk-actions">
                                     <option value=""><?php esc_html_e( 'Bulk Actions', 'mainwp' ); ?></option>
                                     <option value="edit"><?php esc_html_e( 'Edit', 'mainwp' ); ?></option>
                                     <option value="delete"><?php esc_html_e( 'Delete', 'mainwp' ); ?></option>
@@ -421,7 +421,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                                     do_action( 'mainwp_users_bulk_action' );
                                     ?>
                                 </select>
-                                <button class="ui mini button" id="mainwp-do-users-bulk-actions"><?php esc_html_e( 'Apply', 'mainwp' ); ?></button>
+                                <button class="ui mini button disabled" id="mainwp-do-users-bulk-actions"><?php esc_html_e( 'Apply', 'mainwp' ); ?></button>
                                 <?php
                                 /**
                                  * Users actions bar (left)
@@ -807,6 +807,8 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      */
     public static function render_table( $cached = true, $role = '', $groups = '', $sites = '', $search = null, $clients = '' ) {
 
+        $has_cached_results = $cached && isset( $_SESSION['MainWPUserSearch'] ) && ! empty( $_SESSION['MainWPUserSearch'] );
+
         /**
          * Action: mainwp_before_users_table
          *
@@ -815,6 +817,8 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
          * @since 4.1
          */
         do_action( 'mainwp_before_users_table' );
+
+        if ( ! $cached || $has_cached_results ) :
         ?>
         <table id="mainwp-users-table" class="ui unstackable single line table" style="width:100%">
             <thead>
@@ -841,6 +845,13 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             </tbody>
         </table>
         <?php
+        else :
+            MainWP_UI::render_empty_page_placeholder(
+                esc_html__( 'Find Users', 'mainwp' ),
+                esc_html__( 'Select the Child Sites you want, choose any filters, then click Show Users.', 'mainwp' ),
+                '<em data-emoji=":busts_in_silhouette:" class="big"></em>'
+            );
+        endif;
         /**
          * Action: mainwp_after_users_table
          *
@@ -895,12 +906,13 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         "targets": 'no-sort',
                         "orderable": false
                     } ],
-                    "preDrawCallback": function() {
+                    "drawCallback": function() {
                         setTimeout(() => {
                             jQuery('#mainwp-users-table .ui.dropdown').dropdown();
                             jQuery('#mainwp-users-table .ui.checkbox').checkbox();
                             mainwp_datatable_fix_menu_overflow('#mainwp-users-table');
                             mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
+                            updateUsersBulkActionsState();
                         }, 1000);
                     },
                     select: {
@@ -913,12 +925,14 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         dt.rows(indexes)
                         .nodes()
                         .to$().find('td.check-column .ui.checkbox' ).checkbox('set checked');
+                        updateUsersBulkActionsState();
                     }
                 }).on('deselect', function (e, dt, type, indexes) {
                     if( 'row' == type ){
                         dt.rows(indexes)
                         .nodes()
                         .to$().find('td.check-column .ui.checkbox' ).checkbox('set unchecked');
+                        updateUsersBulkActionsState();
                     }
                 }).on( 'columns-reordered', function () {
                     setTimeout(() => {
@@ -944,6 +958,12 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 } );
             };
             _init_manage_sites_screen();
+
+            updateUsersBulkActionsState();
+
+            jQuery(document).on('change', '#mainwp-users-table .check-column INPUT:checkbox', function() {
+                updateUsersBulkActionsState();
+            });
 
         } );
         </script>
@@ -1216,14 +1236,14 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             <tr>
                 <td class="check-column"><span class="ui checkbox"><input type="checkbox" name="user[]" value="1"></span></td>
                 <?php do_action( 'mainwp_users_table_column', $user, $website ); ?>
-                <td class="name column-name">
+                <td class="name column-name not-selectable">
                     <?php echo ! empty( $user['display_name'] ) ? esc_html( $user['display_name'] ) : '&nbsp;'; ?>
                 </td>
-                <td class="username column-username"><strong><abbr title="<?php echo esc_attr( $user['login'] ); ?>"><?php echo esc_html( $user['login'] ); ?></abbr></strong></td>
-                <td class="email column-email"><a href="mailto:<?php echo esc_attr( $user['email'] ); ?>"><?php echo esc_html( $user['email'] ); ?></a></td>
-                <td class="role column-role"><?php echo static::get_role( $user['role'] ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
-                <td class="posts column-posts"><a href="<?php echo esc_url( admin_url( 'admin.php?page=PostBulkManage&siteid=' . intval( $website->id ) ) . '&userid=' . $user['id'] ); ?>"><?php echo esc_html( $user['post_count'] ); ?></a></td>
-                <td class="website column-website"><a href="<?php echo esc_url( $website->url ); ?>" target="_blank"><?php echo esc_html( $website->url ); ?></a></td>
+                <td class="username column-username not-selectable"><strong><abbr title="<?php echo esc_attr( $user['login'] ); ?>"><?php echo esc_html( $user['login'] ); ?></abbr></strong></td>
+                <td class="email column-email not-selectable"><a href="mailto:<?php echo esc_attr( $user['email'] ); ?>"><?php echo esc_html( $user['email'] ); ?></a></td>
+                <td class="role column-role not-selectable"><?php echo static::get_role( $user['role'] ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
+                <td class="posts column-posts not-selectable"><a href="<?php echo esc_url( admin_url( 'admin.php?page=PostBulkManage&siteid=' . intval( $website->id ) ) . '&userid=' . $user['id'] ); ?>"><?php echo esc_html( $user['post_count'] ); ?></a></td>
+                <td class="website column-website not-selectable"><a href="<?php echo esc_url( $website->url ); ?>" target="_blank"><?php echo esc_html( $website->url ); ?></a></td>
                 <td class="right aligned not-selectable">
                     <input class="userId" type="hidden" name="id" value="<?php echo esc_attr( $user['id'] ); ?>" />
                     <input class="userName" type="hidden" name="name" value="<?php echo esc_attr( $user['login'] ); ?>" />

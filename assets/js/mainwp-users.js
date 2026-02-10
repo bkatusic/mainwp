@@ -4,6 +4,22 @@
 let userCountSent = 0;
 let userCountReceived = 0;
 
+let updateUsersBulkActionsState = function() {
+    let checkedCount = jQuery('#mainwp-users-table input[name="user[]"]:checked').length;
+    let dropdown = jQuery('#mainwp-bulk-actions');
+    let applyButton = jQuery('#mainwp-do-users-bulk-actions');
+    
+    if (checkedCount > 0) {
+        dropdown.removeClass('disabled');
+        dropdown.parent('.ui.dropdown').removeClass('disabled');
+        applyButton.removeClass('disabled');
+    } else {
+        dropdown.addClass('disabled');
+        dropdown.parent('.ui.dropdown').addClass('disabled');
+        dropdown.dropdown('set selected', 'none');
+        applyButton.addClass('disabled');
+    }
+};
 
 let import_user_stop_by_user = false;
 let import_user_current_line_number = 0;
@@ -12,6 +28,12 @@ let import_user_count_created_users = 0;
 let import_user_count_create_fails = 0;
 
 jQuery(function () {
+
+    updateUsersBulkActionsState();
+
+    jQuery(document).on('change', '#mainwp-users-table .check-column INPUT:checkbox', function() {
+        updateUsersBulkActionsState();
+    });
 
     // Fetch users
     jQuery(document).on('click', '#mainwp_show_users', function () {
@@ -301,12 +323,13 @@ let mainwp_fetch_users = function () {
                 "targets": 'no-sort',
                 "orderable": false
             }],
-            "preDrawCallback": function () {
+            "drawCallback": function () {
                 setTimeout(() => {
-                    jQuery('#mainwp_users_wrap_table table .ui.dropdown').dropdown();
-                    jQuery('#mainwp_users_wrap_table table .ui.checkbox').checkbox();
-                    mainwp_datatable_fix_menu_overflow('#mainwp_users_wrap_table table');
+                    jQuery('#mainwp-users-table .ui.dropdown').dropdown();
+                    jQuery('#mainwp-users-table .ui.checkbox').checkbox();
+                    mainwp_datatable_fix_menu_overflow('#mainwp-users-table');
                     mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
+                    updateUsersBulkActionsState();
                 }, 1000);
             },
             select: {
@@ -319,18 +342,20 @@ let mainwp_fetch_users = function () {
                 dt.rows(indexes)
                     .nodes()
                     .to$().find('td.check-column .ui.checkbox').checkbox('set checked');
+                updateUsersBulkActionsState();
             }
         }).on('deselect', function (e, dt, type, indexes) {
             if ('row' == type) {
                 dt.rows(indexes)
                     .nodes()
                     .to$().find('td.check-column .ui.checkbox').checkbox('set unchecked');
+                updateUsersBulkActionsState();
             }
         }).on('columns-reordered', function () {
             setTimeout(() => {
-                jQuery('#mainwp_users_wrap_table table .ui.dropdown').dropdown();
-                jQuery('#mainwp_users_wrap_table table .ui.checkbox').checkbox();
-                mainwp_datatable_fix_menu_overflow('#mainwp_users_wrap_table');
+                jQuery('#mainwp-users-table .ui.dropdown').dropdown();
+                jQuery('#mainwp-users-table .ui.checkbox').checkbox();
+                mainwp_datatable_fix_menu_overflow('#mainwp-users-table');
                 mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
             }, 1000);
         });
