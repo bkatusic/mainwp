@@ -608,7 +608,7 @@ class MainWP_Updates_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSame
                     <div class="center aligned middle alidgned column">
                     <?php if ( ! get_option( 'mainwp_hide_update_everything', false ) ) : ?>
                         <?php if ( $can_total_update ) : ?>
-                            <a href="#" <?php echo empty( $total_upgrades ) ? 'disabled' : 'onClick="updatesoverview_global_upgrade_all( \'all\' ); return false;"'; ?> class="ui mini green fluid button" id="mainwp-update-everything-button"><?php echo esc_html( apply_filters( 'mainwp_update_everything_button_text', esc_html__( 'Update Everything', 'mainwp' ) ) ); ?></a>
+                            <a href="#" <?php echo empty( $total_upgrades ) ? 'disabled' : 'onClick="updatesoverview_global_upgrade_all( \'all\' ); return false;"'; ?> class="ui mini basic green fluid button" id="mainwp-update-everything-button"><?php echo esc_html( apply_filters( 'mainwp_update_everything_button_text', esc_html__( 'Update Everything', 'mainwp' ) ) ); ?></a>
                         <?php endif; ?>
                     <?php endif; ?>
                     </div>

@@ -239,14 +239,19 @@
 }
 
 .mainwp-ui.mainwp-ui:not(.mainwp-ui-setup) .ui.page.dimmer {
-    margin-left: 72px;
-    margin-top: 57px;
+    z-index: 1000 !important;
 }
 
 .mainwp-ui .ui.dimmer.active,
 .mainwp-ui .ui.dimmer.modals.active {
     z-index: 1001;
 }
+
+.mainwp-ui .mainwp-widget .ui.dimmer.active,
+.mainwp-ui .mainwp-widget .ui.dimmer.modals.active {
+    z-index: 1000;
+}
+
 
 .mainwp-ui .ui.modal .mainwp-html-popup {
     overflow: visible;
@@ -343,6 +348,10 @@
   margin: 0 !important;
   width: auto !important;
   max-width: none !important;
+}
+
+.mainwp-ui .ui.form .field {
+    margin: 0 0 1.25em !important;
 }
 
 /* classic theme */

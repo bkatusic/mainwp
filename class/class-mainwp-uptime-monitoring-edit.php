@@ -197,7 +197,9 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                     exit();
                 }
             } else {
+                $update['retention_limits'] = isset( $_POST['mainwp_edit_monitor_retention_days'] ) ? intval( $_POST['mainwp_edit_monitor_retention_days'] ) : 180;
                 MainWP_Uptime_Monitoring_Handle::update_uptime_global_settings( $update );
+                MainWP_Utility::update_option( 'mainwp_uptime_monitor_cleanup_heartbeat_at', 0 ); // reset cleanup heartbeat to process on next run.
             }
         }
     }
@@ -317,12 +319,24 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
             if ( $edit_sub_monitor ) {
                 $show_in_modal = true;
             }
-            ?>
-            <h2 class="ui dividing header">
-                <?php echo esc_html( $title ); ?>
-                <div class="sub header"><?php echo esc_html( $sub_header ); ?></div>
-            </h2>
-            <?php
+            if ( ! $show_in_modal ) {
+                ?>
+                <div class="ui basic accordion mainwp-blank-accordion mainwp-sidebar-accordion" id="mainwp-edit-site-monitoring-settings-accordion">
+                    <h2 class="ui dividing header title">
+                        <i class="right dropdown icon"></i>
+                        <?php echo esc_html( $title ); ?>
+                        <div class="sub header"><?php echo esc_html( $sub_header ); ?></div>
+                    </h2>
+                    <div class="content">
+                <?php
+            } else {
+                ?>
+                <h2 class="ui dividing header">
+                    <?php echo esc_html( $title ); ?>
+                    <div class="sub header"><?php echo esc_html( $sub_header ); ?></div>
+                </h2>
+                <?php
+            }
         }
         if ( $show_in_modal ) {
             $this->render_add_edit_sub_page_monitor_begin_form_in_modal( $title );
@@ -549,38 +563,69 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
             $http_error_codes = MainWP_Utility::get_http_codes();
             ?>
             <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-monitor-general" <?php echo $disableGeneralSitesMonitoring && 1 !== (int) get_option( 'mainwp_check_http_response', 0 ) ? 'style="display:none"' : ''; ?> hide-element="uptime-monitoring" id="up-http-codes-selection">
-                    <label class="six wide column middle aligned">
-                    <?php
-                    $up_statuscodes = ! empty( $mo_settings['up_status_codes'] ) ? $mo_settings['up_status_codes'] : '';
-                    MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_edit_monitor_up_status_codes', $up_statuscodes );
-                    esc_html_e( 'Up HTTP Codes for HTTP Response and Uptime Monitoring', 'mainwp' );
-                    ?>
-                    </label>
-                    <div class="ten wide column">
-                        <div class="ui multiple selection dropdown" init-value="<?php echo esc_attr( $up_statuscodes ); ?>">
-                            <input name="mainwp_edit_monitor_up_status_codes" class="settings-field-value-change-handler" type="hidden">
-                            <i class="dropdown icon"></i>
-                            <div class="default text"></div>
-                            <div class="menu">
-                                <?php
-                                if ( $individual ) {
-                                    ?>
-                                <div class="item" data-value='useglobal'><?php esc_html_e( 'Use global setting', 'mainwp' ); ?></div>
-                                    <?php
-                                }
-                                foreach ( $http_error_codes as $error_code => $label ) {
-                                    ?>
-                                    <div class="item" data-value="<?php echo esc_attr( $error_code ); ?>"><?php echo esc_html( $error_code . ' (' . $label . ')' ); ?></div>
-                                    <?php
-                                }
+                <label class="six wide column middle aligned">
+                <?php
+                $up_statuscodes = ! empty( $mo_settings['up_status_codes'] ) ? $mo_settings['up_status_codes'] : '';
+                MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_edit_monitor_up_status_codes', $up_statuscodes );
+                esc_html_e( 'Up HTTP Codes for HTTP Response and Uptime Monitoring', 'mainwp' );
+                ?>
+                </label>
+                <div class="ten wide column">
+                    <div class="ui multiple selection dropdown" init-value="<?php echo esc_attr( $up_statuscodes ); ?>">
+                        <input name="mainwp_edit_monitor_up_status_codes" class="settings-field-value-change-handler" type="hidden">
+                        <i class="dropdown icon"></i>
+                        <div class="default text"></div>
+                        <div class="menu">
+                            <?php
+                            if ( $individual ) {
                                 ?>
-                            </div>
+                            <div class="item" data-value='useglobal'><?php esc_html_e( 'Use global setting', 'mainwp' ); ?></div>
+                                <?php
+                            }
+                            foreach ( $http_error_codes as $error_code => $label ) {
+                                ?>
+                                <div class="item" data-value="<?php echo esc_attr( $error_code ); ?>"><?php echo esc_html( $error_code . ' (' . $label . ')' ); ?></div>
+                                <?php
+                            }
+                            ?>
                         </div>
                     </div>
+                </div>
             </div>
 
-            <?php if ( $individual ) { ?>
+            <?php if ( ! $individual ) {
+                if( ! isset( $mo_settings['retention_limits'] ) ) {
+                    $mo_settings['retention_limits'] = 180;
+                }
+                ?>
+             <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-monitor-general" default-indi-value="180">
+                <label class="six wide column middle aligned">
                 <?php
+                $show_indi = 180 !== (int) $mo_settings['retention_limits'] ? 1 : 0;
+                MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $show_indi );
+                esc_html_e( 'Monitoring Data Retention', 'mainwp' );
+                ?>
+                </label>
+                <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Automatically remove old heartbeat monitoring data to keep the Dashboard database size under control.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                    <select name="mainwp_edit_monitor_retention_days" id="mainwp_edit_monitor_retention_days" class="ui dropdown settings-field-value-change-handler">
+                    <?php
+                    $retention_options = array(
+                        0   => __( 'Keep forever (no automatic cleanup)', 'mainwp' ),
+                        30  => __( '30 days', 'mainwp' ),
+                        90  => __( '90 days (3 months)', 'mainwp' ),
+                        180 => __( '180 days (6 months)', 'mainwp' ),
+                        365 => __( '365 days (1 year)', 'mainwp' ),
+                    );
+                    foreach ( $retention_options as $val => $label ) {
+                        ?>
+                        <option value="<?php echo esc_attr( $val ); ?>" <?php echo intval( $mo_settings['retention_limits'] ) === $val ? 'selected' : ''; ?>><?php echo esc_html( $label ); ?></option>
+                        <?php
+                    }
+                    ?>
+                    </select>
+                </div>
+            </div>
+            <?php }  else {
 
                 if ( ! $edit_sub_monitor ) {
 
@@ -612,7 +657,13 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 if ( ! $show_in_modal && $is_editing_monitor_or_sub_monitor ) {
                     $el_id_del_mo_1 = 'delete_uptime_monitor_btn';
                     ?>
-                    <input type="button" name="delete_uptime_monitor_btn" id="<?php echo esc_attr( $el_id_del_mo_1 ); ?>" class="ui button basic big" value="<?php esc_html_e( 'Disable Monitor', 'mainwp' ); ?>">
+                    <div class="ui grid field">
+                        <label class="six wide column middle aligned"><?php esc_html_e( 'Monitor actions', 'mainwp' ); ?></label>
+                        <div class="ui six wide column">
+                            <input type="button" name="delete_uptime_monitor_btn" id="<?php echo esc_attr( $el_id_del_mo_1 ); ?>" class="ui grey basic mini button" value="<?php esc_html_e( 'Disable Monitor', 'mainwp' ); ?>">
+                        </div>
+                    </div>
+                    
                     <?php
                 }
                 ?>
@@ -707,6 +758,11 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                     $this->render_add_edit_sub_page_monitor_end_form_in_modal( $site_id, $is_editing_monitor_or_sub_monitor );
                     ?>
                     </form>
+                    <?php
+                } else {
+                    ?>
+                    </div>
+                </div>
                     <?php
                 }
             }

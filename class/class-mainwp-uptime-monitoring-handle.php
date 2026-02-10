@@ -67,6 +67,7 @@ class MainWP_Uptime_Monitoring_Handle { // phpcs:ignore Generic.Classes.OpeningB
             );
         }
         $this->clear_outdated_hourly_uptime_stats();
+        $this->handle_cleanup_heartbeat_data();
     }
 
 
@@ -93,13 +94,14 @@ class MainWP_Uptime_Monitoring_Handle { // phpcs:ignore Generic.Classes.OpeningB
         if ( ! $individual ) {
             $up_codes = array( 200, 201, 202, 203, 204, 205, 206 );
             // global defaults.
-            $default['up_status_codes'] = implode( ',', $up_codes );
-            $default['active']          = 0;
-            $default['type']            = 'http';
-            $default['maxretries']      = 1;
-            $default['method']          = 'head';
-            $default['timeout']         = 60; // seconds.
-            $default['interval']        = 60; // mins.
+            $default['up_status_codes']  = implode( ',', $up_codes );
+            $default['active']           = 0;
+            $default['type']             = 'http';
+            $default['maxretries']       = 1;
+            $default['method']           = 'head';
+            $default['timeout']          = 60; // seconds.
+            $default['interval']         = 60; // mins.
+            $default['retention_limits'] = 180; // days.
             unset( $default['suburl'] );
         }
         return $default;
@@ -115,6 +117,10 @@ class MainWP_Uptime_Monitoring_Handle { // phpcs:ignore Generic.Classes.OpeningB
         $global_settings = get_option( 'mainwp_global_uptime_monitoring_settings', array() );
         if ( empty( $global_settings ) || ! is_array( $global_settings ) ) {
             $global_settings = static::get_default_monitoring_settings( false );
+        }
+        if ( ! isset( $global_settings['retention_limits'] ) ) {
+            $global_settings['retention_limits'] = 0; // to compatible.
+            self::update_uptime_global_settings( $global_settings );
         }
         return $global_settings;
     }
@@ -562,6 +568,23 @@ class MainWP_Uptime_Monitoring_Handle { // phpcs:ignore Generic.Classes.OpeningB
                     'dts_process_init_time' => $check_time, // use UTC time to compatible with monitor heartbeat db time.
                 )
             );
+        }
+    }
+
+    /**
+     * Cleanup monitoring data.
+     *
+     * @return mixed Results.
+     */
+    public function handle_cleanup_heartbeat_data() {
+        $glo_settings = static::get_global_monitoring_settings();
+        if ( empty( $glo_settings['retention_limits'] ) || ( (int) $glo_settings['retention_limits'] <= 0 ) ) {
+            return;
+        }
+        $cleanup_at = (int) get_option( 'mainwp_uptime_monitor_cleanup_heartbeat_at', 0 );
+        if ( empty( $cleanup_at ) || ( MainWP_Utility::get_timestamp() > ( $cleanup_at + DAY_IN_SECONDS ) ) ) {
+            MainWP_Utility::update_option( 'mainwp_uptime_monitor_cleanup_heartbeat_at', MainWP_Utility::get_timestamp() );
+            return MainWP_DB_Uptime_Monitoring::instance()->cleanup_heartbeat_data( $glo_settings['retention_limits'] );
         }
     }
 }

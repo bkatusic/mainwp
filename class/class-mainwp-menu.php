@@ -942,19 +942,19 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     }
                     ?>
                     </div>
-                    </div>
                 </div>
+            </div>
 
-                <?php
-                /**
-                 * Action: after_mainwp_menu
-                 *
-                 * Fires after the main navigation element.
-                 *
-                 * @since 4.0
-                 */
-                do_action( 'after_mainwp_menu' );
-                ?>
+            <?php
+            /**
+             * Action: after_mainwp_menu
+             *
+             * Fires after the main navigation element.
+             *
+             * @since 4.0
+             */
+            do_action( 'after_mainwp_menu' );
+            ?>
             <script type="text/javascript">
 
                 jQuery( document ).ready( function () {
