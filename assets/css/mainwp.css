@@ -652,7 +652,7 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
 }
 
 .mainwp-widget .mainwp-widget-header {
-    padding: 1em;
+    padding: 1em !important;
 }
 
 .mainwp-widget .mainwp-scrolly-overflow {
