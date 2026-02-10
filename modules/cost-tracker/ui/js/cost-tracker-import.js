@@ -62,7 +62,19 @@ const mainwp_cost_tracker_import_cost = function() { // NOSONAR - complex.
 	const row_element = jQuery( '#mainwp_managecosts_import_csv_line_' + import_cost_current );
 	const encoded_data = row_element.attr( 'encoded-data' );
 	const original_line = row_element.attr( 'original' );
-	const decoded_cost_val = JSON.parse( encoded_data );
+	
+	let decoded_cost_val = {};
+	try {
+		decoded_cost_val = JSON.parse( encoded_data );
+	} catch ( error ) {
+		jQuery( '#mainwp_cost_tracker_import_logging .log' ).append( '<strong>[' + import_cost_current + '] &lt;&lt; ' + original_line + '</strong><br/>' );
+		jQuery( '#mainwp_cost_tracker_import_logging .log' ).append( '<span style="color:red;">ERROR: Invalid JSON data - ' + error.message + '</span><br/>' );
+		jQuery( '#mainwp_cost_tracker_import_fail_logging' ).append( original_line + '\n' );
+		import_cost_count_fails++;
+		jQuery( '#mainwp_cost_tracker_import_logging' ).scrollTop( jQuery( '#mainwp_cost_tracker_import_logging .log' ).height() );
+		mainwp_cost_tracker_import_cost();
+		return;
+	}
 
 	const cost_name = typeof decoded_cost_val['cost.name'] !== 'undefined' ? decoded_cost_val['cost.name'] : '';
 	const cost_url = typeof decoded_cost_val['cost.url'] !== 'undefined' ? decoded_cost_val['cost.url'] : '';

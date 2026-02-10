@@ -309,7 +309,7 @@ class Cost_Tracker_Import {
 					continue;
 				}
 
-				$items = str_getcsv( $line, ',', '"', '\\' );
+				$items = str_getcsv( $line, ',', '"', '' );
 
 				if ( ( null === $header_line ) && ! empty( $_POST['mainwp_cost_tracker_import_chk_header_first'] ) ) {
 					$header_line = sanitize_text_field( $line ) . "\r";

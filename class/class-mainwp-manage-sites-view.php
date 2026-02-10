@@ -1388,6 +1388,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 <?php
                 $healthThreshold = $website->health_threshold;
                 $indi_val        = 0 !== (int) $healthThreshold ? 1 : 0;
+                $hide_style      = 'style="display:none;"';
                 ?>
                 <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-edit-site-health" default-indi-value="0" <?php echo 1 === (int) $website->disable_health_check ? $hide_style : ''; //phpcs:ignore -- ok.?> hide-element="health-monitoring">
                     <label class="six wide column middle aligned">
@@ -1865,7 +1866,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 </label>
                 <div class="six wide column">
                     <div class="ui left labeled input">
-                        <input type="text" class="settings-field-value-change-handler" id="mainwp_managesites_edit_monitoringNotificationEmails" name="mainwp_managesites_edit_monitoringNotificationEmails" value="<?php echo ! empty( $website->monitoring_notification_emails ) ? esc_html( $website->monitoring_notification_emails ) : ''; ?>"/>
+                        <input type="text" class="settings-field-value-change-handler" id="mainwp_managesites_edit_monitoringNotificationEmails" name="mainwp_managesites_edit_monitoringNotificationEmails" value="<?php echo ! empty( $website->monitoring_notification_emails ) ? esc_attr( $website->monitoring_notification_emails ) : ''; ?>"/>
                     </div>
                 </div>
             </div>
