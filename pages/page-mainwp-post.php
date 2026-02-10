@@ -1713,7 +1713,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
 
         $html  = '<div class="ui fluid accordion mainwp-sidebar-accordion">';
         $html .= '<div class="title active"><i class="dropdown icon"></i> ' . esc_html__( 'Featured Image', 'mainwp' ) . '</div>';
-        $html .= '<div class="content active"';
+        $html .= '<div class="content active">';
         $html .= $content;
         $html .= '</div>';
         $html .= '</div>';
