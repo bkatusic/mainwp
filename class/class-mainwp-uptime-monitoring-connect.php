@@ -567,7 +567,6 @@ class MainWP_Uptime_Monitoring_Connect { // phpcs:ignore Generic.Classes.Opening
                     $resource_id = MainWP_Connect::get_resource_id( $info['handle'] );
                     curl_multi_remove_handle( $mh, $info['handle'] );
                     $http_code = curl_getinfo( $info['handle'], CURLINFO_HTTP_CODE );
-                    curl_close( $info['handle'] );
 
                     $down_count = 0;
                     $set_retry  = false;
@@ -594,12 +593,9 @@ class MainWP_Uptime_Monitoring_Connect { // phpcs:ignore Generic.Classes.Opening
                         }
 
                         if ( $_try_second ) {
-                            curl_reset( $info['handle'] ); // IMPORTANT.
-                            curl_setopt(
-                                $info['handle'],
-                                CURLOPT_URL,
-                                $requestUrls[ $resource_id ]
-                            );
+                            curl_setopt( $info['handle'], CURLOPT_URL, $requestUrls[ $resource_id ] );
+                            curl_setopt( $info['handle'], CURLOPT_FRESH_CONNECT, true );
+                            curl_setopt( $info['handle'], CURLOPT_FORBID_REUSE, true );
                             curl_multi_add_handle( $mh, $info['handle'] );
                             unset( $requestUrls[ $resource_id ] );
                             continue;

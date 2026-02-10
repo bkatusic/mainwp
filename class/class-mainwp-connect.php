@@ -973,17 +973,14 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                     $data     = curl_multi_getcontent( $info['handle'] );
                     $contains = ( 0 < preg_match( '/<mainwp>(.*)<\/mainwp>/', $data, $results ) );
                     curl_multi_remove_handle( $mh, $info['handle'] );
-                    curl_close( $info['handle'] );
 
-                    if ( ! $contains && isset( $requestUrls[ static::get_resource_id( $info['handle'] ) ] ) ) {
-                        curl_reset( $info['handle'] ); // IMPORTANT.
-                        curl_setopt(
-                            $info['handle'],
-                            CURLOPT_URL,
-                            $requestUrls[ static::get_resource_id( $info['handle'] ) ]
-                        );
+                    $rid = static::get_resource_id( $info['handle'] );
+                    if ( ! $contains && isset( $requestUrls[ $rid ] ) ) {
+                        curl_setopt( $info['handle'], CURLOPT_URL, $requestUrls[ $rid ] );
+                        curl_setopt( $info['handle'], CURLOPT_FRESH_CONNECT, true );
+                        curl_setopt( $info['handle'], CURLOPT_FORBID_REUSE, true );
                         curl_multi_add_handle( $mh, $info['handle'] );
-                        unset( $requestUrls[ static::get_resource_id( $info['handle'] ) ] );
+                        unset( $requestUrls[ $rid ] );
                         continue; // libcurl updates $running automatically.
                     }
 
