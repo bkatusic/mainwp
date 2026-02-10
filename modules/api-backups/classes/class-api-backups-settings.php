@@ -1125,12 +1125,15 @@ class Api_Backups_Settings {
         }
 
         ?>
-        <h3 class="ui dividing header">
-            <?php esc_html_e( 'Backup API Provider Settings', 'mainwp' ); ?>
-            <div class="sub header"><?php esc_html_e( 'Use the provided settings to set your Backup API provider. Sites hosted on Cloudways and Gridpane do not require these settings.', 'mainwp' ); ?></div>
-            <div class="sub header"><?php esc_html_e( 'Use these settings to select Provider and instance ID only if the site is hosted on DigitalOcean, Akamai (Linode), or Vultr hosting.', 'mainwp' ); ?></div>
-            <div class="sub header"><?php esc_html_e( 'Sites hosted on Cloudways and GridPane do not require these settings to be added manually. All the necessary info for the feature will be obtained automatically so you can leave these settings blank.', 'mainwp' ); ?></div>
-        </h3>
+        <div class="ui basic accordion mainwp-blank-accordion mainwp-sidebar-accordion" id="mainwp-edit-site-backup-api-provider-settings-accordion">
+            <h2 class="ui dividing header title">
+                <i class="right dropdown icon"></i>
+                <?php esc_html_e( 'Backup API Provider Settings', 'mainwp' ); ?>
+                <div class="sub header"><?php esc_html_e( 'Use the provided settings to set your Backup API provider. Sites hosted on Cloudways and Gridpane do not require these settings.', 'mainwp' ); ?></div>
+                <div class="sub header"><?php esc_html_e( 'Use these settings to select Provider and instance ID only if the site is hosted on DigitalOcean, Akamai (Linode), or Vultr hosting.', 'mainwp' ); ?></div>
+                <div class="sub header"><?php esc_html_e( 'Sites hosted on Cloudways and GridPane do not require these settings to be added manually. All the necessary info for the feature will be obtained automatically so you can leave these settings blank.', 'mainwp' ); ?></div>
+            </h2>
+            <div class="content">
         <?php if ( '' === $mainwp_3rd_party_api || 'cPanel' === $mainwp_3rd_party_api || 'Plesk' === $mainwp_3rd_party_api || 'Kinsta' === $mainwp_3rd_party_api ) : ?>
             <div class="ui grid field settings-field-indicator-wrapper">
                 <label class="six wide column middle aligned">
@@ -1449,6 +1452,8 @@ class Api_Backups_Settings {
 
             } );
         </script>
+            </div>
+        </div>
         <?php
     } // [ END: hook_render_mainwp_manage_sites_edit ]
 } // [ END: class Api_Backups_Settings ]

@@ -28,9 +28,6 @@ class Cost_Tracker_Add_Edit {
      */
     private static $instance = null;
 
-
-
-
     /**
      * Get Instance
      *
@@ -450,7 +447,7 @@ class Cost_Tracker_Add_Edit {
                     <label class="six wide column middle aligned">
                     <?php
                     MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $edit_cost ? ( 'active' !== $selected_cost_tracker_status ) : '' );
-                    esc_html_e( 'Subscription status', 'mainwp' );
+                    esc_html_e( 'Billing status', 'mainwp' );
                     ?>
                     </label>
                     <div class="five wide column">

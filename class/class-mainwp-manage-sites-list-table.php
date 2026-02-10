@@ -1201,7 +1201,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
         <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-columns-notice' ) ) : ?>
             <div class="ui message">
                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-columns-notice"></i>
-                <?php printf( esc_html__( '%s Tip: To hide or show a column, click the Page Settings (%s) button and select options from "Show columns"', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<i class="cog fitted icon"></i>' ); ?>
+                <?php printf( esc_html__( '%s Tip: To hide or show a column, click the Page Settings (%s) button and select options from "Show columns". You can also rearrange columns by dragging them, and the new order will be saved automatically.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<i class="cog fitted icon"></i>' ); ?>
             </div>
         <?php endif; ?>
         <div id="mainwp-loading-sites">

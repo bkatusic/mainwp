@@ -345,7 +345,7 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
     left: 0;
     top: 58px;
     bottom: 0;
-    z-index: 1 !important;
+    z-index: 1001 !important;
 }
 
 #mainwp-main-navigation-container .active.item:last-child {
@@ -539,7 +539,7 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
     width: 72px !important;
 }
 
-.mainwp-ui.toplevel_page_mainwp_tab #mainwp-collapse-second-level-navigation,
+.mainwp-ui.toplevel_page_mainwp_tab #mainwp-divider-handle:hover,
 .mainwp-ui.toplevel_page_mainwp_tab #mainwp-second-level-navigation,
 .mainwp-ui.mainwp_page_Settings #mainwp-second-level-navigation,
 .mainwp-ui.mainwp_page_SettingsAdvanced #mainwp-second-level-navigation,
@@ -558,20 +558,37 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
     display: none !important;
 }
 
-.mainwp-ui.mainwp-hidden-second-level-navigation #mainwp-collapse-second-level-navigation,
-.mainwp-ui.mainwp_page_Settings #mainwp-collapse-second-level-navigation,
-.mainwp-ui.mainwp_page_SettingsAdvanced #mainwp-collapse-second-level-navigation,
-.mainwp-ui.mainwp_page_MonitoringSettings #mainwp-collapse-second-level-navigation,
-.mainwp-ui.mainwp_page_SettingsEmail #mainwp-collapse-second-level-navigation,
-.mainwp-ui.mainwp_page_MainWPTools #mainwp-collapse-second-level-navigation,
-.mainwp-ui.mainwp_page_SettingsInsights #mainwp-collapse-second-level-navigation,
-.mainwp-ui.mainwp_page_SettingsApiBackups #mainwp-collapse-second-level-navigation,
-.mainwp-ui.mainwp_page_ServerInformation #mainwp-collapse-second-level-navigation,
-.mainwp-ui.mainwp_page_ServerInformationCron #mainwp-collapse-second-level-navigation,
-.mainwp-ui.mainwp_page_ErrorLog #mainwp-collapse-second-level-navigation,
-.mainwp-ui.mainwp_page_ActionLogs #mainwp-collapse-second-level-navigation,
-.mainwp-ui.mainwp_page_PluginPrivacy #mainwp-collapse-second-level-navigation,
-.mainwp-ui.mainwp_page_CostTrackerSettings #mainwp-collapse-second-level-navigation {
+.mainwp-ui.mainwp-hidden-second-level-navigation #mainwp-divider-handle,
+.mainwp-ui.mainwp_page_Settings #mainwp-divider-handle,
+.mainwp-ui.mainwp_page_SettingsAdvanced #mainwp-divider-handle,
+.mainwp-ui.mainwp_page_MonitoringSettings #mainwp-divider-handle,
+.mainwp-ui.mainwp_page_SettingsEmail #mainwp-divider-handle,
+.mainwp-ui.mainwp_page_MainWPTools #mainwp-divider-handle,
+.mainwp-ui.mainwp_page_SettingsInsights #mainwp-divider-handle,
+.mainwp-ui.mainwp_page_SettingsApiBackups #mainwp-divider-handle,
+.mainwp-ui.mainwp_page_ServerInformation #mainwp-divider-handle,
+.mainwp-ui.mainwp_page_ServerInformationCron #mainwp-divider-handle,
+.mainwp-ui.mainwp_page_ErrorLog #mainwp-divider-handle,
+.mainwp-ui.mainwp_page_ActionLogs #mainwp-divider-handle,
+.mainwp-ui.mainwp_page_PluginPrivacy #mainwp-divider-handle,
+.mainwp-ui.mainwp_page_CostTrackerSettings #mainwp-divider-handle {
+    display: none !important;
+}
+
+.mainwp-ui.mainwp-hidden-second-level-navigation #mainwp-divider-handle:hover,
+.mainwp-ui.mainwp_page_Settings #mainwp-divider-handle:hover,
+.mainwp-ui.mainwp_page_SettingsAdvanced #mainwp-divider-handle:hover,
+.mainwp-ui.mainwp_page_MonitoringSettings #mainwp-divider-handle:hover,
+.mainwp-ui.mainwp_page_SettingsEmail #mainwp-divider-handle:hover,
+.mainwp-ui.mainwp_page_MainWPTools #mainwp-divider-handle:hover,
+.mainwp-ui.mainwp_page_SettingsInsights #mainwp-divider-handle:hover,
+.mainwp-ui.mainwp_page_SettingsApiBackups #mainwp-divider-handle:hover,
+.mainwp-ui.mainwp_page_ServerInformation #mainwp-divider-handle:hover,
+.mainwp-ui.mainwp_page_ServerInformationCron #mainwp-divider-handle:hover,
+.mainwp-ui.mainwp_page_ErrorLog #mainwp-divider-handle:hover,
+.mainwp-ui.mainwp_page_ActionLogs #mainwp-divider-handle:hover,
+.mainwp-ui.mainwp_page_PluginPrivacy #mainwp-divider-handle:hover,
+.mainwp-ui.mainwp_page_CostTrackerSettings #mainwp-divider-handle:hover {
     display: none !important;
 }
 
@@ -619,9 +636,23 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
     bottom: .1rem;
     right: .1rem;
 }
+.mainwp-widget .mainwp-widget-header .handle-drag:before {
+    content: '\f58e';
+    font-family: "icons", sans-serif;
+    font-size: 0.785em;
+    opacity: .2;
+    position: absolute;
+    left: 3px;
+    top: 10px;
+    display: none;
+}
+
+.mainwp-widget .mainwp-widget-header:hover .handle-drag:before {
+    display: block;
+}
 
 .mainwp-widget .mainwp-widget-header {
-    padding: 1em !important;
+    padding: 1em;
 }
 
 .mainwp-widget .mainwp-scrolly-overflow {
@@ -668,6 +699,10 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
 
 .mainwp-empty-widget-placeholder img.mainwp-no-results-placeholder {
     margin-bottom: 2rem;
+}
+
+.mainwp-empty-page-placeholder .content {
+    margin-top: 2rem !important;
 }
 
 /* Cards */

@@ -571,6 +571,16 @@
 
 /* Invert Form Fields */
 
+.mainwp-ui.mainwp-custom-theme .ui[class*="left action"].input input[type="text"] {
+    border-bottom-left-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+}
+
+.mainwp-ui.mainwp-custom-theme .ui[class*="right action"].input input[type="text"] {
+    border-bottom-right-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+}
+
 .mainwp-ui.mainwp-custom-theme .ui.form input[type="text"],
 .mainwp-ui.mainwp-custom-theme .ui.form input[type="search"],
 .mainwp-ui.mainwp-custom-theme .ui.form input[type="file"],
@@ -1346,7 +1356,7 @@
 
 .mainwp-ui.mainwp-custom-theme #mainwp-page-navigation-wrapper .menu {
   background-color: var(--mainwp-element-background-secondary) !important;
-  padding: 1em;
+  padding: 1em !important;
   width: 198px !important;
 }
 .mainwp-ui.mainwp-custom-theme #mainwp-page-navigation-wrapper .menu .item {
@@ -1481,7 +1491,6 @@
   }
 
   .mainwp-ui.mainwp-custom-theme .ui.attached.tab.segment {
-    background-color: var(--mainwp-element-background) !important;
     border-color: var(--mainwp-border) !important;
   }
 

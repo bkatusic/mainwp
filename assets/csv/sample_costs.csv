@@ -1,0 +1,19 @@
+# MainWP Cost Tracker Import Sample CSV
+# Instructions:
+# - Header line must remain in the same order
+# - Name and Price are required fields
+# - Date format is YYYY-MM-DD
+# - Select Sites column: Use semicolon separators for multiple site URLs (e.g., https://site1.com;https://site2.com)
+# - Type values: subscription or lifetime
+# - Status values: active, canceled, onhold, expired, pending_cancelation
+# - Category values: plugin, theme, hosting, service, other
+# - License Type values: single_site, multi_site
+# - Payment Method values: paypal, stripe, apple, amazon, google, credit_debit, debit_card, cash
+# - Renewal Type values: weekly, monthly, quarterly, yearly
+Name,URL,Type,Category,License Type,Price,Payment Method,Renewal Type,Last Renewal Date,Status,Select Sites
+Pressable Hosting,https://pressable.com/,subscription,hosting,unlimited,45.00,card,monthly,2025-12-01,active,
+SEOPress PRO,https://www.seopress.org/,subscription,plugin,single_site,49.00,card,yearly,2025-03-10,active,
+Patchstack,https://patchstack.com/,subscription,security,unlimited,99.00,card,yearly,2025-01-05,paused,
+AreaWP,https://areawp.com/,subscription,service,unlimited,29.00,card,monthly,2025-11-20,active,
+Termageddon,https://termageddon.com/,subscription,service,single_site,120.00,card,yearly,2025-02-15,active,
+Independent Analytics,https://independentwp.com/,subscription,plugin,single_site,54.00,card,yearly,2025-04-01,active,

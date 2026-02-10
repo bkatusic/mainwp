@@ -684,8 +684,14 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                                 <li><?php printf( esc_html__( '%1$sActivate%2$s the plugin', 'mainwp' ), '<strong>', '</strong>' ); ?></li>
                             </ol>
                         </div>
+                        <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-add-site-trust-message' ) ) : ?>
+                            <div class="ui message">
+                                <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-add-site-trust-message"></i>
+                                <?php printf( esc_html__( '%1$s Your credentials are never sent to MainWP.com. Communication occurs only between your Dashboard and your sites.', 'mainwp' ), '<em data-emoji=":lock:" class="small"></em>' ); ?>
+                            </div>
+                        <?php endif; ?>
                         <h2 class="ui dividing header">
-                            <?php echo esc_html__( 'Connect a Single Site', 'mainwp' ); ?>
+                            <?php echo esc_html__( 'Verify Connection', 'mainwp' ); ?>
                             <div class="sub header"><?php echo esc_html__( 'Connect your site to your MainWP Dashboard for centralized management.', 'mainwp' ); ?></div>
                         </h2>
                         <?php static::render_new_site_add_new_site( $groups );  // NOSONAR - render html form. ?>
@@ -818,7 +824,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                         <option value="http"><?php echo esc_html( 'http://' ); ?></option>
                         <option selected="" value="https"><?php echo esc_html( 'https://' ); ?></option>
                     </select>
-                    <input type="text" id="mainwp_managesites_add_wpurl" name="mainwp_managesites_add_wpurl" value="" />
+                    <input type="text" id="mainwp_managesites_add_wpurl" name="mainwp_managesites_add_wpurl" value="" autofocus />
                 </div>
             </div>
             <div class="ui four wide middle aligned column">
@@ -826,16 +832,16 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
             </div>
         </div>
         <div class="ui grid field">
-            <label class="six wide column middle aligned"><?php esc_html_e( 'Verify that the MainWP Child plugin is installed and activated', 'mainwp' ); ?></label>
-            <div class="six wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'Verify that MainWP Child is Installed and Activated.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+            <label class="six wide column middle aligned"><?php esc_html_e( 'Confirm the MainWP Child plugin is active on this site', 'mainwp' ); ?></label>
+            <div class="six wide column ui toggle checkbox">
                 <input type="checkbox" name="mainwp_managesites_verify_installed_child" id="mainwp_managesites_verify_installed_child" />
-                <label><?php esc_attr_e( 'Select to confirm that the MainWP Child plugin is active on the child site.', 'mainwp' ); ?></label>
+                <label><?php esc_attr_e( 'This confirms the required plugin is installed before proceeding.', 'mainwp' ); ?></label>
             </div>
         </div>
 
         <div id="mainwp-add-site-hidden-form" style="display:none">
             <h2 class="ui dividing header">
-                <?php esc_html_e( 'Connection Settings', 'mainwp' ); ?>
+                <?php esc_html_e( 'Configure Settings', 'mainwp' ); ?>
                 <div class="sub header">
                     <?php esc_html_e( 'Enter site connection details', 'mainwp' ); ?>
                 </div>
@@ -848,9 +854,10 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                     </div>
                 </div>
             </div>
+            <div class="ui hidden divider"></div>
             <div class="ui grid field">
                 <label class="six wide column top aligned"><?php esc_html_e( 'Connection authentication method(s)', 'mainwp' ); ?></label>
-                <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Select which connection authentication processes you are using.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Select which connection authentication processes you are using.', 'mainwp' ); ?>" data-inverted="" data-position="left center">
                     <div class="ui toggle checked checkbox not-auto-init" id="addsite-adminpwd" style="margin-right:2em;">
                         <input type="checkbox" id="mainwp-administrator-password-checkbox-field" checked=""><label><?php esc_html_e( 'Administrator password', 'mainwp' ); ?></label>
                     </div>
@@ -864,19 +871,22 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                             <?php esc_html_e( 'Connection authentication methods explained', 'mainwp' ); ?>
                         </div>
                         <div class="content">
-                            <span class="ui text"><?php esc_html_e( 'Choose options based on your MainWP Child plugin setup on the WordPress site you want to connect.', 'mainwp' ); ?></span>
+                            <span class="ui text"><?php esc_html_e( 'Choose options based on how the MainWP Child plugin is configured on your WordPress site.', 'mainwp' ); ?></span>
+                            
+                            <h4 class="ui small header"><?php esc_html_e( 'Default Setup (most users)', 'mainwp' ); ?></h4>
+                            <div class="item"><?php esc_html_e( 'Use Administrator Password only — this is the standard configuration.', 'mainwp' ); ?></div>
+
+                            <h4 class="ui small header"><?php esc_html_e( 'Advanced Setup', 'mainwp' ); ?></h4>
+                            <div class="item"><?php esc_html_e( 'If authentication was disabled in the Child plugin, turn both toggles off.', 'mainwp' ); ?></div>
+                            
+                            <h4 class="ui small header"><?php esc_html_e( 'Toggle Summary', 'mainwp' ); ?></h4>
                             <div class="ui bulleted small list">
-                                <div class="item"><?php esc_html_e( 'Default Setup: Use only the Password field if you haven\'t changed the default settings.', 'mainwp' ); ?></div>
-                                <div class="item"><?php esc_html_e( 'Advanced Setup: If you\'ve turned off all verification on the child site, switch off both fields.', 'mainwp' ); ?></div>
+                                <div class="item"><?php esc_html_e( 'Password On → Displays the Password field.', 'mainwp' ); ?></div>
+                                <div class="item"><?php esc_html_e( 'Security Key On → Displays the Security Key field.', 'mainwp' ); ?></div>
+                                <div class="item"><?php esc_html_e( 'Both On → Displays both fields.', 'mainwp' ); ?></div>
+                                <div class="item"><?php esc_html_e( 'Both Off → Hides both fields.', 'mainwp' ); ?></div>
                             </div>
-                            <span class="ui text"><?php esc_html_e( 'Use the sliders to control the fields shown:', 'mainwp' ); ?></span>
-                            <div class="ui bulleted small list">
-                                <div class="item"><?php esc_html_e( 'Password On: Displays the Password field.', 'mainwp' ); ?></div>
-                                <div class="item"><?php esc_html_e( 'Security Key On: Displays the Security Key field.', 'mainwp' ); ?></div>
-                                <div class="item"><?php esc_html_e( 'Both On: Displays both fields.', 'mainwp' ); ?></div>
-                                <div class="item"><?php esc_html_e( 'Both Off: Hides both fields.', 'mainwp' ); ?></div>
-                            </div>
-                            <span class="ui  text"><strong><?php esc_html_e( 'This needs to match what is set on your child site. Default is Administrator password.', 'mainwp' ); ?></strong></span>
+                            <span class="ui text"><strong><?php esc_html_e( 'Your settings must match the Child plugin configuration. If unsure, use the default.', 'mainwp' ); ?></strong></span>
                         </div>
                     </div>
                 </div>
@@ -904,6 +914,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                     </div>
                 </div>
             </div>
+            <div class="ui hidden divider"></div>
             <div class="ui grid field">
                 <label class="six wide column middle aligned"><?php esc_html_e( 'Site title', 'mainwp' ); ?></label>
                 <div class="ui six wide column" data-tooltip="<?php esc_attr_e( 'Enter the website title.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
@@ -1598,7 +1609,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
      * @uses \MainWP\Dashboard\MainWP_System_Utility::set_current_wpid()
      */
     public static function render_email_settings( $website, $updated = false, $updated_templ = false, $editing_temp = false ) {
-        $website = MainWP_DB::instance()->get_website_by_id( $website->id, false, array( 'settings_notification_emails' ) ); // reload.
+        $website = MainWP_DB::instance()->get_website_by_id( $website->id, false, array( 'monitoring_notification_emails', 'settings_notification_emails' ) ); // reload.
 
         MainWP_System_Utility::set_current_wpid( $website->id );
 

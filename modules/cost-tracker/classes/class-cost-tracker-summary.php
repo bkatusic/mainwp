@@ -340,7 +340,7 @@ class Cost_Tracker_Summary {
      */
     public static function render_header() {
         $params = array(
-            'title'      => esc_html__( 'Cost Summary', 'mainwp' ),
+            'title'      => esc_html__( 'Operational Costs Summary', 'mainwp' ),
             'which'      => 'page_cost_summary',
             'wrap_class' => 'mainwp-module-cost-summary-wrapper',
         );

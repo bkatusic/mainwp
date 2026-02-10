@@ -1206,11 +1206,14 @@ class MainWP_Manage_Backups { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         }
 
         ?>
-        <h3 class="ui dividing header">
-            <?php MainWP_Settings_Indicator::render_indicator( 'header', 'settings-field-indicator-backups' ); ?>
-            <?php esc_html_e( 'Backup Settings', 'mainwp' ); ?>
-            <div class="sub header"><?php printf( esc_html__( 'MainWP is actively moving away from further development of the native backups feature. The best long-term solution would be one of the %1$sBackup Extensions%2$s.', 'mainwp' ), '<a href="https://mainwp.com/extensions/extension-category/backups/" target="_blank" ?>', '</a>' ); // NOSONAR - noopener - open safe. ?></div>
-        </h3>
+        <div class="ui basic accordion mainwp-blank-accordion mainwp-sidebar-accordion" id="mainwp-edit-site-backup-settings-accordion">
+            <h2 class="ui dividing header title">
+                <i class="right dropdown icon"></i>
+                <?php MainWP_Settings_Indicator::render_indicator( 'header', 'settings-field-indicator-backups' ); ?>
+                <?php esc_html_e( 'Backup Settings', 'mainwp' ); ?>
+                <div class="sub header"><?php printf( esc_html__( 'MainWP is actively moving away from further development of the native backups feature. The best long-term solution would be one of the %1$sBackup Extensions%2$s.', 'mainwp' ), '<a href="https://mainwp.com/extensions/extension-category/backups/" target="_blank" ?>', '</a>' ); // NOSONAR - noopener - open safe. ?></div>
+            </h2>
+            <div class="content">
         <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-wrapper settings-field-indicator-wrapper settings-field-indicator-backups">
             <label class="six wide column middle aligned"><?php esc_html_e( 'Select primary backup system', 'mainwp' ); ?></label>
             <div class="ten wide column">
@@ -1223,6 +1226,8 @@ class MainWP_Manage_Backups { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                     ?>
 
                 </select>
+            </div>
+        </div>
             </div>
         </div>
         <?php
