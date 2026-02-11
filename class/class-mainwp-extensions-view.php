@@ -889,7 +889,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
      * @param string|false $mainwp_api_key The MainWP API key or false if not set.
      * @return void
      */
-    public static function render_licensing_actions_bar( $mainwp_api_key ) {
+    public static function render_licensing_actions_bar( $mainwp_api_key ) { // NOSONAR - complexity function.
         $extensions = MainWP_Extensions_Handler::get_extensions();
 
         $count_enabled = is_array( $extensions ) ? count( $extensions ) : 0;

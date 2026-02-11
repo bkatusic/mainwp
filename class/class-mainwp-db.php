@@ -1765,7 +1765,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
      *
      * @return int Count of sites matching the filters.
      */
-    public function get_websites_count_for_current_user( $params = array() ) {
+    public function get_websites_count_for_current_user( $params = array() ) { // NOSONAR - complex.
         if ( ! is_array( $params ) ) {
             $params = array();
         }
@@ -3231,7 +3231,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
         $where_site_threshold  = ' ( wp.health_threshold = 80 AND wp_sync.health_value < 80 ) '; // should-be-improved site health.
         $where_site_threshold .= ' OR ( wp.health_threshold = 100 AND wp_sync.health_value >= 80 ) '; // good site health.
 
-        
+
         $wp_table       = esc_sql( $this->table_name( 'wp' ) );
         $wp_sync_table  = esc_sql( $this->table_name( 'wp_sync' ) );
         $option_view    = $this->get_wp_options_view( $extra_view );

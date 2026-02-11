@@ -644,7 +644,7 @@ KEY idx_wpid_issub (wpid, issub)";
      *
      * @return object|null Database query results or null on failure.
      */
-    public function update_wp_monitor( $data ) {
+    public function update_wp_monitor( $data ) { // NOSONAR - complex function.
         if ( ! is_array( $data ) ) {
             return false;
         }
