@@ -101,7 +101,7 @@ class MainWP_Cache_Warm_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSam
     /**
      * Method invalidate_pages_by_site_actions().
      *
-     * @param array $actions Site actions.
+     * @param array $action Site actions.
      */
     public static function invalidate_pages_by_site_actions( $action ) {
         switch ( $action ) {

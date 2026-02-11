@@ -569,6 +569,8 @@ KEY idx_wpid_issub (wpid, issub)";
      * Get uptime notifcation to send.
      *
      * @param  int $limit limit.
+     * @param  int $global_active global active.
+     *
      * @return mixed
      */
     public function get_uptime_notification_to_start_send( $limit = 50, $global_active = 1 ) {
@@ -644,7 +646,7 @@ KEY idx_wpid_issub (wpid, issub)";
      *
      * @return object|null Database query results or null on failure.
      */
-    public function update_wp_monitor( $data ) { // NOSONAR - complex function.
+    public function update_wp_monitor( $data ) { // phpcs:ignore -- NOSONAR - complexity.
         if ( ! is_array( $data ) ) {
             return false;
         }

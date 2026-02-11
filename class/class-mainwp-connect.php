@@ -1350,7 +1350,7 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
      *
      * @return mixed static::fetch_url() Fetch URL.
      */
-    public static function fetch_url_not_authed(  // NOSONAR - compatible.
+    public static function fetch_url_not_authed(  // phpcs:ignore -- NOSONAR - compatible.
         $url,
         $admin,
         $what,
