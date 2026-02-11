@@ -299,7 +299,7 @@ let mainwp_client_fields_bulk_delete = function () {
     return false;
   }
 
-  const confirmMessage = selectedFields.length === 1 
+  const confirmMessage = selectedFields.length === 1
     ? __('Are you sure you want to delete this field?')
     : __('Are you sure you want to delete these %s fields?').replace('%s', selectedFields.length);
 
@@ -331,7 +331,7 @@ let mainwp_client_fields_bulk_delete = function () {
     }
   }, 'json');
 
-  return false;
+  return true;
 };
 
 // Handle tab QSW add client

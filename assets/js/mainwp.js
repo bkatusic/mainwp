@@ -278,11 +278,10 @@ jQuery(function () {
         return false;
     });
     jQuery(document).on('click', '.mainwp-plugin-delete', function () {
-        let item = this;
-        let name = jQuery(item).closest('.row-manage-item').attr('plugin-title');
+        let name = jQuery(this).closest('.row-manage-item').attr('plugin-title');
         let confirmMsg = __('You are about to delete the %1?', name);
-        mainwp_confirm(confirmMsg, function () {
-            pluginAction(jQuery(item), 'delete');
+        mainwp_confirm(confirmMsg, () =>{
+            pluginAction(jQuery(this), 'delete');
         });
         return false;
     });
@@ -312,11 +311,10 @@ jQuery(function () {
         return false;
     });
     jQuery(document).on('click', '.mainwp-theme-delete', function () {
-        let item = this;
-        let name = jQuery(item).closest('.row-manage-item').children('.themeName').val();
+        let name = jQuery(this).closest('.row-manage-item').children('.themeName').val();
         let confirmMsg = __('You are about to delete the %1?', name);
-        mainwp_confirm(confirmMsg, function () {
-            themeAction(jQuery(item), 'delete');
+        mainwp_confirm(confirmMsg, () => {
+            themeAction(jQuery(this), 'delete');
         });
         return false;
     });
@@ -5221,9 +5219,8 @@ jQuery(function ($) {
     });
     jQuery('#module-update-logs-db-requirement').on('click', function () {
         let msg = __('Are you sure?');
-        let btn = this;
-        mainwp_confirm(msg, function () {
-            jQuery(btn).closest('.ui.message').fadeOut();
+        mainwp_confirm(msg,  () => {
+            jQuery(this).closest('.ui.message').fadeOut();
             mainwp_module_logs_start_update_dismissed_db();
         });
         return false;

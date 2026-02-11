@@ -125,7 +125,7 @@ const init_application_passwords = ($) => {
             '"': "&quot;",
             "'": "&#039;",
         };
-        return text.replace(/[&<>"']/g, (m) => map[m]);
+        return text.replace(/[&<>"']/g, (m) => map[m]); // NOSONAR  ok.
     };
 
     /**
@@ -369,7 +369,7 @@ const init_application_passwords = ($) => {
         app_pass_name_input.val("");
         create_modal
             .modal({
-                onApprove: () => {
+                onApprove: () => { // NOSONAR - noopener - prevent close.
                     const name = app_pass_name_input.val().trim();
 
                     if (name.length === 0) {
@@ -554,7 +554,7 @@ const init_application_passwords = ($) => {
     /**
      * Bulk actions
      */
-    $("#mainwp-do-application-passwords-bulk-actions").on("click", () => {
+    $("#mainwp-do-application-passwords-bulk-actions").on("click", (e) => {
         const selected = [];
         app_pass_tbody
             .find('.check-column input[type="checkbox"]:checked')
@@ -585,7 +585,9 @@ const init_application_passwords = ($) => {
         }
 
         revoke_multiple_passwords(selected);
-        return false;
+        e.preventDefault();
+        e.stopPropagation();
+        return true;
     });
 
     /**
@@ -613,22 +615,21 @@ const init_application_passwords = ($) => {
 /**
  * Initialize REST API Permission Chips
  */
-jQuery(document).ready(function($) {
+jQuery(document).ready(function($) { // NOSONAR - complex.
     let initPermissionChips = function() {
         $('.mainwp-rest-api-permission-chips').each(function() {
             let container = $(this);
             let hiddenInput = container.find('input[type="hidden"]');
             let chips = container.find('.mainwp-permission-chip:visible');
             let initValue = container.data('init-value') || '';
-            let apiVersion = container.data('api-version') || 'v2';
-            
+
             let updateHiddenInput = function() {
                 let selectedPermissions = [];
                 container.find('.mainwp-permission-chip:visible').each(function() {
                     if ($(this).hasClass('active')) {
                         let perms = $(this).data('permission').toString().split(',');
                         perms.forEach(function(p) {
-                            if (p && selectedPermissions.indexOf(p) === -1) {
+                            if (p && !selectedPermissions.includes(p)) {
                                 selectedPermissions.push(p);
                             }
                         });
@@ -637,50 +638,50 @@ jQuery(document).ready(function($) {
                 hiddenInput.val(selectedPermissions.join(','));
                 hiddenInput.trigger('change');
             };
-            
+
             let initPermissions = initValue.split(',').filter(function(p) { return p !== ''; });
-            
+
             chips.each(function() {
                 let chip = $(this);
                 let chipPerms = chip.data('permission').toString().split(',');
                 let isActive = false;
-                
+
                 chipPerms.forEach(function(perm) {
                     if (initPermissions.indexOf(perm) !== -1) {
                         isActive = true;
                     }
                 });
-                
+
                 if (isActive) {
                     chip.addClass('active green');
                 } else {
                     chip.addClass('inactive grey');
                 }
             });
-            
+
             updateHiddenInput();
-            
+
             chips.off('click.permission-chip').on('click.permission-chip', function(e) {
                 e.preventDefault();
                 let chip = $(this);
-                
+
                 if (chip.hasClass('active')) {
                     chip.removeClass('active green').addClass('inactive grey');
                 } else {
                     chip.removeClass('inactive grey').addClass('active green');
                 }
-                
+
                 updateHiddenInput();
             });
         });
     };
-    
+
     initPermissionChips();
-    
+
     $('#mainwp_rest_api_keys_compatible_v1').on('change', function() {
         let isV1 = $(this).is(':checked');
         let container = $('.mainwp-rest-api-permission-chips[data-api-version]');
-        
+
         if (isV1) {
             container.attr('data-api-version', 'v1');
             container.find('.mainwp-v2-chip').hide();
@@ -690,16 +691,16 @@ jQuery(document).ready(function($) {
             container.find('.mainwp-v1-chip').hide();
             container.find('.mainwp-v2-chip').show();
         }
-        
+
         container.find('.mainwp-permission-chip').removeClass('active');
         initPermissionChips();
     });
-    
+
     let updateBulkActionsState = function() {
         let checkedCount = $('.mainwp-rest-api-body-table-manage .check-column INPUT:checkbox:checked').length;
         let dropdown = $('#mainwp-rest-api-bulk-actions-menu');
         let applyButton = $('#mainwp-do-rest-api-bulk-actions');
-        
+
         if (checkedCount > 0) {
             dropdown.removeClass('disabled');
             applyButton.removeClass('disabled');
@@ -709,9 +710,9 @@ jQuery(document).ready(function($) {
             applyButton.addClass('disabled');
         }
     };
-    
+
     updateBulkActionsState();
-    
+
     $(document).on('change', '.mainwp-rest-api-body-table-manage .check-column INPUT:checkbox', function() {
         updateBulkActionsState();
     });

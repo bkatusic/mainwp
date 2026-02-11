@@ -144,7 +144,7 @@ jQuery(document).on('click', '.mainwp-extensions-remove-menu', function () {
     return false;
 });
 
-jQuery(function () {
+jQuery(function () { // NOSONAR - nest functions more than 4 levels deep allowed.
     jQuery(document).on('click', '.mainwp-manage-extension-license', function () {
         let currentCard = jQuery(this).closest(".card");
         currentCard.find("#mainwp-extensions-api-form").toggle();
@@ -483,7 +483,7 @@ function mainwp_extensions_savelogin(retring, autoTriggerInstall) {
 
     statusEl.show();
 
-    jQuery.post(ajaxurl, data, function (response) {
+    jQuery.post(ajaxurl, data, function (response) { // NOSONAR - Complexity.
         let undefError = false;
         let isSuccess = false;
         if (response) {
@@ -611,7 +611,6 @@ let extensions_activate_next = function (pObj, bulkAct) {
                 loadingEl.find('.ui.text.loader').html(__('License activated'));
                 statusEl.html('<i class="green key icon"></i> Licensed');
                 apiEl.attr('license-status', 'activated');
-                //apiEl.find('.mainwp-extensions-deactivate-chkbox').attr('checked', false);
                 loadingEl.hide();
                 if (!bulkAct) {
                     setTimeout(function () {

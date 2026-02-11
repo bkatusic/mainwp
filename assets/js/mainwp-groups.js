@@ -1,7 +1,7 @@
 jQuery(function () {
 
     // Auto-select newly created group from URL parameter
-    let urlParams = new URLSearchParams(window.location.search);
+    let urlParams = new URLSearchParams(globalThis.location.search);
     let newGroupId = urlParams.get('new-tag');
 
     jQuery(document).ready(function () {
@@ -21,11 +21,11 @@ jQuery(function () {
                 }, 5000);
 
                 // Remove the URL parameter without reloading the page
-                let cleanUrl = window.location.pathname + window.location.search.replace(/[?&]new-tag=[^&]+/, '').replace(/^&/, '?');
+                let cleanUrl = globalThis.location.pathname + globalThis.location.search.replace(/[?&]new-tag=[^&]+/, '').replace(/^&/, '?');
                 if (cleanUrl.endsWith('?')) {
                     cleanUrl = cleanUrl.slice(0, -1);
                 }
-                window.history.replaceState({}, document.title, cleanUrl);
+                globalThis.history.replaceState({}, document.title, cleanUrl);
             }
         }
     })
@@ -91,7 +91,7 @@ jQuery(function () {
     });
 
     // Create a new group
-    jQuery(document).on('click', '#mainwp-save-new-group-button', function () {
+    jQuery(document).on('click', '#mainwp-save-new-group-button', function (e) {
 
         let $button = jQuery(this);
         let $modal = jQuery('#mainwp-create-group-modal');
@@ -140,7 +140,7 @@ jQuery(function () {
                     return;
                 }
 
-                window.location.href = "admin.php?page=ManageGroups&new-tag=" + resp.success;
+                globalThis.location.href = "admin.php?page=ManageGroups&new-tag=" + resp.success;
             } catch (err) {
                 // to fix js error.
                 // Remove loading state on error
@@ -149,9 +149,10 @@ jQuery(function () {
                 $button.html(originalText);
                 $modal.find("input").prop("disabled", false);
             }
-            //jQuery('#mainwp-create-group-modal').modal('hide');
         });
-        return false;
+        e.preventDefault();
+        e.stopPropagation();
+        return true;
     });
 
     // Delete a Tag
@@ -284,7 +285,7 @@ jQuery(function () {
 
         jQuery.post(ajaxurl, data, function (response) {
             jQuery('#mainwp-save-sites-groups-selection-button').removeClass('disabled');
-            if (response && response.result === true) {
+            if (response?.result === true) {
                 feedback('mainwp-message-zone', 'Selection saved successfully.', 'ui green message');
                 setTimeout(() => {
                     jQuery('#mainwp-message-zone').fadeOut();
@@ -303,8 +304,8 @@ jQuery(function () {
             groupId: groupID
         });
         jQuery('.dimmer').addClass('active');
-        var dtApi = jQuery('#mainwp-manage-groups-sites-table').dataTable().api();
-        var searchValue = dtApi.search();
+        let dtApi = jQuery('#mainwp-manage-groups-sites-table').dataTable().api();
+        let searchValue = dtApi.search();
         dtApi.search('').draw();
         jQuery.post(ajaxurl, data, function (response) {
             jQuery('.dimmer').removeClass('active');

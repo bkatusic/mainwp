@@ -209,9 +209,8 @@ jQuery(function(){
     // Trigger action_restore_database_backup.
     jQuery(document).on('click', '.mainwp_3rd_party_api_cpanel_action_restore_database_backup', function () {
         let confirmMsg = __('Are you sure you want to Restore this backup?');
-        let btObj = this;
-        mainwp_confirm(confirmMsg, function () {
-            cpanel_action_restore_database_backup(btObj);
+        mainwp_confirm(confirmMsg, () => {
+            cpanel_action_restore_database_backup(this);
         });
     });
 
