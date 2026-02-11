@@ -144,8 +144,7 @@ jQuery(document).on('click', '.mainwp-extensions-remove-menu', function () {
     return false;
 });
 
-// eslint-disable-next-line complexity
-jQuery(function () {
+jQuery(function () { // eslint-disable-line unicorn/no-nested-ternary
     jQuery(document).on('click', '.mainwp-manage-extension-license', function () {
         let currentCard = jQuery(this).closest(".card");
         currentCard.find("#mainwp-extensions-api-form").toggle();
@@ -258,13 +257,13 @@ jQuery(function () {
         return false;
     });
 
-    jQuery(document).on('click', '.extension-the-plugin-action', function () {
+    jQuery(document).on('click', '.extension-the-plugin-action', function () { // eslint-disable-line unicorn/no-nested-ternary
         let parent = jQuery(this).closest(".card");
         let slug = jQuery(parent).attr('extension-slug');
         let loadingEl = parent.find(".action-feedback");
         let whatAct = jQuery(this).attr("plugin-action");
 
-        let _callback = function () {
+        let _callback = function () { // eslint-disable-line unicorn/no-nested-ternary
             loadingEl.show();
 
             let msg = __('Disabling add-on...');
@@ -283,7 +282,7 @@ jQuery(function () {
             });
 
             jQuery(this).attr('disabled', true);
-            jQuery.post(ajaxurl, data, function (response) {
+            jQuery.post(ajaxurl, data, function (response) { // eslint-disable-line unicorn/no-nested-ternary
                 jQuery(this).attr('disabled', false);
                 let success = false;
                 if (response) {
