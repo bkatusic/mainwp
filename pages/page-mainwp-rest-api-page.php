@@ -385,10 +385,10 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             // compatible with version 2.
             $scope = 'read';
             if ( ! empty( $pers ) ) {
-                $pers_list  = explode( ',', $pers );
-                $has_read   = in_array( 'r', $pers_list );
-                $has_write  = in_array( 'w', $pers_list ) || in_array( 'd', $pers_list );
-                
+                $pers_list = explode( ',', $pers );
+                $has_read  = in_array( 'r', $pers_list );
+                $has_write = in_array( 'w', $pers_list ) || in_array( 'd', $pers_list );
+
                 if ( $has_read && $has_write ) {
                     $scope = 'read_write';
                 } elseif ( $has_write ) {
@@ -432,10 +432,10 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                     $pers    = ! empty( $_POST['mainwp_rest_api_key_edit_pers'] ) ? sanitize_text_field( wp_unslash( $_POST['mainwp_rest_api_key_edit_pers'] ) ) : '';
                     $scope   = 'read';
                     if ( ! empty( $pers ) ) {
-                        $pers_list  = explode( ',', $pers );
-                        $has_read   = in_array( 'r', $pers_list );
-                        $has_write  = in_array( 'w', $pers_list ) || in_array( 'd', $pers_list );
-                        
+                        $pers_list = explode( ',', $pers );
+                        $has_read  = in_array( 'r', $pers_list );
+                        $has_write = in_array( 'w', $pers_list ) || in_array( 'd', $pers_list );
+
                         if ( $has_read && $has_write ) {
                             $scope = 'read_write';
                         } elseif ( $has_write ) {
@@ -678,7 +678,6 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         $can_edit_keys   = static::can_edit_rest_api_keys();
         $can_delete_keys = static::can_delete_rest_api_keys();
 
-
         if ( ! is_array( $all_keys ) ) {
             $all_keys = array();
         }
@@ -726,13 +725,10 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                             $pers_codes = explode( ',', $pers_codes );
                             if ( is_array( $pers_codes ) ) {
                                 if ( in_array( 'r', $pers_codes ) ) {
-                                    $pers_names[] = esc_html__( 'Read', 'mainwp' );
+                                    $pers_names[] = $read;
                                 }
-                                if ( in_array( 'w', $pers_codes ) ) {
-                                    $pers_names[] = esc_html__( 'Write', 'mainwp' );
-                                }
-                                if ( in_array( 'd', $pers_codes ) ) {
-                                    $pers_names[] = esc_html__( 'Delete', 'mainwp' );
+                                if ( in_array( 'w', $pers_codes ) || in_array( 'd', $pers_codes ) ) {
+                                    $pers_names[] = $write_delete;
                                 }
                             }
                         }
@@ -839,6 +835,8 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         $can_edit_keys   = static::can_edit_rest_api_keys();
         $can_delete_keys = static::can_delete_rest_api_keys();
         $el_id_cb_1      = 'cb-select-all-top';
+        $read            = esc_html__( 'Read', 'mainwp' );
+        $write_delete    = esc_html__( 'Write & Delete', 'mainwp' );
         ?>
         <table id="mainwp-rest-api-keys-v2-table" class="ui unstackable single line table">
             <thead>
@@ -872,14 +870,14 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                         $pers_title = array();
                         $per        = $item->permissions;
                         if ( 'read' === $per ) {
-                            $pers_title[] = esc_html__( 'Read', 'mainwp' );
+                            $pers_title[] = $read;
                         }
                         if ( 'write' === $per || 'delete' === $per ) {
-                            $pers_title[] = esc_html__( 'Write & Delete', 'mainwp' );
+                            $pers_title[] = $write_delete;
                         }
                         if ( 'read_write' === $per ) {
-                            $pers_title[] = esc_html__( 'Read', 'mainwp' );
-                            $pers_title[] = esc_html__( 'Write & Delete', 'mainwp' );
+                            $pers_title[] = $read;
+                            $pers_title[] = $write_delete;
                         }
                         $url = '';
                         if ( $can_edit_keys ) {
@@ -991,8 +989,8 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
         if ( ! is_array( $all_keys ) ) {
             $all_keys = array();
         }
-        $all_keys_v2        = MainWP_DB::instance()->get_rest_api_keys();
-        $has_no_api_keys    = empty( $all_keys ) && empty( $all_keys_v2 );
+        $all_keys_v2     = MainWP_DB::instance()->get_rest_api_keys();
+        $has_no_api_keys = empty( $all_keys ) && empty( $all_keys_v2 );
         static::render_header();
         static::render_table_top( $has_no_api_keys );
         if ( ! static::check_rest_api_enabled() ) {
@@ -1259,7 +1257,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                     <?php $init_pers = 'r,w,d'; ?>
 
                     <div class="ui grid field">
-                        <label class="six wide column middle aligned"><?php esc_html_e( 'Permissions', 'mainwp' ); ?></label>
+                        <label class="six wide column middle aligned" for="mainwp_rest_api_key_edit_pers"><?php esc_html_e( 'Permissions', 'mainwp' ); ?></label>
                         <div class="ten wide column">
                             <div class="mainwp-rest-api-permission-chips" data-init-value="<?php echo esc_attr( $init_pers ); ?>" data-api-version="v2">
                                 <input type="hidden" name="mainwp_rest_api_key_edit_pers" value="" />
@@ -1271,17 +1269,13 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                                     <i class="pencil icon"></i>
                                     <?php esc_html_e( 'Write & Delete', 'mainwp' ); ?>
                                 </button>
-                                <button type="button" class="ui basic label mainwp-permission-chip mainwp-v1-chip" data-permission="w" style="display:none;">
+                                <button type="button" class="ui basic label mainwp-permission-chip mainwp-v1-chip" data-permission="w,d" style="display:none;">
                                     <i class="pencil icon"></i>
-                                    <?php esc_html_e( 'Write', 'mainwp' ); ?>
-                                </button>
-                                <button type="button" class="ui basic label mainwp-permission-chip mainwp-v1-chip" data-permission="d" style="display:none;">
-                                    <i class="trash icon"></i>
-                                    <?php esc_html_e( 'Delete', 'mainwp' ); ?>
+                                    <?php esc_html_e( 'Write & Delete', 'mainwp' ); ?>
                                 </button>
                             </div>
                             <div class="mainwp-permission-chips-help">
-                                <span class="ui small grey text"><?php esc_html_e( 'Choose what actions this key can perform on your Dashboard data.', 'mainwp' ); ?></span>
+                                <span class="ui small grey text"><?php esc_html_e( 'Choose what actions this key can perform on your Dashboard data.', 'mainwp' ); // NOSONAR. ?></span>
                             </div>
                         </div>
                     </div>
@@ -1610,7 +1604,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                     </div>
                     <div class="ui grid field settings-field-indicator-wrapper <?php echo $item ? 'settings-field-indicator-edit-api-keys' : ''; ?>"
                         default-indi-value="3">
-                        <label class="six wide column middle aligned">
+                        <label class="six wide column middle aligned" for="mainwp_rest_api_key_edit_pers">
                             <?php
                             if ( $item ) {
                                 $tmp     = explode( ',', $init_pers );
@@ -1626,13 +1620,9 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                                     <i class="book icon"></i>
                                     <?php esc_html_e( 'Read', 'mainwp' ); ?>
                                 </button>
-                                <button type="button" class="ui button chip mainwp-permission-chip" data-permission="w">
+                                <button type="button" class="ui button chip mainwp-permission-chip" data-permission="w,d">
                                     <i class="pencil icon"></i>
-                                    <?php esc_html_e( 'Write', 'mainwp' ); ?>
-                                </button>
-                                <button type="button" class="ui button chip mainwp-permission-chip" data-permission="d">
-                                    <i class="trash icon"></i>
-                                    <?php esc_html_e( 'Delete', 'mainwp' ); ?>
+                                    <?php esc_html_e( 'Write & Delete', 'mainwp' ); ?>
                                 </button>
                             </div>
                             <div class="mainwp-permission-chips-help" style="margin-top: 8px; font-size: 12px; color: #666;">
@@ -2117,11 +2107,11 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
             wp_send_json_error( array( 'message' => __( 'UUID and Name are required.', 'mainwp' ) ) );
         }
 
-        $current_id       = get_current_user_id();
+        $current_id = get_current_user_id();
         // Only allow targeting others if can manage or can view all.
-        $can_edit_others  = static::$application_passwords->can_manage_application_passwords() || static::$application_passwords->can_view_all_application_passwords();
-        $target_user      = ( $user_id > 0 && $can_edit_others ) ? $user_id : $current_id;
-        $result      = static::$application_passwords->update_application_password( $target_user, $uuid, array( 'name' => $name ) );
+        $can_edit_others = static::$application_passwords->can_manage_application_passwords() || static::$application_passwords->can_view_all_application_passwords();
+        $target_user     = ( $user_id > 0 && $can_edit_others ) ? $user_id : $current_id;
+        $result          = static::$application_passwords->update_application_password( $target_user, $uuid, array( 'name' => $name ) );
 
         if ( is_wp_error( $result ) ) {
             wp_send_json_error( array( 'message' => $result->get_error_message() ) );
