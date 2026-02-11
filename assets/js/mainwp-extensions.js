@@ -144,7 +144,7 @@ jQuery(document).on('click', '.mainwp-extensions-remove-menu', function () {
     return false;
 });
 
-// NOSONAR - nest functions more than 4 levels deep allowed.
+// eslint-disable-next-line complexity
 jQuery(function () {
     jQuery(document).on('click', '.mainwp-manage-extension-license', function () {
         let currentCard = jQuery(this).closest(".card");
