@@ -144,7 +144,8 @@ jQuery(document).on('click', '.mainwp-extensions-remove-menu', function () {
     return false;
 });
 
-jQuery(function () { // NOSONAR - nest functions more than 4 levels deep allowed.
+// NOSONAR - nest functions more than 4 levels deep allowed.
+jQuery(function () {
     jQuery(document).on('click', '.mainwp-manage-extension-license', function () {
         let currentCard = jQuery(this).closest(".card");
         currentCard.find("#mainwp-extensions-api-form").toggle();

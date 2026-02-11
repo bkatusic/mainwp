@@ -1624,7 +1624,7 @@ let mainwp_managesites_add = function () {
         http_pass: jQuery('#mainwp_managesites_add_http_pass').val().trim()
     });
 
-    jQuery.post(ajaxurl, data, function (res_things) {
+    jQuery.post(ajaxurl, data, function (res_things) { // NOSONAR - function complexity.
         let response = res_things.response;
         response = response.trim();
         let errors = [];
@@ -3130,7 +3130,7 @@ let mainwp_item_changes_load = function ( btnObj, load_more_date = '' ) {
     let data = 'plugin' === type ? pluginChangesLoadData : themeChangesLoadData;
 
 
-    jQuery.post(ajaxurl, data, function (response) {
+    jQuery.post(ajaxurl, data, function (response) { // NOSONAR - complex.
         jQuery(md).find('.history-actions-loading').remove();
         if (response?.error) {
             if(parentContent){
@@ -3307,7 +3307,7 @@ let dayHistory_SwitchViewHandler = function (btn) {
         target_date: dt
     });
 
-    jQuery.post(ajaxurl, data, function (response) {
+    jQuery.post(ajaxurl, data, function (response) { // NOSONAR - complex.
 
         jQuery(parent).find('.history-actions-loading').remove();
 

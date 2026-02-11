@@ -381,7 +381,7 @@ class MainWP_Cache_Warm_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSam
             $userId = 0;
         }
         // ====== Build ETag from user + page + last-modified ======.
-        return '"mainwp_pages_' . sha1( "u:$userId|p:$page|ts:$lastChangedTs" ) . '"';
+        return '"mainwp_pages_' . sha1( "u:$userId|p:$page|ts:$lastChangedTs" ) . '"'; // NOSONAR - is sufficient for keys.
     }
 
 
