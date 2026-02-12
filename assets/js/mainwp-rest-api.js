@@ -625,7 +625,7 @@ jQuery(document).ready(function($) { // NOSONAR - complex.
 
             let updateHiddenInput = function() {
                 let selectedPermissions = [];
-                container.find('.mainwp-permission-chip:visible').each(function() {
+                container.find('.mainwp-permission-chip:visible').each(function() { // NOSONAR - levels deep.
                     if ($(this).hasClass('active')) {
                         let perms = $(this).data('permission').toString().split(',');
                         perms.forEach(function(p) {
