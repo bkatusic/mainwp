@@ -292,7 +292,7 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
      *
      * @return bolean True|False.
      */
-    public static function check_ignored_http_code( $value, $website = false ) {
+    public static function check_ignored_http_code( $value, $website = false ) { // phpcs:ignore -- NOSONAR -complex method.
         $value           = (int) $value;
         $site_id         = is_object( $website ) && ! empty( $website->id ) ? $website->id : 0;
         $global_settings = MainWP_Uptime_Monitoring_Handle::get_global_monitoring_settings();

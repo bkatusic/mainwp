@@ -1094,7 +1094,7 @@ class MainWP_System { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
      *
      * Enqueue all Mainwp Admin Scripts.
      */
-    public function admin_enqueue_scripts() {
+    public function admin_enqueue_scripts() { // phpcs:ignore -- NOSONAR - complex function.
 
         $load_cust_scripts = false;
 

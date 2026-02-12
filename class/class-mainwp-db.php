@@ -1806,6 +1806,9 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
                 case 'suspended':
                     $where .= ' AND wp.suspended = 1 ';
                     break;
+                default:
+                    // No additional filtering.
+                    break;
             }
         }
 

@@ -399,7 +399,7 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
      *
      * @return string Formatted timestamp.
      */
-    public static function format_timezone( $timestamp, $with_tz_info = false, $use_tzformat = false ) {
+    public static function format_timezone( $timestamp, $with_tz_info = false, $use_tzformat = false ) { // phpcs:ignore -- NOSONAR - complex.
         $tzinfo = '';
         if ( false !== $use_tzformat ) {
             if ( is_array( $use_tzformat ) && ( isset( $use_tzformat['timezone_string'] ) || isset( $use_tzformat['gmt_offset'] ) || isset( $use_tzformat['date_format'] ) || isset( $use_tzformat['time_format'] ) ) ) {

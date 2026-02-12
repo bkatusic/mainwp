@@ -302,9 +302,9 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
 					$item_slug = MainWP_Utility::get_dir_slug( $priv_extension['slug'] );
 					?>
 					<?php if ( isset( $priv_extension['privacy'] ) && ( 2 === $priv_extension['privacy'] || 1 === (int) $priv_extension['privacy'] ) ) { ?>
-						<input
+						<input  <?php // NOSONAR - id ok. ?>
 							type="hidden"
-							id="<?php echo esc_attr( $priv_extension['slug'] ); // NOSONAR - id ok. ?>"
+							id="<?php echo esc_attr( $priv_extension['slug'] ); ?>"
 							name="<?php echo esc_attr( $priv_extension['slug'] ); ?>"
 							base-slug="<?php echo esc_attr( $item_slug ); ?>"
 							privacy="<?php echo esc_attr( $priv_extension['privacy'] ); ?>"
@@ -316,7 +316,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
 							value="<?php echo esc_attr( $priv_extension['title'] ); ?>"
 						/>
 					<?php } elseif ( isset( $priv_extension['privacy'] ) && 0 === (int) $priv_extension['privacy'] ) { ?>
-						<input
+						<input <?php // NOSONAR - id ok. ?>
 							type="hidden"
 							id="<?php echo esc_attr( $priv_extension['slug'] ); // NOSONAR - id ok. ?>"
 							name="<?php echo esc_attr( $priv_extension['slug'] ); ?>"
@@ -326,9 +326,9 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
 							value="<?php echo esc_attr( $priv_extension['title'] ); ?>"
 						/>
 					<?php } else { ?>
-						<input
+						<input <?php // NOSONAR - id ok. ?>
 							type="hidden"
-							id="<?php echo esc_attr( $priv_extension['slug'] ); // NOSONAR - id ok. ?>"
+							id="<?php echo esc_attr( $priv_extension['slug'] );  // NOSONAR - id ok. ?>"
 							name="<?php echo esc_attr( $priv_extension['slug'] ); ?>"
 							base-slug="<?php echo esc_attr( $item_slug ); ?>"
 							extension_title="<?php echo esc_attr( MainWP_Extensions_Handler::polish_string_name( $priv_extension['title'] ) ); ?>"
@@ -974,7 +974,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                             <input type="checkbox" <?php echo '' !== $mainwp_api_key ? 'checked="checked"' : ''; ?> name="extensions_api_savemylogin_chk" id="extensions_api_savemylogin_chk">
                             <label for="extensions_api_savemylogin_chk"><small><?php esc_html_e( 'Remember Key', 'mainwp' ); ?></small></label>
                         </div>&nbsp;&nbsp;
-                        <a href="javascript:void(0);" class="ui green basic tiny button" id="mainwp-extensions-savelogin"><i class="check icon"></i> <?php esc_html_e( 'Validate License', 'mainwp' ); ?></a>
+                        <a href="javascript:void(0);" class="ui green basic tiny button" id="mainwp-extensions-savelogin"><i class="check icon"></i> <?php esc_html_e( 'Validate License', 'mainwp' ); //NOSONAR - id ok. ?></a>
                         <a href="javascript:void(0);" class="ui grey basic tiny button" id="mainwp-extensions-manage-toggle-off"><?php esc_html_e( 'Close', 'mainwp' ); ?></a>
                     </div>
                 </div>

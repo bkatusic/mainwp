@@ -214,7 +214,7 @@ class MainWP_Abilities_Batch {
      * @param array $input Input parameters with job_id.
      * @return array|\WP_Error Job status array or WP_Error on failure.
      */
-    public static function execute_get_batch_job_status( array $input ) {
+    public static function execute_get_batch_job_status( array $input ) { // phpcs:ignore -- NOSONAR - complex function.
         $job_id = isset( $input['job_id'] ) ? $input['job_id'] : '';
 
         if ( empty( $job_id ) || ! is_string( $job_id ) ) {

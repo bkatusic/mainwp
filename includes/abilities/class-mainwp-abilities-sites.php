@@ -960,7 +960,7 @@ class MainWP_Abilities_Sites {
      * @param array $input Validated input from Abilities API.
      * @return array|\WP_Error
      */
-    public static function execute_get_site_plugins( array $input ) {
+    public static function execute_get_site_plugins( array $input ) { // phpcs:ignore -- NOSONAR - complexity method.
         $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] );
 
         if ( is_wp_error( $site ) ) {
@@ -1058,7 +1058,7 @@ class MainWP_Abilities_Sites {
      * @param array $input Validated input from Abilities API.
      * @return array|\WP_Error
      */
-    public static function execute_get_site_themes( array $input ) {
+    public static function execute_get_site_themes( array $input ) { // phpcs:ignore -- NOSONAR - complexity method.
         $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] );
 
         if ( is_wp_error( $site ) ) {
@@ -1265,7 +1265,7 @@ class MainWP_Abilities_Sites {
      * @param array $input Input parameters.
      * @return array|\WP_Error Site data or error.
      */
-    public static function execute_add_site( $input ) {
+    public static function execute_add_site( $input ) { // phpcs:ignore -- NOSONAR - complexity method.
         $input = MainWP_Abilities_Util::normalize_input( $input );
 
         // Validate required fields.
@@ -1480,7 +1480,7 @@ class MainWP_Abilities_Sites {
      * @param array $input Input parameters.
      * @return array|\WP_Error Site data or error.
      */
-    public static function execute_update_site( $input ) {
+    public static function execute_update_site( $input ) { // phpcs:ignore -- NOSONAR - complexity method.
         $input = MainWP_Abilities_Util::normalize_input( $input );
 
         $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
@@ -2687,7 +2687,7 @@ class MainWP_Abilities_Sites {
      * @param array  $adapter Item type adapter configuration.
      * @return array Dry-run response.
      */
-    private static function build_delete_dry_run_response( $site, array $items, array $adapter ): array {
+    private static function build_delete_dry_run_response( $site, array $items, array $adapter ): array { // phpcs:ignore -- NOSONAR - complexity.
         $would_affect = array();
         $warnings     = array();
 
@@ -2885,7 +2885,7 @@ class MainWP_Abilities_Sites {
      * @param array $input Input parameters.
      * @return array|\WP_Error Result or error.
      */
-    public static function execute_get_abandoned_plugins( $input ) {
+    public static function execute_get_abandoned_plugins( $input ) { // phpcs:ignore -- NOSONAR - complexity.
         $input = MainWP_Abilities_Util::normalize_input( $input );
 
         $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
@@ -3241,7 +3241,7 @@ class MainWP_Abilities_Sites {
      * @param array $input Input parameters.
      * @return array|\WP_Error Result or error.
      */
-    public static function execute_get_abandoned_themes( $input ) {
+    public static function execute_get_abandoned_themes( $input ) { // phpcs:ignore -- NOSONAR - complexity.
         $input = MainWP_Abilities_Util::normalize_input( $input );
 
         $site = MainWP_Abilities_Util::resolve_site( $input['site_id_or_domain'] ?? null );
@@ -3469,7 +3469,7 @@ class MainWP_Abilities_Sites {
      * @param array $input Input parameters.
      * @return array|\WP_Error Result or error.
      */
-    public static function execute_get_site_changes( $input ) {
+    public static function execute_get_site_changes( $input ) { // phpcs:ignore -- NOSONAR - complexity.
         $input = MainWP_Abilities_Util::normalize_input(
             $input,
             array(

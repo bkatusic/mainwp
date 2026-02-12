@@ -265,7 +265,7 @@ final class MainWP_Cache_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSa
      * }
      * @return array
      */
-    private static function clean_and_sort_params( $params, $opts = array() ) {
+    private static function clean_and_sort_params( $params, $opts = array() ) { // phpcs:ignore -- NOSONAR -complex method.
 
         $default_igkeys = array( 'maybe_cache' );
 

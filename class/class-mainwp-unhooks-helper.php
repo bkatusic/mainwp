@@ -253,7 +253,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
     /**
      * Remove slow hooks.
      */
-    public function remove_slow_hooks() {
+    public function remove_slow_hooks() { // phpcs:ignore -- NOSONAR -complex.
 
         $remove_desired_hooks = $this->unhooks_list();
 
@@ -423,7 +423,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
      * @param  mixed $names Array of classes names.
      * @return int
      */
-    private function remove_by_name( $hook, $cls_names = array() ) {
+    private function remove_by_name( $hook, $cls_names = array() ) { // phpcs:ignore -- NOSONAR -complex.
         global $wp_filter;
         $removed = 0;
         $failed  = 0;
@@ -535,7 +535,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
      * @param  mixed $classes_names The classes names.
      * @return int
      */
-    private function remove_by_class( $hook, $classes_names ) {
+    private function remove_by_class( $hook, $classes_names ) { // phpcs:ignore -- NOSONAR -complex.
         global $wp_filter;
         $removed = 0;
         $failed  = 0;
@@ -628,7 +628,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
      * @param callable $callback
      * @return string|null
      */
-    private function callable_file( $callback ) {
+    private function callable_file( $callback ) { // phpcs:ignore -- NOSONAR -complex.
 
         static $cache = array();
 

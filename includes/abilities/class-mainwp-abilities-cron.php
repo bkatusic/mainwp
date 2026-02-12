@@ -104,7 +104,7 @@ class MainWP_Abilities_Cron {
      * @param string $job_id Job ID to process.
      * @return void
      */
-    public function process_sync_job( $job_id ): void {
+    public function process_sync_job( $job_id ): void { // phpcs:ignore
         // Environment setup for long-running process.
         ignore_user_abort( true );
         MainWP_System_Utility::set_time_limit( 0 );
@@ -260,7 +260,7 @@ class MainWP_Abilities_Cron {
      * @param string $job_id Job ID to process.
      * @return void
      */
-    public function process_update_job( $job_id ): void {
+    public function process_update_job( $job_id ): void { // phpcs:ignore -- NOSONAR - complex function.
         // Environment setup for long-running process.
         ignore_user_abort( true );
         MainWP_System_Utility::set_time_limit( 0 );
@@ -730,6 +730,9 @@ class MainWP_Abilities_Cron {
                                         MainWP_Sync::sync_information_array( $website, $information['sync'] );
                                     }
                                 }
+                                break;
+                            default:
+                                // do nothing for unknown type.
                                 break;
                         }
                     } catch ( \Exception $e ) {
