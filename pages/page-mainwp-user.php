@@ -154,6 +154,9 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     <?php if ( ! MainWP_Menu::is_disable_menu_item( 3, 'UpdateAdminPasswords' ) ) { ?>
                     <a href="<?php echo esc_url( admin_url( 'admin.php?page=UpdateAdminPasswords' ) ); ?>" class="mainwp-submenu"><?php esc_html_e( 'Admin Passwords', 'mainwp' ); ?></a>
                     <?php } ?>
+                    <?php if ( ! MainWP_Menu::is_disable_menu_item( 3, 'PasswordPolicy' ) ) { ?>
+                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=PasswordPolicy' ) ); ?>" class="mainwp-submenu"><?php esc_html_e( 'Password Policy', 'mainwp' ); ?></a>
+                    <?php } ?>
                     <?php
                     if ( isset( static::$subPages ) && is_array( static::$subPages ) ) {
                         foreach ( static::$subPages as $subPage ) {
@@ -183,12 +186,14 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      */
     public static function get_manage_columns() {
         return array(
-            'name'     => esc_html__( 'Name', 'mainwp' ),
-            'username' => esc_html__( 'Username', 'mainwp' ),
-            'email'    => esc_html__( 'E-mail', 'mainwp' ),
-            'role'     => esc_html__( 'Role', 'mainwp' ),
-            'posts'    => esc_html__( 'Posts', 'mainwp' ),
-            'website'  => esc_html__( 'Website', 'mainwp' ),
+            'name'                 => esc_html__( 'Name', 'mainwp' ),
+            'username'             => esc_html__( 'Username', 'mainwp' ),
+            'email'                => esc_html__( 'E-mail', 'mainwp' ),
+            'last_password_change' => esc_html__( 'Last Password Change', 'mainwp' ),
+            'password_status'      => esc_html__( 'Password Status', 'mainwp' ),
+            'role'                 => esc_html__( 'Role', 'mainwp' ),
+            'posts'                => esc_html__( 'Posts', 'mainwp' ),
+            'website'              => esc_html__( 'Website', 'mainwp' ),
         );
     }
 
@@ -276,6 +281,13 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 'slug'       => 'UpdateAdminPasswords',
                 'right'      => '',
             ),
+            array(
+                'title'      => esc_html__( 'Password Policy', 'mainwp' ),
+                'parent_key' => 'UserBulkManage',
+                'href'       => 'admin.php?page=PasswordPolicy',
+                'slug'       => 'PasswordPolicy',
+                'right'      => '',
+            ),
         );
 
         MainWP_Menu::init_subpages_left_menu( $subPages, $init_sub_subleftmenu, 'UserBulkManage', 'UserBulk' );
@@ -336,6 +348,14 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 'title'  => esc_html__( 'Admin Passwords', 'mainwp' ),
                 'href'   => 'admin.php?page=UpdateAdminPasswords',
                 'active' => ( 'UpdateAdminPasswords' === $shownPage ) ? true : false,
+            );
+        }
+
+        if ( ! MainWP_Menu::is_disable_menu_item( 3, 'PasswordPolicy' ) ) {
+            $renderItems[] = array(
+                'title'  => esc_html__( 'Password Policy', 'mainwp' ),
+                'href'   => 'admin.php?page=PasswordPolicy',
+                'active' => ( 'PasswordPolicy' === $shownPage ) ? true : false,
             );
         }
 
@@ -461,6 +481,13 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-manage-users-info-message"></i>
                             <?php printf( esc_html__( 'Manage existing users on your child sites.  Here you can Delete, Edit or Change Role for existing users.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/users/manage-users/" target="_blank">', '</a>' ); ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-password-policy-feature-info-message' ) ) : ?>
+                        <div class="ui info message">
+                            <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-password-policy-feature-info-message"></i>
+                            <div><?php esc_html_e( 'MainWP shows the Last password change and Status for each user. WordPress doesn’t store a reliable password-change date by default, so tracking starts after this version of MainWP Child is installed/updated. Until a user changes their password, the date may appear as Unknown.', 'mainwp' ); ?></div><br/>
+                            <div><?php esc_html_e( 'If your password policy is set to Never, MainWP will still record password changes, but no due/overdue notices are shown and status may remain OK/Disabled. When a policy is enabled, users with an Unknown date can still become Due/Overdue based on no password change recorded since the policy was enabled.', 'mainwp' ); ?></div>
                         </div>
                     <?php endif; ?>
                     <div class="ui message" id="mainwp-message-zone" style="display:none"></div>
@@ -828,6 +855,8 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     <th id="name"><?php esc_html_e( 'Name', 'mainwp' ); ?></th>
                     <th id="username"><?php esc_html_e( 'Username', 'mainwp' ); ?></th>
                     <th id="email"><?php esc_html_e( 'E-mail', 'mainwp' ); ?></th>
+                    <th id="last_password_change" class="right aligned"><?php esc_html_e( 'Last Password Change', 'mainwp' ); ?></th>
+                    <th id="password_status" class="center aligned"><?php esc_html_e( 'Password Status', 'mainwp' ); ?></th>
                     <th id="role"><?php esc_html_e( 'Role', 'mainwp' ); ?></th>
                     <th id="posts"><?php esc_html_e( 'Posts', 'mainwp' ); ?></th>
                     <th id="website"><?php esc_html_e( 'Website', 'mainwp' ); ?></th>
@@ -902,10 +931,20 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     "scrollX" : <?php echo esc_html( $table_features['scrollX'] ); ?>,
                     "lengthMenu": [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ],
                     "language" : { "emptyTable": "<?php esc_html_e( 'Please use the search options to find wanted users.', 'mainwp' ); ?>" },
-                    "columnDefs": [ {
-                        "targets": 'no-sort',
-                        "orderable": false
-                    } ],
+                    "columnDefs": [ 
+                        {
+                            "targets": 'no-sort',
+                            "orderable": false
+                        },
+                        {
+                            "targets": '#last_password_change',
+                            "type": 'string'
+                        },
+                        {
+                            "targets": '#password_status',
+                            "type": 'string'
+                        }
+                    ],
                     "drawCallback": function() {
                         setTimeout(() => {
                             jQuery('#mainwp-users-table .ui.dropdown').dropdown();
@@ -1241,6 +1280,54 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 </td>
                 <td class="username column-username not-selectable"><strong><abbr title="<?php echo esc_attr( $user['login'] ); ?>"><?php echo esc_html( $user['login'] ); ?></abbr></strong></td>
                 <td class="email column-email not-selectable"><a href="mailto:<?php echo esc_attr( $user['email'] ); ?>"><?php echo esc_html( $user['email'] ); ?></a></td>
+                <td class="last_password_change column-last_password_change not-selectable right aligned" data-order="<?php echo ! empty( $user['last_password_change'] ) ? intval( $user['last_password_change'] ) : 0; ?>">
+                    <?php
+                    if ( ! empty( $user['last_password_change'] ) ) {
+                        $timestamp = date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $user['last_password_change'] );
+                        echo '<span data-tooltip="' . esc_attr( $timestamp ) . '" data-inverted="" data-position="left center">' . esc_html( MainWP_Utility::time_elapsed_string( $user['last_password_change'] ) ) . '</span>';
+                    } else {
+                        echo '<span class="ui grey text" data-tooltip="' . esc_attr__( 'Password change hasn\'t been tracked yet.', 'mainwp' ) . '" data-inverted="" data-position="left center">' . esc_html__( 'Unknown', 'mainwp' ) . '</span>';
+                    }
+                    ?>
+                </td>
+                <?php
+                $status        = isset( $user['password_status'] ) ? $user['password_status'] : '';
+                $status_order  = 0;
+                if ( 'OVERDUE' === $status ) {
+                    $status_order = 3;
+                } elseif ( 'DUE' === $status ) {
+                    $status_order = 2;
+                } elseif ( 'OK' === $status ) {
+                    $status_order = 1;
+                }
+                ?>
+                <td class="password_status column-password_status not-selectable center aligned" data-order="<?php echo intval( $status_order ); ?>">
+                    <?php
+                    if ( 'OK' === $status && empty( $user['last_password_change'] ) ) {
+                        echo '<span class="ui grey mini label" data-tooltip="' . esc_attr__( 'Password change hasn\'t been tracked yet.', 'mainwp' ) . '" data-inverted="" data-position="left center">' . esc_html__( 'Unknown', 'mainwp' ) . '</span>';
+                    } elseif ( 'OK' === $status ) {
+                        echo '<span class="ui green mini label">' . esc_html__( 'Fresh', 'mainwp' ) . '</span>';
+                    } elseif ( 'DUE' === $status ) {
+                        if ( ! empty( $user['password_due_time'] ) ) {
+                            $due_date = MainWP_Utility::format_timestamp( $user['password_due_time'] );
+                            echo '<span class="ui yellow mini label" data-tooltip="' . esc_attr__( 'Due: ', 'mainwp' ) . esc_attr( $due_date ) . '" data-inverted="" data-position="left center">' . esc_html__( 'Due Soon', 'mainwp' ) . '</span>';
+                        } else {
+                            echo '<span class="ui yellow mini label">' . esc_html__( 'Due Soon', 'mainwp' ) . '</span>';
+                        }
+                    } elseif ( 'OVERDUE' === $status ) {
+                        if ( ! empty( $user['password_due_time'] ) ) {
+                            $overdue_date = MainWP_Utility::format_timestamp( $user['password_due_time'] );
+                            echo '<span class="ui red mini label" data-tooltip="' . esc_attr__( 'Was due: ', 'mainwp' ) . esc_attr( $overdue_date ) . '" data-inverted="" data-position="left center">' . esc_html__( 'Overdue', 'mainwp' ) . '</span>';
+                        } else {
+                            echo '<span class="ui red mini label">' . esc_html__( 'Overdue', 'mainwp' ) . '</span>';
+                        }
+                    } elseif ( 'DISABLED' === $status || empty( $status ) ) {
+                        echo '<span class="ui grey mini label">' . esc_html__( 'Disabled', 'mainwp' ) . '</span>';
+                    } else {
+                        echo '<span class="ui grey text">' . esc_html( $status ) . '</span>';
+                    }
+                    ?>
+                </td>
                 <td class="role column-role not-selectable"><?php echo static::get_role( $user['role'] ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
                 <td class="posts column-posts not-selectable"><a href="<?php echo esc_url( admin_url( 'admin.php?page=PostBulkManage&siteid=' . intval( $website->id ) ) . '&userid=' . $user['id'] ); ?>"><?php echo esc_html( $user['post_count'] ); ?></a></td>
                 <td class="website column-website not-selectable"><a href="<?php echo esc_url( $website->url ); ?>" target="_blank"><?php echo esc_html( $website->url ); ?></a></td>
