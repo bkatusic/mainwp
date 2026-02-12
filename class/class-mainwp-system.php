@@ -270,6 +270,7 @@ class MainWP_System { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
         }
         MainWP_Manage_Groups::init();
         MainWP_User::init();
+        MainWP_Password_Policy_Settings::init();
         MainWP_Page::init();
         MainWP_Themes::init();
         MainWP_Plugins::init();

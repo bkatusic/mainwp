@@ -282,6 +282,18 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 'init_menu_callback' => array( MainWP_Bulk_Update_Admin_Passwords::class, 'init_menu' ),
             );
 
+            // Password Policy Settings.
+            $menus_items[] = array(
+                'slug'               => 'PasswordPolicy',
+                'menu_level'         => 2,
+                'menu_rights'        => array(
+                    'dashboard' => array(
+                        'manage_users',
+                    ),
+                ),
+                'init_menu_callback' => array( MainWP_Password_Policy_Settings::class, 'init_menu' ),
+            );
+
             // Monitoring Sites.
             $menus_items[] = array(
                 'slug'               => 'MonitoringSites',
