@@ -144,7 +144,7 @@ jQuery(document).on('click', '.mainwp-extensions-remove-menu', function () {
     return false;
 });
 
-jQuery(function () { // eslint-disable-line unicorn/no-nested-ternary
+jQuery(function () { // NOSONAR - levels deep ok.
     jQuery(document).on('click', '.mainwp-manage-extension-license', function () {
         let currentCard = jQuery(this).closest(".card");
         currentCard.find("#mainwp-extensions-api-form").toggle();
@@ -304,7 +304,7 @@ jQuery(function () { // eslint-disable-line unicorn/no-nested-ternary
                     }
                 } else {
                     loadingEl.find('.ui.text.loader').html(__('Undefined error'));
-                    run_after_delay(() => loadingEl.hide());
+                    run_after_delay(() => loadingEl.hide()); // eslint-disable-line unicorn/no-nested-ternary
                 }
 
                 if (success) {
