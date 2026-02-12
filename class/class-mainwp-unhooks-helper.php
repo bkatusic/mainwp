@@ -471,7 +471,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
      * @param  mixed $path_files The files path to check hooks.
      * @return int
      */
-    private function remove_by_file( $hook, $path_files ) {
+    private function remove_by_file( $hook, $path_files ) { // phpcs:ignore -- NOSONAR -complex.
 
         global $wp_filter;
 
