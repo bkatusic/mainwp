@@ -157,7 +157,7 @@ class Log_Install extends MainWP_Install {
      *
      * @param string $currentVersion Current db version.
      */
-    public function update_log_db( $currentVersion ) {
+    public function update_log_db( $currentVersion ) { // phpcs:ignore -- NOSONAR - complex.
 
         $is_db_ver_with_archive = version_compare( $currentVersion, '1.0.1.8', '>=' ); // NOSONAR - non-ip.
 

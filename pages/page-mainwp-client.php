@@ -604,7 +604,7 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
         </div>
         <?php
         static::render_footer( '' );
-        
+
         if ( ! $has_no_clients ) {
             static::render_screen_options();
         }
@@ -1190,7 +1190,7 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
     /**
      * Renders the Add New Client Fields form.
      */
-    public static function render_client_fields() {
+    public static function render_client_fields() { // phpcs:ignore -- NOSONAR - Current complexity is the only way to achieve desired results, pull request solutions appreciated.
 
         $fields         = MainWP_DB_Client::instance()->get_client_fields();
         $has_no_fields  = empty( $fields );
@@ -1304,7 +1304,7 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                     orderMulti: false,
                     searchDelay: 350
                 } );
-                
+
                 // Initialize header checkbox
                 jQuery( '#mainwp-clients-custom-fields-table thead .ui.checkbox' ).checkbox();
                 </script>
@@ -1738,7 +1738,7 @@ class MainWP_Client { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
         ?>
         <div class="ui form">
             <input type="hidden" name="nonce_client_id" value="<?php echo esc_attr( wp_create_nonce( 'editing-client-' . $client_id ) ); ?>">
-            
+
             <div class="ui basic accordion mainwp-blank-accordion mainwp-sidebar-accordion" id="mainwp-client-info-accordion">
                 <h2 class="ui dividing header active title">
                     <i class="right dropdown icon"></i>

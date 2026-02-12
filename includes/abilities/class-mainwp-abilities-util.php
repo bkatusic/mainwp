@@ -455,7 +455,7 @@ class MainWP_Abilities_Util {
      *                              - 'include_contacts' (bool): Include client contacts.
      * @return array Formatted client data.
      */
-    public static function format_client_for_output( $client, array $options = array() ): array {
+    public static function format_client_for_output( $client, array $options = array() ): array { // phpcs:ignore -- NOSONAR - complex method.
         // Convert array to object for consistent access.
         if ( is_array( $client ) ) {
             $client = (object) $client;
@@ -1144,7 +1144,7 @@ class MainWP_Abilities_Util {
      * @param array|object $plugin Plugin data with keys: slug, Name/name, Version/version, active, update.
      * @return array Standardized plugin structure: { slug, name, version, active, has_update, update_version }.
      */
-    public static function format_plugin_for_output( $plugin ): array {
+    public static function format_plugin_for_output( $plugin ): array { // phpcs:ignore -- NOSONAR -complexity.
         if ( is_object( $plugin ) ) {
             $plugin = (array) $plugin;
         }
@@ -1211,7 +1211,7 @@ class MainWP_Abilities_Util {
      * @param array|object $theme Theme data with keys: slug, Name/name, Version/version, active, update.
      * @return array Standardized theme structure: { slug, name, version, active, has_update, update_version }.
      */
-    public static function format_theme_for_output( $theme ): array {
+    public static function format_theme_for_output( $theme ): array { // phpcs:ignore -- NOSONAR -complexity.
         if ( is_object( $theme ) ) {
             $theme = (array) $theme;
         }

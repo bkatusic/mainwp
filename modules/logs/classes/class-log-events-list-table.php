@@ -465,7 +465,7 @@ class Log_Events_List_Table { //phpcs:ignore -- NOSONAR - complex.
      * @param bool   $coloring Coloring term.
      * @return string
      */
-    public function get_event_title( $record, $type, $coloring = false ) {
+    public function get_event_title( $record, $type, $coloring = false ) { //phpcs:ignore -- NOSONAR - complex.
 
         $act = $record->action;
 
@@ -603,7 +603,7 @@ class Log_Events_List_Table { //phpcs:ignore -- NOSONAR - complex.
      *
      * @return string
      */
-    public function get_object_title( $record, $with_icon = true, $with_context_suffix = true ) {
+    public function get_object_title( $record, $with_icon = true, $with_context_suffix = true ) { //phpcs:ignore -- NOSONAR - complex.
         $extra_meta = ! empty( $record->extra_meta ) ? json_decode( $record->extra_meta, true ) : array();
         if ( ! is_array( $extra_meta ) ) {
             $extra_meta = array();

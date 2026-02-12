@@ -75,7 +75,7 @@ class Log_Settings {
     /**
      * Handle admin_init action.
      */
-    public function admin_init() {
+    public function admin_init() { // phpcs:ignore -- NOSONAR - complex.
         //phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         if ( isset( $_POST['mainwp_module_log_settings_nonce'] ) && wp_verify_nonce( wp_unslash( $_POST['mainwp_module_log_settings_nonce'] ), 'logs_settings_nonce' ) ) {
 

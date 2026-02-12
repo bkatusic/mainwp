@@ -532,7 +532,7 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
      *
      * @return array|mixed Response data, ready for insertion into collection data.
      */
-    public function get_item( $request ) {
+    public function get_item( $request ) { // phpcs:ignore -- NOSONAR - complex method.
 
         $value = isset( $request['id_domain'] ) ? $request['id_domain'] : '';
         $by    = 'domain';
@@ -821,7 +821,7 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
      *
      * @return WP_Error|WP_REST_Response
      */
-    public function sync_item( $request ) {
+    public function sync_item( $request ) { // phpcs:ignore -- NOSONAR - complex.
 
         $website = $this->get_request_item( $request );
 
@@ -1607,7 +1607,7 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
      *
      * @return WP_Error|WP_REST_Response
      */
-    public function sync_items( $request ) {
+    public function sync_items( $request ) { //phpcs:ignore -- NOSONAR - complex.
 
         $args   = $this->prepare_objects_query( $request );
         $params = array(

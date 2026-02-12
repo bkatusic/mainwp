@@ -190,7 +190,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             $post_id                      = $_mainwp_default_post_to_edit ? $_mainwp_default_post_to_edit->ID : 0;
         } else {
             $post_id                                   = isset( $_GET['post_id'] ) ? intval( $_GET['post_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-        }        
+        }
 
         if ( ! $post_id ) {
             wp_die( esc_html__( 'Invalid post.', 'mainwp' ) );
@@ -860,7 +860,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      * @uses \MainWP\Dashboard\MainWP_Cache::echo_body()
      * @uses \MainWP\Dashboard\MainWP_Utility::enabled_wp_seo()
      */
-    public static function render_table( $cached = true, $keyword = '', $dtsstart = '', $dtsstop = '', $status = '', $params = array() ) {
+    public static function render_table( $cached = true, $keyword = '', $dtsstart = '', $dtsstop = '', $status = '', $params = array() ) { // phpcs:ignore -- NOSONAR - complex.
 
         if ( ! is_array( $params ) ) {
             $params = array();

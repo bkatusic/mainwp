@@ -3554,7 +3554,7 @@ class MainWP_Abilities_Updates {
      * @param array  $updates Array of theme updates.
      * @return array Array with 'updated' and 'errors' keys.
      */
-    private static function execute_theme_updates( $site, array $updates ): array {
+    private static function execute_theme_updates( $site, array $updates ): array { // phpcs:ignore -- NOSONAR - complex method.
         $updated = array();
         $errors  = array();
 

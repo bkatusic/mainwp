@@ -66,7 +66,7 @@ class Log_DB_Driver_WPDB implements Log_DB_Driver {
      *
      * @return int
      */
-    public function insert_record( $data ) {
+    public function insert_record( $data ) { // phpcs:ignore -- NOSONAR - complex method.a
         global $wpdb;
 
         if ( defined( 'WP_IMPORTING' ) && WP_IMPORTING ) {

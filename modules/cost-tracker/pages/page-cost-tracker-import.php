@@ -100,18 +100,18 @@ class Cost_Tracker_Import {
 					jQuery( '#mainwp_cost_tracker_import_file_bulkupload' ).on( 'change', function() {
 						const messageZone = jQuery( '#<?php echo esc_js( $el_id_mes_zn_1 ); ?>' );
 						messageZone.hide().removeClass( 'red' ).html( '' );
-						
+
 						if ( this.files.length > 0 ) {
 							const fileName = this.files[0].name;
 							const fileExtension = fileName.split( '.' ).pop().toLowerCase();
-							
+
 							if ( fileExtension !== 'csv' ) {
 								messageZone.addClass( 'red' ).html( '<?php esc_html_e( 'Please select a valid CSV file.', 'mainwp' ); ?>' ).show();
 								jQuery( '#mainwp_cost_tracker_import_bulkadd' ).addClass( 'disabled' );
 								this.value = '';
 								return;
 							}
-							
+
 							jQuery( '#mainwp_cost_tracker_import_bulkadd' ).removeClass( 'disabled' );
 						} else {
 							jQuery( '#mainwp_cost_tracker_import_bulkadd' ).addClass( 'disabled' );
@@ -212,7 +212,7 @@ class Cost_Tracker_Import {
 		}
 
 		$import_cost_data = static::handle_cost_import_files();
-		
+
 		if ( empty( $import_cost_data ) || ! is_array( $import_cost_data ) || empty( $import_cost_data['data'] ) ) {
 			?>
 			<div class="ui red message">
@@ -265,7 +265,7 @@ class Cost_Tracker_Import {
 	 *
 	 * @return array Array containing 'header_line' and 'data' keys.
 	 */
-	public static function handle_cost_import_files() {
+	public static function handle_cost_import_files() { // phpcs:ignore -- NOSONAR - complex method.
 		$tmp_path = isset( $_FILES['mainwp_cost_tracker_import_file_bulkupload']['tmp_name'] ) ? $_FILES['mainwp_cost_tracker_import_file_bulkupload']['tmp_name'] : '';
 
 		if ( empty( $tmp_path ) ) {

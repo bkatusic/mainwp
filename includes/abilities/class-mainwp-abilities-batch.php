@@ -91,7 +91,7 @@ class MainWP_Abilities_Batch {
      *
      * @return array
      */
-    public static function get_batch_job_status_output_schema(): array {
+    public static function get_batch_job_status_output_schema(): array { // phpcs:ignore -- NOSONAR - complex array.
         return array(
             'type'       => 'object',
             'properties' => array(
