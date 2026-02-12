@@ -237,9 +237,13 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
         // Get params.
         $args = $this->prepare_objects_query( $request, 'pages_fields' );
 
+        // Map search_on values.
+        $search_on = ! empty( $args['search_on'] ) ? (string) $args['search_on'] : '';
+        $search_on = $this->map_search_on( $search_on );
+
         $page_data = array(
             'keyword'    => ! empty( $args['s'] ) ? $args['s'] : '',
-            'search_on'  => ! empty( $args['search_on'] ) ? $args['search_on'] : '',
+            'search_on'  => $search_on,
             'dtsstart'   => ! empty( $args['dtsstart'] ) ? $args['dtsstart'] : '',
             'dtsstop'    => ! empty( $args['dtsstop'] ) ? $args['dtsstop'] : '',
             'status'     => ! empty( $args['status'] ) ? $args['status'] : '',
@@ -1320,5 +1324,29 @@ class MainWP_Rest_Pages_Controller extends MainWP_REST_Controller { //phpcs:igno
         );
 
         return isset( $words_map[ $key ] ) ? $words_map[ $key ] : '';
+    }
+
+    /**
+     * Map search on.
+     *
+     * @param string $search_on Search on.
+     *
+     * @return string
+     */
+    protected function map_search_on( $search_on ) {
+        $search = '';
+        if ( empty( $search_on ) ) {
+            return $search;
+        }
+
+        // Map search_on values.
+        if ( 'body' === $search_on ) {
+            $search = 'content';
+        } elseif ( 'Title and Body' === $search_on ) {
+            $search = 'all';
+        } elseif ( 'title' === $search_on ) {
+            $search = $search_on;
+        }
+        return $search;
     }
 }

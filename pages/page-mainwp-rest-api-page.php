@@ -388,7 +388,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                 $pers_list  = explode( ',', $pers );
                 $has_read   = in_array( 'r', $pers_list );
                 $has_write  = in_array( 'w', $pers_list ) || in_array( 'd', $pers_list );
-                
+
                 if ( $has_read && $has_write ) {
                     $scope = 'read_write';
                 } elseif ( $has_write ) {
@@ -435,7 +435,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                         $pers_list  = explode( ',', $pers );
                         $has_read   = in_array( 'r', $pers_list );
                         $has_write  = in_array( 'w', $pers_list ) || in_array( 'd', $pers_list );
-                        
+
                         if ( $has_read && $has_write ) {
                             $scope = 'read_write';
                         } elseif ( $has_write ) {

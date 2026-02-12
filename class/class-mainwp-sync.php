@@ -193,6 +193,38 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 'pingnonce'                       => MainWP_Utility::instance()->create_site_nonce( 'pingnonce', $pWebsite->id ),
             );
 
+            $individual_settings_json = MainWP_DB::instance()->get_website_option( $pWebsite, 'password_policy_individual_settings' );
+            $individual_settings = array();
+            
+            if ( ! empty( $individual_settings_json ) ) {
+                $individual_settings = json_decode( $individual_settings_json, true );
+                if ( ! is_array( $individual_settings ) ) {
+                    $individual_settings = array();
+                }
+            }
+            
+            if ( ! empty( $individual_settings['overwrite_enabled'] ) ) {
+                $password_policy_settings = wp_parse_args(
+                    $individual_settings,
+                    array(
+                        'max_age_days'     => 0,
+                        'due_soon_message' => __( 'Your password is due to be changed soon. Please update it as soon as possible. This helps keep your account secure.', 'mainwp' ),
+                        'overdue_message'  => __( 'Your password change is overdue. Please update your password now. This is required by your site\'s password policy.', 'mainwp' ),
+                        'show_notices_to'  => 'edit_posts',
+                    )
+                );
+            } else {
+                $password_policy_defaults = array(
+                    'max_age_days'     => 0,
+                    'due_soon_message' => __( 'Your password is due to be changed soon. Please update it as soon as possible. This helps keep your account secure.', 'mainwp' ),
+                    'overdue_message'  => __( 'Your password change is overdue. Please update your password now. This is required by your site\'s password policy.', 'mainwp' ),
+                    'show_notices_to'  => 'edit_posts',
+                );
+                $password_policy_settings = wp_parse_args( get_option( 'mainwp_password_policy_settings', array() ), $password_policy_defaults );
+            }
+            
+            $postdata['passwordPolicySettings'] = wp_json_encode( $password_policy_settings );
+
             $reg_verify = MainWP_DB::instance()->get_website_option( $pWebsite, 'register_verify_key', '' );
             if ( empty( $reg_verify ) ) {
                 $postdata['sync_regverify'] = 1;
@@ -564,6 +596,11 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             $done = true;
         }
 
+        if ( isset( $information['password_policy_options'] ) ) {
+            MainWP_DB::instance()->update_website_option( $pWebsite, 'password_policy_options', wp_json_encode( $information['password_policy_options'] ) );
+            $done = true;
+        }
+
         if ( isset( $information['primaryLasttimeBackup'] ) ) {
             MainWP_DB::instance()->update_website_option( $pWebsite, 'primary_lasttime_backup', $information['primaryLasttimeBackup'] );
             $done = true;
@@ -794,6 +831,7 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             'plugins',
             'users',
             'categories',
+            'password_policy_options',
         );
 
         foreach ( $opts as $opt ) {

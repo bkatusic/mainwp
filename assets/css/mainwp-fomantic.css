@@ -311,14 +311,14 @@
   width: auto !important;
 }
 
-#mainwp-extensions-list.ui.four.cards {
+#mainwp-extensions-list .ui.four.cards {
   display: grid !important;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
   gap: 1.5rem !important;
   margin: 0 !important;
 }
 
-#mainwp-extensions-list.ui.four.cards > .card {
+#mainwp-extensions-list .ui.four.cards > .card {
   margin: 0 !important;
   width: auto !important;
   max-width: none !important;

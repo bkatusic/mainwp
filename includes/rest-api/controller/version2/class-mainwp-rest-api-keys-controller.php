@@ -213,7 +213,6 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
      *
      * @param WP_REST_Request $request Full details about the request.
      *
-     * @uses MainWP_Rest_Api_Page::check_rest_api_updates()
      * @uses MainWP_Rest_Api_Page::mainwp_generate_rand_hash()
      * @uses MainWP_DB::instance()->insert_rest_api_key()
      * @uses MainWP_Utility::update_option()
@@ -240,34 +239,15 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
         $active          = ! empty( $body['active'] ) ? 1 : 0;
         $permission      = ! empty( $body['permissions'] ) ? sanitize_text_field( wp_unslash( $body['permissions'] ) ) : '';
         $desc            = ! empty( $body['description'] ) ? sanitize_text_field( wp_unslash( $body['description'] ) ) : '';
-        $compatible_v1   = ! empty( $body['compatible_v1'] ) ? 1 : 0;
         $scope           = $this->determine_scope( $permission );
 
-        $token_v1 = array();
         try {
             // Save api key v2.
             $api_key = $this->db->insert_rest_api_key( $consumer_key, $consumer_secret, $scope, $desc, $active );
-
-            // Save api key v1.
-            if ( $compatible_v1 && ! empty( $api_key['key_id'] ) ) {
-                // Get all keys v1.
-                $all_keys = MainWP_Rest_Api_Page::check_rest_api_updates();
-                if ( ! is_array( $all_keys ) ) {
-                    $all_keys = array();
-                }
-
-                $scope_v1                  = $this->determine_scope( $permission, 'v1' );
-                $all_keys[ $consumer_key ] = array(
-                    'ck_hashed' => wp_hash_password( $consumer_key ),
-                    'cs'        => wp_hash_password( $consumer_secret ),
-                    'desc'      => $desc,
-                    'enabled'   => $active,
-                    'perms'     => $scope_v1,
-                );
-                MainWP_Utility::update_option( 'mainwp_rest_api_keys', $all_keys );
-                $token_v1 = array(
-                    'consumer_key'    => $consumer_key,
-                    'consumer_secret' => $consumer_secret,
+            if ( empty( $api_key['key_id'] ) ) {
+                return new WP_Error(
+                    'create_key_failed',
+                    __( 'Create API key failed.', 'mainwp' ),
                 );
             }
         } catch ( Exception $e ) {
@@ -278,13 +258,10 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
         }
 
         return rest_ensure_response(
-            array_merge(
-                array(
-                    'success' => 1,
-                    'message' => esc_html__( 'API Key created successfully.', 'mainwp' ),
-                    'token'   => $_consumer_secret . '==' . $_consumer_key,
-                ),
-                $token_v1
+            array(
+                'success' => 1,
+                'message' => esc_html__( 'API Key created successfully.', 'mainwp' ),
+                'token'   => $_consumer_secret . '==' . $_consumer_key,
             )
         );
     }
@@ -475,30 +452,24 @@ class MainWP_Rest_API_Keys_Controller extends MainWP_REST_Controller { //phpcs:i
      */
     public function rest_api_add_key_allowed_fields() {
         return array(
-            'active'        => array(
+            'active'      => array(
                 'required'          => true,
                 'type'              => 'boolean',
                 'description'       => __( 'Active or disable API key.', 'mainwp' ),
                 'sanitize_callback' => 'rest_sanitize_boolean',
             ),
-            'description'   => array(
+            'description' => array(
                 'required'          => false,
                 'type'              => 'string',
                 'description'       => __( 'API key description.', 'mainwp' ),
                 'sanitize_callback' => 'sanitize_text_field',
             ),
-            'permissions'   => array(
+            'permissions' => array(
                 'required'          => true,
                 'type'              => 'string',
                 'description'       => __( 'API key permissions.', 'mainwp' ),
                 'sanitize_callback' => 'sanitize_text_field',
                 'validate_callback' => array( $this, 'rest_api_validate_permissions_param' ),
-            ),
-            'compatible_v1' => array(
-                'required'          => false,
-                'type'              => 'boolean',
-                'description'       => __( 'Compatible with REST API v1.', 'mainwp' ),
-                'sanitize_callback' => 'rest_sanitize_boolean',
             ),
         );
     }

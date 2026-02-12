@@ -29,7 +29,7 @@ class MainWP_System { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
      *
      * @var string Current plugin version.
      */
-    public static $version = '6.0-er.13'; // NOSONAR.
+    public static $version = '6.0-er.14'; // NOSONAR.
 
     /**
      * Private static variable to hold the single instance of the class.
@@ -270,6 +270,7 @@ class MainWP_System { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
         }
         MainWP_Manage_Groups::init();
         MainWP_User::init();
+        MainWP_Password_Policy_Settings::init();
         MainWP_Page::init();
         MainWP_Themes::init();
         MainWP_Plugins::init();
