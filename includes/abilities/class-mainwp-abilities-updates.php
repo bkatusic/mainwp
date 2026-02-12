@@ -2298,7 +2298,7 @@ class MainWP_Abilities_Updates {
      * @param array $input Validated input from Abilities API.
      * @return array|\WP_Error
      */
-    public static function execute_get_site_updates( array $input ) {
+    public static function execute_get_site_updates( array $input ) { //phpcs:ignore -- NOSONAR - complex method.
         $site_id_or_domain = $input['site_id_or_domain'];
         $types             = $input['types'] ?? array( 'core', 'plugins', 'themes', 'translations' );
 
@@ -2443,7 +2443,7 @@ class MainWP_Abilities_Updates {
      * @param array $input Validated input from Abilities API.
      * @return array|\WP_Error
      */
-    public static function execute_update_site_plugins( array $input ) {
+    public static function execute_update_site_plugins( array $input ) { // phpcs:ignore -- NOSONAR - complex method.
         $site_id_or_domain = $input['site_id_or_domain'];
         $slugs             = $input['slugs'] ?? array();
 
@@ -2552,7 +2552,7 @@ class MainWP_Abilities_Updates {
      * @param array $input Validated input from Abilities API.
      * @return array|\WP_Error
      */
-    public static function execute_update_site_themes( array $input ) {
+    public static function execute_update_site_themes( array $input ) { // phpcs:ignore -- NOSONAR - complex method.
         $site_id_or_domain = $input['site_id_or_domain'];
         $slugs             = $input['slugs'] ?? array();
 
@@ -2661,7 +2661,7 @@ class MainWP_Abilities_Updates {
      * @param array $input Validated input from Abilities API.
      * @return array|\WP_Error
      */
-    public static function execute_update_site_translations( array $input ) {
+    public static function execute_update_site_translations( array $input ) { // phpcs:ignore -- NOSONAR - complex method.
         $site_id_or_domain = $input['site_id_or_domain'];
         $slugs             = $input['slugs'] ?? array();
 
@@ -3440,7 +3440,7 @@ class MainWP_Abilities_Updates {
      * @param array  $updates Array of plugin updates.
      * @return array Array with 'updated' and 'errors' keys.
      */
-    private static function execute_plugin_updates( $site, array $updates ): array {
+    private static function execute_plugin_updates( $site, array $updates ): array { // phpcs:ignore -- NOSONAR - complex method.
         $updated = array();
         $errors  = array();
 
@@ -3654,7 +3654,7 @@ class MainWP_Abilities_Updates {
      * @param array  $updates Array of translation updates.
      * @return array Array with 'updated' and 'errors' keys.
      */
-    private static function execute_translation_updates( $site, array $updates ): array {
+    private static function execute_translation_updates( $site, array $updates ): array { // phpcs:ignore -- NOSONAR - complex method.
         $updated = array();
         $errors  = array();
 

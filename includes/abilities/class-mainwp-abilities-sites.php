@@ -4106,7 +4106,7 @@ class MainWP_Abilities_Sites {
      * @param array $input Input parameters.
      * @return array|\WP_Error Result or error.
      */
-    public static function execute_reconnect_sites( $input ) {
+    public static function execute_reconnect_sites( $input ) { // phpcs:ignore -- NOSONAR - complexity.
         $input = MainWP_Abilities_Util::normalize_input( $input );
 
         $identifiers = isset( $input['site_ids_or_domains'] ) && is_array( $input['site_ids_or_domains'] ) ? $input['site_ids_or_domains'] : array();
@@ -4334,7 +4334,7 @@ class MainWP_Abilities_Sites {
      * @param array $input Input parameters.
      * @return array|\WP_Error Result or error.
      */
-    public static function execute_check_sites( $input ) {
+    public static function execute_check_sites( $input ) { // phpcs:ignore -- NOSONAR - complexity.
         $input = MainWP_Abilities_Util::normalize_input( $input );
 
         $identifiers = isset( $input['site_ids_or_domains'] ) && is_array( $input['site_ids_or_domains'] ) ? $input['site_ids_or_domains'] : array();

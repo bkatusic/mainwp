@@ -89,7 +89,7 @@ class Cost_Tracker_Clients_Widget {
     /**
      * Method render_tasks_client_page_widget_content().
      */
-    public function render_costs_tracker_widget_content() {
+    public function render_costs_tracker_widget_content() { // phpcs:ignore -- NOSONAR - complex method.
         $client_id = intval( $_GET['client_id'] ); //phpcs:ignore -- ok.
 
         $this->clients_sites = array();

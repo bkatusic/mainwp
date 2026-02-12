@@ -626,7 +626,7 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
      * @param WP_REST_Request $request Full details about the request.
      * @return WP_Error|WP_REST_Response
      */
-    public function get_items( $request ) {
+    public function get_items( $request ) { // phpcs:ignore -- NOSONAR - complex method.
 
         $args = $this->prepare_objects_query( $request );
         $args = $this->validate_rest_args( $args, $this->get_validate_args_params( 'get_sites' ) );

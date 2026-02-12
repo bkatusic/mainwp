@@ -254,7 +254,7 @@ class Log_Settings {
     /**
      * Render Insights settings page.
      */
-    public function render_settings_page() {
+    public function render_settings_page() { // phpcs:ignore -- NOSONAR - complex method.
         /** This action is documented in ../pages/page-mainwp-manage-sites.php */
         do_action( 'mainwp_pageheader_settings', 'Insights' );
         $enabled              = ! empty( $this->options['enabled'] ) ? true : false;

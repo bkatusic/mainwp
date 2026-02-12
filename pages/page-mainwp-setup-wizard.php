@@ -71,7 +71,7 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
      *
      * Initiate Quick Setup Wizard page.
      */
-    public function admin_init() {
+    public function admin_init() { // phpcs:ignore -- NOSONAR - complex method.
         if ( empty( $_GET['page'] ) || 'mainwp-setup' !== $_GET['page'] ) { // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
             return;
         }
@@ -322,7 +322,7 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
      *
      * Render Setup Wizards Steps.
      */
-    public function setup_wizard_steps() {
+    public function setup_wizard_steps() { // phpcs:ignore -- NOSONAR - complex method.
         $ouput_steps = $this->steps;
         ?>
         <div id="mainwp-quick-setup-wizard-steps" class="ui circular ordered stackable fluid steps" style="">
@@ -841,7 +841,7 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                         <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                           <input type="hidden" name="qsw_nonce[mainwp_addwp]" value="<?php echo esc_attr( wp_create_nonce( 'mainwp_addwp' ) ); ?>">
                           <input type="hidden" name="qsw_nonce[mainwp_checkwp]" value="<?php echo esc_attr( wp_create_nonce( 'mainwp_checkwp' ) ); ?>">
-            
+
 
                            <div class="ui two column grid">
                             <div class="column">
