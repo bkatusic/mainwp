@@ -98,7 +98,7 @@ jQuery(document).ready(function($) {
 					statusDiv
 						.removeClass('green icon')
 						.addClass('red icon')
-						.html(response?.data && response?.data?.message ? response.data.message : __('An error occurred', 'mainwp'))
+						.html(response?.data?.message ?? __('An error occurred', 'mainwp')))
 						.show();
 
 					$('html, body').animate({

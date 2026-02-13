@@ -1251,19 +1251,13 @@ let mainwp_tool_disconnect_sites_next_int = function (websiteId, data, errors) {
     });
 };
 
-let mainwp_tool_clear_activation_data = function (pObj) {
+let mainwp_tool_confirm_to_process = function (pObj) {
     let loc = jQuery(pObj).attr('href');
     mainwp_confirm('Are you sure?', function () {
-        window.location = loc;
+        globalThis.location = loc;
     });
 };
 
-let mainwp_tool_clear_archived_sites_changes = function (pObj) {
-    let loc = jQuery(pObj).attr('href');
-    mainwp_confirm('Are you sure?', function () {
-        window.location = loc;
-    });
-};
 
 /**
  * Manage sites page
@@ -2212,7 +2206,6 @@ jQuery(function () {
 /**
  * Add new user
  */
-jQuery(function ($) {
   function mainwp_gen_passsword(len = 24) {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+{}[]<>?';
     const arr = new Uint32Array(len);
@@ -2220,11 +2213,10 @@ jQuery(function ($) {
     return Array.from(arr, x => chars[x % chars.length]).join('');
   }
 
-  $('.mainwp-generate-password-button').on('click', function (e) {
+  jQuery('.mainwp-generate-password-button').on('click', function (e) {
     e.preventDefault();
-    $('#createuser #password, #mainwp-update-admin-password-form #password').val(mainwp_gen_passsword(24)).trigger('change');
+    jQuery('#createuser #password, #mainwp-update-admin-password-form #password').val(mainwp_gen_passsword(24)).trigger('change');
   });
-});
 
 jQuery(function () {
     jQuery(document).on('click', '#bulk_add_createuser', function () {
@@ -3032,7 +3024,7 @@ jQuery(function ($) {
                  slug = decodeURIComponent( $(this).closest('tr').attr('plugin_slug') );
                  name = $(this).closest('tr').attr('plugin_name');
                  break;
-             case 'update-theme-per-site':
+             case 'update-theme-per-site': // NOSONAR - same above.
                  parent = $(this).closest('.themes-bulk-updates');
                  siteId = $(parent).attr('site_id');
                  info = $(parent).attr('site_name') + ' (' + $(parent).attr('site_url') + ') ' + $(parent).attr('tz-info');
@@ -3104,7 +3096,7 @@ let mainwp_item_changes_load = function ( btnObj, load_more_date = '' ) {
 
     let md = jQuery('#mainwp-plugin-theme-history-changes-modal');
     let parentContent = false;
-    if(typeof btnObj !== 'undefined' && btnObj != false){
+    if(btnObj !== undefined && btnObj != false){
         parentContent = jQuery(btnObj).closest('.ui.accordion').find('.ui.content');
     } else {
         parentContent = jQuery(md).find('.scrolling.content')
@@ -3114,7 +3106,7 @@ let mainwp_item_changes_load = function ( btnObj, load_more_date = '' ) {
     jQuery(md).find('.actions .col-right').html('');
 
     const type = jQuery(md).attr('history-type');
-    const load_more = false;
+    let load_more = false;
 
     // set load date if provided
     if(typeof load_more_date === 'string' && load_more_date !== ''){
@@ -3233,14 +3225,12 @@ let mainwp_item_changes_load = function ( btnObj, load_more_date = '' ) {
                     jQuery(md).find('.actions .col-right').html('<a href="javascript:void(0);" onclick="mainwp_item_changes_load(false,\'' + ( response.more_date ?? get_local_date_string() ) + '\');return false;">' + __('Load More') + '</a>');
                 }
             }
-        } else {
-            if(parentContent){
-                let err_content = '<div class="ui message red">' + __('Undefined error occurred. Please try again.') + '</div>';
-                if(!load_more){
-                    jQuery(parentContent).html(err_content);
-                } else {
-                    jQuery(parentContent).append(err_content);
-                }
+        } else if(parentContent){
+            let err_content = '<div class="ui message red">' + __('Undefined error occurred. Please try again.') + '</div>';
+            if(!load_more){
+                jQuery(parentContent).html(err_content);
+            } else {
+                jQuery(parentContent).append(err_content);
             }
         }
     }, 'json');
@@ -3403,7 +3393,6 @@ let listHistory_SwitchViewHandler = function (btn) {
 
     jQuery(parent).find('.content.ui').html('<div class="ui active centered inline loader history-actions-loading"></div>');
 
-    const dt = jQuery(parent).data('date');
     let md = jQuery('#mainwp-plugin-theme-history-changes-modal');
     const type = jQuery(md).attr('history-type');
 

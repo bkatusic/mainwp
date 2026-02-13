@@ -598,7 +598,7 @@ window.mainwp_sites_filter_select = function (objInput) {
     }
 }
 
-window.mainwp_tags_filter_select = function (objInput) {
+globalThis.mainwp_tags_filter_select = function (objInput) {
     let filter = jQuery(objInput).val().toLowerCase();
     let parent = jQuery(objInput).closest('.mainwp-search-options');
     let tags = [];
@@ -610,7 +610,7 @@ window.mainwp_tags_filter_select = function (objInput) {
     for (let id of tags) {
         let currentElement = jQuery(id);
         let value = currentElement.text().toLowerCase();
-        if (value.indexOf(filter) > -1) {
+        if (value.includes(filter)) {
             currentElement.show();
         } else {
             currentElement.hide();
@@ -784,8 +784,7 @@ let mainwp_upload_custom_icon = function (iconObj) {
  * @param {Array|string} buttonIds - Array of button IDs or single button ID string
  * @param {string} containerSelector - Optional container selector (default: '#mainwp-select-sites')
  */
-let mainwp_init_button_site_selection_dependency = function(buttonIds, containerSelector) {
-	containerSelector = containerSelector || '#mainwp-select-sites';
+let mainwp_init_button_site_selection_dependency = function(buttonIds, containerSelector = '#mainwp-select-sites') {
 
 	// Convert single button ID to array
 	if (typeof buttonIds === 'string') {
@@ -991,10 +990,10 @@ let mainwp_help_modal_start_content_onclick = function (tour_id, video_id, show_
 
 jQuery(document).on('click', '#mainwp-select-light-theme-button', function(e) {
     e.preventDefault();
-    const url = new URL(window.location.href);
+    const url = new URL(globalThis.location.href);
     url.searchParams.set('mainwp_quick_theme_change', 'default');
     url.searchParams.set('_wpnonce', mainwpParams.quickThemeChangeNonce);
-    window.location.href = url.toString();
+    globalThis.location.href = url.toString();
 });
 
 jQuery(document).on('click', '#mainwp-select-dark-theme-button', function(e) {

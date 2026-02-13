@@ -455,8 +455,11 @@ const init_application_passwords = ($) => {
      */
     $(document).on("click", ".copy-app-password", function () {
         const input = $("#app-pass-success-value");
-        input.select();
-        document.execCommand("copy");
+        const value = input.val();
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(value);
+        }
 
         const button = $(this);
         const original_text = button.html();
@@ -647,7 +650,7 @@ jQuery(document).ready(function($) { // NOSONAR - complex.
                 let isActive = false;
 
                 chipPerms.forEach(function(perm) {
-                    if (initPermissions.indexOf(perm) !== -1) {
+                    if (initPermissions.includes(perm)) {
                         isActive = true;
                     }
                 });
