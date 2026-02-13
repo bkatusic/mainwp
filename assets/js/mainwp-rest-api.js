@@ -301,7 +301,7 @@ const init_application_passwords = ($) => {
                     }
                     show_message(__('Application password updated successfully.'), 'success');
                     edit_modal.modal('hide');
-                } catch (err) {
+                } catch {
                     mainwp_forceReload();
                 }
             } else {

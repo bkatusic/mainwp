@@ -141,7 +141,7 @@ jQuery(function () {
                 }
 
                 globalThis.location.href = "admin.php?page=ManageGroups&new-tag=" + resp.success;
-            } catch (err) {
+            } catch {
                 // to fix js error.
                 // Remove loading state on error
                 $button.data("loading", false);

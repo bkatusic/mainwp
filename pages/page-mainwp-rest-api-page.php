@@ -824,7 +824,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                             }
                         });
                         mainwp_datatable_fix_menu_overflow('#mainwp-rest-api-keys-table', -70, 0);
-                    } catch (err) {
+                    } catch {
                         // to fix js error.
                     }
                 });
@@ -966,7 +966,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                         }
                     });
                     mainwp_datatable_fix_menu_overflow('#mainwp-rest-api-keys-v2-table', -70, 0);
-                } catch (err) {
+                } catch {
                     // to fix js error.
                 }
             });

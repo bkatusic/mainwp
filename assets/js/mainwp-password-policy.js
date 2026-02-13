@@ -29,12 +29,12 @@ jQuery(document).ready(function($) {
 		}
 
 		if ($('#individual_max_age_days').length) {
-			var initialValue = $('#individual_max_age_days').val();
-			
+			let initialValue = $('#individual_max_age_days').val();
+
 			if (initialValue === '0') {
 				$('#individual-additional-settings').hide();
 			}
-			
+
 			$('#individual_max_age_days').dropdown({
 				onChange: function(value) {
 					if (value === '0') {
@@ -53,18 +53,18 @@ jQuery(document).ready(function($) {
 
 	$(document).on('click', '#save-individual-password-policy', function(e) {
 		e.preventDefault();
-		
+
 		let button = $(this);
 		let form = $('#mainwp-individual-password-policy-form');
 		let statusDiv = $('#individual-password-policy-status');
-		
+
 		if (!form.length) {
 			return;
 		}
-		
+
 		button.addClass('loading disabled');
 		statusDiv.hide();
-		
+
 		let formData = {
 			action: 'mainwp_password_policy_save_individual',
 			site_id: form.find('input[name="site_id"]').val(),
@@ -74,23 +74,23 @@ jQuery(document).ready(function($) {
 			overdue_message: form.find('input[name="overdue_message"]').val(),
 			show_notices_to: form.find('select[name="show_notices_to"]').val()
 		};
-		
+
 		let data = mainwp_secure_data(formData);
-		
+
 		$.ajax({
 			type: 'POST',
 			url: ajaxurl,
 			data: data,
 			success: function(response) {
 				button.removeClass('loading disabled');
-				
+
 				if (response.success) {
 					statusDiv
 						.removeClass('red')
 						.addClass('green icon')
 						.html(response.data.message)
 						.show();
-					
+
 					setTimeout(function() {
 						location.reload();
 					}, 1500);
@@ -98,9 +98,9 @@ jQuery(document).ready(function($) {
 					statusDiv
 						.removeClass('green icon')
 						.addClass('red icon')
-						.html(response.data && response.data.message ? response.data.message : __('An error occurred', 'mainwp'))
+						.html(response?.data && response?.data?.message ? response.data.message : __('An error occurred', 'mainwp'))
 						.show();
-					
+
 					$('html, body').animate({
 						scrollTop: statusDiv.offset().top - 100
 					}, 500);
@@ -113,7 +113,7 @@ jQuery(document).ready(function($) {
 					.addClass('red icon')
 					.html(__('AJAX request failed', 'mainwp'))
 					.show();
-				
+
 				$('html, body').animate({
 					scrollTop: statusDiv.offset().top - 100
 				}, 500);
@@ -123,7 +123,7 @@ jQuery(document).ready(function($) {
 	});
 });
 
-window.mainwp_password_policy_vars = {
+globalThis.mainwp_password_policy_vars = {
 	sitesToUpdate: [],
 	sitesTotal: 0,
 	sitesLeft: 0,
@@ -143,7 +143,7 @@ window.mainwp_password_policy_vars = {
  * @param {object} sitesData Object containing site data keyed by site ID
  * @param {object} settings Password policy settings to apply
  */
-window.mainwp_password_policy_start_update = function(siteIds, sitesData, settings) {
+globalThis.mainwp_password_policy_start_update = function(siteIds, sitesData, settings) {
 	mainwp_password_policy_vars.sitesToUpdate = siteIds;
 	mainwp_password_policy_vars.sitesData = sitesData;
 	mainwp_password_policy_vars.settings = settings;
@@ -154,11 +154,9 @@ window.mainwp_password_policy_start_update = function(siteIds, sitesData, settin
 	mainwp_password_policy_vars.updateRunning = true;
 
 	jQuery('#mainwp-password-policy-sites-list').html('');
-	
-	for (let i = 0; i < siteIds.length; i++) {
-		let siteId = siteIds[i];
+
+    for (const siteId of siteIds) {
 		let siteName = sitesData[siteId].name;
-		
 		jQuery('#mainwp-password-policy-sites-list').append(
 			'<div class="item">' +
 			'<div class="right floated content">' +
@@ -179,7 +177,7 @@ window.mainwp_password_policy_start_update = function(siteIds, sitesData, settin
 		value: 0,
 		total: siteIds.length
 	});
-	
+
 	mainwp_password_policy_update_progress_status();
 
 	jQuery('#mainwp-password-policy-progress-modal').modal({
@@ -193,8 +191,8 @@ window.mainwp_password_policy_start_update = function(siteIds, sitesData, settin
  * Process next batch of sites
  */
 let mainwp_password_policy_loop_next = function() {
-	while (mainwp_password_policy_vars.updateRunning && 
-	       (mainwp_password_policy_vars.currentThreads < mainwp_password_policy_vars.maxThreads) && 
+	while (mainwp_password_policy_vars.updateRunning &&
+	       (mainwp_password_policy_vars.currentThreads < mainwp_password_policy_vars.maxThreads) &&
 	       (mainwp_password_policy_vars.sitesLeft > 0)) {
 		mainwp_password_policy_update_next();
 	}
@@ -206,11 +204,11 @@ let mainwp_password_policy_loop_next = function() {
 let mainwp_password_policy_update_next = function() {
 	mainwp_password_policy_vars.currentThreads++;
 	mainwp_password_policy_vars.sitesLeft--;
-	
+
 	let siteId = mainwp_password_policy_vars.sitesToUpdate[mainwp_password_policy_vars.currentSite++];
-	
+
 	mainwp_password_policy_update_site_status(
-		siteId, 
+		siteId,
 		'<span data-inverted="" data-position="left center" data-tooltip="' + __('Updating...', 'mainwp') + '">' +
 		'<i class="sync alternate loading icon"></i>' +
 		'</span>'
@@ -240,29 +238,29 @@ let mainwp_password_policy_update_next_int = function(siteId, data, errors) {
 		success: function(pSiteId) {
 			return function(response) {
 				mainwp_password_policy_vars.currentThreads--;
-				
-				if (response && response.success) {
+
+				if (response?.success) {
 					mainwp_password_policy_update_site_status(
-						pSiteId, 
+						pSiteId,
 						'<span data-inverted="" data-position="left center" data-tooltip="' + __('Updated successfully', 'mainwp') + '">' +
 						'<i class="check green icon"></i>' +
 						'</span>',
 						true
 					);
 				} else {
-					let errorMsg = (response && response.error) ? response.error : __('Unknown error', 'mainwp');
-					if (response && response.debug) {
+					let errorMsg = response?.error ? response.error : __('Unknown error', 'mainwp');
+					if ( response?.debug) {
 						console.log('Password policy update debug (Site ' + pSiteId + '):', response.debug);
 						errorMsg += ' (See console for details)';
 					}
 					mainwp_password_policy_update_site_status(
-						pSiteId, 
+						pSiteId,
 						'<span data-inverted="" data-position="left center" data-tooltip="' + errorMsg + '">' +
 						'<i class="exclamation red icon"></i>' +
 						'</span>'
 					);
 				}
-				
+
 				mainwp_password_policy_update_done();
 			}
 		}(siteId),
@@ -271,7 +269,7 @@ let mainwp_password_policy_update_next_int = function(siteId, data, errors) {
 				if (pErrors > 5) {
 					mainwp_password_policy_vars.currentThreads--;
 					mainwp_password_policy_update_site_status(
-						pSiteId, 
+						pSiteId,
 						'<span data-inverted="" data-position="left center" data-tooltip="' + __('Process timed out. Please try again.', 'mainwp') + '">' +
 						'<i class="exclamation yellow icon"></i>' +
 						'</span>'
@@ -296,7 +294,7 @@ let mainwp_password_policy_update_next_int = function(siteId, data, errors) {
  */
 let mainwp_password_policy_update_site_status = function(siteId, statusHtml, isSuccess) {
 	jQuery('.password-policy-site-status[siteid="' + siteId + '"]').html(statusHtml);
-	if (typeof isSuccess !== 'undefined' && isSuccess) {
+	if ( isSuccess !== undefined && isSuccess) {
 		let row = jQuery('.password-policy-site-status[siteid="' + siteId + '"]').closest('.item');
 		jQuery(row).insertAfter(jQuery('#mainwp-password-policy-sites-list .item').last());
 	}
@@ -320,7 +318,7 @@ let mainwp_password_policy_update_done = function() {
 	}
 
 	mainwp_password_policy_vars.sitesDone++;
-	
+
 	if (mainwp_password_policy_vars.sitesDone > mainwp_password_policy_vars.sitesTotal) {
 		mainwp_password_policy_vars.sitesDone = mainwp_password_policy_vars.sitesTotal;
 	}

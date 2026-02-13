@@ -712,7 +712,7 @@ let securityIssues_handle = function (response) { // NOSONAR - complex.
                     }
                 }
             }
-        } catch (err) {
+        } catch {
             result = '<i class="exclamation circle icon"></i> ' + __('Undefined error!');
         }
     }
