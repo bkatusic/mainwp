@@ -3077,7 +3077,7 @@ jQuery(function ($) {
                  from_date: '' // current date.
              });
          } else {
-             return false;
+             return;
          };
 
         $('#mainwp-plugin-theme-history-changes-modal').modal({
@@ -3089,7 +3089,6 @@ jQuery(function ($) {
                 mainwp_item_changes_load();
             }
         }).modal('show');
-        return false;
     });
 });
 

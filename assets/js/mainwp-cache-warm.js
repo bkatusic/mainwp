@@ -117,7 +117,7 @@
     }
 
     function setupViewportWarm(root) {
-        if (!('IntersectionObserver' in window)) return;
+        if (!('IntersectionObserver' in globalThis)) return;
         const io = new IntersectionObserver((entries) => {
             entries.forEach((e) => {
                 if (!e.isIntersecting) return;

@@ -189,7 +189,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             $_mainwp_default_post_to_edit = get_default_post_to_edit( $post_type, true );
             $post_id                      = $_mainwp_default_post_to_edit ? $_mainwp_default_post_to_edit->ID : 0;
         } else {
-            $post_id                                   = isset( $_GET['post_id'] ) ? intval( $_GET['post_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            $post_id = isset( $_GET['post_id'] ) ? intval( $_GET['post_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         }
 
         if ( ! $post_id ) {
@@ -896,7 +896,7 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
          */
         do_action( 'mainwp_before_posts_table' );
 
-        if ( ! $cached || $has_cached_results ) :
+        if ( ! $cached || $has_cached_results ) {
             ?>
         <table id="mainwp-posts-table" class="ui unstackable single line table" style="width:100%">
             <thead class="full-width">
@@ -946,14 +946,14 @@ class MainWP_Post { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             ?>
             </tbody>
         </table>
-        <?php
-        else :
+            <?php
+        } else {
             MainWP_UI::render_empty_page_placeholder(
                 esc_html__( 'Find Posts', 'mainwp' ),
                 esc_html__( 'Select the Child Sites you want, choose any filters, then click Show Posts.', 'mainwp' ),
                 '<em data-emoji=":page_facing_up:" class="big"></em>'
             );
-        endif;
+        }
         /**
          * Action: mainwp_after_posts_table
          *

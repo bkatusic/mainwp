@@ -129,10 +129,6 @@
   color: var(--mainwp-text-secondary) !important;
 }
 
-.mainwp-ui.mainwp-custom-theme a:not(.button).grey {
-  color: var(--mainwp-text-secondary) !important;
-}
-
 /* Buttons */
 
 .mainwp-ui.mainwp-custom-theme .ui.button {
@@ -1180,7 +1176,7 @@
 
 .mainwp-ui.mainwp-custom-theme #mainwp-first-level-navigation .ui.vertical.inverted.menu .item.active {
   color: var(--mainwp-green) !important;
-  background-color: #7fb10010 !important; 
+  background-color: #7fb10010 !important;
 }
 
 .mainwp-ui.mainwp-custom-theme #mainwp-divider-handle:hover {
@@ -1306,7 +1302,7 @@
 .mainwp-ui.mainwp-custom-theme #mainwp-second-level-navigation .ui.inverted.menu .item .item.active,
 .mainwp-ui.mainwp-custom-theme #mainwp-second-level-navigation .ui.inverted.menu .item .item:hover {
   color: var(--mainwp-green) !important;
-  background-color: #7fb10010 !important; 
+  background-color: #7fb10010 !important;
   border-radius: 0.785rem !important;
   -webkit-border-radius: 0.785rem !important;
 }
@@ -1367,7 +1363,7 @@
 }
 .mainwp-ui.mainwp-custom-theme #mainwp-page-navigation-wrapper .menu .item.active {
   color: var(--mainwp-green) !important;
-  background-color: #7fb10010 !important; 
+  background-color: #7fb10010 !important;
   border-radius: 0.785rem !important;
   -webkit-border-radius: 0.785rem !important;
 }
@@ -1469,7 +1465,7 @@
 .mainwp-ui.mainwp-custom-theme #mainwp-select-sites-menu .item:hover,
 .mainwp-ui.mainwp-custom-theme #mainwp-select-sites-menu .item.active {
   color: var(--mainwp-green) !important;
-  background-color: #7fb10010 !important; 
+  background-color: #7fb10010 !important;
 }
 
 /* UI Menus and Tabs

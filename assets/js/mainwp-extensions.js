@@ -297,7 +297,7 @@ jQuery(function () { // NOSONAR - levels deep ok.
                         success = true;
                     } else if (response.error) {
                         loadingEl.find('.ui.text.loader').html(response.error);
-                        run_after_delay(() => loadingEl.hide());
+                        run_after_delay(() => loadingEl.hide()); // eslint-disable-line unicorn/no-nested-ternary
                     } else {
                         loadingEl.find('.ui.text.loader').html(__('Undefined error'));
                         run_after_delay(() => loadingEl.hide());

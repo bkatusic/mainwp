@@ -60,7 +60,7 @@ class MainWP_Password_Policy_Settings {
 		if ( ! is_array( $subpages ) ) {
 			$subpages = array();
 		}
-		
+
 		$subpages[] = array(
 			'title'       => esc_html__( 'Password Policy', 'mainwp' ),
 			'slug'        => 'PasswordPolicy',
@@ -68,7 +68,7 @@ class MainWP_Password_Policy_Settings {
 			'menu_hidden' => true,
 			'callback'    => array( static::get_class_name(), 'render_individual_site' ),
 		);
-		
+
 		return $subpages;
 	}
 
@@ -120,12 +120,12 @@ class MainWP_Password_Policy_Settings {
 	 * @param string $hook Current admin page hook.
 	 */
 	public static function enqueue_scripts( $hook ) {
-		if ( 'mainwp_page_PasswordPolicy' !== $hook && 
-		     'mainwp_page_managesites' !== $hook && 
+		if ( 'mainwp_page_PasswordPolicy' !== $hook &&
+		     'mainwp_page_managesites' !== $hook &&
 		     'mainwp_page_ManageSitesPasswordPolicy' !== $hook ) {
 			return;
 		}
-		
+
 		wp_enqueue_script(
 			'mainwp-password-policy',
 			MAINWP_PLUGIN_URL . 'assets/js/mainwp-password-policy.js',
@@ -159,9 +159,9 @@ class MainWP_Password_Policy_Settings {
 	 */
 	public static function render_individual_site() {
 		do_action( 'mainwp_pageheader_sites', 'PasswordPolicy' );
-		
+
 		$site_id = isset( $_GET['id'] ) ? intval( $_GET['id'] ) : 0;
-		
+
 		if ( empty( $site_id ) ) {
 			?>
 			<div class="ui red message">
@@ -173,7 +173,7 @@ class MainWP_Password_Policy_Settings {
 		}
 
 		$website = MainWP_DB::instance()->get_website_by_id( $site_id );
-		
+
 		if ( ! $website ) {
 			?>
 			<div class="ui red message">
@@ -185,7 +185,7 @@ class MainWP_Password_Policy_Settings {
 		}
 
 		static::render_individual_form( $website );
-		
+
 		do_action( 'mainwp_pagefooter_sites' );
 	}
 
@@ -202,7 +202,7 @@ class MainWP_Password_Policy_Settings {
 	 * @uses \MainWP\Dashboard\MainWP_User::render_footer()
 	 * @uses \MainWP\Dashboard\MainWP_Utility::map_site()
 	 */
-	public static function render() {
+	public static function render() { // phpcs:ignore -- NOSONAR -- complex.
 		$show_form      = true;
 		$dbwebsites     = array();
 		$errors         = array();
@@ -248,21 +248,21 @@ class MainWP_Password_Policy_Settings {
 					if ( '' !== $website->sync_errors || MainWP_System_Utility::is_suspended_site( $website ) ) {
 						continue;
 					}
-					
+
 					$individual_settings_json = MainWP_DB::instance()->get_website_option( $website, 'password_policy_individual_settings' );
 					$individual_settings = array();
-					
+
 					if ( ! empty( $individual_settings_json ) ) {
 						$individual_settings = json_decode( $individual_settings_json, true );
 						if ( ! is_array( $individual_settings ) ) {
 							$individual_settings = array();
 						}
 					}
-					
+
 					if ( ! empty( $individual_settings['overwrite_enabled'] ) ) {
 						continue;
 					}
-					
+
 					$dbwebsites[ $website->id ] = MainWP_Utility::map_site(
 						$website,
 						$data_fields
@@ -380,7 +380,7 @@ class MainWP_Password_Policy_Settings {
 						</div>
 					<?php endif; ?>
 				<?php endif; ?>
-				
+
 				<div class="ui grid field">
 					<label class="six wide column middle aligned"><?php esc_html_e( 'Require password change every', 'mainwp' ); ?></label>
 					<div class="six wide column">
@@ -401,10 +401,10 @@ class MainWP_Password_Policy_Settings {
 					<div class="ui grid field">
 						<label class="six wide column middle aligned"><?php esc_html_e( '"Due soon" reminder message', 'mainwp' ); ?></label>
 						<div class="ten wide column">
-							<input 
-								type="text" 
-								name="mainwp_password_policy_due_soon_message" 
-								id="mainwp_password_policy_due_soon_message" 
+							<input
+								type="text"
+								name="mainwp_password_policy_due_soon_message"
+								id="mainwp_password_policy_due_soon_message"
 								value="<?php echo esc_attr( $settings['due_soon_message'] ); ?>"
 								class="ui fluid input">
 							<span class="ui small grey text"><?php esc_html_e( 'Shown to users 7 days before their password change is due.', 'mainwp' ); ?></span>
@@ -414,10 +414,10 @@ class MainWP_Password_Policy_Settings {
 					<div class="ui grid field">
 						<label class="six wide column middle aligned"><?php esc_html_e( '"Overdue" reminder message', 'mainwp' ); ?></label>
 						<div class="ten wide column">
-							<input 
-								type="text" 
-								name="mainwp_password_policy_overdue_message" 
-								id="mainwp_password_policy_overdue_message" 
+							<input
+								type="text"
+								name="mainwp_password_policy_overdue_message"
+								id="mainwp_password_policy_overdue_message"
 								value="<?php echo esc_attr( $settings['overdue_message'] ); ?>"
 								class="ui fluid input">
 							<span class="ui small grey text"><?php esc_html_e( 'Shown to users when their password change is overdue.', 'mainwp' ); ?></span>
@@ -460,7 +460,7 @@ class MainWP_Password_Policy_Settings {
 			var passwordPolicySettings = <?php echo wp_json_encode( $settings ); ?>;
 			var sitesToUpdate = <?php echo wp_json_encode( array_keys( $dbwebsites ) ); ?>;
 			var sitesData = <?php echo wp_json_encode( $dbwebsites ); ?>;
-			
+
 			mainwp_password_policy_start_update(sitesToUpdate, sitesData, passwordPolicySettings);
 		});
 	</script>
@@ -484,16 +484,16 @@ class MainWP_Password_Policy_Settings {
 
 		$individual_settings_json = MainWP_DB::instance()->get_website_option( $website, 'password_policy_individual_settings' );
 		$individual_settings = array();
-		
+
 		if ( ! empty( $individual_settings_json ) ) {
 			$individual_settings = json_decode( $individual_settings_json, true );
 			if ( ! is_array( $individual_settings ) ) {
 				$individual_settings = array();
 			}
 		}
-		
+
 		$overwrite_enabled = ! empty( $individual_settings['overwrite_enabled'] );
-		
+
 		if ( $overwrite_enabled ) {
 			$settings = wp_parse_args( $individual_settings, $global_defaults );
 		} else {
@@ -502,7 +502,7 @@ class MainWP_Password_Policy_Settings {
 		?>
 		<div id="mainwp-individual-password-policy-settings" class="ui padded segment">
 			<div id="individual-password-policy-status" class="ui message" style="display:none;"></div>
-			
+
 			<h2 class="ui header">
 				<?php printf( esc_html__( 'Password Policy Settings for %s', 'mainwp' ), '<span class="ui green text">' . esc_html( stripslashes( $website->name ) ) . '</span>' ); ?>
 				<div class="sub header">
@@ -517,10 +517,10 @@ class MainWP_Password_Policy_Settings {
 				<input type="hidden" name="site_id" value="<?php echo esc_attr( $website->id ); ?>"/>
 
 				<div class="ui toggle checkbox field" id="overwrite-enabled-checkbox">
-					<input 
-						type="checkbox" 
-						name="overwrite_enabled" 
-						id="overwrite_enabled" 
+					<input
+						type="checkbox"
+						name="overwrite_enabled"
+						id="overwrite_enabled"
 						<?php checked( $overwrite_enabled, true ); ?>>
 					<label for="overwrite_enabled">
 						<strong><?php esc_html_e( 'Overwrite global settings for this site', 'mainwp' ); ?></strong>
@@ -548,10 +548,10 @@ class MainWP_Password_Policy_Settings {
 						<div class="ui grid field">
 							<label class="six wide column middle aligned"><?php esc_html_e( '"Due soon" reminder message', 'mainwp' ); ?></label>
 							<div class="ten wide column">
-								<input 
-									type="text" 
-									name="due_soon_message" 
-									id="individual_due_soon_message" 
+								<input
+									type="text"
+									name="due_soon_message"
+									id="individual_due_soon_message"
 									value="<?php echo esc_attr( $settings['due_soon_message'] ); ?>"
 									class="ui fluid input">
 								<span class="ui small grey text"><?php esc_html_e( 'Shown to users 7 days before their password change is due.', 'mainwp' ); ?></span>
@@ -561,10 +561,10 @@ class MainWP_Password_Policy_Settings {
 						<div class="ui grid field">
 							<label class="six wide column middle aligned"><?php esc_html_e( '"Overdue" reminder message', 'mainwp' ); ?></label>
 							<div class="ten wide column">
-								<input 
-									type="text" 
-									name="overdue_message" 
-									id="individual_overdue_message" 
+								<input
+									type="text"
+									name="overdue_message"
+									id="individual_overdue_message"
 									value="<?php echo esc_attr( $settings['overdue_message'] ); ?>"
 									class="ui fluid input">
 								<span class="ui small grey text"><?php esc_html_e( 'Shown to users when their password change is overdue.', 'mainwp' ); ?></span>
@@ -584,7 +584,7 @@ class MainWP_Password_Policy_Settings {
 					</div>
 					<div class="ui divider"></div>
 				</div>
-				
+
 				<button type="button" id="save-individual-password-policy" class="ui green big button" style="<?php echo $overwrite_enabled ? '' : 'display:none;'; ?>">
 					<?php esc_html_e( 'Save Settings', 'mainwp' ); ?>
 				</button>
@@ -601,23 +601,23 @@ class MainWP_Password_Policy_Settings {
 	 * @param object $output   Output object to store results.
 	 * @param array  $params   Additional parameters.
 	 */
-	public static function posting_handler( $data, $website, &$output, $params = array() ) {
+	public static function posting_handler( $data, $website, &$output, $params = array() ) { // phpcs:ignore -- NOSONAR -- complex.
 		if ( preg_match( '/<mainwp>(.*)<\/mainwp>/', $data, $results ) > 0 ) {
 			$decoded = base64_decode( $results[1] );
-			
+
 			if ( false === $decoded ) {
 				$output->errors[ $website->id ] = esc_html__( 'Failed to decode response from child site.', 'mainwp' );
 				return;
 			}
 
 			$information = @unserialize( $decoded );
-			
+
 			if ( false === $information && 'b:0;' !== $decoded ) {
 				$output->errors[ $website->id ] = esc_html__( 'Child site does not support password policy settings. Please update MainWP Child plugin.', 'mainwp' );
 				return;
 			}
 
-			if ( ( isset( $information['success'] ) && $information['success'] ) || 
+			if ( ( isset( $information['success'] ) && $information['success'] ) ||
 			     ( isset( $information['result'] ) && 'SUCCESS' === $information['result'] ) ) {
 				$output->ok[ $website->id ] = 1;
 			} else {
@@ -631,17 +631,17 @@ class MainWP_Password_Policy_Settings {
 	/**
 	 * AJAX handler for saving individual site password policy settings.
 	 */
-	public static function ajax_save_individual() {
+	public static function ajax_save_individual() { // phpcs:ignore -- NOSONAR -- complex.
 		MainWP_Post_Handler::instance()->check_security( 'mainwp_password_policy_save_individual' );
 
 		$site_id = isset( $_POST['site_id'] ) ? intval( $_POST['site_id'] ) : 0;
-		
+
 		if ( empty( $site_id ) ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Invalid site ID', 'mainwp' ) ) );
 		}
 
 		$website = MainWP_DB::instance()->get_website_by_id( $site_id );
-		
+
 		if ( ! $website ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'Site not found', 'mainwp' ) ) );
 		}
@@ -655,7 +655,7 @@ class MainWP_Password_Policy_Settings {
 		if ( $overwrite_enabled ) {
 			$max_age_days = isset( $_POST['max_age_days'] ) ? intval( $_POST['max_age_days'] ) : 0;
 			$valid_windows = array( 0, 30, 60, 90, 120, 180, 360 );
-			
+
 			if ( ! in_array( $max_age_days, $valid_windows, true ) ) {
 				wp_send_json_error( array( 'message' => esc_html__( 'Invalid password policy window selected.', 'mainwp' ) ) );
 			}
@@ -701,7 +701,7 @@ class MainWP_Password_Policy_Settings {
 					if ( isset( $result['error'] ) ) {
 						wp_send_json_error( array( 'message' => esc_html__( 'Settings saved to Dashboard but failed to push to child site: ', 'mainwp' ) . $result['error'] ) );
 					}
-					
+
 					if ( isset( $result['result'] ) && 'SUCCESS' === $result['result'] ) {
 						wp_send_json_success( array( 'message' => esc_html__( 'Individual password policy settings saved and pushed to child site successfully.', 'mainwp' ) ) );
 					}
@@ -709,12 +709,12 @@ class MainWP_Password_Policy_Settings {
 
 				if ( is_string( $result ) && preg_match( '/<mainwp>(.*)<\/mainwp>/', $result, $results ) > 0 ) {
 					$decoded = base64_decode( $results[1] );
-					
+
 					if ( false !== $decoded ) {
 						$information = json_decode( $decoded, true );
-						
+
 						if ( null !== $information ) {
-							if ( ( isset( $information['success'] ) && $information['success'] ) || 
+							if ( ( isset( $information['success'] ) && $information['success'] ) ||
 								( isset( $information['result'] ) && 'SUCCESS' === $information['result'] ) ) {
 								wp_send_json_success( array( 'message' => esc_html__( 'Individual password policy settings saved and pushed to child site successfully.', 'mainwp' ) ) );
 							} else {
@@ -739,31 +739,31 @@ class MainWP_Password_Policy_Settings {
 	/**
 	 * AJAX handler for updating a single site's password policy settings.
 	 */
-	public static function ajax_update_site() {
+	public static function ajax_update_site() { // phpcs:ignore -- NOSONAR -- complexity.
 		MainWP_Post_Handler::instance()->check_security( 'mainwp_password_policy_update_site' );
 
 		$site_id = isset( $_POST['site_id'] ) ? intval( $_POST['site_id'] ) : 0;
-		
+
 		if ( empty( $site_id ) ) {
 			wp_send_json( array( 'error' => esc_html__( 'Invalid site ID', 'mainwp' ) ) );
 		}
 
 		$website = MainWP_DB::instance()->get_website_by_id( $site_id );
-		
+
 		if ( ! $website ) {
 			wp_send_json( array( 'error' => esc_html__( 'Site not found', 'mainwp' ) ) );
 		}
 
 		$individual_settings_json = MainWP_DB::instance()->get_website_option( $website, 'password_policy_individual_settings' );
 		$individual_settings = array();
-		
+
 		if ( ! empty( $individual_settings_json ) ) {
 			$individual_settings = json_decode( $individual_settings_json, true );
 			if ( ! is_array( $individual_settings ) ) {
 				$individual_settings = array();
 			}
 		}
-		
+
 		if ( ! empty( $individual_settings['overwrite_enabled'] ) ) {
 			wp_send_json( array( 'success' => true, 'skipped' => true, 'message' => esc_html__( 'Site is using individual password policy settings', 'mainwp' ) ) );
 		}
@@ -779,7 +779,7 @@ class MainWP_Password_Policy_Settings {
 
 		try {
 			$website = MainWP_DB::instance()->get_website_by_id( $site_id );
-			
+
 			if ( ! $website ) {
 				wp_send_json( array( 'error' => esc_html__( 'Site not found', 'mainwp' ) ) );
 			}
@@ -802,19 +802,19 @@ class MainWP_Password_Policy_Settings {
 				if ( isset( $result['error'] ) ) {
 					wp_send_json( array( 'error' => $result['error'] ) );
 				}
-				
+
 				if ( isset( $result['result'] ) && 'SUCCESS' === $result['result'] ) {
 					wp_send_json( array( 'success' => true ) );
 				}
-				
-				wp_send_json( array( 
+
+				wp_send_json( array(
 					'error' => esc_html__( 'Invalid response from child site.', 'mainwp' ),
 					'debug' => 'Response is array with keys: ' . implode( ', ', array_keys( $result ) )
 				) );
 			}
 
 			if ( ! is_string( $result ) ) {
-				wp_send_json( array( 
+				wp_send_json( array(
 					'error' => esc_html__( 'Invalid response type from child site.', 'mainwp' ),
 					'debug' => 'Response type: ' . gettype( $result )
 				) );
@@ -822,18 +822,18 @@ class MainWP_Password_Policy_Settings {
 
 			if ( preg_match( '/<mainwp>(.*)<\/mainwp>/', $result, $results ) > 0 ) {
 				$decoded = base64_decode( $results[1] );
-				
+
 				if ( false === $decoded ) {
 					wp_send_json( array( 'error' => esc_html__( 'Failed to decode response from child site.', 'mainwp' ) ) );
 				}
 
 				$information = json_decode( $decoded, true );
-				
+
 				if ( null === $information ) {
 					wp_send_json( array( 'error' => esc_html__( 'Failed to parse response from child site.', 'mainwp' ) ) );
 				}
 
-				if ( ( isset( $information['success'] ) && $information['success'] ) || 
+				if ( ( isset( $information['success'] ) && $information['success'] ) ||
 				     ( isset( $information['result'] ) && 'SUCCESS' === $information['result'] ) ) {
 					wp_send_json( array( 'success' => true ) );
 				} else {
@@ -842,7 +842,7 @@ class MainWP_Password_Policy_Settings {
 				}
 			} else {
 				$response_preview = strlen( $result ) > 200 ? substr( $result, 0, 200 ) . '...' : $result;
-				wp_send_json( array( 
+				wp_send_json( array(
 					'error' => esc_html__( 'Invalid response from child site.', 'mainwp' ),
 					'debug' => 'Response preview: ' . esc_html( $response_preview )
 				) );
