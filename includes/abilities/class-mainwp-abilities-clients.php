@@ -1071,7 +1071,7 @@ class MainWP_Abilities_Clients { //phpcs:ignore -- NOSONAR -- class complexity a
      *
      * @return array Input schema definition.
      */
-    private static function get_suspend_client_input_schema(): array {
+    private static function get_suspend_client_input_schema(): array { // phpcs:ignore -- NOSONAR -- repeat function.
         return array(
             'type'       => 'object',
             'properties' => array(

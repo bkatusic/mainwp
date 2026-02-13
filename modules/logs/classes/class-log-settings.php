@@ -50,13 +50,6 @@ class Log_Settings {
     private static $enable_logs_items;
 
     /**
-     * Holds the array with all the default built in links.
-     *
-     * @var array
-     */
-    private static $ws_al_built_links = array();
-
-    /**
      * Class constructor.
      *
      * @param Log_Manager $manager Instance of manager object.

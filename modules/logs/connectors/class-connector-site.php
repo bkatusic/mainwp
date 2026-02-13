@@ -376,7 +376,7 @@ class Connector_Site extends Log_Connector {
      *
      * @return void.
      */
-    public function callback_mainwp_site_go_to_wpadmin( $website, $location, $params = array() ) {
+    public function callback_mainwp_site_go_to_wpadmin( $website, $location, $params = array() ) { //phpcs:ignore -- NOSONAR - unuse $location.
 
         if ( empty( $website ) || ! is_object( $website ) || empty( $website->id ) ) {
             return;

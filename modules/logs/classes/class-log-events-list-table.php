@@ -635,7 +635,7 @@ class Log_Events_List_Table { //phpcs:ignore -- NOSONAR - complex.
 
         if ( ! $with_context_suffix ) {
             $title = trim( $title );
-            $title = preg_replace( '/([ ]?(plugin|theme))$/i', '', $title );
+            $title = preg_replace( '/( ?(plugin|theme))$/i', '', $title );
         }
 
         if ( $with_icon ) {
@@ -749,7 +749,7 @@ class Log_Events_List_Table { //phpcs:ignore -- NOSONAR - complex.
         $context_title = '';
 
         if ( in_array( $context, array( 'plugin', 'theme' ) ) ) {
-            $title = preg_replace( '/([ ]?(plugin|theme|translation))$/i', '', $title );
+            $title = preg_replace( '/( ?(plugin|theme|translation))$/i', '', $title );
             $title = trim( $title );
         }
 

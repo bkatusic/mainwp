@@ -103,7 +103,7 @@ class Log_Posts_Widget {
                 MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' );
                 if ( ! empty( $data ) ) {
                     $this->render_widget_content( $stats_data, $stats_prev_data );
-                } else { 
+                } else {
                     MainWP_UI::render_empty_element_placeholder( __( 'No activity recorded', 'mainwp' ), __( 'Data will appear here once actions are tracked.', 'mainwp' ), '<em data-emoji=":bar_chart:" class="medium"></em>' );
                 }
                 ?>

@@ -128,12 +128,12 @@ const mainwp_cost_tracker_import_cost = function () { // NOSONAR - complex.
     });
 
     jQuery.post(ajaxurl, data, function (response) {
-        if (response && response.success) {
+        if (response?.success) {
             import_cost_count_success++;
             jQuery('#mainwp_cost_tracker_import_logging .log').append('<span style="color:green;">SUCCESS</span><br/>');
         } else {
             import_cost_count_fails++;
-            const error_message = response && response.data ? response.data : 'Unknown error occurred.';
+            const error_message = response?.data ?? 'Unknown error occurred.';
             jQuery('#mainwp_cost_tracker_import_logging .log').append('<span style="color:red;">ERROR: ' + error_message + '</span><br/>');
             jQuery('#mainwp_cost_tracker_import_fail_logging').append(original_line + '\n');
         }
