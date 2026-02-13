@@ -766,9 +766,6 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
         </div>
         <?php } ?>
 
-        <!--<div class="extra content action-feedback" style="display:none;">
-            <div class="ui mini message"></div>
-        </div>-->
         <div class="ui active dimmer action-feedback" style="display:none;">
             <div class="ui text loader"></div>
         </div>
@@ -786,9 +783,6 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
             <?php } ?>
 
             <?php if ( isset( $extension['apiManager'] ) && $extension['apiManager'] ) { ?>
-            <!--<div class="extra content api-feedback" style="display:none;">
-                <div class="ui mini message"></div>
-            </div>-->
             <div class="ui active dimmer api-feedback" style="display:none;">
                 <div class="ui text loader"></div>
             </div>

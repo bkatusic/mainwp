@@ -5282,7 +5282,7 @@ class TablePersistentState {
       storage: options.storage !== false, // default true
       storagePrefix: options.storagePrefix || 'mainwp_tables_sort_state',
       onPersist: options.onPersist || null,
-      defaultSort: options.defaultSort || null, // { column, direction }
+      defaultSort: options.defaultSort || null, //  column, direction
     };
 
     this.init();

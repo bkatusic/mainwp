@@ -897,7 +897,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
             <form method="POST" action="" id="mainwp-edit-single-site-form" enctype="multipart/form-data" class="ui form">
                 <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                 <input type="hidden" name="wp_nonce" value="<?php echo esc_attr( wp_create_nonce( 'UpdateWebsite' . $website->id ) ); ?>" />
-                
+
                 <div class="ui basic accordion mainwp-blank-accordion mainwp-sidebar-accordion" id="mainwp-edit-site-general-settings-accordion">
                     <h2 class="ui dividing header active title">
                         <i class="right dropdown icon"></i>
@@ -1224,7 +1224,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 </div>
                     </div>
                 </div>
-                
+
                 <div class="ui basic accordion mainwp-blank-accordion mainwp-sidebar-accordion" id="mainwp-edit-site-advanced-settings-accordion">
                     <h2 class="ui dividing header title">
                         <i class="right dropdown icon"></i>
@@ -1365,7 +1365,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 </div>
                     </div>
                 </div>
-                
+
                 <div class="ui basic accordion mainwp-blank-accordion mainwp-sidebar-accordion" id="mainwp-edit-site-health-monitoring-accordion">
                     <h2 class="ui dividing header title">
                         <i class="right dropdown icon"></i>
@@ -2123,7 +2123,6 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
         $error_category  = 'unknown';
         $error_code      = '';
-        $http_status     = '';
         $connection_step = '';
 
         if ( $website ) {
