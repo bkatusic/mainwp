@@ -2731,9 +2731,18 @@ class MainWP_Abilities_Updates { //phpcs:ignore -- NOSONAR - multi methods.
 
         $updates = array();
         foreach ( $translation_upgrades as $translation ) {
+
+            $name = '';
+
+            if ( isset( $translation['name'] ) ) {
+                $name = $translation['name'];
+            } elseif ( isset( $translation['slug'] ) ) {
+                $name = $translation['slug'];
+            }
+
             $updates[] = array(
                 'slug'            => isset( $translation['slug'] ) ? $translation['slug'] : '',
-                'name'            => isset( $translation['name'] ) ? $translation['name'] : ( isset( $translation['slug'] ) ? $translation['slug'] : '' ),
+                'name'            => $name,
                 'current_version' => isset( $translation['version'] ) ? $translation['version'] : '',
                 'new_version'     => isset( $translation['new_version'] ) ? $translation['new_version'] : '',
             );
@@ -3302,6 +3311,15 @@ class MainWP_Abilities_Updates { //phpcs:ignore -- NOSONAR - multi methods.
                 }
 
                 foreach ( $plugin_upgrades as $slug => $plugin ) {
+
+                    $new_version = '';
+
+                    if ( isset( $plugin['update']['new_version'] ) ) {
+                        $new_version = $plugin['update']['new_version'];
+                    } elseif ( isset( $plugin['new_version'] ) ) {
+                        $new_version = $plugin['new_version'];
+                    }
+
                     $updates[] = array(
                         'site_id'         => $site_id,
                         'site_url'        => $site_url,
@@ -3310,7 +3328,7 @@ class MainWP_Abilities_Updates { //phpcs:ignore -- NOSONAR - multi methods.
                         'slug'            => $slug,
                         'name'            => isset( $plugin['Name'] ) ? $plugin['Name'] : $slug,
                         'current_version' => isset( $plugin['Version'] ) ? $plugin['Version'] : '',
-                        'new_version'     => isset( $plugin['update']['new_version'] ) ? $plugin['update']['new_version'] : ( isset( $plugin['new_version'] ) ? $plugin['new_version'] : '' ),
+                        'new_version'     => $new_version,
                     );
                 }
             }
@@ -3363,13 +3381,22 @@ class MainWP_Abilities_Updates { //phpcs:ignore -- NOSONAR - multi methods.
 
             if ( is_array( $translation_upgrades ) && ! empty( $translation_upgrades ) ) {
                 foreach ( $translation_upgrades as $translation ) {
+
+                    $name = '';
+
+                    if ( isset( $translation['name'] ) ) {
+                        $name = $translation['name'];
+                    } elseif ( isset( $translation['slug'] ) ) {
+                        $name = $translation['slug'];
+                    }
+
                     $updates[] = array(
                         'site_id'         => $site_id,
                         'site_url'        => $site_url,
                         'site_name'       => $site_name,
                         'type'            => 'translation',
                         'slug'            => isset( $translation['slug'] ) ? $translation['slug'] : '',
-                        'name'            => isset( $translation['name'] ) ? $translation['name'] : ( isset( $translation['slug'] ) ? $translation['slug'] : '' ),
+                        'name'            => $name,
                         'current_version' => isset( $translation['version'] ) ? $translation['version'] : '',
                         'new_version'     => isset( $translation['new_version'] ) ? $translation['new_version'] : '',
                     );

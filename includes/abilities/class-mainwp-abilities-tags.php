@@ -409,7 +409,7 @@ class MainWP_Abilities_Tags { //phpcs:ignore -- NOSONAR - multi methods.
      *
      * @return array
      */
-    private static function get_tag_sites_input_schema(): array {
+    private static function get_tag_sites_input_schema(): array { // phpcs:ignore -- NOSONAR -- repeat function.
         return array(
             'type'                 => 'object',
             'properties'           => array(
@@ -442,7 +442,7 @@ class MainWP_Abilities_Tags { //phpcs:ignore -- NOSONAR - multi methods.
      *
      * @return array
      */
-    private static function get_tag_clients_input_schema(): array {
+    private static function get_tag_clients_input_schema(): array { // phpcs:ignore -- NOSONAR -- repeat function.
         return array(
             'type'                 => 'object',
             'properties'           => array(

@@ -76,17 +76,17 @@ const mainwp_cost_tracker_import_cost = function () { // NOSONAR - complex.
         return;
     }
 
-    const cost_name = typeof decoded_cost_val['cost.name'] !== 'undefined' ? decoded_cost_val['cost.name'] : '';
-    const cost_url = typeof decoded_cost_val['cost.url'] !== 'undefined' ? decoded_cost_val['cost.url'] : '';
-    const cost_type = typeof decoded_cost_val['cost.type'] !== 'undefined' ? decoded_cost_val['cost.type'] : '';
-    const cost_product_type = typeof decoded_cost_val['cost.product_type'] !== 'undefined' ? decoded_cost_val['cost.product_type'] : '';
-    const cost_license_type = typeof decoded_cost_val['cost.license_type'] !== 'undefined' ? decoded_cost_val['cost.license_type'] : '';
-    const cost_price = typeof decoded_cost_val['cost.price'] !== 'undefined' ? decoded_cost_val['cost.price'] : '';
-    const cost_payment_method = typeof decoded_cost_val['cost.payment_method'] !== 'undefined' ? decoded_cost_val['cost.payment_method'] : '';
-    const cost_renewal_type = typeof decoded_cost_val['cost.renewal_type'] !== 'undefined' ? decoded_cost_val['cost.renewal_type'] : '';
-    const cost_last_renewal = typeof decoded_cost_val['cost.last_renewal'] !== 'undefined' ? decoded_cost_val['cost.last_renewal'] : '';
-    const cost_status = typeof decoded_cost_val['cost.cost_status'] !== 'undefined' ? decoded_cost_val['cost.cost_status'] : '';
-    const select_sites = typeof decoded_cost_val['cost.select_sites'] !== 'undefined' ? decoded_cost_val['cost.select_sites'] : [];
+    const cost_name = decoded_cost_val?.['cost.name'] ?? '';
+    const cost_url = decoded_cost_val?.['cost.url'] ?? '';
+    const cost_type = decoded_cost_val?.['cost.type'] ?? '';
+    const cost_product_type = decoded_cost_val?.['cost.product_type'] ?? '';
+    const cost_license_type =  decoded_cost_val?.['cost.license_type'] ?? '';
+    const cost_price = decoded_cost_val?.['cost.price'] ?? '';
+    const cost_payment_method = decoded_cost_val?.['cost.payment_method'] ?? '';
+    const cost_renewal_type = decoded_cost_val?.['cost.renewal_type'] ?? '';
+    const cost_last_renewal = decoded_cost_val?.['cost.last_renewal'] ?? '';
+    const cost_status = decoded_cost_val?.['cost.cost_status'] ?? '';
+    const select_sites = decoded_cost_val?.['cost.select_sites'] ?? [];
 
     jQuery('#mainwp_cost_tracker_import_logging .log').append('<strong>[' + import_cost_current + '] &lt;&lt; ' + original_line + '</strong><br/>');
 

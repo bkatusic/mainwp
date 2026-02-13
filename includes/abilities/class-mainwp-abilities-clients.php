@@ -870,7 +870,7 @@ class MainWP_Abilities_Clients { //phpcs:ignore -- NOSONAR -- class complexity a
      *
      * @return array Input schema definition.
      */
-    private static function get_count_client_sites_input_schema(): array {
+    private static function get_count_client_sites_input_schema(): array { // phpcs:ignore -- NOSONAR -- repeat function.
         return array(
             'type'       => 'object',
             'properties' => array(
@@ -951,7 +951,7 @@ class MainWP_Abilities_Clients { //phpcs:ignore -- NOSONAR -- class complexity a
      *
      * @return array Input schema definition.
      */
-    private static function get_get_client_costs_input_schema(): array {
+    private static function get_get_client_costs_input_schema(): array { // phpcs:ignore -- NOSONAR -- repeat function.
         return array(
             'type'       => 'object',
             'properties' => array(
@@ -1156,7 +1156,7 @@ class MainWP_Abilities_Clients { //phpcs:ignore -- NOSONAR -- class complexity a
      *
      * @return array Input schema definition.
      */
-    private static function get_unsuspend_client_input_schema(): array {
+    private static function get_unsuspend_client_input_schema(): array { // phpcs:ignore -- NOSONAR -- repeat function.
         return array(
             'type'       => 'object',
             'properties' => array(
