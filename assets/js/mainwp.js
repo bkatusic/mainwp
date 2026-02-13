@@ -5261,7 +5261,7 @@ let get_local_date_string = function () {
 }
 
 function mainwp_forceReload(targetUrl) {
-    const url = targetUrl || window.location.href;
+    const url = targetUrl || globalThis.location.href;
     // Navigate to URL (force reload from server)
     globalThis.location.href = url;
 }
