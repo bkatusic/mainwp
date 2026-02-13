@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Shared utility functions for MainWP abilities.
  */
-class MainWP_Abilities_Util {
+class MainWP_Abilities_Util { //phpcs:ignore -- NOSONAR - multi methods.
 
     /**
      * Minimum child plugin version required for Abilities API operations.

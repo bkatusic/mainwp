@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * >200 sites are automatically queued for background processing. This ability allows
  * clients to poll for job status, progress, and results.
  */
-class MainWP_Abilities_Batch {
+class MainWP_Abilities_Batch { //phpcs:ignore -- NOSONAR - multi methods.
 
     /**
      * Register all batch abilities.

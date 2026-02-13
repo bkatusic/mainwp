@@ -845,8 +845,8 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
          */
         do_action( 'mainwp_before_users_table' );
 
-        if ( ! $cached || $has_cached_results ) :
-        ?>
+        if ( ! $cached || $has_cached_results ) {
+            ?>
         <table id="mainwp-users-table" class="ui unstackable single line table" style="width:100%">
             <thead>
                 <tr>
@@ -873,14 +873,14 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             ?>
             </tbody>
         </table>
-        <?php
-        else :
+            <?php
+        } else {
             MainWP_UI::render_empty_page_placeholder(
                 esc_html__( 'Find Users', 'mainwp' ),
                 esc_html__( 'Select the Child Sites you want, choose any filters, then click Show Users.', 'mainwp' ),
                 '<em data-emoji=":busts_in_silhouette:" class="big"></em>'
             );
-        endif;
+        }
         /**
          * Action: mainwp_after_users_table
          *
@@ -931,7 +931,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     "scrollX" : <?php echo esc_html( $table_features['scrollX'] ); ?>,
                     "lengthMenu": [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ],
                     "language" : { "emptyTable": "<?php esc_html_e( 'Please use the search options to find wanted users.', 'mainwp' ); ?>" },
-                    "columnDefs": [ 
+                    "columnDefs": [
                         {
                             "targets": 'no-sort',
                             "orderable": false
@@ -1262,7 +1262,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      *
      * @uses \MainWP\Dashboard\MainWP_Cache::add_body()
      */
-    protected static function users_search_handler_renderer( $users, $website ) {
+    protected static function users_search_handler_renderer( $users, $website ) { // phpcs:ignore -- NOSONAR -complex.
         $return  = 0;
         $is_demo = MainWP_Demo_Handle::is_demo_mode();
 
@@ -1291,8 +1291,8 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     ?>
                 </td>
                 <?php
-                $status        = isset( $user['password_status'] ) ? $user['password_status'] : '';
-                $status_order  = 0;
+                $status       = isset( $user['password_status'] ) ? $user['password_status'] : '';
+                $status_order = 0;
                 if ( 'OVERDUE' === $status ) {
                     $status_order = 3;
                 } elseif ( 'DUE' === $status ) {

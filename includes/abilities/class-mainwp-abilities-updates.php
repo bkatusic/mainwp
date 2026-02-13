@@ -45,7 +45,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @see .mwpdev/docs/abilities-api-docs/known-issues.md for detailed explanation
  */
-class MainWP_Abilities_Updates {
+class MainWP_Abilities_Updates { //phpcs:ignore -- NOSONAR - multi methods.
 
     /**
      * Batch operation threshold.

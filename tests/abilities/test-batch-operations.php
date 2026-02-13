@@ -14,7 +14,7 @@ namespace MainWP\Dashboard\Tests;
  *
  * Tests for batch operations including queuing, thresholds, and site resolution.
  */
-class MainWP_Abilities_Batch_Operations_Test extends MainWP_Abilities_Test_Case {
+class MainWP_Abilities_Batch_Operations_Test extends MainWP_Abilities_Test_Case { //phpcs:ignore -- NOSONAR - multi methods.
 
 	// =========================================================================
 	// Batch Sync Queuing Tests

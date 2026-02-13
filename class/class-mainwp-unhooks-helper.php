@@ -436,7 +436,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         $callbacks = $hook_obj->callbacks ?? array();
 
         foreach ( $callbacks as $priority => $list ) {
-            foreach ( $list as $idx => $entry ) {
+            foreach ( $list as $entry ) {
                 $callable = $entry['function'] ?? null;
                 $name     = $this->callable_label( $callable );
                 if ( ! empty( $name ) ) {
@@ -494,7 +494,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         $lists          = array();
         $lists[ $hook ] = array();
         foreach ( $callbacks as $priority => $list ) {
-            foreach ( $list as $idx => $entry ) {
+            foreach ( $list as $entry ) {
                 $callable = $entry['function'] ?? null;
                 $file     = $this->callable_file( $callable );
                 if ( ! empty( $file ) ) {
@@ -548,7 +548,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         $callbacks = $hook_obj->callbacks ?? array();
 
         foreach ( $callbacks as $priority => $list ) {
-            foreach ( $list as $idx => $entry ) {
+            foreach ( $list as $entry ) {
                 $callable = $entry['function'] ?? null;
 
                 if ( is_array( $callable ) ) {

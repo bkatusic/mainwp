@@ -14,7 +14,7 @@ namespace MainWP\Dashboard\Tests;
  *
  * Tests for permission callbacks, ACL enforcement, and REST API key authentication.
  */
-class MainWP_Abilities_Permission_Test extends MainWP_Abilities_Test_Case {
+class MainWP_Abilities_Permission_Test extends MainWP_Abilities_Test_Case { //phpcs:ignore -- NOSONAR - multi methods.
 
 	/**
 	 * Test that permission is denied for subscriber (no manage_options).

@@ -37,7 +37,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @see .mwpdev/docs/abilities-api-docs/known-issues.md for detailed explanation
  */
-class MainWP_Abilities_Sites {
+class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
 
     /**
      * Register all site abilities.
@@ -3131,7 +3131,7 @@ class MainWP_Abilities_Sites {
      *
      * @return array JSON Schema.
      */
-    private static function get_delete_themes_output_schema(): array {
+    private static function get_delete_themes_output_schema(): array { //phpcs:ignore -- NOSONAR - identical acceptance.
         return array(
             'type'       => 'object',
             'properties' => array(

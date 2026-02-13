@@ -14,7 +14,7 @@ namespace MainWP\Dashboard\Tests;
  *
  * Tests that abilities and categories are properly registered and discoverable.
  */
-class MainWP_Abilities_Discovery_Test extends MainWP_Abilities_Test_Case {
+class MainWP_Abilities_Discovery_Test extends MainWP_Abilities_Test_Case { //phpcs:ignore -- NOSONAR - multi methods.
 
 	/**
 	 * Test that all MainWP abilities are discoverable.

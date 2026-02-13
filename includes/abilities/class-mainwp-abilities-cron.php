@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Handles cron processing for batch Abilities API operations.
  * Processes jobs in chunks of 20 sites with timeout protection and reschedule logic.
  */
-class MainWP_Abilities_Cron {
+class MainWP_Abilities_Cron { //phpcs:ignore -- NOSONAR - multi methods.
 
     /**
      * Singleton instance.
