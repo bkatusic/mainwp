@@ -885,7 +885,7 @@ class MainWP_Abilities_Clients { //phpcs:ignore -- NOSONAR -- class complexity a
      *
      * @return array Output schema definition.
      */
-    private static function get_count_client_sites_output_schema(): array {
+    private static function get_count_client_sites_output_schema(): array { // phpcs:ignore - NOSONAR -- same get_count_clients_output_schema.
         return array(
             'type'       => 'object',
             'properties' => array(

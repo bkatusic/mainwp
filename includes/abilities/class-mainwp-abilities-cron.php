@@ -68,7 +68,7 @@ class MainWP_Abilities_Cron { //phpcs:ignore -- NOSONAR - multi methods.
      * @throws \Exception Always throws to prevent unserialization.
      */
     public function __wakeup() {
-        throw new \Exception( 'Cannot unserialize singleton.' );
+        throw new \Exception( 'Cannot unserialize singleton.' ); // NOSONAR - generic exception ok.
     }
 
     /**

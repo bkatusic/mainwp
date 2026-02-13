@@ -2641,7 +2641,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                             </div>
                         </div>
                         <div class="left aligned extra content">
-                            <div class="ui toggle disabled checked checkbox" onclick="event.stopPropagation()">
+                            <div class="ui toggle disabled checked checkbox on-stop-propagation">
                                 <input type="checkbox" class="" name="" id="" checked="true" />
                                 <label><?php esc_html_e( 'Always On', 'mainwp' ); ?></label>
                             </div>
@@ -2668,7 +2668,16 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
             </div>
 
         </div>
-
+        <script type="text/javascript">
+            // to fix not keyboard accessible issue.
+            document.querySelector('.ui.toggle.on-stop-propagation')
+            .addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            });
+        </script>
         <?php
     }
 
@@ -3090,7 +3099,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
 
         if ( $echo_out ) {
             echo $out; //phpcs:ignore --ok.
-            return;
+            return '';
         }
         return $out;
     }

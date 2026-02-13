@@ -53,7 +53,7 @@ class MainWP_Abilities_Util { //phpcs:ignore -- NOSONAR - multi methods.
      * @param mixed $_input The ability input (unused but required by signature).
      * @return true|\WP_Error True on success, WP_Error with code on failure.
      */
-    public static function check_rest_api_permission( $_input = null ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required by callback signature.
+    public static function check_rest_api_permission( $_input = null ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required by callback signature NOSONAR .
         // Prioritize MainWP REST API key authentication.
         // Note: Key-specific errors (invalid key, invalid secret, bad signature) are
         // handled by MainWP_REST_Authentication::check_authentication_error() which
@@ -144,14 +144,12 @@ class MainWP_Abilities_Util { //phpcs:ignore -- NOSONAR - multi methods.
         // Use MainWP's existing per-site access control.
         if ( class_exists( 'MainWP_System' ) ) {
             $system = MainWP_System::instance();
-            if ( method_exists( $system, 'check_site_access' ) ) {
-                if ( ! $system->check_site_access( $site_id ) ) {
-                    return new \WP_Error(
-                        'mainwp_access_denied',
-                        __( 'You do not have permission to access this site.', 'mainwp' ),
-                        array( 'status' => 403 )
-                    );
-                }
+            if ( method_exists( $system, 'check_site_access' ) && ! $system->check_site_access( $site_id ) ) {
+                return new \WP_Error(
+                    'mainwp_access_denied',
+                    __( 'You do not have permission to access this site.', 'mainwp' ),
+                    array( 'status' => 403 )
+                );
             }
         }
 

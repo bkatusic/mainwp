@@ -2288,9 +2288,9 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         $build = 0;
         if ( preg_match( '/rc(\d+)/', $v, $m ) ) {
             $build = (int) $m[1];
-        } elseif ( preg_match( '/b(\d+)/', $v, $m ) ) {
+        } elseif ( preg_match( '/b(\d+)/', $v, $m ) ) { // NOSONAR - same above ok.
             $build = (int) $m[1];
-        } elseif ( preg_match( '/a(\d+)/', $v, $m ) ) {
+        } elseif ( preg_match( '/a(\d+)/', $v, $m ) ) { // NOSONAR - same above ok.
             $build = (int) $m[1];
         }
 
