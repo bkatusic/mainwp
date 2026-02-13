@@ -3896,7 +3896,7 @@ jQuery.mwp_strCut = function (i, l, s, w) {
     if (!s) {
         s = '0';
     }
-    while (o.length < parseInt(l)) {
+    while (o.length <  Number.parseInt(l)) {
         // empty
         if (w == 'undefined') {
             o = s + o;
@@ -4503,8 +4503,8 @@ function mainwp_according_table_sorting(pObj) { // NOSONAR - complex.
 
             // if sort value attribute existed then sorting on that else sorting on cell value
             if (x.hasAttribute('sort-value')) {
-                xVal = parseInt(x.getAttribute('sort-value'));
-                yVal = parseInt(y.getAttribute('sort-value'));
+                xVal = Number.parseInt(x.getAttribute('sort-value'));
+                yVal = Number.parseInt(y.getAttribute('sort-value'));
                 let tmp = xVal > yVal ? -1 : 1;
                 campare = (xVal == yVal) ? 0 : tmp;
             } else {

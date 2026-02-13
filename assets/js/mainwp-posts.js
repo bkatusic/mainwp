@@ -537,7 +537,7 @@ let mainwp_fetch_posts_prepare = function (postId, userId, start_sites) { // NOS
 
     let i = 0;
     let num_sites = jQuery('#search-bulk-sites').attr('number-sites');
-    num_sites = parseInt(num_sites);
+    num_sites =  Number.parseInt(num_sites);
 
     let select_sites_error = '<div class="ui yellow message">' + __('Please select at least one website or group or client.') + '</div>';
 

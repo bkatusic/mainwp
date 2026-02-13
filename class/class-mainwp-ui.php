@@ -1045,7 +1045,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                             let tourId = jQuery( this ).attr( 'tour-id' );
                             jQuery( '#mainwp-documentation-sidebar' ).sidebar( 'toggle' );
                             if(tourId){
-                                window.USETIFUL.tour.start( parseInt( tourId ) );
+                                window.USETIFUL.tour.start(  Number.parseInt( tourId ) );
                             } else {
                                 console.warn('Error: empty tour ID. Please set valid tour ID.');
                             }
@@ -1067,7 +1067,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                         setTimeout(
                             function () {
                                 try {
-                                    window.USETIFUL.tour.start( parseInt( 40279 ) );
+                                    window.USETIFUL.tour.start(  Number.parseInt( 40279 ) );
                                 } catch ( e ) {
                                     if ( _count_retry < 10 ) {
                                         _count_retry++;

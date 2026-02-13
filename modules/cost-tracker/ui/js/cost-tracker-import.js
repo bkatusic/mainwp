@@ -9,7 +9,7 @@ let import_cost_stop_by_user = false;
 
 jQuery(document).ready(function () {
     import_cost_total = Number.parseInt(jQuery('#mainwp_managecosts_total_import').val());
-    if (1 === parseInt(jQuery('#mainwp_managecosts_do_import').val())) {
+    if (1 ===  Number.parseInt(jQuery('#mainwp_managecosts_do_import').val())) {
         mainwp_cost_tracker_import_cost();
     }
 });

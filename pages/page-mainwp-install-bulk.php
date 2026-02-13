@@ -214,7 +214,7 @@ class MainWP_Install_Bulk { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                                         formData.append("qq_nonce", "<?php echo esc_js( wp_create_nonce( 'qq_nonce' ) ); ?>");
                                     });
                                     this.on("uploadprogress", function( file, progress, bytesSent ) {
-                                        progress = parseInt(progress);
+                                        progress =  Number.parseInt(progress);
                                         jQuery(file.previewElement).find('.qq-upload-percent').html( progress + '% from ');
                                     });
                                     this.on("success", function( file, result ) {

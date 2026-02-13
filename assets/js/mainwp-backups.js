@@ -383,7 +383,7 @@ backup_upload_file = function (pSiteId, pFile, pRegexFile, pSubfolder, pRemoteDe
 
                             if (backupUploadRunning[pUnique]) {
                                 let progressBar = jQuery('#managesite-upload-status-progress-' + pUnique);
-                                if ((progressBar.length > 0) && (progressBar.progress('get value') < progressBar.progress('get total')) && (progressBar.progress('get value') < parseInt(response.result))) {
+                                if ((progressBar.length > 0) && (progressBar.progress('get value') < progressBar.progress('get total')) && (progressBar.progress('get value') < Number.parseInt(response.result))) {
                                     progressBar.progress('set progress', response.result);
                                 }
 
@@ -823,7 +823,7 @@ managebackups_backup_upload_file = function (pSiteId, pSiteName, pFile, pRegexFi
 
                             if (backupUploadRunning[pUnique]) {
                                 let progressBar = jQuery('#managesite-upload-status-progress-' + pUnique);
-                                if ((progressBar.length > 0) && (progressBar.progress('get value') < progressBar.progress('get total')) && (progressBar.progress('get value') < parseInt(response.result))) {
+                                if ((progressBar.length > 0) && (progressBar.progress('get value') < progressBar.progress('get total')) && (progressBar.progress('get value') < Number.parseInt(response.result))) {
                                     progressBar.progress('set progress', response.result);
                                 }
 
