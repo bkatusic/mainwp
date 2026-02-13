@@ -104,13 +104,8 @@ class MainWP_Cache_Warm_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSam
      * @param array $action Site actions.
      */
     public static function invalidate_pages_by_site_actions( $action ) {
-        switch ( $action ) {
-            case 'stats': // sync.
-                static::invalidate_manage_pages( array( 'mainwp_tab', 'managesites' ) );
-                break;
-            default:
-                // code...
-                break;
+        if ( 'stats' === $action ) {
+            static::invalidate_manage_pages( array( 'mainwp_tab', 'managesites' ) );
         }
     }
 

@@ -3016,7 +3016,7 @@ jQuery(function ($) {
                  slug = decodeURIComponent($(parent).attr('theme_slug'));
                  type = 'theme';
                  break;
-             case 'update-plugin-per-site':
+             case 'update-plugin-per-site': // NOSONAR - same as above.
                  parent = $(this).closest('.plugins-bulk-updates');
                  siteId = $(parent).attr('site_id');
                  info = $(parent).attr('site_name') + ' (' + $(parent).attr('site_url') + ') ' + $(parent).attr('tz-info');
@@ -3068,9 +3068,7 @@ jQuery(function ($) {
                  name: name,
                  from_date: '' // current date.
              });
-         } else {
-             return;
-         };
+         }
 
         $('#mainwp-plugin-theme-history-changes-modal').modal({
             onHide: function () {
@@ -3096,7 +3094,7 @@ let mainwp_item_changes_load = function ( btnObj, load_more_date = '' ) {
 
     let md = jQuery('#mainwp-plugin-theme-history-changes-modal');
     let parentContent = false;
-    if(btnObj !== undefined && btnObj != false){
+    if(btnObj){
         parentContent = jQuery(btnObj).closest('.ui.accordion').find('.ui.content');
     } else {
         parentContent = jQuery(md).find('.scrolling.content')
@@ -3126,11 +3124,7 @@ let mainwp_item_changes_load = function ( btnObj, load_more_date = '' ) {
         if (response?.error) {
             if(parentContent){
                 let err_content = '<div class="ui message red">' + response.error + '</div>';
-                if(!load_more){
-                    jQuery(parentContent).html(err_content);
-                } else {
-                    jQuery(parentContent).append(err_content);
-                }
+                jQuery(parentContent).html(err_content);
             }
         } else if (response?.list) {
             if (response.list.length == 0) {
@@ -3140,11 +3134,7 @@ let mainwp_item_changes_load = function ( btnObj, load_more_date = '' ) {
                 }
                 if(parentContent){
                     let msg_content = '<div class="ui info message">' + msg + '</div>';
-                    if(!load_more){
-                        jQuery(parentContent).html(msg_content);
-                    } else {
-                        jQuery(parentContent).append(msg_content);
-                    }
+                    jQuery(parentContent).html(msg_content);
                 }
             } else {
                 let content = '';
@@ -3227,11 +3217,7 @@ let mainwp_item_changes_load = function ( btnObj, load_more_date = '' ) {
             }
         } else if(parentContent){
             let err_content = '<div class="ui message red">' + __('Undefined error occurred. Please try again.') + '</div>';
-            if(!load_more){
-                jQuery(parentContent).html(err_content);
-            } else {
-                jQuery(parentContent).append(err_content);
-            }
+            jQuery(parentContent).html(err_content);
         }
     }, 'json');
 }
@@ -5277,7 +5263,7 @@ let get_local_date_string = function () {
 function mainwp_forceReload(targetUrl) {
     const url = targetUrl || window.location.href;
     // Navigate to URL (force reload from server)
-    window.location.href = url;
+    globalThis.location.href = url;
 }
 
 class TablePersistentState {

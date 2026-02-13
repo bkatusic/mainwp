@@ -457,7 +457,7 @@ const init_application_passwords = ($) => {
         const input = $("#app-pass-success-value");
         const value = input.val();
 
-        if (navigator.clipboard && window.isSecureContext) {
+        if (navigator.clipboard && globalThis.isSecureContext) {
             navigator.clipboard.writeText(value);
         }
 
@@ -642,7 +642,11 @@ jQuery(document).ready(function($) { // NOSONAR - complex.
                 hiddenInput.trigger('change');
             };
 
-            let initPermissions = initValue.split(',').filter(function(p) { return p !== ''; });
+            let initPermissions = new Set(
+                initValue
+                    .split(',')
+                    .filter(function (p) { return p !== ''; })
+            );
 
             chips.each(function() {
                 let chip = $(this);
@@ -650,7 +654,7 @@ jQuery(document).ready(function($) { // NOSONAR - complex.
                 let isActive = false;
 
                 chipPerms.forEach(function(perm) {
-                    if (initPermissions.includes(perm)) {
+                    if (initPermissions.has(perm)) {
                         isActive = true;
                     }
                 });

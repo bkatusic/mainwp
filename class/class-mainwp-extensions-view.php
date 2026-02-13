@@ -591,7 +591,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 <div class="ui card">
                     <div class="content">
                         <div class="ui mini grey right floated label"><?php esc_html_e( 'FREE', 'mainwp' ); ?></div>
-                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'advanced-uptime-monitor.png' ); ?>"></div>
+                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'advanced-uptime-monitor.png' ); ?>" alt="<?php esc_attr_e( 'Advanced Uptime Monitor', 'mainwp' ); ?>"></div>
                         <h3 class="ui header">
                             <a href="https://mainwp.com/add-on/advanced-uptime-monitor/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Advanced Uptime Monitor', 'mainwp' ); ?> →</a>
                             <div class="sub header"><?php esc_html_e( 'Real-time up time monitoring', 'mainwp' ); ?></div>
@@ -601,7 +601,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 <div class="ui card">
                     <div class="content">
                         <div class="ui mini green right floated label"><?php esc_html_e( 'PRO', 'mainwp' ); ?></div>
-                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'branding.png' ); ?>"></div>
+                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'branding.png' ); ?>" alt="<?php esc_attr_e( 'White Label', 'mainwp' ); ?>"></div>
                         <h3 class="ui header">
                             <a href="https://mainwp.com/add-on/white-label/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'White Label', 'mainwp' ); ?> →</a>
                             <div class="sub header"><?php esc_html_e( 'White label MainWP Child', 'mainwp' ); ?></div>
@@ -611,7 +611,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 <div class="ui card">
                     <div class="content">
                         <div class="ui mini green right floated label"><?php esc_html_e( 'PRO', 'mainwp' ); ?></div>
-                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'pro-reports.png' ); ?>"></div>
+                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'pro-reports.png' ); ?>" alt="<?php esc_attr_e( 'Pro Reports', 'mainwp' ); ?>"></div>
                         <h3 class="ui header">
                             <a href="https://mainwp.com/add-on/pro-reports/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Pro Reports', 'mainwp' ); ?> →</a>
                             <div class="sub header"><?php esc_html_e( 'Client reporting', 'mainwp' ); ?></div>
@@ -621,7 +621,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 <div class="ui card">
                     <div class="content">
                         <div class="ui mini grey right floated label"><?php esc_html_e( 'FREE', 'mainwp' ); ?></div>
-                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'updraftplus.png' ); ?>"></div>
+                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'updraftplus.png' ); ?>" alt="<?php esc_attr_e( 'UpdraftPlus', 'mainwp' ); ?>"></div>
                         <h3 class="ui header">
                             <a href="https://mainwp.com/add-on/updraftplus/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'UpdraftPlus', 'mainwp' ); ?> →</a>
                             <div class="sub header"><?php esc_html_e( 'UpdraftPlus backups', 'mainwp' ); ?></div>
@@ -631,7 +631,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 <div class="ui card">
                     <div class="content">
                         <div class="ui mini green right floated label"><?php esc_html_e( 'PRO', 'mainwp' ); ?></div>
-                        <div class="ui small circular image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'maintenance.png' ); ?>"></div>
+                        <div class="ui small circular image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'maintenance.png' ); ?>" alt="<?php esc_attr_e( 'Maintenance', 'mainwp' ); ?>"></div>
                         <h3 class="ui header">
                             <a href="https://mainwp.com/add-on/maintenance/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Maintenance', 'mainwp' ); ?> →</a>
                             <div class="sub header"><?php esc_html_e( 'Database optimization', 'mainwp' ); ?></div>
