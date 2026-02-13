@@ -685,7 +685,6 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
 
         if ( ! empty( $all_keys ) ) {
             $write_delete = esc_html__( 'Write & Delete', 'mainwp' ); // NOSONAR - ok.
-            $read         = esc_html__( 'Read', 'mainwp' );
             ?>
 
             <table id="mainwp-rest-api-keys-table" class="ui unstackable single linetable">
