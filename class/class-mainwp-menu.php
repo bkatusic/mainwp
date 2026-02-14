@@ -793,7 +793,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 }
                 ?>
                 <div id="mainwp-support-menu">
-                    <a id="mainwp-help-menu-item" title="<?php esc_attr_e( 'Support', 'mainwp' ); ?>" href="#">
+                    <a class="mainwp-help-menu-item-open" title="<?php esc_attr_e( 'Support', 'mainwp' ); ?>" href="#">
                         <i class="question circle outline icon"></i><br/>
                         <span class="ui small text"><?php esc_html_e( 'Support', 'mainwp' ); ?></span>
                     </a>
@@ -806,7 +806,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     </span>
                     <script>
                     jQuery(document).ready(function() {
-                        jQuery('#mainwp-help-menu-item').popup({
+                        jQuery('.mainwp-help-menu-item-open').popup({
                             popup : jQuery('.mainwp-help-popup'),
                             delay : { show: 2000 },
                             distanceAway : 10,
@@ -1077,7 +1077,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
     public static function render_mobile_menu() { // phpcs:ignore -- NOSONAR -Current complexity is the only way to achieve desired results, pull request solutions appreciated.
         $mainwp_show_language_updates = get_option( 'mainwp_show_language_updates', 1 );
         ?>
-        <div id="mainwp-main-mobile-navigation-container" class="ui top fullscreen flyout">
+        <div class="mainwp-main-mobile-navigation-container ui top fullscreen flyout">
             <div class="mainwp-nav-menu scrolling content">
                 <?php
                 /**
@@ -1090,8 +1090,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 do_action( 'before_mainwp_menu' );
                 ?>
 
-                <div id="mainwp-main-menu"  class="ui inverted vertical accordion menu">
-
+                <div id="mainwp-main-menu-mobile"  class="mainwp-main-navigation-menu test-menu ui inverted vertical accordion menu">
                     <div class="item"><i class="th left floated icon"></i><a href="admin.php?page=mainwp_tab"><?php esc_html_e( 'Overview', 'mainwp' ); ?></a></div>
                     <div class="item"><i class="globe left floated icon"></i>
                         <div class="title"><a href="admin.php?page=managesites" class=" with-sub"><?php esc_html_e( 'Sites', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
@@ -1290,7 +1289,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         <a href="<?php echo esc_html( $link['url'] ); ?>" class="ui mini basic fluid button"><i class="icon wordpress"></i> <?php echo esc_html( $link['text'] ); ?></a><?php //phpcs:ignore -- to avoid auto fix icon wordpress ?>
                     </div>
                     <div class="column">
-                        <a id="mainwp-help-menu-item" class="ui mini basic fluid button" href="#"><i class="question circle icon"></i> <?php esc_html_e( 'Quick Help', 'mainwp' ); ?></a>
+                        <a class="mainwp-help-menu-item-open ui mini basic fluid button" href="#"><i class="question circle icon"></i> <?php esc_html_e( 'Quick Help', 'mainwp' ); ?></a>
                     </div>
                     <div class="column item-wp-admin">
                         <a class="ui mini basic fluid button" href="<?php echo esc_url_raw( wp_logout_url() ); ?>"><i class="sign out icon"></i> <?php esc_html_e( 'Log Out', 'mainwp' ); ?></a>
