@@ -974,8 +974,8 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                     </div>
                 </div>
                 <div class="ui padded segment">
-                    <a style="display:none" name="createclient" current-page="qsw-add" id="bulk_add_createclient" class="ui big green basic right floated button"><?php echo esc_attr__( 'Add and Proceed to Monitoring', 'mainwp' ); ?> <i class="arrow right icon"></i></a>
-                    <a style="display:none" name="create_multi_client" current-page="qsw-add" id="bulk_add_multi_create_client" class="ui big green basic right floated button"><?php echo esc_attr__( 'Add and Proceed to Monitoring', 'mainwp' ); ?> <i class="arrow right icon"></i></a>
+                    <a style="display:none" current-page="qsw-add" id="bulk_add_createclient" class="ui big green basic right floated button"><?php echo esc_attr__( 'Add and Proceed to Monitoring', 'mainwp' ); ?> <i class="arrow right icon"></i></a>
+                    <a style="display:none" current-page="qsw-add" id="bulk_add_multi_create_client" class="ui big green basic right floated button"><?php echo esc_attr__( 'Add and Proceed to Monitoring', 'mainwp' ); ?> <i class="arrow right icon"></i></a>
                     <a href="<?php echo esc_url( $this->get_next_step_link() ); ?>" id="mainwp_qsw_add_client_continue_button" class="ui big green basic right floated button"><?php esc_html_e( 'Continue Without Creating Clients', 'mainwp' ); ?> <i class="arrow right icon"></i></a>
                     <a href="<?php echo esc_url( $this->get_back_step_link() ); ?>" class="ui big basic button"><i class="arrow left icon"></i> <?php esc_html_e( 'Back to Add Sites', 'mainwp' ); ?></a>
                 </div>
