@@ -77,7 +77,7 @@
   font-weight: 600;
 }
 
-.mainwp-ui.mainwp-custom-theme a:not(.button).grey {
+.mainwp-ui.mainwp-custom-theme.mainwp-default-dark-theme a:not(.button).grey {
   color: var(--mainwp-text-secondary) !important;
 }
 .mainwp-ui.mainwp-custom-theme a:not(.button).green {

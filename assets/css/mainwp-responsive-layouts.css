@@ -96,11 +96,6 @@
 		min-width: auto !important;
 	}
 
-	#mainwp-top-header .ui.button {
-		width: auto !important;
-		min-width: auto !important;
-	}
-
 	#mainwp-main-mobile-navigation-container .ui.button {
 		width: 100% !important;
 	}
@@ -254,9 +249,9 @@
 	.mainwp-ui [data-tooltip]:after {
 		display: none !important;
 	}
-	.mainwp-ui .mainwp-actions-bar .ui.mini.form .ui.dropdown, 
-	.mainwp-ui .mainwp-actions-bar.ui.mini.form .ui.dropdown, 
-	.mainwp-ui .mainwp-sub-header .ui.mini.form .ui.dropdown, 
+	.mainwp-ui .mainwp-actions-bar .ui.mini.form .ui.dropdown,
+	.mainwp-ui .mainwp-actions-bar.ui.mini.form .ui.dropdown,
+	.mainwp-ui .mainwp-sub-header .ui.mini.form .ui.dropdown,
 	.mainwp-ui .mainwp-sub-header.ui.mini.form .ui.dropdown,
 	.mainwp-ui .ui.dropdown {
 		width: 100% !important;

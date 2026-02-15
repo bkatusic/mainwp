@@ -74,16 +74,14 @@
 }
 .grid-stack-item > .ui-resizable-nw {
   transform: rotate(-45deg);
-}
-.grid-stack-item > .ui-resizable-se {
-  transform: rotate(-45deg);
-}
-.grid-stack-item > .ui-resizable-nw {
   cursor: nw-resize;
   width: 20px;
   height: 20px;
   top: var(--gs-item-margin-top);
   left: var(--gs-item-margin-left);
+}
+.grid-stack-item > .ui-resizable-se {
+  transform: rotate(-45deg);
 }
 .grid-stack-item > .ui-resizable-n {
   cursor: n-resize;
