@@ -111,7 +111,6 @@
 
 	#mainwp-navigation-icon {
 		margin: 0 !important;
-		width: 35px !important;
 	}
 
 	.mainwp-content-wrap {
@@ -283,12 +282,32 @@
 		width: auto !important;
 	}
 
-	#mainwp-top-header .ui.icon.button:not(#mainwp-mobile-menu-trigger) {
+	#mainwp-top-header .ui.icon.button:not(#mainwp-mobile-menu-trigger):not(#mainwp-sync-sites) {
 		display: none !important;
 	}
 
-	#mainwp-top-header .ui.icon.button#mainwp-sync-sites {
+	#mainwp-top-header .ui.icon.button#mainwp-sync-sites,
+	#mainwp-top-header #mainwp-header-layout-actions .ui.button {
 		display: inline-block !important;
+	}
+	
+	#mainwp-top-header #mainwp-sync-sites,
+	#mainwp-top-header #mainwp-header-layout-actions .ui.button {
+		margin-bottom: 0 !important;
+	}
+	#mainwp-top-header #mainwp-sync-sites .icon,
+	#mainwp-top-header #mainwp-header-layout-actions .ui.button .icon {
+		margin-right: 0 !important;
+	}
+
+	#mainwp-top-header #mainwp-header-layout-actions {
+		border: none !important;
+		padding: 0 !important;
+		margin: 0 !important;
+	}
+
+	#mainwp-top-header #mainwp-header-secondary-actions {
+		display: none !important;
 	}
 
 	.mainwp-widget .ui.icon.button {
@@ -560,7 +579,7 @@
 	/* ---  Contribution by Joris Kramer  --- */
 
 	.mainwp-ui #mainwp-top-header .ui.stackable.grid .left.floated.column {
-		display: none !important;
+		display: block !important;
 	}
 
 	.mainwp-ui #mainwp-top-header .ui.stackable.grid .right.floated.column.right.aligned {

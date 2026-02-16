@@ -919,16 +919,22 @@
   background-color: #7fb10010 !important;
 }
 .mainwp-ui.mainwp-custom-theme .ui.table > thead > tr:first-child > th:first-child {
-  border-radius: var(--area-radius) 0 0 0 !important;
+	border-radius: var(--area-radius) 0 0 0 !important;
 }
 .mainwp-ui.mainwp-custom-theme .ui.table > thead > tr:last-child > th:last-child {
-  border-radius: 0 var(--area-radius) 0 0 !important;
+	border-radius: 0 var(--area-radius) 0 0 !important;
+}
+.mainwp-ui.mainwp-custom-theme .ui.table > thead > tr:first-child > th:first-child:last-child {
+	border-radius: var(--area-radius) var(--area-radius) 0 0 !important;
 }
 .mainwp-ui.mainwp-custom-theme .ui.table > tbody > tr:last-child > td:first-child {
-  border-radius: 0 0 0 var(--area-radius) !important;
+	border-radius: 0 0 0 var(--area-radius) !important;
 }
 .mainwp-ui.mainwp-custom-theme .ui.table > tbody > tr:last-child > td:last-child {
-  border-radius: 0 0 var(--area-radius) 0 !important;
+	border-radius: 0 0 var(--area-radius) 0 !important;
+}
+.mainwp-ui.mainwp-custom-theme .ui.table > tbody > tr:last-child > td:first-child:last-child {
+	border-radius: 0 0 var(--area-radius) var(--area-radius) !important;
 }
 
 .mainwp-ui table.dataTable thead tr th.check-column {
@@ -942,6 +948,11 @@
 }
 .mainwp-ui table.dataTable tbody tr td.check-column .ui.checkbox {
   max-width: 17px !important;
+}
+
+.mainwp-ui.mainwp-custom-theme table.dataTable tr th:last-child,
+.mainwp-ui.mainwp-custom-theme table.dataTable tr td:last-child {
+  border-right: none !important;
 }
 
 .mainwp-ui.mainwp-custom-theme .ui.ui.selectable.table > tbody > tr:hover,
@@ -1201,7 +1212,7 @@
 .mainwp-ui.mainwp-custom-theme #mainwp-second-level-navigation {
   background-color: var(--mainwp-element-background-secondary) !important;
   border-left: 1px solid var(--mainwp-element-background-secondary);
-  border-right: 1px solid var(--mainwp-element-background-secondary);
+  border-right: 1px solid var(--mainwp-element-background);
   box-shadow: none !important;
   -webkit-box-shadow: none !important;
 }
@@ -1618,13 +1629,12 @@ body.mainwp-ui.mainwp-custom-theme,
 .mainwp-ui.mainwp-custom-theme.mainwp-individual-site-view .mainwp-sub-header {
   margin-top: 0em !important;
 }
-
-
-
+.mainwp-ui.mainwp-custom-theme #mainwp-themes-content .ui.secondary.segment,
 .mainwp-ui.mainwp-custom-theme #mainwp-plugins-content .ui.secondary.segment {
-  background-color: var(--mainwp-base-background-secondary) !important;
+  background-color: var(--mainwp-element-background) !important;
   padding: var(--mainwp-area-padding);
   margin-bottom: 0px;
+  border-bottom: 1px solid var(--mainwp-border) !important;
 }
 
 /* Invert Dimmer and Loader */
@@ -1962,6 +1972,10 @@ body.mainwp-ui.mainwp-custom-theme,
 .mainwp-ui.mainwp-custom-theme table.dataTable tr th:last-child,
 .mainwp-ui.mainwp-custom-themetable.dataTable tr td:last-child {
     border-right: none !important;
+}
+
+.mainwp-ui.mainwp-custom-theme div.dt-container.dt-empty-footer tbody>tr:last-child>* {
+  border-bottom: none !important;
 }
 
 /* WP Widget */

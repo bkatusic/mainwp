@@ -484,6 +484,11 @@ let mainwp_fetch_all_active_plugins = function () {
         response = response.trim();
         jQuery('#mainwp-auto-updates-plugins-content').find('.dimmer').removeClass('active');
         jQuery('#mainwp-auto-updates-plugins-table-wrapper').html(response);
+        if (jQuery('#mainwp-auto-updates-plugins-table-wrapper').find('.mainwp-empty-page-placeholder').length > 0) {
+            jQuery('#mainwp-plugin-auto-updates .mainwp-actions-bar').hide();
+        } else {
+            jQuery('#mainwp-plugin-auto-updates .mainwp-actions-bar').show();
+        }
     });
 };
 
@@ -501,6 +506,11 @@ let mainwp_fetch_all_themes = function () {
     jQuery.post(ajaxurl, data, function (response) {
         jQuery('#mainwp-auto-updates-themes-content').find('.dimmer').removeClass('active');
         jQuery('#mainwp-auto-updates-themes-table-wrapper').html(response);
+        if (jQuery('#mainwp-auto-updates-themes-table-wrapper').find('.mainwp-empty-page-placeholder').length > 0) {
+            jQuery('#mainwp-theme-auto-updates .mainwp-actions-bar').hide();
+        } else {
+            jQuery('#mainwp-theme-auto-updates .mainwp-actions-bar').show();
+        }
     });
 };
 

@@ -6,7 +6,7 @@ let userCountReceived = 0;
 
 let updateUsersBulkActionsState = function() {
     let checkedCount = jQuery('#mainwp-users-table input[name="user[]"]:checked').length;
-    let dropdown = jQuery('#mainwp-bulk-actions');
+    let dropdown = jQuery('#mainwp-manage-users #mainwp-bulk-actions');
     let applyButton = jQuery('#mainwp-do-users-bulk-actions');
     
     if (checkedCount > 0) {

@@ -423,7 +423,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 <label class="six wide column middle aligned">
                 <?php
                 MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_edit_monitor_active', (int) $mo_settings['active'], true, ( $individual ? -1 : 0 ) );
-                esc_html_e( 'Enable Uptime Monitoring', 'mainwp' );
+                esc_html_e( 'Enable uptime monitoring', 'mainwp' );
                 ?>
                 </label>
                 <?php
@@ -452,7 +452,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 <label class="six wide column middle aligned">
                 <?php
                 MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_edit_monitor_type', $mo_settings['type'], true, ( $individual ? 'useglobal' : 'http' ) );
-                esc_html_e( 'Monitor Type', 'mainwp' );
+                esc_html_e( 'Monitor type', 'mainwp' );
                 ?>
                 </label>
                 <div class="ten wide column">
@@ -496,7 +496,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 <label class="six wide column middle aligned">
                 <?php
                 MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_edit_monitor_keyword', $mo_settings['keyword'] );
-                esc_html_e( 'Keyword to Look For', 'mainwp' );
+                esc_html_e( 'Keyword to look for', 'mainwp' );
                 ?>
                 </label>
                 <div class="ten wide column" >
@@ -508,7 +508,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 <label class="six wide column middle aligned">
                 <?php
                 MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_edit_monitor_interval_hidden', (int) $mo_settings['interval'], true, ( $individual ? -1 : 60 ) );
-                esc_html_e( 'Monitor Interval (minutes)', 'mainwp' );
+                esc_html_e( 'Monitor interval (minutes)', 'mainwp' );
                 ?>
                 </label>
                 <div class="ten wide column">
@@ -540,7 +540,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
 
                 MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $show_indi );
 
-                esc_html_e( 'Down Confirmation Check', 'mainwp' );
+                esc_html_e( 'Down confirmation check', 'mainwp' );
                 ?>
                 </label>
                 <div class="ten wide column">
@@ -567,7 +567,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 <?php
                 $up_statuscodes = ! empty( $mo_settings['up_status_codes'] ) ? $mo_settings['up_status_codes'] : '';
                 MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_edit_monitor_up_status_codes', $up_statuscodes );
-                esc_html_e( 'Up HTTP Codes for HTTP Response and Uptime Monitoring', 'mainwp' );
+                esc_html_e( 'Up HTTP codes for HTTP response and uptime monitoring', 'mainwp' );
                 ?>
                 </label>
                 <div class="ten wide column">
@@ -603,18 +603,18 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 <?php
                 $show_indi = 180 !== (int) $mo_settings['retention_limits'] ? 1 : 0;
                 MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $show_indi );
-                esc_html_e( 'Monitoring Data Retention', 'mainwp' );
+                esc_html_e( 'Monitoring data retention', 'mainwp' );
                 ?>
                 </label>
                 <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Automatically remove old heartbeat monitoring data to keep the Dashboard database size under control.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
                     <select name="mainwp_edit_monitor_retention_days" id="mainwp_edit_monitor_retention_days" class="ui dropdown settings-field-value-change-handler">
                     <?php
                     $retention_options = array(
-                        0   => __( 'Keep forever (no automatic cleanup)', 'mainwp' ),
+                        0   => __( 'Keep forever', 'mainwp' ),
                         30  => __( '30 days', 'mainwp' ),
-                        90  => __( '90 days (3 months)', 'mainwp' ),
-                        180 => __( '180 days (6 months)', 'mainwp' ),
-                        365 => __( '365 days (1 year)', 'mainwp' ),
+                        90  => __( '90 days', 'mainwp' ),
+                        180 => __( '180 days', 'mainwp' ),
+                        365 => __( '365 days', 'mainwp' ),
                     );
                     foreach ( $retention_options as $val => $label ) {
                         ?>

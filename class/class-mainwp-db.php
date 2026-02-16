@@ -1960,15 +1960,18 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
                 $where .= ' AND wp.id IN (' . implode( ',', $selected_sites ) . ') ';
             }
 
-            // for searching.
-            if ( null !== $search_site && '' !== $search_site ) {
-                $like_search = '%' . $this->wpdb->esc_like( $search_site ) . '%';
-                $where      .= $this->wpdb->prepare( ' AND (wp.name LIKE %s OR wp.url LIKE %s) ', $like_search, $like_search );
-            }
-
             if ( null !== $extraWhere ) {
                 $where .= ' AND ' . $extraWhere;
             }
+        }
+
+        // Search filtering.
+        // IMPORTANT: Do NOT use wpdb->prepare() here. The $search_site variable is already escaped
+        // via $this->escape() on line 1878. Using wpdb->prepare() creates placeholder tokens that
+        // are never substituted because this method builds a SQL string for later execution, not
+        // an immediate query. Direct concatenation is safe here and matches WordPress v5 behavior.
+        if ( null !== $search_site && '' !== $search_site ) {
+            $where .= ' AND (wp.name LIKE "%' . $search_site . '%" OR wp.url LIKE "%' . $search_site . '%") ';
         }
 
         $staging_enabled = is_plugin_active( 'mainwp-staging-extension/mainwp-staging-extension.php' ) || is_plugin_active( 'mainwp-timecapsule-extension/mainwp-timecapsule-extension.php' );

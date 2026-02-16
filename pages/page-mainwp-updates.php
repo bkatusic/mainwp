@@ -2147,25 +2147,23 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
     }
 
 
-        /**
-         * Method render_updates_view_options().
-         *
-         * @param  mixed $site_view Site view.
-         * @return void
-         */
+    /**
+     * Method render_updates_view_options().
+     *
+     * @param  mixed $site_view Site view.
+     * @return void
+     */
     public static function render_updates_view_options( $site_view = '' ) {
         ?>
         <form method="post" action="" class="ui mini form" style="display:inline flow-root">
-        <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
-            <div class="inline field">
-                <select class="ui mini dropdown" onchange="mainwp_siteview_onchange(this)" id="mainwp_select_options_siteview" name="select_mainwp_options_siteview">
-                    <option value="1" class="item" <?php echo MAINWP_VIEW_PER_SITE === $site_view ? 'selected' : ''; ?>><?php esc_html_e( 'Show updates per Site', 'mainwp' ); ?></option>
-                    <option value="0" class="item" <?php echo MAINWP_VIEW_PER_PLUGIN_THEME === $site_view ? 'selected' : ''; ?>><?php esc_html_e( 'Show updates per Item', 'mainwp' ); ?></option>
-                    <option value="2" class="item" <?php echo MAINWP_VIEW_PER_GROUP === $site_view ? 'selected' : ''; ?>><?php esc_html_e( 'Show updates per Tag', 'mainwp' ); ?></option>
-                </select>
-            </div>
+            <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
+            <select class="ui mini dropdown" onchange="mainwp_siteview_onchange(this)" id="mainwp_select_options_siteview" name="select_mainwp_options_siteview">
+                <option value="1" class="item" <?php echo MAINWP_VIEW_PER_SITE === $site_view ? 'selected' : ''; ?>><?php esc_html_e( 'Show updates per Site', 'mainwp' ); ?></option>
+                <option value="0" class="item" <?php echo MAINWP_VIEW_PER_PLUGIN_THEME === $site_view ? 'selected' : ''; ?>><?php esc_html_e( 'Show updates per Item', 'mainwp' ); ?></option>
+                <option value="2" class="item" <?php echo MAINWP_VIEW_PER_GROUP === $site_view ? 'selected' : ''; ?>><?php esc_html_e( 'Show updates per Tag', 'mainwp' ); ?></option>
+            </select>
         </form>
-            <?php
+        <?php
     }
 
         /**

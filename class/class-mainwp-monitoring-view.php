@@ -40,7 +40,7 @@ class MainWP_Monitoring_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
             <label class="six wide column middle aligned">
             <?php
             MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_disableSitesHealthMonitoring', (int) $disableSitesHealthMonitoring );
-            esc_html_e( 'Enable Site Health monitoring', 'mainwp' );
+            esc_html_e( 'Enable site health monitoring', 'mainwp' );
             ?>
             </label>
             <div class="ten wide column ui toggle checkbox mainwp-checkbox-showhide-elements" hide-parent="health-monitoring">

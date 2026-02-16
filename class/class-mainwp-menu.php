@@ -1062,7 +1062,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu .content.menu.active').removeClass('active');
                     };
 
-                    jQuery('.mainwp-main-mobile-navigation-container .mainwp-main-navigation-menu').accordion();
+                    jQuery( '#mainwp-main-mobile-navigation-container .accordion.menu' ).accordion();
 
                 } );
             </script>
@@ -1093,88 +1093,90 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 <div id="mainwp-main-menu"  class="ui inverted vertical accordion menu">
 
                     <div class="item"><i class="th left floated icon"></i><a href="admin.php?page=mainwp_tab"><?php esc_html_e( 'Overview', 'mainwp' ); ?></a></div>
+                    
                     <div class="item"><i class="globe left floated icon"></i>
                         <div class="title"><a href="admin.php?page=managesites" class=" with-sub"><?php esc_html_e( 'Sites', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
                         <div class="content menu" id="mainwp-sites-mobile-menu-item">
-                                <div class="accordion item">
-                                    <div class="title"><a href="admin.php?page=managesites"><?php esc_html_e( 'Sites', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=managesites"><?php esc_html_e( 'Manage Sites', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=managesites&do=new"><?php esc_html_e( 'Add New Site', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=managesites&do=bulknew"><?php esc_html_e( 'Import Sites', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=MonitoringSites"><?php esc_html_e( 'Monitoring', 'mainwp' ); ?></a>
-                                    </div>
-                                </div>
-                                <div class="item accordion">
-                                    <div class="title"><a class="" href="admin.php?page=ManageGroups"><?php esc_html_e( 'Tags', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=managesites"><?php esc_html_e( 'Sites', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
                                 <div class="content menu">
-                                    <a class="item" href="admin.php?page=ManageGroups"><?php esc_html_e( 'Manage Tags', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=managesites"><?php esc_html_e( 'Manage Sites', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=managesites&do=new"><?php esc_html_e( 'Add New Site', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=managesites&do=bulknew"><?php esc_html_e( 'Import Sites', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=MonitoringSites"><?php esc_html_e( 'Monitoring', 'mainwp' ); ?></a>
                                 </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a class="" href="admin.php?page=ManageGroups"><?php esc_html_e( 'Tags', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                            <div class="content menu">
+                                <a class="item" href="admin.php?page=ManageGroups"><?php esc_html_e( 'Manage Tags', 'mainwp' ); ?></a>
+                            </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=UpdatesManage"><?php esc_html_e( 'Updates', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                                <div class="content menu">
+                                    <a class="item" href="admin.php?page=UpdatesManage&tab=plugins-updates"><?php esc_html_e( 'Plugin Updates', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=UpdatesManage&tab=themes-updates"><?php esc_html_e( 'Theme Updates', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=UpdatesManage&tab=wordpress-updates"><?php esc_html_e( 'WordPress Updates', 'mainwp' ); ?></a>
+                                <?php if ( $mainwp_show_language_updates ) : ?>
+                                    <a class="item" href="admin.php?page=UpdatesManage&tab=translations-updates"><?php esc_html_e( 'Translation Plugins', 'mainwp' ); ?></a>
+                                <?php endif; ?>
+                                    <a class="item" href="admin.php?page=PluginsAbandoned"><?php esc_html_e( 'Abandoned Plugins', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=ThemesAbandoned"><?php esc_html_e( 'Abandoned Themes', 'mainwp' ); ?></a>
                                 </div>
-                                <div class="item accordion">
-                                    <div class="title"><a href="admin.php?page=UpdatesManage"><?php esc_html_e( 'Updates', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=UpdatesManage&tab=plugins-updates"><?php esc_html_e( 'Plugin Updates', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=UpdatesManage&tab=themes-updates"><?php esc_html_e( 'Theme Updates', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=UpdatesManage&tab=wordpress-updates"><?php esc_html_e( 'WordPress Updates', 'mainwp' ); ?></a>
-                                    <?php if ( $mainwp_show_language_updates ) : ?>
-                                        <a class="item" href="admin.php?page=UpdatesManage&tab=translations-updates"><?php esc_html_e( 'Translation Plugins', 'mainwp' ); ?></a>
-                                    <?php endif; ?>
-                                        <a class="item" href="admin.php?page=PluginsAbandoned"><?php esc_html_e( 'Abandoned Plugins', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=ThemesAbandoned"><?php esc_html_e( 'Abandoned Themes', 'mainwp' ); ?></a>
-                                    </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=PluginsManage"><?php esc_html_e( 'Plugins', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                                <div class="content menu">
+                                    <a class="item" href="admin.php?page=PluginsManage"><?php esc_html_e( 'Manage Plugins', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=PluginsInstall"><?php esc_html_e( 'Install', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=PluginsAutoUpdate"><?php esc_html_e( 'Advanced Auto Updates', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=PluginsIgnore"><?php esc_html_e( 'Ignored Updates', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=PluginsIgnoredAbandoned"><?php esc_html_e( 'Ignored Abandoned', 'mainwp' ); ?></a>
                                 </div>
-                                <div class="item accordion">
-                                    <div class="title"><a href="admin.php?page=PluginsManage"><?php esc_html_e( 'Plugins', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=PluginsManage"><?php esc_html_e( 'Manage Plugins', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=PluginsInstall"><?php esc_html_e( 'Install', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=PluginsAutoUpdate"><?php esc_html_e( 'Advanced Auto Updates', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=PluginsIgnore"><?php esc_html_e( 'Ignored Updates', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=PluginsIgnoredAbandoned"><?php esc_html_e( 'Ignored Abandoned', 'mainwp' ); ?></a>
-                                    </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=ThemesManage"><?php esc_html_e( 'Themes', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                                <div class="content menu">
+                                    <a class="item" href="admin.php?page=ThemesManage"><?php esc_html_e( 'Manage Themes', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=ThemesInstall"><?php esc_html_e( 'Install', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=ThemesAutoUpdate"><?php esc_html_e( 'Advanced Auto Updates', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=ThemesIgnore"><?php esc_html_e( 'Ignored Updates', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=ThemesIgnoredAbandoned"><?php esc_html_e( 'Ignored Abandoned', 'mainwp' ); ?></a>
                                 </div>
-                                <div class="item accordion">
-                                    <div class="title"><a href="admin.php?page=ThemesManage"><?php esc_html_e( 'Themes', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=ThemesManage"><?php esc_html_e( 'Manage Themes', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=ThemesInstall"><?php esc_html_e( 'Install', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=ThemesAutoUpdate"><?php esc_html_e( 'Advanced Auto Updates', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=ThemesIgnore"><?php esc_html_e( 'Ignored Updates', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=ThemesIgnoredAbandoned"><?php esc_html_e( 'Ignored Abandoned', 'mainwp' ); ?></a>
-                                    </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=UserBulkManage"><?php esc_html_e( 'Users', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                                <div class="content menu">
+                                    <a class="item" href="admin.php?page=UserBulkManage"><?php esc_html_e( 'Manage Users', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=UserBulkAdd"><?php esc_html_e( 'Add New User', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=BulkImportUsers"><?php esc_html_e( 'Import Users', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=UpdateAdminPasswords"><?php esc_html_e( 'Admin Passwords', 'mainwp' ); ?></a>
                                 </div>
-                                <div class="item accordion">
-                                    <div class="title"><a href="admin.php?page=UserBulkManage"><?php esc_html_e( 'Users', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=UserBulkManage"><?php esc_html_e( 'Manage Users', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=UserBulkAdd"><?php esc_html_e( 'Add New User', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=BulkImportUsers"><?php esc_html_e( 'Import Users', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=UpdateAdminPasswords"><?php esc_html_e( 'Admin Passwords', 'mainwp' ); ?></a>
-                                    </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=PostBulkManage"><?php esc_html_e( 'Posts', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                                <div class="content menu">
+                                    <a class="item" href="admin.php?page=PostBulkManage"><?php esc_html_e( 'Manage Pages', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=PostBulkAdd"><?php esc_html_e( 'Add New Post', 'mainwp' ); ?></a>
                                 </div>
-                                <div class="item accordion">
-                                    <div class="title"><a href="admin.php?page=PostBulkManage"><?php esc_html_e( 'Posts', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=PostBulkManage"><?php esc_html_e( 'Manage Pages', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=PostBulkAdd"><?php esc_html_e( 'Add New Post', 'mainwp' ); ?></a>
-                                    </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=PageBulkManage"><?php esc_html_e( 'Pages', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                                <div class="content menu">
+                                    <a class="item" href="admin.php?page=PageBulkManage"><?php esc_html_e( 'Manage Pages', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=PageBulkAdd"><?php esc_html_e( 'Add New Page', 'mainwp' ); ?></a>
                                 </div>
-                                <div class="item accordion">
-                                    <div class="title"><a href="admin.php?page=PageBulkManage"><?php esc_html_e( 'Pages', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=PageBulkManage"><?php esc_html_e( 'Manage Pages', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=PageBulkAdd"><?php esc_html_e( 'Add New Page', 'mainwp' ); ?></a>
-                                    </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=ManageApiBackups"><?php esc_html_e( 'Backups', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                                <div class="content menu">
+                                    <a class="item" href="admin.php?page=ManageApiBackups"><?php esc_html_e( 'Backups', 'mainwp' ); ?></a>
                                 </div>
-                                <div class="item accordion">
-                                    <div class="title"><a href="admin.php?page=ManageApiBackups"><?php esc_html_e( 'Backups', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=ManageApiBackups"><?php esc_html_e( 'Backups', 'mainwp' ); ?></a>
-                                    </div>
-                                </div>
+                            </div>
                         </div>
                     </div>
+
                     <div class="item"><i class="users left floated icon"></i>
                         <div class="title"><a href="admin.php?page=ManageClients" class="with-sub"><?php esc_html_e( 'Clients', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
                         <div class="content menu">
@@ -1237,9 +1239,6 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             <a class="item" href="admin.php?page=PluginPrivacy"><?php esc_html_e( 'Plugin Privacy', 'mainwp' ); ?></a>
                         </div>
                     </div>
-                    <div class="item">
-                        <a id="mainwp-help-menu-item-mobile" title="<?php esc_attr_e( 'Help', 'mainwp' ); ?>" class="item" href="#" style="opacity:0.3;"><?php esc_html_e( 'Quick Help', 'mainwp' ); ?></a>
-                    </div>
                 </div>
                 <?php
                 /**
@@ -1287,10 +1286,10 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     ?>
                 <div class="ui three column grid">
                     <div class="column">
-                        <a href="<?php echo esc_html( $link['url'] ); ?>" class="ui mini basic fluid button"><i class="icon wordpress"></i> <?php echo esc_html( $link['text'] ); ?></a><?php //phpcs:ignore -- to avoid auto fix icon wordpress ?>
+                        <a href="<?php echo esc_html( $link['url'] ); ?>" class="ui mini basic fluid button small text"><i class="icon wordpress"></i> <?php echo esc_html( $link['text'] ); ?></a><?php //phpcs:ignore -- to avoid auto fix icon wordpress ?>
                     </div>
                     <div class="column">
-                        <a id="mainwp-help-menu-item" class="ui mini basic fluid button" href="#"><i class="question circle icon"></i> <?php esc_html_e( 'Quick Help', 'mainwp' ); ?></a>
+                        <a id="mainwp-help-menu-item" class="ui mini basic fluid button" href="#"><i class="question circle icon"></i> <?php esc_html_e( 'Help', 'mainwp' ); ?></a>
                     </div>
                     <div class="column item-wp-admin">
                         <a class="ui mini basic fluid button" href="<?php echo esc_url_raw( wp_logout_url() ); ?>"><i class="sign out icon"></i> <?php esc_html_e( 'Log Out', 'mainwp' ); ?></a>
