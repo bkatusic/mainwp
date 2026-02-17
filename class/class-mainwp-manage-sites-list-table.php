@@ -687,7 +687,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                 <a class="ui button basic <?php echo 'table' === $siteViewMode ? 'green' : ''; ?> icon" <?php echo 'table' === $siteViewMode ? 'style="pointer-events:none"' : ''; ?> href="admin.php?page=managesites&viewmode=table&modenonce=<?php echo esc_html( $nonce ); ?>">
                     <i class="bars icon"></i>
                 </a>
-                <a class="ui button basic <?php echo 'grid' === $siteViewMode ? 'green' : ''; ?> icon" <?php echo 'table' === $siteViewMode ? 'style="pointer-events:none"' : ''; ?> href="admin.php?page=managesites&viewmode=grid&modenonce=<?php echo esc_html( $nonce ); ?>">
+                <a class="ui button basic <?php echo 'grid' === $siteViewMode ? 'green' : ''; ?> icon" <?php echo 'grid' === $siteViewMode ? 'style="pointer-events:none"' : ''; ?> href="admin.php?page=managesites&viewmode=grid&modenonce=<?php echo esc_html( $nonce ); ?>">
                     <i class="grid layout icon"></i>
                 </a>
             </div>

@@ -2496,19 +2496,22 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
              */
             do_action( 'mainwp_themes_before_ignored_updates', $ignoredThemes, $websites );
             ?>
-            <?php if ( $ignoredThemes ) : ?>
+            <?php if ( ! empty( $ignoredThemes ) ) : ?>
             <h3 class="ui header">
                 <?php esc_html_e( 'Globally Ignored Themes', 'mainwp' ); ?>
                 <div class="sub header"><?php esc_html_e( 'These are themes you have told your MainWP Dashboard to ignore updates on global level and not notify you about pending updates.', 'mainwp' ); ?></div>
             </h3>
             <?php static::render_global_ignored( $ignoredThemes, $decodedIgnoredThemes ); ?>
             <div class="ui hidden divider"></div>
+            <?php endif; ?>
+            <?php if ( $cnt > 0 ) : ?>
             <h3 class="ui header">
                 <?php esc_html_e( 'Per Site Ignored Themes', 'mainwp' ); ?>
                 <div class="sub header"><?php esc_html_e( 'These are themes you have told your MainWP Dashboard to ignore updates per site level and not notify you about pending updates.', 'mainwp' ); ?></div>
             </h3>
             <?php static::render_sites_ignored( $cnt, $websites ); ?>
-            <?php else : ?>
+            <?php endif; ?>
+            <?php if ( empty( $ignoredThemes ) && 0 === $cnt ) : ?>
                 <?php MainWP_UI::render_empty_page_placeholder( __( 'No Ignored Updates', 'mainwp' ), __( 'All theme updates are being tracked. When you choose to ignore updates for a specific theme, they will appear here.', 'mainwp' ), '<em data-emoji=":compass:" class="big"></em>' ); ?>
             <?php endif; ?>
         
@@ -2768,19 +2771,22 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
              */
             do_action( 'mainwp_themes_before_ignored_abandoned', $ignoredThemes, $websites );
             ?>
-            <?php if ( $ignoredThemes ) : ?>
+            <?php if ( ! empty( $ignoredThemes ) ) : ?>
             <h3 class="ui header">
                 <?php esc_html_e( 'Globally Ignored Abandoned Themes', 'mainwp' ); ?>
                 <div class="sub header"><?php esc_html_e( 'These are themes you have told your MainWP Dashboard to ignore on global level even though they have passed your Abandoned Themes Tolerance date', 'mainwp' ); ?></div>
             </h3>
             <?php static::render_global_ignored_abandoned( $ignoredThemes, $decodedIgnoredThemes ); ?>
             <div class="ui hidden divider"></div>
+            <?php endif; ?>
+            <?php if ( $cnt > 0 ) : ?>
             <h3 class="ui header">
                 <?php esc_html_e( 'Per Site Ignored Abandoned Themes', 'mainwp' ); ?>
                 <div class="sub header"><?php esc_html_e( 'These are themes you have told your MainWP Dashboard to ignore per site level even though they have passed your Abandoned Theme Tolerance date', 'mainwp' ); ?></div>
             </h3>
             <?php static::render_sites_ignored_abandoned( $cnt, $websites ); ?>
-            <?php else : ?>
+            <?php endif; ?>
+            <?php if ( empty( $ignoredThemes ) && 0 === $cnt ) : ?>
                 <?php MainWP_UI::render_empty_page_placeholder( __( 'No Ignored Updates', 'mainwp' ), __( 'All theme updates are being tracked. When you choose to ignore updates for a specific theme, they will appear here.', 'mainwp' ), '<em data-emoji=":compass:" class="big"></em>' ); ?>
             <?php endif; ?>
             <?php

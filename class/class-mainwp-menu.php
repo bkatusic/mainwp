@@ -1157,7 +1157,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             <div class="item">
                                 <div class="title"><a href="admin.php?page=PostBulkManage"><?php esc_html_e( 'Posts', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
                                 <div class="content menu">
-                                    <a class="item" href="admin.php?page=PostBulkManage"><?php esc_html_e( 'Manage Pages', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=PostBulkManage"><?php esc_html_e( 'Manage Posts', 'mainwp' ); ?></a>
                                     <a class="item" href="admin.php?page=PostBulkAdd"><?php esc_html_e( 'Add New Post', 'mainwp' ); ?></a>
                                 </div>
                             </div>
@@ -1286,7 +1286,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     ?>
                 <div class="ui three column grid">
                     <div class="column">
-                        <a href="<?php echo esc_html( $link['url'] ); ?>" class="ui mini basic fluid button small text"><i class="icon wordpress"></i> <?php echo esc_html( $link['text'] ); ?></a><?php //phpcs:ignore -- to avoid auto fix icon wordpress ?>
+                        <a href="<?php echo esc_url( $link['url'] ); ?>" class="ui mini basic fluid button small text"><i class="icon wordpress"></i> <?php echo esc_html( $link['text'] ); ?></a><?php //phpcs:ignore -- to avoid auto fix icon wordpress ?>
                     </div>
                     <div class="column">
                         <a id="mainwp-help-menu-item" class="ui mini basic fluid button" href="#"><i class="question circle icon"></i> <?php esc_html_e( 'Help', 'mainwp' ); ?></a>

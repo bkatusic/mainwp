@@ -1209,14 +1209,14 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                         type="submit"
                         name="select_mainwp_options_plugintheme_view"
                         value="0"
-                        class="ui basic <?php echo MAINWP_VIEW_PER_PLUGIN_THEME === (int) $view_mode ? 'green' : ''; ?> button">
+                        class="ui basic <?php echo esc_attr( MAINWP_VIEW_PER_PLUGIN_THEME === (int) $view_mode ? 'green' : '' ); ?> button">
                         <?php echo esc_html( 'plugin' === $which ? esc_html__( 'Show Plugins per Item', 'mainwp' ) : esc_html__( 'Show Themes per Item', 'mainwp' ) ); ?>
                     </button>
                     <button
                         type="submit"
                         name="select_mainwp_options_plugintheme_view"
                         value="1"
-                        class="ui basic <?php echo MAINWP_VIEW_PER_SITE === (int) $view_mode ? 'green' : ''; ?> button">
+                        class="ui basic <?php echo esc_attr( MAINWP_VIEW_PER_SITE === (int) $view_mode ? 'green' : '' ); ?> button">
                         <?php echo esc_html( 'plugin' === $which ? esc_html__( 'Show Plugins per Site', 'mainwp' ) : esc_html__( 'Show Themes per Site', 'mainwp' ) ); ?>
                     </button>
                 </div>
@@ -2638,19 +2638,22 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
              */
             do_action( 'mainwp_plugins_before_ignored_updates', $ignoredPlugins, $websites );
             ?>
-            <?php if ( $ignoredPlugins ) : ?>
+            <?php if ( ! empty( $ignoredPlugins ) ) : ?>
             <h3 class="ui header">
                 <?php esc_html_e( 'Globally Ignored Plugins', 'mainwp' ); ?>
                 <div class="sub header"><?php esc_html_e( 'These are plugins you have told your MainWP Dashboard to ignore updates on global level and not notify you about pending updates.', 'mainwp' ); ?></div>
             </h3>
             <?php static::render_global_ignored( $ignoredPlugins, $decodedIgnoredPlugins ); ?>
             <div class="ui hidden divider"></div>
+            <?php endif; ?>
+            <?php if ( $cnt > 0 ) : ?>
             <h3 class="ui header">
                 <?php esc_html_e( 'Per Site Ignored Plugins', 'mainwp' ); ?>
                 <div class="sub header"><?php esc_html_e( 'These are plugins you have told your MainWP Dashboard to ignore updates per site level and not notify you about pending updates.', 'mainwp' ); ?></div>
             </h3>
             <?php static::render_sites_ignored( $cnt, $websites ); ?>
-            <?php else : ?>
+            <?php endif; ?>
+            <?php if ( empty( $ignoredPlugins ) && 0 === $cnt ) : ?>
                 <?php MainWP_UI::render_empty_page_placeholder( __( 'No Ignored Updates', 'mainwp' ), __( 'All plugin updates are being tracked. When you choose to ignore updates for a specific plugin, they will appear here.', 'mainwp' ), '<em data-emoji=":compass:" class="big"></em>' ); ?>
             <?php endif; ?>
             <?php
@@ -2928,19 +2931,22 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
              */
             do_action( 'mainwp_plugins_before_ignored_abandoned', $ignoredPlugins, $websites );
             ?>
-            <?php if ( $ignoredPlugins ) : ?>
+            <?php if ( ! empty( $ignoredPlugins ) ) : ?>
             <h3 class="ui header">
                 <?php esc_html_e( 'Globally Ignored Abandoned Plugins', 'mainwp' ); ?>
                 <div class="sub header"><?php esc_html_e( 'These are plugins you have told your MainWP Dashboard to ignore on global level even though they have passed your Abandoned Plugin Tolerance date', 'mainwp' ); ?></div>
             </h3>
             <?php static::render_global_ignored_abandoned( $ignoredPlugins, $decodedIgnoredPlugins ); ?>
             <div class="ui hidden divider"></div>
+            <?php endif; ?>
+            <?php if ( $cnt > 0 ) : ?>
             <h3 class="ui header">
                 <?php esc_html_e( 'Per Site Ignored Abandoned Plugins', 'mainwp' ); ?>
                 <div class="sub header"><?php esc_html_e( 'These are plugins you have told your MainWP Dashboard to ignore per site level even though they have passed your Abandoned Plugin Tolerance date', 'mainwp' ); ?></div>
             </h3>
             <?php static::render_sites_ignored_abandoned( $cnt, $websites ); ?>
-            <?php else : ?>
+            <?php endif; ?>
+            <?php if ( empty( $ignoredPlugins ) && 0 === $cnt ) : ?>
                 <?php MainWP_UI::render_empty_page_placeholder( __( 'No Ignored Abandoned Plugins', 'mainwp' ), __( 'All plugins are being monitored for abandonment. When you choose to ignore the abandoned status for a specific plugin, it will appear here.', 'mainwp' ), '<em data-emoji=":compass:" class="big"></em>' ); ?>
             <?php endif; ?>
             <?php
