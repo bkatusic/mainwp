@@ -1452,7 +1452,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                     <?php if ( $site_sync_outdated ) : ?>
                         <span class="ui red empty circular looping pulsating transition label" style="position: absolute; top: -4px; right: -4px;"></span>
                     <?php endif; ?>
-                    <i class="sync alternate icon"></i> <?php echo esc_html__( 'Sync', 'mainwp' ); ?>
+                    <i class="sync alternate icon"></i> <span class="mainwp-768-hide"><?php echo esc_html__( 'Sync', 'mainwp'); ?></span>
                 </a>
             <?php endif; ?>
             <?php
@@ -1480,7 +1480,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                     <?php if ( $sync_outdated ) : ?>
                     <span class="ui red empty circular looping pulsating transition label" style="position: absolute; top: -4px; right: -4px;"></span>
                 <?php endif; ?>
-                <i class="sync alternate icon"></i> <?php echo esc_html__( 'Sync', 'mainwp' ); ?>
+                <i class="sync alternate icon"></i> <span class="mainwp-768-hide"><?php echo esc_html__( 'Sync', 'mainwp'); ?></span>
             </a>
         <?php endif; ?>
 
@@ -1506,7 +1506,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
             </span>
         <?php endif; ?>
 
-        <span id="mainwp-header-secondary-actions">
+        <span id="mainwp-header-secondary-actions" class="mainwp-768-hide">
             <?php if ( ( 'mainwp_tab' === $page ) || isset( $_GET['dashboard'] ) || in_array( $page, $sidebar_pages ) ) : // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended ?>
             <a id="mainwp-screen-options-button" class="ui icon button" onclick="jQuery( '#mainwp-overview-screen-options-modal' ).modal({allowMultiple:true}).modal( 'show' ); return false;" data-inverted="" data-position="bottom right" href="#" aria-label="<?php esc_attr_e( 'Page Settings', 'mainwp' ); ?>" data-tooltip="<?php esc_html_e( 'Page Settings', 'mainwp' ); ?>">
                 <i class="cog icon"></i>
@@ -1866,12 +1866,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
         if ( $selected_widget_layout ) {
             // to support saving selected layout.
             ?>
-            <input type="hidden" id="mainwp-widgets-selected-layout" layout-name="<?php echo esc_attr( $selected_layout['name'] ); ?>" layout-idx="<?php echo esc_attr( $layid ); ?>" >
-            <script type="text/javascript">
-                jQuery( document ).ready( function( $ ) {
-                    mainwp_overview_gridstack_save_layout(<?php echo (int) $client_id; ?>);
-                } );
-            </script>
+            <input type="hidden" id="mainwp-widgets-selected-layout" layout-name="<?php echo esc_attr( $selected_layout['name'] ); ?>" layout-idx="<?php echo esc_attr( $layid ); ?>" data-save-on-load="true" >
             <?php
         }
         ?>
@@ -1917,8 +1912,19 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 // $layout['h'] = 4;
                 // }
 
-                $layout_attrs_escaped  = ' gs-y="' . ( isset( $layout['y'] ) && -1 !== (int) ( $layout['y'] ) ? esc_attr( $layout['y'] ) : '' ) . '" gs-x="' . ( isset( $layout['x'] ) && - 1 !== (int) $layout['x'] ? esc_attr( $layout['x'] ) : '' ) . '" ';
-                $layout_attrs_escaped .= ' gs-w="' . ( isset( $layout['w'] ) ? esc_attr( $layout['w'] ) : '' ) . '" gs-h="' . ( isset( $layout['h'] ) ? esc_attr( $layout['h'] ) : '' ) . '" ';
+                $layout_attrs_escaped = '';
+                if ( isset( $layout['x'] ) && (int) $layout['x'] >= 0 ) {
+                    $layout_attrs_escaped .= ' gs-x="' . esc_attr( $layout['x'] ) . '"';
+                }
+                if ( isset( $layout['y'] ) && (int) $layout['y'] >= 0 ) {
+                    $layout_attrs_escaped .= ' gs-y="' . esc_attr( $layout['y'] ) . '"';
+                }
+                if ( isset( $layout['w'] ) && (int) $layout['w'] > 0 ) {
+                    $layout_attrs_escaped .= ' gs-w="' . esc_attr( $layout['w'] ) . '"';
+                }
+                if ( isset( $layout['h'] ) && (int) $layout['h'] > 0 ) {
+                    $layout_attrs_escaped .= ' gs-h="' . esc_attr( $layout['h'] ) . '"';
+                }
 
                 echo '<div id="widget-' . esc_html( $box['id'] ) . '" class="grid-stack-item" ' . $layout_attrs_escaped . '>' . "\n"; //phpcs:ignore -- escaped.
                     echo '<div class="grid-stack-item-content ui segment mainwp-widget">' . "\n";
@@ -1934,32 +1940,37 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 let page_sortablewidgets = '<?php echo esc_js( $page ); ?>';
                 let page_widget = '<?php echo esc_js( $page_widget ); ?>';
                 jQuery( document ).ready( function( $ ) {
-                    let wgIds = [];
-                    jQuery( ".mainwp-widget" ).each( function () {
-                        wgIds.push( jQuery( this ).attr('id') );
-                    } );
-                    let gsOpts = {
-                        auto: true,
-                        cellHeight: '1rem',
-                        float: false,
-                        resizable: {
-                            handles: 'e,se,s,sw,w'
-                        },
-                        margin: '1rem',
-                        itemClass: 'grid-stack-item',
-                        handleClass: 'handle-drag',
-                        columnOpts: {
-                            breakpointForWindow: true,  // test window vs grid size
-                            breakpoints: [{w:768, c:1}],
-                        },
-                    }
-
-                    let grid = GridStack.init(gsOpts);
-                    jQuery('#mainwp-widgets-placeholder').dimmer('hide');
-                    grid.on('change', function() {
-                        mainwp_overview_gridstack_save_layout(<?php echo (int) $client_id; ?>);
-                    });
-                });
+            let wgIds = [];
+            jQuery( ".mainwp-widget" ).each( function () {
+                wgIds.push( jQuery( this ).attr('id') );
+            } );
+            let gsOpts = {
+                auto: true,
+                cellHeight: '1rem',
+                float: false,
+                resizable: {
+                    handles: 'e,se,s,sw,w'
+                },
+                margin: '1rem',
+                itemClass: 'grid-stack-item',
+                handleClass: 'handle-drag',
+                columnOpts: {
+                    breakpointForWindow: true,  // test window vs grid size
+                    breakpoints: [{w:768, c:1}],
+                },
+            }
+            let grid = GridStack.init(gsOpts);
+            
+            grid.on('change', function() {
+                mainwp_overview_gridstack_save_layout(<?php echo (int) $client_id; ?>, grid);
+            });
+            
+            if (jQuery('#mainwp-widgets-selected-layout[data-save-on-load="true"]').length) {
+                mainwp_overview_gridstack_save_layout(<?php echo (int) $client_id; ?>, grid);
+            }
+            
+            jQuery('#mainwp-widgets-placeholder').dimmer('hide');
+        });
         </script>
         <?php
     }

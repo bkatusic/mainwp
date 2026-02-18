@@ -1179,7 +1179,7 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                         <label>
                             <?php
                             MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_setup_enableUptimeMonitoring', (int) $glo_active, true, 0 );
-                            esc_html_e( 'Enable Uptime Monitoring', 'mainwp' );
+                            esc_html_e( 'Enable uptime monitoring', 'mainwp' );
                             ?>
                         </label>
                         <div class="ui hidden divider"></div>
@@ -1192,7 +1192,7 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                         <label>
                             <?php
                             MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_setup_monitor_interval_hidden', (int) $global_settings['interval'], true, 60 );
-                            esc_html_e( 'Monitor Interval (minutes)', 'mainwp' );
+                            esc_html_e( 'Monitor interval (minutes)', 'mainwp' );
                             ?>
                         </label>
                         <div class="ui hidden divider"></div>
@@ -1210,7 +1210,7 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                         <label>
                             <?php
                             MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_disableSitesHealthMonitoring', (int) $disableSitesHealthMonitoring );
-                            esc_html_e( 'Enable Site Health monitoring', 'mainwp' );
+                            esc_html_e( 'Enable site health monitoring', 'mainwp' );
                             ?>
                         </label>
                         <div class="ui hidden divider"></div>

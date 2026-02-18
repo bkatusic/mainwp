@@ -879,6 +879,7 @@ class MainWP_Monitoring_Sites_List_Table extends MainWP_Manage_Sites_List_Table 
                         "drawCallback": function( settings ) {
                             this.api().tables().body().to$().attr( 'id', 'mainwp-manage-sites-body-table' );
                             _init_uptime_status_bar_popup_tooltip();
+                            updateMonitorsBulkActionsState();
                         },
                         rowCallback: function (row, data) {
                             jQuery( row ).addClass(data.rowClass);
@@ -917,12 +918,14 @@ class MainWP_Monitoring_Sites_List_Table extends MainWP_Manage_Sites_List_Table 
                             dt.rows(indexes)
                             .nodes()
                             .to$().find('td.check-column .ui.checkbox' ).checkbox('set checked');
+                            updateMonitorsBulkActionsState();
                         }
                     }).on('deselect', function (e, dt, type, indexes) {
                         if( 'row' == type ){
                             dt.rows(indexes)
                             .nodes()
                             .to$().find('td.check-column .ui.checkbox' ).checkbox('set unchecked');
+                            updateMonitorsBulkActionsState();
                         }
                     }).on( 'columns-reordered', function () {
                         setTimeout(() => {
@@ -1528,7 +1531,7 @@ class MainWP_Monitoring_Sites_List_Table extends MainWP_Manage_Sites_List_Table 
             <a href="<?php echo 'admin.php?page=managesites&dashboard=' . intval( $website['id'] ); ?>"><?php echo esc_html( stripslashes( $website['name'] ) ); ?></a><i class="ui active inline loader tiny" style="display:none"></i>
             <span id="site-status-<?php echo esc_attr( $mo_st_id ); ?>" class="status hidden"></span>
             <br/>
-            <span class="ui small text"><a href="<?php echo esc_url( $website['url'] ); ?>" class="mainwp-may-hide-referrer open_site_url" target="_blank"><?php echo esc_html( MainWP_Utility::get_nice_url( $website['url'] ) ); ?></a></span>
+            <span class="ui small text"><a href="<?php echo esc_url( $website['url'] ); ?>" class="mainwp-may-hide-referrer open_site_url ui grey text" target="_blank"><?php echo esc_html( MainWP_Utility::get_nice_url( $website['url'] ) ); ?></a></span>
             <?php
         } else {
             $subpage   = $website['url'] . $website['suburl'];
@@ -1537,7 +1540,7 @@ class MainWP_Monitoring_Sites_List_Table extends MainWP_Manage_Sites_List_Table 
             <a href="admin.php?page=managesites&monitor_wpid=<?php echo intval( $website['id'] ); ?>&monitor_id=<?php echo intval( $website['monitor_id'] ); ?>"><?php echo esc_html( $subpage ); ?></a><i class="ui active inline loader tiny" style="display:none"></i>
             <span id="site-status-<?php echo esc_attr( $sub_st_id ); ?>" class="status hidden"></span>
             <br/>
-            <span class="ui small text"><a href="<?php echo esc_url( $subpage ); ?>" class="mainwp-may-hide-referrer open_site_url" target="_blank"><?php echo esc_html( MainWP_Utility::get_nice_url( $subpage ) ); ?></a></span>
+            <span class="ui small text"><a href="<?php echo esc_url( $subpage ); ?>" class="mainwp-may-hide-referrer open_site_url ui grey text" target="_blank"><?php echo esc_html( MainWP_Utility::get_nice_url( $subpage ) ); ?></a></span>
         <?php } ?>
         <?php
     }

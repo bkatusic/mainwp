@@ -469,7 +469,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     </div>
                 </div>
                 <div id="mainwp-loading-users-row" style="display: none;">
-                    <div class="ui active dimmer">
+                    <div class="ui active page dimmer">
                         <div class="ui double text loader">
                             <?php esc_html_e( 'Loading...', 'mainwp' ); ?>
                             <span id="mainwp_users_loading_info" class="mainwp-grabbing-info-note"><br /><?php esc_html_e( 'Automatically refreshing to get up to date information.', 'mainwp' ); ?></span>
@@ -486,7 +486,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-password-policy-feature-info-message' ) ) : ?>
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-password-policy-feature-info-message"></i>
-                            <div><?php esc_html_e( 'MainWP shows the Last password change and Status for each user. WordPress doesn’t store a reliable password-change date by default, so tracking starts after this version of MainWP Child is installed/updated. Until a user changes their password, the date may appear as Unknown.', 'mainwp' ); ?></div><br/>
+                            <div><?php esc_html_e( 'MainWP shows the Last password change and Status for each user. WordPress doesn\'t store a reliable password-change date by default, so tracking starts after this version of MainWP Child is installed/updated. Until a user changes their password, the date may appear as Unknown.', 'mainwp' ); ?></div><br/>
                             <div><?php esc_html_e( 'If your password policy is set to Never, MainWP will still record password changes, but no due/overdue notices are shown and status may remain OK/Disabled. When a policy is enabled, users with an Unknown date can still become Due/Overdue based on no password change recorded since the policy was enabled.', 'mainwp' ); ?></div>
                         </div>
                     <?php endif; ?>
@@ -834,7 +834,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      */
     public static function render_table( $cached = true, $role = '', $groups = '', $sites = '', $search = null, $clients = '' ) {
 
-        $has_cached_results = $cached && isset( $_SESSION['MainWPUserSearch'] ) && ! empty( $_SESSION['MainWPUserSearch'] );
+        $has_cached_results = $cached && isset( $_SESSION['MainWPUsersSearch'] ) && ! empty( $_SESSION['MainWPUsersSearch'] );
 
         /**
          * Action: mainwp_before_users_table
@@ -868,6 +868,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             if ( $cached ) {
                 MainWP_Cache::echo_body( 'Users' );
             } else {
+                MainWP_Cache::init_cache( 'Users' );
                 static::render_table_body( $role, $groups, $sites, $search, $clients );
             }
             ?>
@@ -1030,8 +1031,6 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      * @uses \MainWP\Dashboard\MainWP_Utility::map_site()
      */
     public static function render_table_body( $role = '', $groups = '', $sites = '', $search = '', $clients = '' ) { // phpcs:ignore -- NOSONAR - current complexity required to achieve desired results. Pull request solutions appreciated.
-        MainWP_Cache::init_cache( 'Users' );
-
         $output         = new \stdClass();
         $output->errors = array();
         $output->users  = 0;
@@ -1201,7 +1200,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             array(
                 'count'   => $output->users,
                 'keyword' => $search,
-                'status'  => ( isset( $_POST['role'] ) ? sanitize_text_field( wp_unslash( $_POST['role'] ) ) : 'administrator' ), // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+                'status'  => $role,
                 'sites'   => '' !== $sites ? $sites : '',
                 'groups'  => '' !== $groups ? $groups : '',
                 'clients' => ( '' !== $clients ) ? $clients : '',

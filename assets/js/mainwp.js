@@ -5051,25 +5051,33 @@ jQuery(function ($) {
 
 });
 
-let mainwp_overview_gridstack_save_layout = function (item_id) {
+let mainwp_overview_gridstack_save_layout = function (item_id, grid) {
+
+    if (!grid || !grid.engine || !grid.engine.nodes) {
+        return;
+    }
 
     let orders = [];
     let wgIds = [];
 
-    const $items = document.querySelectorAll('.grid-stack-item');
-
-    $items.forEach(function (item) {
-        let obj = {};
-        obj["x"] = item.getAttribute('gs-x');
-        obj["y"] = item.getAttribute('gs-y');
-        obj["w"] = item.getAttribute('gs-w');
-        obj["h"] = item.getAttribute('gs-h');
+    grid.engine.nodes.forEach(function (node) {
+        if (!node.el || !node.el.id) {
+            return;
+        }
+        
+        let obj = {
+            "x": node.x !== undefined ? node.x : 0,
+            "y": node.y !== undefined ? node.y : 0,
+            "w": node.w !== undefined ? node.w : 4,
+            "h": node.h !== undefined ? node.h : 4
+        };
         orders.push(obj);
-        wgIds.push(item.id);
+        wgIds.push(node.el.id);
     });
 
-    console.log(orders);
-    console.log(wgIds);
+    if (wgIds.length === 0) {
+        return;
+    }
 
     let postVars = {
         action: 'mainwp_widgets_order',
@@ -5079,8 +5087,7 @@ let mainwp_overview_gridstack_save_layout = function (item_id) {
         item_id: item_id,
         page_widget: page_widget
     };
-    jQuery.post(ajaxurl, mainwp_secure_data(postVars), function () {
-    });
+    jQuery.post(ajaxurl, mainwp_secure_data(postVars), function () {});
 }
 
 window.mainwp_init_ui_calendar = ($selectors) => {

@@ -1092,7 +1092,7 @@ let mainwp_common_show_edit_widgets_layout_modal = function (loadCallback) {
 /**
  * Save widget layout configuration.
  *
- * Collects grid stack item positions and sizes, then saves the layout via AJAX.
+ * Collects grid stack item positions and sizes from GridStack engine, then saves the layout via AJAX.
  *
  * @param {string} itemClass - CSS selector for grid items (e.g., '.grid-stack-item').
  * @param {Object} data - Data object containing layout metadata (name, seg_id, settings_slug).
@@ -1103,21 +1103,36 @@ let mainwp_common_ui_widgets_save_layout = function (itemClass, data, callBack) 
     let orders = [];
     let wgIds = [];
 
-    const $items = document.querySelectorAll(itemClass);
-
-    if ($items.length == 0) {
+    const gridElement = document.querySelector('.grid-stack');
+    
+    if (!gridElement) {
         return;
     }
 
-    $items.forEach(function (item) {
-        let obj = {};
-        obj["x"] = item.getAttribute('gs-x');
-        obj["y"] = item.getAttribute('gs-y');
-        obj["w"] = item.getAttribute('gs-w');
-        obj["h"] = item.getAttribute('gs-h');
+    const grid = gridElement.gridstack;
+    
+    if (!grid || !grid.engine || !grid.engine.nodes) {
+        return;
+    }
+
+    grid.engine.nodes.forEach(function (node) {
+        if (!node.el || !node.el.id) {
+            return;
+        }
+        
+        let obj = {
+            "x": node.x !== undefined ? node.x : 0,
+            "y": node.y !== undefined ? node.y : 0,
+            "w": node.w !== undefined ? node.w : 4,
+            "h": node.h !== undefined ? node.h : 4
+        };
         orders.push(obj);
-        wgIds.push(item.id);
+        wgIds.push(node.el.id);
     });
+
+    if (wgIds.length === 0) {
+        return;
+    }
 
     data.action = 'mainwp_ui_save_widgets_layout';
     data.order = orders;

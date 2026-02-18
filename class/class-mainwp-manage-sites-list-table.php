@@ -684,15 +684,15 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
         ?>
         <span data-tooltip="<?php esc_html_e( 'Switch between Table or Grid view.', 'mainwp' ); ?>" data-position="bottom right" data-inverted="">
             <div class="ui mini buttons view-mode-manage-site">
-                <a class="ui button basic <?php echo 'table' === $siteViewMode ? 'disabled' : ''; ?> icon" href="admin.php?page=managesites&viewmode=table&modenonce=<?php echo esc_html( $nonce ); ?>">
+                <a class="ui button basic <?php echo 'table' === $siteViewMode ? 'green' : ''; ?> icon" <?php echo 'table' === $siteViewMode ? 'style="pointer-events:none"' : ''; ?> href="admin.php?page=managesites&viewmode=table&modenonce=<?php echo esc_html( $nonce ); ?>">
                     <i class="bars icon"></i>
                 </a>
-                <a class="ui button basic <?php echo 'grid' === $siteViewMode ? 'disabled' : ''; ?> icon" href="admin.php?page=managesites&viewmode=grid&modenonce=<?php echo esc_html( $nonce ); ?>">
+                <a class="ui button basic <?php echo 'grid' === $siteViewMode ? 'green' : ''; ?> icon" <?php echo 'grid' === $siteViewMode ? 'style="pointer-events:none"' : ''; ?> href="admin.php?page=managesites&viewmode=grid&modenonce=<?php echo esc_html( $nonce ); ?>">
                     <i class="grid layout icon"></i>
                 </a>
             </div>
         </span>
-        <a href="#" class="ui mini icon basic button" id="mainwp-manage-sites-filter-toggle-button">
+        <a href="#" class="ui mini basic button" id="mainwp-manage-sites-filter-toggle-button">
             <i class="filter icon"></i> <?php esc_html_e( 'Show Filters', 'mainwp' ); ?>
         </a>
         <?php
@@ -974,11 +974,13 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
         $total_params = array( 'count_only' => true );
 
         if ( $get_all ) {
+            $total_params['search'] = $search;
             $params = array(
                 'selectgroups' => true,
                 'orderby'      => $orderby,
                 'offset'       => $start,
                 'rowcount'     => $perPage,
+                'search'       => $search,
             );
         } else {
 
@@ -1072,16 +1074,22 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
 
         $cache_key = MainWP_Cache_Helper::get_cache_key( 'sites_ids', $cache_group, $params );
 
-        $cache_ids = MainWP_Cache_Helper::instance()->get_cache(
-            $cache_key,
-            $cache_group
-        );
+        // IMPORTANT: Skip cache when searching to prevent cached site IDs from restricting results.
+        // When $_included_cache_ids is set, the SQL query adds "WHERE wp.id IN (cached_ids)" which
+        // limits results to previously cached sites. This breaks search functionality because we need
+        // to search across ALL sites, not just the subset that was cached during the last non-search query.
+        if ( empty( $search ) ) {
+            $cache_ids = MainWP_Cache_Helper::instance()->get_cache(
+                $cache_key,
+                $cache_group
+            );
 
-        if ( '_get_cache_false' !== $cache_ids ) {
-            if ( empty( $cache_ids ) ) {
-                $params['_included_cache_ids'] = array( -1 ); // not found if get cached success but empty.
-            } else {
-                $params['_included_cache_ids'] = $cache_ids;
+            if ( '_get_cache_false' !== $cache_ids ) {
+                if ( empty( $cache_ids ) ) {
+                    $params['_included_cache_ids'] = array( -1 ); // not found if get cached success but empty.
+                } else {
+                    $params['_included_cache_ids'] = $cache_ids;
+                }
             }
         }
 
@@ -1247,7 +1255,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             'scrollX'       => 'true',
             'responsive'    => 'true',
             'fixedColumns'  => '',
-            'searchDelay'   => 350,
+            'searchDelay'   => 500,
         );
 
         /**

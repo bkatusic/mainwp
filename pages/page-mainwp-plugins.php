@@ -434,7 +434,7 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                 <div class="ui mini form mainwp-actions-bar">
                     <div class="ui stackable grid">
                         <div class="ui two column row">
-                            <div class="column" >
+                            <div class="middle aligned column">
                                 <span id="mainwp-plugins-bulk-actions-wapper" style="margin-right:1rem">
                                     <?php
                                     if ( is_array( $cachedResult ) && isset( $cachedResult['bulk_actions'] ) ) {
@@ -454,7 +454,7 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                                 do_action( 'mainwp_plugins_actions_bar_left' );
                                 ?>
                             </div>
-                            <div class="right aligned column">
+                            <div class="right aligned middle aligned column">
                                 <?php static::render_select_manage_view(); ?>
 
                                 <?php
@@ -1204,11 +1204,21 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             <form method="post" action="" class="ui mini form right aligned">
                 <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                 <input type="hidden" name="whichview" value="<?php echo esc_attr( $which ); ?>" />
-                <div class="inline field">
-                    <select class="ui dropdown" onchange="mainwp_siteview_onchange(this)"  name="select_mainwp_options_plugintheme_view">
-                    <option value="0" class="item" <?php echo MAINWP_VIEW_PER_PLUGIN_THEME === (int) $view_mode ? 'selected' : ''; ?>><?php echo esc_html( 'plugin' === $which ? esc_html__( 'Show Plugins per Item', 'mainwp' ) : esc_html__( 'Show Themes per Item', 'mainwp' ) ); ?></option>
-                    <option value="1" class="item" <?php echo MAINWP_VIEW_PER_SITE === (int) $view_mode ? 'selected' : ''; ?>><?php echo esc_html( 'plugin' === $which ? esc_html__( 'Show Plugins per Site', 'mainwp' ) : esc_html__( 'Show Themes per Site', 'mainwp' ) ); ?></option>
-                    </select>
+                <div class="ui mini stackable buttons">
+                    <button
+                        type="submit"
+                        name="select_mainwp_options_plugintheme_view"
+                        value="0"
+                        class="ui basic <?php echo esc_attr( MAINWP_VIEW_PER_PLUGIN_THEME === (int) $view_mode ? 'green' : '' ); ?> button">
+                        <?php echo esc_html( 'plugin' === $which ? esc_html__( 'Show Plugins per Item', 'mainwp' ) : esc_html__( 'Show Themes per Item', 'mainwp' ) ); ?>
+                    </button>
+                    <button
+                        type="submit"
+                        name="select_mainwp_options_plugintheme_view"
+                        value="1"
+                        class="ui basic <?php echo esc_attr( MAINWP_VIEW_PER_SITE === (int) $view_mode ? 'green' : '' ); ?> button">
+                        <?php echo esc_html( 'plugin' === $which ? esc_html__( 'Show Plugins per Site', 'mainwp' ) : esc_html__( 'Show Themes per Site', 'mainwp' ) ); ?>
+                    </button>
                 </div>
             </form>
             <?php
@@ -2149,7 +2159,7 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
             ?>
             <div class="ui alt segment" id="mainwp-plugin-auto-updates">
                 <div class="mainwp-main-content">
-                    <div class="mainwp-actions-bar">
+                    <div class="mainwp-actions-bar" <?php echo ! isset( $_SESSION['MainWP_PluginsActive'] ) ? 'style="display:none"' : ''; ?>>
                         <div class="ui mini form stackable grid">
                             <div class="ui two column row">
                                 <div class="left aligned column">
@@ -2628,17 +2638,24 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
              */
             do_action( 'mainwp_plugins_before_ignored_updates', $ignoredPlugins, $websites );
             ?>
+            <?php if ( ! empty( $ignoredPlugins ) ) : ?>
             <h3 class="ui header">
                 <?php esc_html_e( 'Globally Ignored Plugins', 'mainwp' ); ?>
                 <div class="sub header"><?php esc_html_e( 'These are plugins you have told your MainWP Dashboard to ignore updates on global level and not notify you about pending updates.', 'mainwp' ); ?></div>
             </h3>
             <?php static::render_global_ignored( $ignoredPlugins, $decodedIgnoredPlugins ); ?>
             <div class="ui hidden divider"></div>
+            <?php endif; ?>
+            <?php if ( $cnt > 0 ) : ?>
             <h3 class="ui header">
                 <?php esc_html_e( 'Per Site Ignored Plugins', 'mainwp' ); ?>
                 <div class="sub header"><?php esc_html_e( 'These are plugins you have told your MainWP Dashboard to ignore updates per site level and not notify you about pending updates.', 'mainwp' ); ?></div>
             </h3>
             <?php static::render_sites_ignored( $cnt, $websites ); ?>
+            <?php endif; ?>
+            <?php if ( empty( $ignoredPlugins ) && 0 === $cnt ) : ?>
+                <?php MainWP_UI::render_empty_page_placeholder( __( 'No Ignored Updates', 'mainwp' ), __( 'All plugin updates are being tracked. When you choose to ignore updates for a specific plugin, they will appear here.', 'mainwp' ), '<em data-emoji=":compass:" class="big"></em>' ); ?>
+            <?php endif; ?>
             <?php
             /**
              * Action: mainwp_plugins_after_ignored_updates
@@ -2914,17 +2931,24 @@ class MainWP_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
              */
             do_action( 'mainwp_plugins_before_ignored_abandoned', $ignoredPlugins, $websites );
             ?>
+            <?php if ( ! empty( $ignoredPlugins ) ) : ?>
             <h3 class="ui header">
                 <?php esc_html_e( 'Globally Ignored Abandoned Plugins', 'mainwp' ); ?>
                 <div class="sub header"><?php esc_html_e( 'These are plugins you have told your MainWP Dashboard to ignore on global level even though they have passed your Abandoned Plugin Tolerance date', 'mainwp' ); ?></div>
             </h3>
             <?php static::render_global_ignored_abandoned( $ignoredPlugins, $decodedIgnoredPlugins ); ?>
             <div class="ui hidden divider"></div>
+            <?php endif; ?>
+            <?php if ( $cnt > 0 ) : ?>
             <h3 class="ui header">
                 <?php esc_html_e( 'Per Site Ignored Abandoned Plugins', 'mainwp' ); ?>
                 <div class="sub header"><?php esc_html_e( 'These are plugins you have told your MainWP Dashboard to ignore per site level even though they have passed your Abandoned Plugin Tolerance date', 'mainwp' ); ?></div>
             </h3>
             <?php static::render_sites_ignored_abandoned( $cnt, $websites ); ?>
+            <?php endif; ?>
+            <?php if ( empty( $ignoredPlugins ) && 0 === $cnt ) : ?>
+                <?php MainWP_UI::render_empty_page_placeholder( __( 'No Ignored Abandoned Plugins', 'mainwp' ), __( 'All plugins are being monitored for abandonment. When you choose to ignore the abandoned status for a specific plugin, it will appear here.', 'mainwp' ), '<em data-emoji=":compass:" class="big"></em>' ); ?>
+            <?php endif; ?>
             <?php
             /**
              * Action: mainwp_plugins_after_ignored_abandoned

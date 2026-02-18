@@ -78,8 +78,8 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
         $saved_segments = static::set_get_widgets_layout( false, array(), $screen_slug );
         ?>
 
-        <div class="ui mini basic top left pointing dropdown button">
-            <div><i class="border all icon"></i><?php esc_html_e( 'Layout', 'mainwp' ); ?></div>
+        <div class="ui mini basic top left pointing dropdown button mainwp-768-hide">
+            <div><i class="border all icon"></i><span class="mainwp-768-hide"><?php esc_html_e( 'Layout', 'mainwp' ); ?></span></div>
             <div class="menu">
                 <a class="item" id="mainwp-manage-widgets-load-saved-layout-button" selected-layout-id="" settings-slug="<?php echo esc_attr( $screen_slug ); ?>"><?php esc_html_e( 'Save Layout', 'mainwp' ); ?></a>
                 <?php if ( ! empty( $saved_segments ) ) : ?>
