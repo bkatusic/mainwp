@@ -378,7 +378,6 @@ let mainwp_manage_plugins_bulk_actions_check_done = function () {
         pluginCountReceived = 0;
         pluginCountSent = 0;
         jQuery('#mainwp_bulk_action_loading').hide();
-        //mainwp_fetch_plugins();
     }
 };
 
@@ -698,7 +697,7 @@ jQuery(function () {
 
 
 // Manage Themes -- Fetch themes from child sites
-window.mainwp_fetch_themes = function (notFetchContent) {
+globalThis.mainwp_fetch_themes = function (notFetchContent) {
     let errors = [];
     let selected_sites = [];
     let selected_groups = [];
@@ -784,11 +783,10 @@ jQuery(function () {
         return false;
     });
     jQuery(document).on('click', '.mainwp-manage-plugin-delete', function () {
-        let item = this;
-        let name = jQuery(item).closest('.mainwp-manage-plugin-item-website').attr('plugin-name');
+        let name = jQuery(this).closest('.mainwp-manage-plugin-item-website').attr('plugin-name');
         let confirmMsg = __('You are about to delete the %1?', name);
-        mainwp_confirm(confirmMsg, function () {
-            manage_plugin_Action(jQuery(item), 'delete');
+        mainwp_confirm(confirmMsg,() => {
+            manage_plugin_Action(jQuery(this), 'delete');
         });
         return false;
     });
@@ -938,11 +936,10 @@ jQuery(function () {
         return false;
     });
     jQuery(document).on('click', '.mainwp-manages-theme-delete', function () {
-        let item = this;
-        let name = jQuery(item).closest('.mainwp-manage-theme-item-website').attr('theme-name');
+        let name = jQuery(this).closest('.mainwp-manage-theme-item-website').attr('theme-name');
         let confirmMsg = __('You are about to delete the %1?', name);
-        mainwp_confirm(confirmMsg, function () {
-            manages_themeAction(jQuery(item), 'delete');
+        mainwp_confirm(confirmMsg, () => {
+            manages_themeAction(jQuery(this), 'delete');
         });
         return false;
     });

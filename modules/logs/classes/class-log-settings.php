@@ -50,13 +50,6 @@ class Log_Settings {
     private static $enable_logs_items;
 
     /**
-     * Holds the array with all the default built in links.
-     *
-     * @var array
-     */
-    private static $ws_al_built_links = array();
-
-    /**
      * Class constructor.
      *
      * @param Log_Manager $manager Instance of manager object.
@@ -75,7 +68,7 @@ class Log_Settings {
     /**
      * Handle admin_init action.
      */
-    public function admin_init() {
+    public function admin_init() { // phpcs:ignore -- NOSONAR - complex.
         //phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         if ( isset( $_POST['mainwp_module_log_settings_nonce'] ) && wp_verify_nonce( wp_unslash( $_POST['mainwp_module_log_settings_nonce'] ), 'logs_settings_nonce' ) ) {
 
@@ -254,7 +247,7 @@ class Log_Settings {
     /**
      * Render Insights settings page.
      */
-    public function render_settings_page() {
+    public function render_settings_page() { // phpcs:ignore -- NOSONAR - complex method.
         /** This action is documented in ../pages/page-mainwp-manage-sites.php */
         do_action( 'mainwp_pageheader_settings', 'Insights' );
         $enabled              = ! empty( $this->options['enabled'] ) ? true : false;

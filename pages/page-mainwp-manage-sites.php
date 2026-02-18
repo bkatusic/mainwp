@@ -872,13 +872,13 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                         </div>
                         <div class="content">
                             <span class="ui text"><?php esc_html_e( 'Choose options based on how the MainWP Child plugin is configured on your WordPress site.', 'mainwp' ); ?></span>
-                            
+
                             <h4 class="ui small header"><?php esc_html_e( 'Default Setup (most users)', 'mainwp' ); ?></h4>
                             <div class="item"><?php esc_html_e( 'Use Administrator Password only — this is the standard configuration.', 'mainwp' ); ?></div>
 
                             <h4 class="ui small header"><?php esc_html_e( 'Advanced Setup', 'mainwp' ); ?></h4>
                             <div class="item"><?php esc_html_e( 'If authentication was disabled in the Child plugin, turn both toggles off.', 'mainwp' ); ?></div>
-                            
+
                             <h4 class="ui small header"><?php esc_html_e( 'Toggle Summary', 'mainwp' ); ?></h4>
                             <div class="ui bulleted small list">
                                 <div class="item"><?php esc_html_e( 'Password On → Displays the Password field.', 'mainwp' ); ?></div>
@@ -2505,7 +2505,7 @@ class MainWP_Manage_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                 </div>
             </div>
             <?php foreach ( $optional_fields as $key_optional => $field_optional ) : ?>
-                <div class="<?php echo ( 'verify_certificate' === $key_optional || 'ssl_version' === $key_optional ) ? 'two' : 'two'; ?> wide column mainwp-managesites-import-column-more-<?php echo esc_attr( $index ); ?>" style="<?php echo esc_attr( $display_none ); ?>">
+                <div class="<?php echo ( 'verify_certificate' === $key_optional || 'ssl_version' === $key_optional ) ? 'two' : 'one'; ?> wide column mainwp-managesites-import-column-more-<?php echo esc_attr( $index ); ?>" style="<?php echo esc_attr( $display_none ); ?>">
                     <div class="">
                         <span class="ui small text"><?php echo esc_html( $field_optional['label'] ); ?></span>
                         <?php self::mainwp_managesites_form_import_sites_render_input( $index, $key_optional, $field_optional, $field, $site ); ?>

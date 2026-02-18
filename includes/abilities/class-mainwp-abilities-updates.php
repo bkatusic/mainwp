@@ -45,7 +45,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @see .mwpdev/docs/abilities-api-docs/known-issues.md for detailed explanation
  */
-class MainWP_Abilities_Updates {
+class MainWP_Abilities_Updates { //phpcs:ignore -- NOSONAR - multi methods.
 
     /**
      * Batch operation threshold.
@@ -2298,7 +2298,7 @@ class MainWP_Abilities_Updates {
      * @param array $input Validated input from Abilities API.
      * @return array|\WP_Error
      */
-    public static function execute_get_site_updates( array $input ) {
+    public static function execute_get_site_updates( array $input ) { //phpcs:ignore -- NOSONAR - complex method.
         $site_id_or_domain = $input['site_id_or_domain'];
         $types             = $input['types'] ?? array( 'core', 'plugins', 'themes', 'translations' );
 
@@ -2443,7 +2443,7 @@ class MainWP_Abilities_Updates {
      * @param array $input Validated input from Abilities API.
      * @return array|\WP_Error
      */
-    public static function execute_update_site_plugins( array $input ) {
+    public static function execute_update_site_plugins( array $input ) { // phpcs:ignore -- NOSONAR - complex method.
         $site_id_or_domain = $input['site_id_or_domain'];
         $slugs             = $input['slugs'] ?? array();
 
@@ -2526,11 +2526,20 @@ class MainWP_Abilities_Updates {
 
         $updates = array();
         foreach ( $plugin_upgrades as $slug => $plugin ) {
+
+            $new_version = '';
+
+            if ( isset( $plugin['update']['new_version'] ) ) {
+                $new_version = $plugin['update']['new_version'];
+            } elseif ( isset( $plugin['new_version'] ) ) {
+                $new_version = $plugin['new_version'];
+            }
+
             $updates[] = array(
                 'slug'            => $slug,
                 'name'            => isset( $plugin['Name'] ) ? $plugin['Name'] : $slug,
                 'current_version' => isset( $plugin['Version'] ) ? $plugin['Version'] : '',
-                'new_version'     => isset( $plugin['update']['new_version'] ) ? $plugin['update']['new_version'] : ( isset( $plugin['new_version'] ) ? $plugin['new_version'] : '' ),
+                'new_version'     => $new_version,
             );
         }
 
@@ -2552,7 +2561,7 @@ class MainWP_Abilities_Updates {
      * @param array $input Validated input from Abilities API.
      * @return array|\WP_Error
      */
-    public static function execute_update_site_themes( array $input ) {
+    public static function execute_update_site_themes( array $input ) { // phpcs:ignore -- NOSONAR - complex method.
         $site_id_or_domain = $input['site_id_or_domain'];
         $slugs             = $input['slugs'] ?? array();
 
@@ -2639,7 +2648,7 @@ class MainWP_Abilities_Updates {
                 'slug'            => $slug,
                 'name'            => isset( $theme['Name'] ) ? $theme['Name'] : $slug,
                 'current_version' => isset( $theme['Version'] ) ? $theme['Version'] : '',
-                'new_version'     => isset( $theme['update']['new_version'] ) ? $theme['update']['new_version'] : ( isset( $theme['new_version'] ) ? $theme['new_version'] : '' ),
+                'new_version'     => $theme['update']['new_version'] ?? $theme['new_version'] ?? '',
             );
         }
 
@@ -2661,7 +2670,7 @@ class MainWP_Abilities_Updates {
      * @param array $input Validated input from Abilities API.
      * @return array|\WP_Error
      */
-    public static function execute_update_site_translations( array $input ) {
+    public static function execute_update_site_translations( array $input ) { // phpcs:ignore -- NOSONAR - complex method.
         $site_id_or_domain = $input['site_id_or_domain'];
         $slugs             = $input['slugs'] ?? array();
 
@@ -2722,9 +2731,18 @@ class MainWP_Abilities_Updates {
 
         $updates = array();
         foreach ( $translation_upgrades as $translation ) {
+
+            $name = '';
+
+            if ( isset( $translation['name'] ) ) {
+                $name = $translation['name'];
+            } elseif ( isset( $translation['slug'] ) ) {
+                $name = $translation['slug'];
+            }
+
             $updates[] = array(
                 'slug'            => isset( $translation['slug'] ) ? $translation['slug'] : '',
-                'name'            => isset( $translation['name'] ) ? $translation['name'] : ( isset( $translation['slug'] ) ? $translation['slug'] : '' ),
+                'name'            => $name,
                 'current_version' => isset( $translation['version'] ) ? $translation['version'] : '',
                 'new_version'     => isset( $translation['new_version'] ) ? $translation['new_version'] : '',
             );
@@ -3293,6 +3311,15 @@ class MainWP_Abilities_Updates {
                 }
 
                 foreach ( $plugin_upgrades as $slug => $plugin ) {
+
+                    $new_version = '';
+
+                    if ( isset( $plugin['update']['new_version'] ) ) {
+                        $new_version = $plugin['update']['new_version'];
+                    } elseif ( isset( $plugin['new_version'] ) ) {
+                        $new_version = $plugin['new_version'];
+                    }
+
                     $updates[] = array(
                         'site_id'         => $site_id,
                         'site_url'        => $site_url,
@@ -3301,7 +3328,7 @@ class MainWP_Abilities_Updates {
                         'slug'            => $slug,
                         'name'            => isset( $plugin['Name'] ) ? $plugin['Name'] : $slug,
                         'current_version' => isset( $plugin['Version'] ) ? $plugin['Version'] : '',
-                        'new_version'     => isset( $plugin['update']['new_version'] ) ? $plugin['update']['new_version'] : ( isset( $plugin['new_version'] ) ? $plugin['new_version'] : '' ),
+                        'new_version'     => $new_version,
                     );
                 }
             }
@@ -3324,6 +3351,15 @@ class MainWP_Abilities_Updates {
                 }
 
                 foreach ( $theme_upgrades as $slug => $theme ) {
+
+                    $new_version = '';
+
+                    if ( isset( $theme['update']['new_version'] ) ) {
+                        $new_version = $theme['update']['new_version'];
+                    } elseif ( isset( $theme['new_version'] ) ) {
+                        $new_version = $theme['new_version'];
+                    }
+
                     $updates[] = array(
                         'site_id'         => $site_id,
                         'site_url'        => $site_url,
@@ -3332,7 +3368,7 @@ class MainWP_Abilities_Updates {
                         'slug'            => $slug,
                         'name'            => isset( $theme['Name'] ) ? $theme['Name'] : $slug,
                         'current_version' => isset( $theme['Version'] ) ? $theme['Version'] : '',
-                        'new_version'     => isset( $theme['update']['new_version'] ) ? $theme['update']['new_version'] : ( isset( $theme['new_version'] ) ? $theme['new_version'] : '' ),
+                        'new_version'     => $new_version,
                     );
                 }
             }
@@ -3345,13 +3381,22 @@ class MainWP_Abilities_Updates {
 
             if ( is_array( $translation_upgrades ) && ! empty( $translation_upgrades ) ) {
                 foreach ( $translation_upgrades as $translation ) {
+
+                    $name = '';
+
+                    if ( isset( $translation['name'] ) ) {
+                        $name = $translation['name'];
+                    } elseif ( isset( $translation['slug'] ) ) {
+                        $name = $translation['slug'];
+                    }
+
                     $updates[] = array(
                         'site_id'         => $site_id,
                         'site_url'        => $site_url,
                         'site_name'       => $site_name,
                         'type'            => 'translation',
                         'slug'            => isset( $translation['slug'] ) ? $translation['slug'] : '',
-                        'name'            => isset( $translation['name'] ) ? $translation['name'] : ( isset( $translation['slug'] ) ? $translation['slug'] : '' ),
+                        'name'            => $name,
                         'current_version' => isset( $translation['version'] ) ? $translation['version'] : '',
                         'new_version'     => isset( $translation['new_version'] ) ? $translation['new_version'] : '',
                     );
@@ -3440,7 +3485,7 @@ class MainWP_Abilities_Updates {
      * @param array  $updates Array of plugin updates.
      * @return array Array with 'updated' and 'errors' keys.
      */
-    private static function execute_plugin_updates( $site, array $updates ): array {
+    private static function execute_plugin_updates( $site, array $updates ): array { // phpcs:ignore -- NOSONAR - complex method.
         $updated = array();
         $errors  = array();
 
@@ -3554,7 +3599,7 @@ class MainWP_Abilities_Updates {
      * @param array  $updates Array of theme updates.
      * @return array Array with 'updated' and 'errors' keys.
      */
-    private static function execute_theme_updates( $site, array $updates ): array {
+    private static function execute_theme_updates( $site, array $updates ): array { // phpcs:ignore -- NOSONAR - complex method.
         $updated = array();
         $errors  = array();
 
@@ -3654,7 +3699,7 @@ class MainWP_Abilities_Updates {
      * @param array  $updates Array of translation updates.
      * @return array Array with 'updated' and 'errors' keys.
      */
-    private static function execute_translation_updates( $site, array $updates ): array {
+    private static function execute_translation_updates( $site, array $updates ): array { // phpcs:ignore -- NOSONAR - complex method.
         $updated = array();
         $errors  = array();
 

@@ -71,7 +71,7 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
      *
      * Initiate Quick Setup Wizard page.
      */
-    public function admin_init() {
+    public function admin_init() { // phpcs:ignore -- NOSONAR - complex method.
         if ( empty( $_GET['page'] ) || 'mainwp-setup' !== $_GET['page'] ) { // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
             return;
         }
@@ -322,7 +322,7 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
      *
      * Render Setup Wizards Steps.
      */
-    public function setup_wizard_steps() {
+    public function setup_wizard_steps() { // phpcs:ignore -- NOSONAR - complex method.
         $ouput_steps = $this->steps;
         ?>
         <div id="mainwp-quick-setup-wizard-steps" class="ui circular ordered stackable fluid steps" style="">
@@ -332,15 +332,12 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                     continue;
                 }
 
-                //if ( 'welcome' === $step_key ) {
-                //    continue;
-               // }
                 ?>
                 <div
                 <?php
                 if ( $step_key === $this->step ) {
                     // Check if this is the last step.
-                    $step_keys = array_keys( $this->steps );
+                    $step_keys     = array_keys( $this->steps ); // NOSONAR -- ??.
                     $last_step_key = end( $step_keys );
 
                     if ( $step_key === $last_step_key ) {
@@ -541,7 +538,7 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                 <h1 class="ui massive header"><?php esc_html_e( 'System Requirements Check', 'mainwp' ); ?></h1>
                 <p>
                     <?php
-                    echo sprintf(
+                    printf(
                         esc_html__( 'These checks ensure MainWP can connect to your child sites. If any check fails, %1$slearn how to resolve the issue%2$s.', 'mainwp' ),
                         '<a href="https://docs.mainwp.com/advanced/miscellaneous/mainwp-system-requirements" target="_blank">',
                         '</a>'
@@ -699,9 +696,10 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
             $url .= '&step=add_client';
             MainWP_Manage_Sites::render_import_sites_modal( $url, 'Import Sites' );
             ?>
-        <?php else :
+            <?php
+        else :
                 $el_id_msg_zn_1 = 'submit';
-                ?>
+            ?>
             <form method="post" action="" class="ui form" enctype="multipart/form-data" id="mainwp_connect_first_site_form">
                 <div class="ui vertical basic padded segments">
                     <div class="ui padded segment">
@@ -839,11 +837,11 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                     <div class="ui padded segment">
                         <?php wp_nonce_field( 'mwp-setup' ); ?>
                         <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
-                          <input type="hidden" name="qsw_nonce[mainwp_addwp]" value="<?php echo esc_attr( wp_create_nonce( 'mainwp_addwp' ) ); ?>">
-                          <input type="hidden" name="qsw_nonce[mainwp_checkwp]" value="<?php echo esc_attr( wp_create_nonce( 'mainwp_checkwp' ) ); ?>">
-            
+                            <input type="hidden" name="qsw_nonce[mainwp_addwp]" value="<?php echo esc_attr( wp_create_nonce( 'mainwp_addwp' ) ); ?>">
+                            <input type="hidden" name="qsw_nonce[mainwp_checkwp]" value="<?php echo esc_attr( wp_create_nonce( 'mainwp_checkwp' ) ); ?>">
 
-                           <div class="ui two column grid">
+
+                            <div class="ui two column grid">
                             <div class="column">
                                 <a href="<?php echo esc_url( $this->get_back_step_link() ); ?>" class="ui big basic button"><i class="arrow left icon"></i> <?php esc_html_e( 'Back to System Check', 'mainwp' ); ?></a>
                             </div>
@@ -976,8 +974,8 @@ class MainWP_Setup_Wizard { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                     </div>
                 </div>
                 <div class="ui padded segment">
-                    <a style="display:none" name="createclient" current-page="qsw-add" id="bulk_add_createclient" class="ui big green basic right floated button"><?php echo esc_attr__( 'Add and Proceed to Monitoring', 'mainwp' ); ?> <i class="arrow right icon"></i></a>
-                    <a style="display:none" name="create_multi_client" current-page="qsw-add" id="bulk_add_multi_create_client" class="ui big green basic right floated button"><?php echo esc_attr__( 'Add and Proceed to Monitoring', 'mainwp' ); ?> <i class="arrow right icon"></i></a>
+                    <a style="display:none" current-page="qsw-add" id="bulk_add_createclient" class="ui big green basic right floated button"><?php echo esc_attr__( 'Add and Proceed to Monitoring', 'mainwp' ); ?> <i class="arrow right icon"></i></a>
+                    <a style="display:none" current-page="qsw-add" id="bulk_add_multi_create_client" class="ui big green basic right floated button"><?php echo esc_attr__( 'Add and Proceed to Monitoring', 'mainwp' ); ?> <i class="arrow right icon"></i></a>
                     <a href="<?php echo esc_url( $this->get_next_step_link() ); ?>" id="mainwp_qsw_add_client_continue_button" class="ui big green basic right floated button"><?php esc_html_e( 'Continue Without Creating Clients', 'mainwp' ); ?> <i class="arrow right icon"></i></a>
                     <a href="<?php echo esc_url( $this->get_back_step_link() ); ?>" class="ui big basic button"><i class="arrow left icon"></i> <?php esc_html_e( 'Back to Add Sites', 'mainwp' ); ?></a>
                 </div>

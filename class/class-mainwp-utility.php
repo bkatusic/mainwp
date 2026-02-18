@@ -399,7 +399,7 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
      *
      * @return string Formatted timestamp.
      */
-    public static function format_timezone( $timestamp, $with_tz_info = false, $use_tzformat = false ) {
+    public static function format_timezone( $timestamp, $with_tz_info = false, $use_tzformat = false ) { // phpcs:ignore -- NOSONAR - complex.
         $tzinfo = '';
         if ( false !== $use_tzformat ) {
             if ( is_array( $use_tzformat ) && ( isset( $use_tzformat['timezone_string'] ) || isset( $use_tzformat['gmt_offset'] ) || isset( $use_tzformat['date_format'] ) || isset( $use_tzformat['time_format'] ) ) ) {
@@ -2288,9 +2288,9 @@ class MainWP_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         $build = 0;
         if ( preg_match( '/rc(\d+)/', $v, $m ) ) {
             $build = (int) $m[1];
-        } elseif ( preg_match( '/b(\d+)/', $v, $m ) ) {
+        } elseif ( preg_match( '/b(\d+)/', $v, $m ) ) { // NOSONAR - same above ok.
             $build = (int) $m[1];
-        } elseif ( preg_match( '/a(\d+)/', $v, $m ) ) {
+        } elseif ( preg_match( '/a(\d+)/', $v, $m ) ) { // NOSONAR - same above ok.
             $build = (int) $m[1];
         }
 

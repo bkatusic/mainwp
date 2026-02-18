@@ -264,7 +264,7 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     </tr>
                     <tr class="main-child-checkbox content" row-uid="uid_plugin_updates_<?php echo esc_attr( $group_id ); ?>">
                         <td colspan="4">
-                            <table id="mainwp-wordpress-updates-sites-inner-table" class="ui grey table mainwp-per-group-table mainwp-manage-updates-table mainwp-js-persistent-table">
+                            <table id="mainwp-plugins-updates-sites-inner-table" class="ui grey table mainwp-per-group-table mainwp-manage-updates-table mainwp-js-persistent-table">
                                 <thead class="mainwp-768-hide">
                                     <tr>
                                         <th scope="col" class="collapsing no-sort"></th>
@@ -525,7 +525,7 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     </tr>
                     <tr class="title main-child-checkbox content" row-uid="uid_theme_updates_<?php echo esc_attr( $group_id ); ?>">
                         <td colspan="4">
-                            <table id="mainwp-wordpress-updates-sites-inner-table" class="ui grey table mainwp-per-group-table mainwp-manage-updates-table mainwp-js-persistent-table">
+                            <table id="mainwp-themes-updates-sites-inner-table" class="ui grey table mainwp-per-group-table mainwp-manage-updates-table mainwp-js-persistent-table">
                                 <thead class="mainwp-768-hide">
                                     <tr>
                                         <th scope="col" class="collapsing no-sort"></th>

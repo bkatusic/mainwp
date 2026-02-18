@@ -326,14 +326,14 @@ class MainWP_UI_Select_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 }, 'json' );
                 return false;
             } );
-            
+
             if ( typeof mainwp_update_selection_counter === 'function' ) {
                 mainwp_update_selection_counter();
             }
-            
+
             jQuery( document ).on( 'click', '.mainwp-selection-counter-wrapper', function() {
                 let counter = jQuery( this ).find( '.mainwp-sites-selection-counter' );
-                let count = parseInt( counter.text() );
+                let count = Number.parseInt( counter.text() );
                 if ( count > 0 ) {
                     jQuery( '.mainwp-create-group-sites-modal' ).modal( {
                         onHide: function () {
@@ -343,7 +343,7 @@ class MainWP_UI_Select_Sites { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     } ).modal( 'show' );
                 }
             } );
-            
+
             jQuery( '#mainwp-select-sites-menu .item.tab' ).on( 'click', function() {
                 setTimeout( function() {
                     if ( typeof mainwp_update_selection_counter === 'function' ) {

@@ -262,7 +262,7 @@ class Log_Changes_Logs_Helper {
      *
      * @return string
      */
-    public static function get_changes_log_title( $log_type_id, $data, $type ) {
+    public static function get_changes_log_title( $log_type_id, $data, $type ) { // phpcs:ignore -- NOSONAR - complex.
 
         if ( ! is_array( $data ) ) {
             $data = array();
@@ -327,7 +327,7 @@ class Log_Changes_Logs_Helper {
      *
      * @return array Results.
      */
-    public function get_history_changes( $args ) {
+    public function get_history_changes( $args ) { // phpcs:ignore -- NOSONAR - complex.
 
         if ( ! is_array( $args ) ) {
             $args = array();

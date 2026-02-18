@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Handles cron processing for batch Abilities API operations.
  * Processes jobs in chunks of 20 sites with timeout protection and reschedule logic.
  */
-class MainWP_Abilities_Cron {
+class MainWP_Abilities_Cron { //phpcs:ignore -- NOSONAR - multi methods.
 
     /**
      * Singleton instance.
@@ -68,7 +68,7 @@ class MainWP_Abilities_Cron {
      * @throws \Exception Always throws to prevent unserialization.
      */
     public function __wakeup() {
-        throw new \Exception( 'Cannot unserialize singleton.' );
+        throw new \Exception( 'Cannot unserialize singleton.' ); // NOSONAR - generic exception ok.
     }
 
     /**
@@ -104,7 +104,7 @@ class MainWP_Abilities_Cron {
      * @param string $job_id Job ID to process.
      * @return void
      */
-    public function process_sync_job( $job_id ): void {
+    public function process_sync_job( $job_id ): void { // phpcs:ignore -- NOSONAR - complex function.
         // Environment setup for long-running process.
         ignore_user_abort( true );
         MainWP_System_Utility::set_time_limit( 0 );
@@ -260,7 +260,7 @@ class MainWP_Abilities_Cron {
      * @param string $job_id Job ID to process.
      * @return void
      */
-    public function process_update_job( $job_id ): void {
+    public function process_update_job( $job_id ): void { // phpcs:ignore -- NOSONAR - complex function.
         // Environment setup for long-running process.
         ignore_user_abort( true );
         MainWP_System_Utility::set_time_limit( 0 );
@@ -731,6 +731,9 @@ class MainWP_Abilities_Cron {
                                     }
                                 }
                                 break;
+                            default:
+                                // do nothing for unknown type.
+                                break;
                         }
                     } catch ( \Exception $e ) {
                         $site_success  = false;
@@ -838,7 +841,7 @@ class MainWP_Abilities_Cron {
      * @param string $job_id Job ID to process.
      * @return void
      */
-    public function process_batch_job( $job_id ): void {
+    public function process_batch_job( $job_id ): void { // phpcs:ignore -- NOSONAR - complex method.
         // Environment setup for long-running process.
         ignore_user_abort( true );
         MainWP_System_Utility::set_time_limit( 0 );

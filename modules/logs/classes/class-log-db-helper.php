@@ -266,7 +266,7 @@ class Log_DB_Helper extends MainWP_DB {
      *
      * @return array DB stats.
      */
-    public function get_changes_logs_by( $args ) {
+    public function get_changes_logs_by( $args ) { // phpcs:ignore -- NOSONAR - complex.
 
         $site_id = isset( $args['wpid'] ) ? $args['wpid'] : 0; // int or array of int site ids.
 
@@ -467,7 +467,7 @@ class Log_DB_Helper extends MainWP_DB {
     /**
      * Get meta data of logs.
      */
-    public function get_meta_items( &$items ) {
+    public function get_meta_items( &$items ) { // phpcs:ignore -- NOSONAR - complex.
 
         global $wpdb;
 

@@ -748,7 +748,7 @@ class MainWP_Manage_Sites_Update_View { // phpcs:ignore Generic.Classes.OpeningB
      * @param mixed  $active_tab Current active tab.
      * @param object $userExtension User extension data.
      */
-    public static function render_language_updates( $website, $active_tab, $userExtension ) {
+    public static function render_language_updates( $website, $active_tab, $userExtension ) { // NOSONAR - complex.
         $trustedPlugins = ! empty( $userExtension->trusted_plugins ) ? json_decode( $userExtension->trusted_plugins, true ) : array();
         if ( ! is_array( $trustedPlugins ) ) {
             $trustedPlugins = array();

@@ -253,7 +253,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
     /**
      * Remove slow hooks.
      */
-    public function remove_slow_hooks() {
+    public function remove_slow_hooks() { // phpcs:ignore -- NOSONAR -complex.
 
         $remove_desired_hooks = $this->unhooks_list();
 
@@ -423,7 +423,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
      * @param  mixed $names Array of classes names.
      * @return int
      */
-    private function remove_by_name( $hook, $cls_names = array() ) {
+    private function remove_by_name( $hook, $cls_names = array() ) { // phpcs:ignore -- NOSONAR -complex.
         global $wp_filter;
         $removed = 0;
         $failed  = 0;
@@ -436,7 +436,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         $callbacks = $hook_obj->callbacks ?? array();
 
         foreach ( $callbacks as $priority => $list ) {
-            foreach ( $list as $idx => $entry ) {
+            foreach ( $list as $entry ) {
                 $callable = $entry['function'] ?? null;
                 $name     = $this->callable_label( $callable );
                 if ( ! empty( $name ) ) {
@@ -471,7 +471,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
      * @param  mixed $path_files The files path to check hooks.
      * @return int
      */
-    private function remove_by_file( $hook, $path_files ) {
+    private function remove_by_file( $hook, $path_files ) { // phpcs:ignore -- NOSONAR -complex.
 
         global $wp_filter;
 
@@ -494,7 +494,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         $lists          = array();
         $lists[ $hook ] = array();
         foreach ( $callbacks as $priority => $list ) {
-            foreach ( $list as $idx => $entry ) {
+            foreach ( $list as $entry ) {
                 $callable = $entry['function'] ?? null;
                 $file     = $this->callable_file( $callable );
                 if ( ! empty( $file ) ) {
@@ -535,7 +535,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
      * @param  mixed $classes_names The classes names.
      * @return int
      */
-    private function remove_by_class( $hook, $classes_names ) {
+    private function remove_by_class( $hook, $classes_names ) { // phpcs:ignore -- NOSONAR -complex.
         global $wp_filter;
         $removed = 0;
         $failed  = 0;
@@ -548,7 +548,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         $callbacks = $hook_obj->callbacks ?? array();
 
         foreach ( $callbacks as $priority => $list ) {
-            foreach ( $list as $idx => $entry ) {
+            foreach ( $list as $entry ) {
                 $callable = $entry['function'] ?? null;
 
                 if ( is_array( $callable ) ) {
@@ -628,7 +628,7 @@ class MainWP_Unhooks_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
      * @param callable $callback
      * @return string|null
      */
-    private function callable_file( $callback ) {
+    private function callable_file( $callback ) { // phpcs:ignore -- NOSONAR -complex.
 
         static $cache = array();
 

@@ -243,7 +243,7 @@ class MainWP_Rest_Tags_Controller extends MainWP_REST_Controller{ //phpcs:ignore
      * @param WP_REST_Request $request Full details about the request.
      * @return WP_Error|WP_REST_Response
      */
-    public function get_item( $request ) {
+    public function get_item( $request ) { // phpcs:ignore -- NOSONAR - simple method.
         $item = $this->get_request_item( $request );
 
         if ( is_wp_error( $item ) ) {

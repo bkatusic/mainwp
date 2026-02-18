@@ -283,16 +283,16 @@ jQuery(function ($) {
 
 			if (mce) {
 				editor.focus();
-				toolbarHeight = parseInt($('#wp-content-editor-container .mce-toolbar-grp').height(), 10);
+				toolbarHeight = Number.parseInt($('#wp-content-editor-container .mce-toolbar-grp').height(), 10);
 
 				if (toolbarHeight < 10 || toolbarHeight > 200) {
 					toolbarHeight = 30;
 				}
 
-				height = parseInt($('#content_ifr').css('height'), 10) + toolbarHeight - 28;
+				height = Number.parseInt($('#content_ifr').css('height'), 10) + toolbarHeight - 28;
 			} else {
 				$textarea.trigger('focus');
-				height = parseInt($textarea.css('height'), 10);
+				height = Number.parseInt($textarea.css('height'), 10);
 			}
 
 			$document.off('.wp-editor-resize');

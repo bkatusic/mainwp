@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - mainwp/get-tag-sites-v1: Get sites associated with a tag
  * - mainwp/get-tag-clients-v1: Get clients associated with a tag
  */
-class MainWP_Abilities_Tags {
+class MainWP_Abilities_Tags { //phpcs:ignore -- NOSONAR - multi methods.
 
     /**
      * Register all tag abilities.
@@ -409,7 +409,7 @@ class MainWP_Abilities_Tags {
      *
      * @return array
      */
-    private static function get_tag_sites_input_schema(): array {
+    private static function get_tag_sites_input_schema(): array { // phpcs:ignore -- NOSONAR -- repeat function.
         return array(
             'type'                 => 'object',
             'properties'           => array(
@@ -442,7 +442,7 @@ class MainWP_Abilities_Tags {
      *
      * @return array
      */
-    private static function get_tag_clients_input_schema(): array {
+    private static function get_tag_clients_input_schema(): array { // phpcs:ignore -- NOSONAR -- repeat function.
         return array(
             'type'                 => 'object',
             'properties'           => array(

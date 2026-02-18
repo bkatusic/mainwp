@@ -71,19 +71,22 @@
 }
 .grid-stack-item > .ui-resizable-sw {
   transform: rotate(45deg);
+  cursor: sw-resize;
+  width: 20px;
+  height: 20px;
+  bottom: var(--gs-item-margin-bottom);
+  left: var(--gs-item-margin-left);
 }
 .grid-stack-item > .ui-resizable-nw {
   transform: rotate(-45deg);
-}
-.grid-stack-item > .ui-resizable-se {
-  transform: rotate(-45deg);
-}
-.grid-stack-item > .ui-resizable-nw {
   cursor: nw-resize;
   width: 20px;
   height: 20px;
   top: var(--gs-item-margin-top);
   left: var(--gs-item-margin-left);
+}
+.grid-stack-item > .ui-resizable-se {
+  transform: rotate(-45deg);
 }
 .grid-stack-item > .ui-resizable-n {
   cursor: n-resize;
@@ -119,13 +122,6 @@
   left: 25px;
   bottom: var(--gs-item-margin-bottom);
   right: 25px;
-}
-.grid-stack-item > .ui-resizable-sw {
-  cursor: sw-resize;
-  width: 20px;
-  height: 20px;
-  bottom: var(--gs-item-margin-bottom);
-  left: var(--gs-item-margin-left);
 }
 .grid-stack-item > .ui-resizable-w {
   cursor: w-resize;

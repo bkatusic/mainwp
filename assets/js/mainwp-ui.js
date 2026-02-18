@@ -250,7 +250,7 @@ let mainwp_update_selection_counter = function () {
     let parent = jQuery('.mainwp_select_sites_wrapper');
     let tab = parent.find('input[name="select_sites_tab"]').val();
     let count = 0;
-    
+
     if (tab == 'site') {
         count = parent.find('.mainwp-select-sites-list INPUT:checkbox:checked').length;
     } else if (tab == 'staging') {
@@ -260,13 +260,13 @@ let mainwp_update_selection_counter = function () {
     } else if (tab == 'group') {
         count = parent.find('.mainwp-select-groups-list INPUT:checkbox:checked').length;
     }
-    
+
     let counter = parent.find('.mainwp-sites-selection-counter');
     counter.text(count);
-    
+
     let wrapper = parent.find('.mainwp-selection-counter-wrapper');
     let selectedText = parent.find('.mainwp-selected-text');
-    
+
     if (wrapper.length > 0) {
         if (count > 0) {
             counter.removeClass('grey').addClass('green');
@@ -275,7 +275,7 @@ let mainwp_update_selection_counter = function () {
                    .attr('data-tooltip', 'Create a tag with selected sites')
                    .attr('data-position', 'bottom right')
                    .attr('data-inverted', '');
-            
+
             if (!wrapper.find('.tag.icon').length) {
                 counter.before('<i class="tag small green icon"></i> ');
             }
@@ -286,7 +286,7 @@ let mainwp_update_selection_counter = function () {
                    .removeAttr('data-tooltip')
                    .removeAttr('data-position')
                    .removeAttr('data-inverted');
-            
+
             wrapper.find('.tag.icon').remove();
         }
     }
@@ -407,7 +407,7 @@ window.mainwp_sites_selection_onvisible_callback = function (me) {
 
     parent.find('input[name="select_by"]').val(select_by);
     parent.find('input[name="select_sites_tab"]').val(selected_tab);
-    
+
     mainwp_update_selection_counter();
 }
 
@@ -598,7 +598,7 @@ window.mainwp_sites_filter_select = function (objInput) {
     }
 }
 
-window.mainwp_tags_filter_select = function (objInput) {
+globalThis.mainwp_tags_filter_select = function (objInput) {
     let filter = jQuery(objInput).val().toLowerCase();
     let parent = jQuery(objInput).closest('.mainwp-search-options');
     let tags = [];
@@ -610,7 +610,7 @@ window.mainwp_tags_filter_select = function (objInput) {
     for (let id of tags) {
         let currentElement = jQuery(id);
         let value = currentElement.text().toLowerCase();
-        if (value.indexOf(filter) > -1) {
+        if (value.includes(filter)) {
             currentElement.show();
         } else {
             currentElement.hide();
@@ -784,8 +784,7 @@ let mainwp_upload_custom_icon = function (iconObj) {
  * @param {Array|string} buttonIds - Array of button IDs or single button ID string
  * @param {string} containerSelector - Optional container selector (default: '#mainwp-select-sites')
  */
-let mainwp_init_button_site_selection_dependency = function(buttonIds, containerSelector) {
-	containerSelector = containerSelector || '#mainwp-select-sites';
+let mainwp_init_button_site_selection_dependency = function(buttonIds, containerSelector = '#mainwp-select-sites') {
 
 	// Convert single button ID to array
 	if (typeof buttonIds === 'string') {
@@ -991,18 +990,18 @@ let mainwp_help_modal_start_content_onclick = function (tour_id, video_id, show_
 
 jQuery(document).on('click', '#mainwp-select-light-theme-button', function(e) {
     e.preventDefault();
-    const url = new URL(window.location.href);
+    const url = new URL(globalThis.location.href);
     url.searchParams.set('mainwp_quick_theme_change', 'default');
     url.searchParams.set('_wpnonce', mainwpParams.quickThemeChangeNonce);
-    window.location.href = url.toString();
+    globalThis.location.href = url.toString();
 });
 
 jQuery(document).on('click', '#mainwp-select-dark-theme-button', function(e) {
     e.preventDefault();
-    const url = new URL(window.location.href);
+    const url = new URL(globalThis.location.href);
     url.searchParams.set('mainwp_quick_theme_change', 'default-dark');
     url.searchParams.set('_wpnonce', mainwpParams.quickThemeChangeNonce);
-    window.location.href = url.toString();
+    globalThis.location.href = url.toString();
 });
 
 /**
@@ -1010,8 +1009,8 @@ jQuery(document).on('click', '#mainwp-select-dark-theme-button', function(e) {
  *
  * Provides methods for managing the widget layout modal UI state and status messages.
  */
-if (!window.mainwpUIHandleWidgetsLayout) {
-    window.mainwpUIHandleWidgetsLayout = (function () {
+if (!globalThis.mainwpUIHandleWidgetsLayout) {
+    globalThis.mainwpUIHandleWidgetsLayout = (function () {
         const statusElemId = '#mainwp-common-edit-widgets-layout-status';
         let _instance = {
             loadingStatus: function () {
@@ -1140,7 +1139,7 @@ let mainwp_common_ui_widgets_save_layout = function (itemClass, data, callBack) 
     data.wgids = wgIds;
 
     jQuery.post(ajaxurl, mainwp_secure_data(data), function (res) {
-        if (typeof callBack !== "undefined" && false !== callBack) {
+        if (typeof callBack === 'function') {
             callBack(res);
         }
     }, 'json');
@@ -1153,7 +1152,7 @@ let mainwp_common_ui_widgets_save_layout = function (itemClass, data, callBack) 
  * Manages button states based on user input and selections.
  */
 function mainwp_init_widget_layout_handlers() {
-    mainwp_load_manage_widgets_layout = function () {
+    let mainwp_load_manage_widgets_layout = function () {
         jQuery('#mainwp-common-layout-widgets-select-fields').hide();
         let data = mainwp_secure_data({
             action: 'mainwp_ui_load_widgets_layout',
@@ -1180,7 +1179,6 @@ function mainwp_init_widget_layout_handlers() {
     } );
 
     jQuery('#mainwp-manage-widgets-ui-choose-layout').on( 'click', function () {
-        let field_name = '';
         mainwpUIHandleWidgetsLayout.loadSegment(mainwp_load_manage_widgets_layout);
     } );
 
@@ -1203,7 +1201,7 @@ function mainwp_init_widget_layout_handlers() {
         }
     });
 
-    jQuery('#mainwp-common-edit-widgets-layout-save-button').on( 'click', function () {
+    jQuery('#mainwp-common-edit-widgets-layout-save-button').on( 'click', function (e) {
         if (jQuery(this).hasClass('disabled')) {
             return false;
         }
@@ -1239,7 +1237,9 @@ function mainwp_init_widget_layout_handlers() {
                 mainwpUIHandleWidgetsLayout.showWorkingStatus(__('An error occurred while saving the layout.'), 'red');
             }
         });
-        return false;
+        e.preventDefault();
+        e.stopPropagation();
+        return true;
     });
 
     jQuery('#mainwp-common-edit-widgets-select-layout-button').on( 'click', function () {
@@ -1254,35 +1254,42 @@ function mainwp_init_widget_layout_handlers() {
         if('' == loc_url){
             loc_url = location.href;
         }
-        window.location.href = loc_url + '&select_layout=1&screen_slug=' + encodeURIComponent( screen_slug ) + '&updated=' + encodeURIComponent( seg_id ) + '&_opennonce=' + mainwpWidgetLayout.openNonce;
+        globalThis.location.href = loc_url + '&select_layout=1&screen_slug=' + encodeURIComponent( screen_slug ) + '&updated=' + encodeURIComponent( seg_id ) + '&_opennonce=' + mainwpWidgetLayout.openNonce;
     });
 
-    jQuery('#mainwp-common-edit-widgets-layout-delete-button').on( 'click', function () {
-        if (jQuery(this).hasClass('disabled')) {
-            return false;
+    jQuery('#mainwp-common-edit-widgets-layout-delete-button').on( 'click', function (e) {
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const $button = jQuery(this);
+
+        if ($button.hasClass('disabled')) {
+            return;
         }
 
         mainwpUIHandleWidgetsLayout.hideWorkingStatus();
-        let delBtn = this;
+
         let seg_id = jQuery( '#mainwp-common-layout-widgets-select-fields .ui.dropdown').dropdown('get value');
-        if('' == seg_id){
-            return false;
+        if(!seg_id){
+            return;
         }
 
-        if('yes' === jQuery(delBtn).attr('running')){
-            return false;
+        if('yes' === $button.attr('running')){
+            return;
         }
 
-        jQuery(seg_id).attr('running', 'yes');
+        $button.attr('running', 'yes');
+
         let data = mainwp_secure_data({
             action: 'mainwp_ui_delete_widgets_layout',
             seg_id: seg_id,
             settings_slug: jQuery('#mainwp-manage-widgets-load-saved-layout-button').attr('settings-slug')
         });
         mainwpUIHandleWidgetsLayout.showWorkingStatus('<i class="notched circle loading icon"></i> ' + __('Deleting layout. Please wait...'), '' );
-        jQuery.post(ajaxurl, data, function (response) {
+        jQuery.post(ajaxurl, data, (response) => {
 
-            jQuery(delBtn).removeAttr('running');
+            $button.removeAttr('running');
 
             if (response.error != undefined) {
                 mainwpUIHandleWidgetsLayout.showWorkingStatus(response.error, 'red');
@@ -1296,7 +1303,5 @@ function mainwp_init_widget_layout_handlers() {
                 mainwpUIHandleWidgetsLayout.showWorkingStatus(__('An error occurred while deleting the layout.'), 'red');
             }
         }, 'json');
-
-        return false;
     });
 }

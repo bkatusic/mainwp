@@ -500,7 +500,7 @@ class Log_Query {
     public function get_log_meta_view() {
         global $wpdb;
         // Improve select.
-        $view = " ( SELECT
+        return " ( SELECT
             meta_log_id AS log_id,
             MAX(CASE WHEN meta_key = 'name' THEN meta_value END) AS meta_name,
             MAX(CASE WHEN meta_key = 'user_meta_json' THEN meta_value END) AS user_meta_json,
@@ -509,7 +509,6 @@ class Log_Query {
         FROM " . $wpdb->mainwp_tbl_logs_meta . "
         WHERE meta_key IN ('name', 'user_meta_json', 'user_meta', 'extra_info')
         GROUP BY meta_log_id ) ";
-        return $view;
     }
 
     /**

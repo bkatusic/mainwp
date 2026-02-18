@@ -1095,7 +1095,7 @@ class MainWP_System { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
      *
      * Enqueue all Mainwp Admin Scripts.
      */
-    public function admin_enqueue_scripts() {
+    public function admin_enqueue_scripts() { // phpcs:ignore -- NOSONAR - complex function.
 
         $load_cust_scripts = false;
 
@@ -1378,8 +1378,6 @@ class MainWP_System { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
 
         MainWP_System_View::admin_footer();
         MainWP_System_View::render_plugins_install_check();
-
-        //MainWP_Menu::init_sub_pages();
 
         /**
          * MainWP disabled menu items array.

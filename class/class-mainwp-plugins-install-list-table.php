@@ -236,7 +236,7 @@ class MainWP_Plugins_Install_List_Table extends \WP_List_Table { // phpcs:ignore
         <div class="ui two column stackable grid">
             <div class="column left aligned middle aligned">
                 <?php if ( ! empty( $search ) ) : ?>
-                <?php echo esc_html( sprintf( __( 'Search results for: %s', 'mainwp' ), $search ) ); ?>
+                    <?php echo esc_html( sprintf( __( 'Search results for: %s', 'mainwp' ), $search ) ); ?>
                 <?php endif; ?>
             </div>
             <div class="column right aligned middle aligned">
@@ -537,7 +537,7 @@ class MainWP_Plugins_Install_List_Table extends \WP_List_Table { // phpcs:ignore
                         <div class="left aligned middle aligned column">
                             <a href="<?php echo esc_attr( $details_link ); ?>" class="ui mini button open-plugin-details-modal"><?php echo esc_html__( 'Plugin Details', 'mainwp' ); ?></a>
                         </div>
-                        <div class="right aligned middle aligned column">   
+                        <div class="right aligned middle aligned column">
                             <div class="ui radio checkbox">
                             <input name="install-plugin" type="radio" id="install-plugin-<?php echo sanitize_html_class( $plugin['slug'] ); ?>" plugin-name="<?php echo esc_attr( $title ); ?>" plugin-version="<?php echo esc_attr( $version ); ?>">
                             <label><?php esc_html_e( 'Install Plugin', 'mainwp' ); ?></label>
@@ -556,7 +556,7 @@ class MainWP_Plugins_Install_List_Table extends \WP_List_Table { // phpcs:ignore
             do_action( 'mainwp_install_plugin_card_bottom', $plugin );
             ?>
         </div>
-        <?php
+            <?php
         }
         ?>
         <script type="text/javascript">

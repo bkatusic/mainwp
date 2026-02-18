@@ -769,8 +769,8 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
          */
         do_action( 'mainwp_before_pages_table' );
 
-        if ( ! $cached || $has_cached_results ) :
-        ?>
+        if ( ! $cached || $has_cached_results ) {
+            ?>
         <table id="mainwp-pages-table" class="ui unstackable single line table" style="width:100%">
             <thead>
                 <tr>
@@ -810,14 +810,14 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 ?>
             </tbody>
         </table>
-        <?php
-        else :
+            <?php
+        } else {
             MainWP_UI::render_empty_page_placeholder(
                 esc_html__( 'Find Pages', 'mainwp' ),
                 esc_html__( 'Select the Child Sites you want, choose any filters, then click Show Pages.', 'mainwp' ),
                 '<em data-emoji=":page_facing_up:" class="big"></em>'
             );
-        endif;
+        }
         /**
          * Action: mainwp_after_pages_table
          *

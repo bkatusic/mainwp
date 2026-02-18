@@ -278,11 +278,10 @@ jQuery(function () {
         return false;
     });
     jQuery(document).on('click', '.mainwp-plugin-delete', function () {
-        let item = this;
-        let name = jQuery(item).closest('.row-manage-item').attr('plugin-title');
+        let name = jQuery(this).closest('.row-manage-item').attr('plugin-title');
         let confirmMsg = __('You are about to delete the %1?', name);
-        mainwp_confirm(confirmMsg, function () {
-            pluginAction(jQuery(item), 'delete');
+        mainwp_confirm(confirmMsg, () =>{
+            pluginAction(jQuery(this), 'delete');
         });
         return false;
     });
@@ -312,11 +311,10 @@ jQuery(function () {
         return false;
     });
     jQuery(document).on('click', '.mainwp-theme-delete', function () {
-        let item = this;
-        let name = jQuery(item).closest('.row-manage-item').children('.themeName').val();
+        let name = jQuery(this).closest('.row-manage-item').children('.themeName').val();
         let confirmMsg = __('You are about to delete the %1?', name);
-        mainwp_confirm(confirmMsg, function () {
-            themeAction(jQuery(item), 'delete');
+        mainwp_confirm(confirmMsg, () => {
+            themeAction(jQuery(this), 'delete');
         });
         return false;
     });
@@ -714,7 +712,7 @@ let securityIssues_handle = function (response) { // NOSONAR - complex.
                     }
                 }
             }
-        } catch (err) {
+        } catch {
             result = '<i class="exclamation circle icon"></i> ' + __('Undefined error!');
         }
     }
@@ -1253,19 +1251,13 @@ let mainwp_tool_disconnect_sites_next_int = function (websiteId, data, errors) {
     });
 };
 
-let mainwp_tool_clear_activation_data = function (pObj) {
+let mainwp_tool_confirm_to_process = function (pObj) {
     let loc = jQuery(pObj).attr('href');
     mainwp_confirm('Are you sure?', function () {
-        window.location = loc;
+        globalThis.location = loc;
     });
 };
 
-let mainwp_tool_clear_archived_sites_changes = function (pObj) {
-    let loc = jQuery(pObj).attr('href');
-    mainwp_confirm('Are you sure?', function () {
-        window.location = loc;
-    });
-};
 
 /**
  * Manage sites page
@@ -1626,7 +1618,7 @@ let mainwp_managesites_add = function () {
         http_pass: jQuery('#mainwp_managesites_add_http_pass').val().trim()
     });
 
-    jQuery.post(ajaxurl, data, function (res_things) {
+    jQuery.post(ajaxurl, data, function (res_things) { // NOSONAR - function complexity.
         let response = res_things.response;
         response = response.trim();
         let errors = [];
@@ -2214,7 +2206,6 @@ jQuery(function () {
 /**
  * Add new user
  */
-jQuery(function ($) {
   function mainwp_gen_passsword(len = 24) {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+{}[]<>?';
     const arr = new Uint32Array(len);
@@ -2222,11 +2213,10 @@ jQuery(function ($) {
     return Array.from(arr, x => chars[x % chars.length]).join('');
   }
 
-  $('.mainwp-generate-password-button').on('click', function (e) {
+  jQuery('.mainwp-generate-password-button').on('click', function (e) {
     e.preventDefault();
-    $('#createuser #password, #mainwp-update-admin-password-form #password').val(mainwp_gen_passsword(24)).trigger('change');
+    jQuery('#createuser #password, #mainwp-update-admin-password-form #password').val(mainwp_gen_passsword(24)).trigger('change');
   });
-});
 
 jQuery(function () {
     jQuery(document).on('click', '#bulk_add_createuser', function () {
@@ -3026,7 +3016,7 @@ jQuery(function ($) {
                  slug = decodeURIComponent($(parent).attr('theme_slug'));
                  type = 'theme';
                  break;
-             case 'update-plugin-per-site':
+             case 'update-plugin-per-site': // NOSONAR - same as above.
                  parent = $(this).closest('.plugins-bulk-updates');
                  siteId = $(parent).attr('site_id');
                  info = $(parent).attr('site_name') + ' (' + $(parent).attr('site_url') + ') ' + $(parent).attr('tz-info');
@@ -3034,7 +3024,7 @@ jQuery(function ($) {
                  slug = decodeURIComponent( $(this).closest('tr').attr('plugin_slug') );
                  name = $(this).closest('tr').attr('plugin_name');
                  break;
-             case 'update-theme-per-site':
+             case 'update-theme-per-site': // NOSONAR - same above.
                  parent = $(this).closest('.themes-bulk-updates');
                  siteId = $(parent).attr('site_id');
                  info = $(parent).attr('site_name') + ' (' + $(parent).attr('site_url') + ') ' + $(parent).attr('tz-info');
@@ -3078,9 +3068,7 @@ jQuery(function ($) {
                  name: name,
                  from_date: '' // current date.
              });
-         } else {
-             return false;
-         };
+         }
 
         $('#mainwp-plugin-theme-history-changes-modal').modal({
             onHide: function () {
@@ -3091,7 +3079,6 @@ jQuery(function ($) {
                 mainwp_item_changes_load();
             }
         }).modal('show');
-        return false;
     });
 });
 
@@ -3107,7 +3094,7 @@ let mainwp_item_changes_load = function ( btnObj, load_more_date = '' ) {
 
     let md = jQuery('#mainwp-plugin-theme-history-changes-modal');
     let parentContent = false;
-    if(typeof btnObj !== 'undefined' && btnObj != false){
+    if(btnObj){
         parentContent = jQuery(btnObj).closest('.ui.accordion').find('.ui.content');
     } else {
         parentContent = jQuery(md).find('.scrolling.content')
@@ -3117,7 +3104,7 @@ let mainwp_item_changes_load = function ( btnObj, load_more_date = '' ) {
     jQuery(md).find('.actions .col-right').html('');
 
     const type = jQuery(md).attr('history-type');
-    const load_more = false;
+    let load_more = false;
 
     // set load date if provided
     if(typeof load_more_date === 'string' && load_more_date !== ''){
@@ -3132,16 +3119,12 @@ let mainwp_item_changes_load = function ( btnObj, load_more_date = '' ) {
     let data = 'plugin' === type ? pluginChangesLoadData : themeChangesLoadData;
 
 
-    jQuery.post(ajaxurl, data, function (response) {
+    jQuery.post(ajaxurl, data, function (response) { // NOSONAR - complex.
         jQuery(md).find('.history-actions-loading').remove();
         if (response?.error) {
             if(parentContent){
                 let err_content = '<div class="ui message red">' + response.error + '</div>';
-                if(!load_more){
-                    jQuery(parentContent).html(err_content);
-                } else {
-                    jQuery(parentContent).append(err_content);
-                }
+                jQuery(parentContent).html(err_content);
             }
         } else if (response?.list) {
             if (response.list.length == 0) {
@@ -3151,11 +3134,7 @@ let mainwp_item_changes_load = function ( btnObj, load_more_date = '' ) {
                 }
                 if(parentContent){
                     let msg_content = '<div class="ui info message">' + msg + '</div>';
-                    if(!load_more){
-                        jQuery(parentContent).html(msg_content);
-                    } else {
-                        jQuery(parentContent).append(msg_content);
-                    }
+                    jQuery(parentContent).html(msg_content);
                 }
             } else {
                 let content = '';
@@ -3236,15 +3215,9 @@ let mainwp_item_changes_load = function ( btnObj, load_more_date = '' ) {
                     jQuery(md).find('.actions .col-right').html('<a href="javascript:void(0);" onclick="mainwp_item_changes_load(false,\'' + ( response.more_date ?? get_local_date_string() ) + '\');return false;">' + __('Load More') + '</a>');
                 }
             }
-        } else {
-            if(parentContent){
-                let err_content = '<div class="ui message red">' + __('Undefined error occurred. Please try again.') + '</div>';
-                if(!load_more){
-                    jQuery(parentContent).html(err_content);
-                } else {
-                    jQuery(parentContent).append(err_content);
-                }
-            }
+        } else if(parentContent){
+            let err_content = '<div class="ui message red">' + __('Undefined error occurred. Please try again.') + '</div>';
+            jQuery(parentContent).html(err_content);
         }
     }, 'json');
 }
@@ -3309,7 +3282,7 @@ let dayHistory_SwitchViewHandler = function (btn) {
         target_date: dt
     });
 
-    jQuery.post(ajaxurl, data, function (response) {
+    jQuery.post(ajaxurl, data, function (response) { // NOSONAR - complex.
 
         jQuery(parent).find('.history-actions-loading').remove();
 
@@ -3406,7 +3379,6 @@ let listHistory_SwitchViewHandler = function (btn) {
 
     jQuery(parent).find('.content.ui').html('<div class="ui active centered inline loader history-actions-loading"></div>');
 
-    const dt = jQuery(parent).data('date');
     let md = jQuery('#mainwp-plugin-theme-history-changes-modal');
     const type = jQuery(md).attr('history-type');
 
@@ -3924,7 +3896,7 @@ jQuery.mwp_strCut = function (i, l, s, w) {
     if (!s) {
         s = '0';
     }
-    while (o.length < parseInt(l)) {
+    while (o.length <  Number.parseInt(l)) {
         // empty
         if (w == 'undefined') {
             o = s + o;
@@ -4531,8 +4503,8 @@ function mainwp_according_table_sorting(pObj) { // NOSONAR - complex.
 
             // if sort value attribute existed then sorting on that else sorting on cell value
             if (x.hasAttribute('sort-value')) {
-                xVal = parseInt(x.getAttribute('sort-value'));
-                yVal = parseInt(y.getAttribute('sort-value'));
+                xVal = Number.parseInt(x.getAttribute('sort-value'));
+                yVal = Number.parseInt(y.getAttribute('sort-value'));
                 let tmp = xVal > yVal ? -1 : 1;
                 campare = (xVal == yVal) ? 0 : tmp;
             } else {
@@ -5228,9 +5200,8 @@ jQuery(function ($) {
     });
     jQuery('#module-update-logs-db-requirement').on('click', function () {
         let msg = __('Are you sure?');
-        let btn = this;
-        mainwp_confirm(msg, function () {
-            jQuery(btn).closest('.ui.message').fadeOut();
+        mainwp_confirm(msg,  () => {
+            jQuery(this).closest('.ui.message').fadeOut();
             mainwp_module_logs_start_update_dismissed_db();
         });
         return false;
@@ -5297,9 +5268,9 @@ let get_local_date_string = function () {
 }
 
 function mainwp_forceReload(targetUrl) {
-    const url = targetUrl || window.location.href;
+    const url = targetUrl || globalThis.location.href;
     // Navigate to URL (force reload from server)
-    window.location.href = url;
+    globalThis.location.href = url;
 }
 
 class TablePersistentState {
@@ -5318,7 +5289,7 @@ class TablePersistentState {
       storage: options.storage !== false, // default true
       storagePrefix: options.storagePrefix || 'mainwp_tables_sort_state',
       onPersist: options.onPersist || null,
-      defaultSort: options.defaultSort || null, // { column, direction }
+      defaultSort: options.defaultSort || null, //  column, direction
     };
 
     this.init();

@@ -1093,7 +1093,7 @@ qq.extend(qq.UploadHandlerForm.prototype, {
 
         try {
             response = eval("(" + doc.body.innerHTML + ")");
-        } catch (err) {
+        } catch {
             response = {};
         }
 

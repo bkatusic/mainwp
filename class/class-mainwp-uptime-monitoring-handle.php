@@ -579,12 +579,13 @@ class MainWP_Uptime_Monitoring_Handle { // phpcs:ignore Generic.Classes.OpeningB
     public function handle_cleanup_heartbeat_data() {
         $glo_settings = static::get_global_monitoring_settings();
         if ( empty( $glo_settings['retention_limits'] ) || ( (int) $glo_settings['retention_limits'] <= 0 ) ) {
-            return;
+            return false;
         }
         $cleanup_at = (int) get_option( 'mainwp_uptime_monitor_cleanup_heartbeat_at', 0 );
         if ( empty( $cleanup_at ) || ( MainWP_Utility::get_timestamp() > ( $cleanup_at + DAY_IN_SECONDS ) ) ) {
             MainWP_Utility::update_option( 'mainwp_uptime_monitor_cleanup_heartbeat_at', MainWP_Utility::get_timestamp() );
             return MainWP_DB_Uptime_Monitoring::instance()->cleanup_heartbeat_data( $glo_settings['retention_limits'] );
         }
+        return false;
     }
 }

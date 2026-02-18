@@ -331,7 +331,7 @@ class Log_DB extends MainWP_DB {
      *
      * @return mixed Results.
      */
-    public function is_site_action_log_existed( $site_id = false, $object_id = false ) { //phpcs:ignore -- compatible.
+    public function is_site_action_log_existed( $site_id = false, $object_id = false ) { //phpcs:ignore -- NOSONAR compatible.
         return false;
     }
 }
