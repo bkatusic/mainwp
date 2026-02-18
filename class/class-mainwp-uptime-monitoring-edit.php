@@ -200,6 +200,14 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 $update['retention_limits'] = isset( $_POST['mainwp_edit_monitor_retention_days'] ) ? intval( $_POST['mainwp_edit_monitor_retention_days'] ) : 180;
                 MainWP_Uptime_Monitoring_Handle::update_uptime_global_settings( $update );
                 MainWP_Utility::update_option( 'mainwp_uptime_monitor_cleanup_heartbeat_at', 0 ); // reset cleanup heartbeat to process on next run.
+
+                $check_http_response = ( isset( $_POST['mainwp_check_http_response'] ) ? 1 : 0 );
+                MainWP_Utility::update_option( 'mainwp_check_http_response', $check_http_response );
+
+                $chk_http_method = isset( $_POST['mainwp_check_http_response_method'] ) ? sanitize_text_field( wp_unslash( $_POST['mainwp_check_http_response_method'] ) ) : 'head';
+                $chk_http_method = in_array( $chk_http_method, array( 'get', 'head' ) ) ? $chk_http_method : 'head';
+
+                MainWP_Utility::update_option( 'mainwp_check_http_response_method', $chk_http_method );
             }
         }
     }
@@ -397,7 +405,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 esc_html_e( 'Check site HTTP response after update', 'mainwp' );
                 ?>
                 </label>
-                <div class="ten wide column ui toggle checkbox mainwp-checkbox-showhide-elements" hide-parent="http-respon-check"  <?php echo ! $individual ? 'fire-event-parent="on-showhide-up-http-codes-element"' : ''; ?> data-tooltip="<?php esc_attr_e( 'Enable if you want your MainWP Dashboard to check child site header response after updates.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
+                <div class="ten wide column ui toggle checkbox mainwp-checkbox-showhide-elements" hide-parent="http-respon-check"  <?php echo ! $individual ? 'fire-event-parent="on-showhide-up-http-codes-element"' : ''; ?> data-tooltip="<?php esc_attr_e( 'Enable if you want your MainWP Dashboard to check child site header response after updates.', 'mainwp' ); ?>" data-inverted="" data-position="right center">
                     <input type="checkbox" class="settings-field-value-change-handler" inverted-value="1" name="mainwp_check_http_response" id="mainwp_check_http_response" <?php echo 1 === (int) get_option( 'mainwp_check_http_response', 0 ) ? 'checked="true"' : ''; ?>/>
                 </div>
             </div>
@@ -412,10 +420,10 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 esc_html_e( 'Check site HTTP response method', 'mainwp' );
                 ?>
                 </label>
-                <div class="ui six wide column" data-tooltip="<?php esc_attr_e( 'Select Check site HTTP response method. If you are not sure, select "Default".', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                <div class="ui six wide column">
                     <select class="ui dropdown settings-field-value-change-handler"id="mainwp_check_http_response_method" name="mainwp_check_http_response_method">
-                        <option <?php echo 'head' === $chk_http_method ? 'selected' : ''; ?> value="head"><?php esc_html_e( 'Head (default)', 'mainwp' ); ?></option>
-                        <option <?php echo 'get' === $chk_http_method ? 'selected' : ''; ?> value="get"><?php esc_html_e( 'Get', 'mainwp' ); ?></option>
+                        <option <?php echo 'head' === $chk_http_method ? 'selected' : ''; ?> value="head"><?php esc_html_e( 'HEAD (default)', 'mainwp' ); ?></option>
+                        <option <?php echo 'get' === $chk_http_method ? 'selected' : ''; ?> value="get"><?php esc_html_e( 'GET', 'mainwp' ); ?></option>
                     </select>
                 </div>
             </div>
@@ -606,7 +614,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                 esc_html_e( 'Monitoring data retention', 'mainwp' );
                 ?>
                 </label>
-                <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Automatically remove old heartbeat monitoring data to keep the Dashboard database size under control.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
+                <div class="ten wide column">
                     <select name="mainwp_edit_monitor_retention_days" id="mainwp_edit_monitor_retention_days" class="ui dropdown settings-field-value-change-handler">
                     <?php
                     $retention_options = array(

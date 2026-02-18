@@ -566,14 +566,6 @@ class MainWP_Settings { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
 
                 MainWP_Utility::update_option( 'mainwp_numberdays_Outdate_Plugin_Theme', ! empty( $_POST['mainwp_numberdays_Outdate_Plugin_Theme'] ) ? intval( $_POST['mainwp_numberdays_Outdate_Plugin_Theme'] ) : 365 );
 
-                $check_http_response = ( isset( $_POST['mainwp_check_http_response'] ) ? 1 : 0 );
-                MainWP_Utility::update_option( 'mainwp_check_http_response', $check_http_response );
-
-                $chk_http_method = isset( $_POST['mainwp_check_http_response_method'] ) ? sanitize_text_field( wp_unslash( $_POST['mainwp_check_http_response_method'] ) ) : 'head';
-                $chk_http_method = in_array( $chk_http_method, array( 'get', 'head' ) ) ? $chk_http_method : 'head';
-
-                MainWP_Utility::update_option( 'mainwp_check_http_response_method', $chk_http_method );
-
                 $actions_notification_enable = ( isset( $_POST['mainwp_site_actions_notification_enable'] ) ? 1 : 0 );
                 MainWP_Utility::update_option( 'mainwp_site_actions_notification_enable', $actions_notification_enable );
 
