@@ -134,16 +134,17 @@ Yes, we have a quick FAQ with many more questions and answers [here](https://mai
 
 == Screenshots ==
 
-1. Sites - Overview
+1. Sites - Operations
 2. Sites - Manage Sites
 3. Sites - Add a New Site
-4. Sites - Manage Plugins
-5. Sites - Manage Posts
-6. Sites - Manage Updates
-7. Clients - Manage Clients
-8. Cost Tracker - Cost Summary
-9. Cost Tracker - Manage Costs
-10. Dashboard Insights
+4. Sites - Dark Mode - Manage Sites
+5. Sites - Manage Plugins
+6. Sites - Manage Posts
+7. Sites - Manage Updates
+8. Clients - Manage Clients
+9. Cost Tracker - Cost Summary
+10. Cost Tracker - Manage Costs
+11. Dashboard Insights
 
 == Changelog ==
 
