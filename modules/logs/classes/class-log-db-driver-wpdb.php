@@ -117,7 +117,7 @@ class Log_DB_Driver_WPDB implements Log_DB_Driver {
     public function insert_meta( $record_id, $key, $val ) {
         global $wpdb;
 
-        return $wpdb->insert( //phpcs:ignore -- ok.
+        return $wpdb->replace( //phpcs:ignore -- ok.
             $this->table_meta,
             array(
                 'meta_log_id' => $record_id,
