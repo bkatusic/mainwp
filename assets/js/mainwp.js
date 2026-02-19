@@ -5053,7 +5053,7 @@ jQuery(function ($) {
 
 let mainwp_overview_gridstack_save_layout = function (item_id, grid) {
 
-    if (!grid || !grid.engine || !grid.engine.nodes) {
+    if (!grid?.engine?.nodes) {
         return;
     }
 
@@ -5061,15 +5061,15 @@ let mainwp_overview_gridstack_save_layout = function (item_id, grid) {
     let wgIds = [];
 
     grid.engine.nodes.forEach(function (node) {
-        if (!node.el || !node.el.id) {
+        if (!node?.el?.id) {
             return;
         }
-        
+
         let obj = {
-            "x": node.x !== undefined ? node.x : 0,
-            "y": node.y !== undefined ? node.y : 0,
-            "w": node.w !== undefined ? node.w : 4,
-            "h": node.h !== undefined ? node.h : 4
+            "x": node.x ?? 0,
+            "y": node.y ?? 0,
+            "w": node.w ?? 4,
+            "h": node.h ?? 4
         };
         orders.push(obj);
         wgIds.push(node.el.id);

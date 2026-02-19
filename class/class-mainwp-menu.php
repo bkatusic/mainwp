@@ -1092,7 +1092,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
 
                 <div id="mainwp-main-menu-mobile"  class="mainwp-main-navigation-menu test-menu ui inverted vertical accordion menu">
                     <div class="item"><i class="th left floated icon"></i><a href="admin.php?page=mainwp_tab"><?php esc_html_e( 'Overview', 'mainwp' ); ?></a></div>
-                    
+
                     <div class="item"><i class="globe left floated icon"></i>
                         <div class="title"><a href="admin.php?page=managesites" class=" with-sub"><?php esc_html_e( 'Sites', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
                         <div class="content menu" id="mainwp-sites-mobile-menu-item">
@@ -1288,7 +1288,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         <a href="<?php echo esc_url( $link['url'] ); ?>" class="ui mini basic fluid button small text"><i class="icon wordpress"></i> <?php echo esc_html( $link['text'] ); ?></a><?php //phpcs:ignore -- to avoid auto fix icon wordpress. ?>
                     </div>
                     <div class="column">
-                        <a id="mainwp-help-menu-item" class="ui mini basic fluid button" href="#"><i class="question circle icon"></i> <?php esc_html_e( 'Help', 'mainwp' ); ?></a><?php //NOSONAR -- ignore double ID, elements not rendered at the same time. ?>
+                        <a id="mainwp-help-menu-item-mobile" class="ui mini basic fluid button" href="#"><i class="question circle icon"></i> <?php esc_html_e( 'Help', 'mainwp' ); ?></a><?php //NOSONAR -- ignore double ID, elements not rendered at the same time. ?>
                     </div>
                     <div class="column item-wp-admin">
                         <a class="ui mini basic fluid button" href="<?php echo esc_url_raw( wp_logout_url() ); ?>"><i class="sign out icon"></i> <?php esc_html_e( 'Log Out', 'mainwp' ); ?></a>

@@ -1104,27 +1104,27 @@ let mainwp_common_ui_widgets_save_layout = function (itemClass, data, callBack) 
     let wgIds = [];
 
     const gridElement = document.querySelector('.grid-stack');
-    
+
     if (!gridElement) {
         return;
     }
 
     const grid = gridElement.gridstack;
-    
-    if (!grid || !grid.engine || !grid.engine.nodes) {
+
+    if (!grid?.engine?.nodes) {
         return;
     }
 
     grid.engine.nodes.forEach(function (node) {
-        if (!node.el || !node.el.id) {
+        if (!node?.el?.id) {
             return;
         }
-        
+
         let obj = {
-            "x": node.x !== undefined ? node.x : 0,
-            "y": node.y !== undefined ? node.y : 0,
-            "w": node.w !== undefined ? node.w : 4,
-            "h": node.h !== undefined ? node.h : 4
+            "x": node.x ?? 0,
+            "y": node.y ?? 0,
+            "w": node.w ?? 4,
+            "h": node.h ?? 4
         };
         orders.push(obj);
         wgIds.push(node.el.id);

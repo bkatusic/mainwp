@@ -383,13 +383,13 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
     padding: 0.92857143em;
 }
 
-#mainwp-support-menu a#mainwp-help-menu-item {
+#mainwp-support-menu a#mainwp-help-menu-item{
     color: #ffffff !important;
     font-size: 0.75em !important;
     font-weight: 300;
 }
 
-#mainwp-support-menu a#mainwp-help-menu-item .icon {
+#mainwp-support-menu a#mainwp-help-menu-item .icon{
     margin: 0px !important;
     font-size: 2em !important;
     color: #ffffff !important;
