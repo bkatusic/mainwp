@@ -759,7 +759,7 @@ class Cost_Tracker_Admin { // phpcs:ignore -- NOSONAR - multi methods.
      *
      * @return void
      */
-    public static function ajax_import_cost() {
+    public static function ajax_import_cost() { //phpcs:ignore -- NOSONAR - complex method.
         MainWP_Post_Handler::instance()->secure_request( 'mainwp_cost_tracker_import_cost' );
 
         if ( ! isset( $_POST['encoded_data'] ) ) {

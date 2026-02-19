@@ -101,16 +101,11 @@ class MainWP_Cache_Warm_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSam
     /**
      * Method invalidate_pages_by_site_actions().
      *
-     * @param array $actions Site actions.
+     * @param array $action Site actions.
      */
     public static function invalidate_pages_by_site_actions( $action ) {
-        switch ( $action ) {
-            case 'stats': // sync.
-                static::invalidate_manage_pages( array( 'mainwp_tab', 'managesites' ) );
-                break;
-            default:
-                // code...
-                break;
+        if ( 'stats' === $action ) {
+            static::invalidate_manage_pages( array( 'mainwp_tab', 'managesites' ) );
         }
     }
 
@@ -140,7 +135,7 @@ class MainWP_Cache_Warm_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSam
     /**
      * Method verify_current_page_no_cache_header()
      */
-    private static function verify_current_page_no_cache_header() {
+    private static function verify_current_page_no_cache_header() { // phpcs:ignore -- NOSONAR -complex method.
 
         $page = isset($_GET['page']) ? preg_replace('/[^a-z0-9_\-]/i', '', $_GET['page']) : ''; //phpcs:ignore -- ok.
 
@@ -251,7 +246,7 @@ class MainWP_Cache_Warm_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSam
             $userId = 0;
         }
 
-        return sha1( 'v:' . static::WPC_VER . "|u:$userId|p:$page" );
+        return sha1( 'v:' . static::WPC_VER . "|u:$userId|p:$page" ); // NOSONAR - is sufficient for keys.
     }
 
 
@@ -320,7 +315,7 @@ class MainWP_Cache_Warm_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 $key_params .= $normalized_key;
             }
         }
-        return sha1( $key_params );
+        return sha1( $key_params ); // NOSONAR - is sufficient for keys.
     }
 
 
@@ -381,7 +376,7 @@ class MainWP_Cache_Warm_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSam
             $userId = 0;
         }
         // ====== Build ETag from user + page + last-modified ======.
-        return '"mainwp_pages_' . sha1( "u:$userId|p:$page|ts:$lastChangedTs" ) . '"';
+        return '"mainwp_pages_' . sha1( "u:$userId|p:$page|ts:$lastChangedTs" ) . '"'; // NOSONAR - is sufficient for keys.
     }
 
 

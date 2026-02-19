@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - mainwp/suspend-client-v1: Suspend a client
  * - mainwp/unsuspend-client-v1: Unsuspend a client
  */
-class MainWP_Abilities_Clients {
+class MainWP_Abilities_Clients { //phpcs:ignore -- NOSONAR -- class complexity acceptable.
 
     /**
      * Register all client abilities.
@@ -275,7 +275,7 @@ class MainWP_Abilities_Clients {
      * @param array $input Validated input parameters (unused but required by ability signature).
      * @return array|\WP_Error Result array or error.
      */
-    public static function execute_count_clients( array $input ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Required by ability signature.
+    public static function execute_count_clients( array $input ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- NOSONAR Required by ability signature.
         $total = MainWP_DB_Client::instance()->get_wp_clients( array( 'count_only' => true ) );
 
         return array(
@@ -764,7 +764,7 @@ class MainWP_Abilities_Clients {
                 'label'               => __( 'Get Client Sites', 'mainwp' ),
                 'description'         => __( 'Get sites associated with a MainWP client. Possible errors: mainwp_client_not_found, ability_invalid_permissions', 'mainwp' ),
                 'category'            => 'mainwp-clients',
-                'input_schema'        => self::get_get_client_sites_input_schema(),
+                'input_schema'        => self::get_count_client_sites_input_schema(),
                 'output_schema'       => self::get_get_client_sites_output_schema(),
                 'execute_callback'    => array( self::class, 'execute_get_client_sites' ),
                 'permission_callback' => array( MainWP_Abilities_Util::class, 'check_rest_api_permission' ),
@@ -778,21 +778,6 @@ class MainWP_Abilities_Clients {
                     ),
                 ),
             )
-        );
-    }
-
-    /**
-     * Get input schema for get-client-sites.
-     *
-     * @return array Input schema definition.
-     */
-    private static function get_get_client_sites_input_schema(): array {
-        return array(
-            'type'       => 'object',
-            'properties' => array(
-                'client_id_or_email' => array( 'type' => array( 'integer', 'string' ) ),
-            ),
-            'required'   => array( 'client_id_or_email' ),
         );
     }
 
@@ -885,7 +870,7 @@ class MainWP_Abilities_Clients {
      *
      * @return array Input schema definition.
      */
-    private static function get_count_client_sites_input_schema(): array {
+    private static function get_count_client_sites_input_schema(): array { // phpcs:ignore -- NOSONAR -- repeat function.
         return array(
             'type'       => 'object',
             'properties' => array(
@@ -900,7 +885,7 @@ class MainWP_Abilities_Clients {
      *
      * @return array Output schema definition.
      */
-    private static function get_count_client_sites_output_schema(): array {
+    private static function get_count_client_sites_output_schema(): array { // phpcs:ignore - NOSONAR -- same get_count_clients_output_schema.
         return array(
             'type'       => 'object',
             'properties' => array(
@@ -966,7 +951,7 @@ class MainWP_Abilities_Clients {
      *
      * @return array Input schema definition.
      */
-    private static function get_get_client_costs_input_schema(): array {
+    private static function get_get_client_costs_input_schema(): array { // phpcs:ignore -- NOSONAR -- repeat function.
         return array(
             'type'       => 'object',
             'properties' => array(
@@ -1086,7 +1071,7 @@ class MainWP_Abilities_Clients {
      *
      * @return array Input schema definition.
      */
-    private static function get_suspend_client_input_schema(): array {
+    private static function get_suspend_client_input_schema(): array { // phpcs:ignore -- NOSONAR -- repeat function.
         return array(
             'type'       => 'object',
             'properties' => array(
@@ -1171,7 +1156,7 @@ class MainWP_Abilities_Clients {
      *
      * @return array Input schema definition.
      */
-    private static function get_unsuspend_client_input_schema(): array {
+    private static function get_unsuspend_client_input_schema(): array { // phpcs:ignore -- NOSONAR -- repeat function.
         return array(
             'type'       => 'object',
             'properties' => array(

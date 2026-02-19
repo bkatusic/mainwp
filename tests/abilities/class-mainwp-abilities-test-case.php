@@ -57,7 +57,7 @@ use MainWP\Dashboard\MainWP_DB_Client;
  *
  * Provides helper methods for creating test fixtures and mocking MainWP behavior.
  */
-abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase {
+abstract class MainWP_Abilities_Test_Case extends WP_UnitTestCase { //phpcs:ignore -- NOSONAR - multi methods.
 
 	/**
 	 * Track created sync job IDs for cleanup.

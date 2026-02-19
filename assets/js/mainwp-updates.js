@@ -3762,8 +3762,8 @@ const render_html_regression_icon = function (result, onDone) {
         ) {
             const regression_scope = result.html_regression_max_scope;
             _icon = render_html_regression_sync_score_icon(
-                parseInt(regression_scope.change_score_current),
-                parseInt(regression_scope.change_score),
+                Number.parseInt(regression_scope.change_score_current),
+                Number.parseInt(regression_scope.change_score),
                 regression_scope.website_id
             );
         } else {

@@ -74,7 +74,7 @@
             if (!res.ok) return false;
             const len = res.headers.get('content-length');
             if (!len) return true; // no info -> allow
-            return parseInt(len, 10) <= MAX_BYTES;
+            return Number.parseInt(len, 10) <= MAX_BYTES;
         } catch {
             // HEAD may be blocked or not supported; allow rather than fail closed.
             return true;
@@ -117,7 +117,7 @@
     }
 
     function setupViewportWarm(root) {
-        if (!('IntersectionObserver' in window)) return;
+        if (!('IntersectionObserver' in globalThis)) return;
         const io = new IntersectionObserver((entries) => {
             entries.forEach((e) => {
                 if (!e.isIntersecting) return;

@@ -10,7 +10,7 @@ let updatePagesBulkActionsState = function() {
     let checkedCount = jQuery('#mainwp-pages-table input[name="page[]"]:checked').length;
     let dropdown = jQuery('#mainwp-manage-pages #mainwp-bulk-actions');
     let applyButton = jQuery('#mainwp-do-pages-bulk-actions');
-    
+
     if (checkedCount > 0) {
         dropdown.removeClass('disabled');
         dropdown.parent('.ui.dropdown').removeClass('disabled');
@@ -286,7 +286,7 @@ let updatePostsBulkActionsState = function() {
     let checkedCount = jQuery('#mainwp-posts-table input[name="post[]"]:checked').length;
     let dropdown = jQuery('#mainwp-manage-posts #mainwp-bulk-actions');
     let applyButton = jQuery('#mainwp-do-posts-bulk-actions');
-    
+
     if (checkedCount > 0) {
         dropdown.removeClass('disabled');
         dropdown.parent('.ui.dropdown').removeClass('disabled');
@@ -408,7 +408,7 @@ let mainwppost_postAction = function (elem, what, postType) {
     data = mainwp_secure_data(data);
 
     rowElement.html('<td colspan="99"><i class="notched circle loading icon"></i> Please wait...</td>');
-    jQuery.post(ajaxurl, data, function (response) {
+    jQuery.post(ajaxurl, data, function (response) { // NOSONAR - complexity 11/10.
         if (response.error) {
             rowElement.html('<td colspan="99"><i class="times red icon"></i>' + response.error + '</td>');
         } else if (response.result) {
@@ -537,7 +537,7 @@ let mainwp_fetch_posts_prepare = function (postId, userId, start_sites) { // NOS
 
     let i = 0;
     let num_sites = jQuery('#search-bulk-sites').attr('number-sites');
-    num_sites = parseInt(num_sites);
+    num_sites =  Number.parseInt(num_sites);
 
     let select_sites_error = '<div class="ui yellow message">' + __('Please select at least one website or group or client.') + '</div>';
 

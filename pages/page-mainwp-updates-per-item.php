@@ -230,11 +230,10 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
             </tbody>
         </table>
         <?php else : ?>
-            <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No updates available right now.', 'mainwp' ) ); ?>
+            <?php MainWP_UI::render_empty_page_placeholder( __( 'Plugins are up to date', 'mainwp' ), __( 'No plugin updates available right now.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
     }
-
 
     /**
      * Method render_incompatible_message().
@@ -308,7 +307,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
         $updates_table_helper = new MainWP_Updates_Table_Helper( $userExtension->site_view, 'theme' );
         ?>
         <?php if ( 0 < $total_theme_upgrades ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox mainwp-js-persistent-table" id="mainwp-themes-updates-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox mainwp-js-persistent-table mainwp-themes-updates-items-table" id="mainwp-themes-updates-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
@@ -466,7 +465,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
             </tbody>
         </table>
         <?php else : ?>
-            <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No updates available right now.', 'mainwp' ) ); ?>
+            <?php MainWP_UI::render_empty_page_placeholder( __( 'Themes are up to date', 'mainwp' ), __( 'No theme updates available right now.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
     }
@@ -608,7 +607,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
             </tbody>
         </table>
         <?php else : ?>
-            <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No updates available right now.', 'mainwp' ) ); ?>
+            <?php MainWP_UI::render_empty_page_placeholder( __( 'Translations are up to date', 'mainwp' ), __( 'No translation updates available right now.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
     }
@@ -736,7 +735,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
             </tbody>
         </table>
         <?php else : ?>
-            <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No abandoned plugins detected.', 'mainwp' ) ); ?>
+            <?php MainWP_UI::render_empty_page_placeholder( __( 'No abandoned plugins detected', 'mainwp' ), __( 'None of your plugins are currently marked as abandoned.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
     }
@@ -763,7 +762,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
         $count_abandoned = count( $allThemesOutdate );
         ?>
         <?php if ( 0 < $count_abandoned ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table mainwp-js-persistent-table" id="mainwp-themes-updates-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table mainwp-js-persistent-table mainwp-themes-updates-items-table" id="mainwp-themes-abandoned-updates-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
@@ -861,7 +860,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
             </tbody>
         </table>
         <?php else : ?>
-            <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No abandoned themes detected.', 'mainwp' ) ); ?>
+            <?php MainWP_UI::render_empty_page_placeholder( __( 'No abandoned themes detected', 'mainwp' ), __( 'None of your themes are currently marked as abandoned.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
     }

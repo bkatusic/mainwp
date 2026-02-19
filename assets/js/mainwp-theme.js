@@ -1756,13 +1756,13 @@ jQuery(function($) {
             adminbar_height = 0;
 
         if ($('#wpadminbar').length) {
-            adminbar_height = parseInt($('#wpadminbar').css('height'), 10);
+            adminbar_height =  Number.parseInt($('#wpadminbar').css('height'), 10);
         }
 
         if (tbWindow.length) {
             tbWindow.width(W - 50).height(H - 45 - adminbar_height);
             $('#TB_iframeContent').width(W - 50).height(H - 75 - adminbar_height);
-            tbWindow.css({ 'margin-left': '-' + parseInt(((W - 50) / 2), 10) + 'px' });
+            tbWindow.css({ 'margin-left': '-' +  Number.parseInt(((W - 50) / 2), 10) + 'px' });
             if (typeof document.body.style.maxWidth !== 'undefined') {
                 tbWindow.css({ 'top': 20 + adminbar_height + 'px', 'margin-top': '0' });
             }

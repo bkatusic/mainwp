@@ -864,7 +864,7 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
      * @param WP_REST_Request $request Full details about the request.
      * @return WP_Error|WP_REST_Response
      */
-    public function update_all_items_start( $request ) {
+    public function update_all_items_start( $request ) { //phpcs:ignore -- NOSONAR complex function.
 
         $batch_updates_running = get_option( 'mainwp_batch_updates_is_running', 0 );
         $start_time            = get_option( 'mainwp_batch_updates_start_time', 0 );
@@ -959,7 +959,7 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
      * @param WP_REST_Request $request Full details about the request.
      * @return WP_Error|WP_REST_Response
      */
-    public function update_all_items_inidividual_site_start( $request ) {
+    public function update_all_items_inidividual_site_start( $request ) { //phpcs:ignore -- NOSONAR complex function.
         $website = $this->get_request_item( $request );
 
         if ( is_wp_error( $website ) ) {

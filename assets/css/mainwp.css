@@ -118,6 +118,11 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
     opacity: 0.4;
 }
 
+.mainwp-ui input[type="text"],
+.mainwp-ui input[type="search"] {
+    min-height: auto !important;
+}
+
 /* QSW */
 .mainwp-ui-setup::before {
   content: '';
@@ -334,6 +339,10 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
 }
 
 /* Menu */
+
+#mainwp-main-mobile-navigation-container .ui.menu {
+    width: 100%;
+}
 
 #mainwp-main-navigation-container {
     display: flex;
@@ -811,17 +820,16 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
 }
 
 /* Tables */
-/*
-.mainwp-ui table.dataTable thead>tr>th span.dt-column-order {
-    position: relative !important;
-    left: 8px !important;
-    right: 0px !important;
-}
-*/
 .mainwp-ui table.dataTable thead > tr > th .dt-column-header {
     justify-content: start !important;
     flex-direction: row !important;
     gap: 0.5rem !important;
+}
+
+.mainwp-ui table.dataTable thead > tr > th#wpcore_update .dt-column-header,
+.mainwp-ui table.dataTable thead > tr > th#plugin_update .dt-column-header,
+.mainwp-ui table.dataTable thead > tr > th#theme_update .dt-column-header {
+    justify-content: center !important;
 }
 
 .mainwp-ui table.dataTable thead > tr > th.right.aligned .dt-column-header {

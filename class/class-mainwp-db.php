@@ -1765,7 +1765,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
      *
      * @return int Count of sites matching the filters.
      */
-    public function get_websites_count_for_current_user( $params = array() ) {
+    public function get_websites_count_for_current_user( $params = array() ) { // NOSONAR - complex.
         if ( ! is_array( $params ) ) {
             $params = array();
         }
@@ -1805,6 +1805,9 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
                     break;
                 case 'suspended':
                     $where .= ' AND wp.suspended = 1 ';
+                    break;
+                default:
+                    // No additional filtering.
                     break;
             }
         }
@@ -1875,7 +1878,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
 
         $view           = isset( $params['view'] ) ? $params['view'] : 'default'; // must be default to compatible with get_wp_options_view().
         $selectgroups   = isset( $params['selectgroups'] ) && $params['selectgroups'] ? true : false;
-        $search_site    = isset( $params['search'] ) ? $this->escape( trim( $params['search'] ) ) : null;
+        $search_site    = isset( $params['search'] ) ? trim( $params['search'] ) : null;
         $orderBy        = isset( $params['orderby'] ) ? $params['orderby'] : 'wp.url';
         $offset         = isset( $params['offset'] ) ? intval( $params['offset'] ) : false;
         $rowcount       = isset( $params['rowcount'] ) ? intval( $params['rowcount'] ) : false;
@@ -1960,14 +1963,31 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
                 $where .= ' AND wp.id IN (' . implode( ',', $selected_sites ) . ') ';
             }
 
-            // for searching.
-            if ( null !== $search_site && '' !== $search_site ) {
-                $like_search = '%' . $this->wpdb->esc_like( $search_site ) . '%';
-                $where      .= $this->wpdb->prepare( ' AND (wp.name LIKE %s OR wp.url LIKE %s) ', $like_search, $like_search );
-            }
-
             if ( null !== $extraWhere ) {
                 $where .= ' AND ' . $extraWhere;
+            }
+        }
+
+        // Search filtering.
+        if ( null !== $search_site && '' !== $search_site ) {
+            // Escape LIKE wildcards first (%, _, \).
+            // Note: Cannot use WordPress escaping functions (esc_like, esc_sql, prepare) because
+            // WordPress 6.2+ creates placeholder tokens that are only substituted during query execution.
+            // Since this method returns a SQL string for later execution, tokens would never be substituted.
+            // We use direct mysqli_real_escape_string() which is the same underlying function WordPress uses.
+            $search_escaped = str_replace( array( '\\', '%', '_' ), array( '\\\\', '\\%', '\\_' ), $search_site );
+            $like_pattern   = '%' . $search_escaped . '%';
+
+            // SQL escape using direct mysqli function to bypass WordPress placeholder tokens.
+            if ( $this->wpdb->dbh instanceof \mysqli ) {
+                $like_pattern_escaped = mysqli_real_escape_string( $this->wpdb->dbh, $like_pattern );
+            } else {
+                // Fallback: reject if no mysqli connection available.
+                $like_pattern_escaped = '';
+            }
+
+            if ( '' !== $like_pattern_escaped ) {
+                $where .= " AND (wp.name LIKE '" . $like_pattern_escaped . "' OR wp.url LIKE '" . $like_pattern_escaped . "') ";
             }
         }
 
@@ -2208,6 +2228,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
             MainWP_Logger::instance()->log_events( 'cache-metrics', sprintf( '[sql search websites=%s]', $qry ) );
         }
         MainWP_Logger::instance()->log_events( 'db-queries', sprintf( '[sql search websites=%s]', $qry ) );
+        
         return $qry;
     }
 
@@ -3231,7 +3252,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
         $where_site_threshold  = ' ( wp.health_threshold = 80 AND wp_sync.health_value < 80 ) '; // should-be-improved site health.
         $where_site_threshold .= ' OR ( wp.health_threshold = 100 AND wp_sync.health_value >= 80 ) '; // good site health.
 
-        
+
         $wp_table       = esc_sql( $this->table_name( 'wp' ) );
         $wp_sync_table  = esc_sql( $this->table_name( 'wp_sync' ) );
         $option_view    = $this->get_wp_options_view( $extra_view );

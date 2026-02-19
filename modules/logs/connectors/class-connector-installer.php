@@ -240,7 +240,7 @@ class Connector_Installer extends Log_Connector {
      * @param array  $params params array.
      * @param array  $action_data response data.
      */
-    public function callback_mainwp_install_plugin_action( $website, $plugin_act, $params, $action_data ) {
+    public function callback_mainwp_install_plugin_action( $website, $plugin_act, $params, $action_data ) { // phpcs:ignore -- NOSONAR - complex method.
 
         if ( empty( $website ) || ! is_object( $website ) || empty( $website->id ) || empty( $plugin_act ) || ! is_string( $plugin_act ) || ! is_array( $params ) ) {
             return;

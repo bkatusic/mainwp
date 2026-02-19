@@ -200,7 +200,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
         ?>
         <input type="hidden" name="select_by" value="<?php echo esc_attr( $selectedby ); ?>" id="select_by<?php echo esc_attr( $rand_id_prefix ); // empty prefix to ensure compatibility with extensions. ?>"/>
         <input type="hidden" name="select_sites_tab" id="select_sites_tab<?php echo esc_attr( $rand_id_prefix ); // empty prefix to ensure compatibility with extensions. ?>" value="<?php echo esc_attr( $selectedby ); ?>"/>
-        
+
         <div class="mainwp-select-sites-header" id="mainwp-select-sites-header<?php echo esc_attr( $rand_id_prefix ); // empty prefix to ensure compatibility with extensions. ?>" >
             <div class="ui secondary mini horizontal menu" id="mainwp-select-sites-menu">
                 <a class="item ui tab <?php echo ( 'site' === $selectedby ) ? 'active' : ''; ?>" data-tab="mainwp-select-sites-<?php echo esc_attr( $tab_id ); ?>" select-by="site"><?php esc_html_e( 'Sites', 'mainwp' ); ?></a>
@@ -215,7 +215,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 <?php endif; ?>
             </div>
         </div>
-        
+
 
         <?php
         /**
@@ -291,7 +291,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                         <div id="mainwp-select-sites-placeholder" class="ui segment">
                             <?php static::render_empty_element_placeholder( __( 'No sites yet', 'mainwp' ), __( 'Connect your first WordPress site to start managing it from MainWP.', 'mainwp' ), '<em data-emoji=":link:" class="medium"></em>' ); ?>
                             <div class="ui center aligned segment">
-                                <a href="admin.php?page=managesites&do=new" class="ui mini green button"><?php esc_html_e( 'Connect a Site', 'mainwp'); ?></a> <a href="https://docs.mainwp.com/getting-started/get-started-with-mainwp#add-a-site-to-your-dashboard" class="ui mini grey basic button" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Learn How', 'mainwp'); ?></a>
+                                <a href="admin.php?page=managesites&do=new" class="ui mini green button"><?php esc_html_e( 'Connect a Site', 'mainwp' ); ?></a> <a href="https://docs.mainwp.com/getting-started/get-started-with-mainwp#add-a-site-to-your-dashboard" class="ui mini grey basic button" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Learn How', 'mainwp' ); ?></a>
                             </div>
                         </div>
                         <?php
@@ -1045,7 +1045,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                             let tourId = jQuery( this ).attr( 'tour-id' );
                             jQuery( '#mainwp-documentation-sidebar' ).sidebar( 'toggle' );
                             if(tourId){
-                                window.USETIFUL.tour.start( parseInt( tourId ) );
+                                window.USETIFUL.tour.start(  Number.parseInt( tourId ) );
                             } else {
                                 console.warn('Error: empty tour ID. Please set valid tour ID.');
                             }
@@ -1067,7 +1067,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                         setTimeout(
                             function () {
                                 try {
-                                    window.USETIFUL.tour.start( parseInt( 40279 ) );
+                                    window.USETIFUL.tour.start(  Number.parseInt( 40279 ) );
                                 } catch ( e ) {
                                     if ( _count_retry < 10 ) {
                                         _count_retry++;
@@ -1420,8 +1420,8 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
             $website = MainWP_DB::instance()->get_website_by_id( $id );
             ?>
             <?php if ( $id && $website && '' !== $website->sync_errors ) : ?>
-                <a href="#" class="mainwp-updates-overview-reconnect-site ui green button" adminuser="<?php echo esc_attr( $website->adminname ); ?>" siteid="<?php echo intval( $website->id ); ?>" data-position="bottom right" aria-label="Reconnect <?php echo esc_html( stripslashes( $website->name ) ); ?>" data-tooltip="Reconnect <?php echo esc_html( stripslashes( $website->name ) ); ?>" data-inverted=""><i class="undo alternate icon"></i> <?php echo esc_html__( 'Reconnect', 'mainwp'); ?></a>
-            <?php
+                <a href="#" class="mainwp-updates-overview-reconnect-site ui green button" adminuser="<?php echo esc_attr( $website->adminname ); ?>" siteid="<?php echo intval( $website->id ); ?>" data-position="bottom right" aria-label="Reconnect <?php echo esc_html( stripslashes( $website->name ) ); ?>" data-tooltip="Reconnect <?php echo esc_html( stripslashes( $website->name ) ); ?>" data-inverted=""><i class="undo alternate icon"></i> <?php echo esc_html__( 'Reconnect', 'mainwp' ); ?></a>
+                <?php
                 else :
                     $site_sync_info     = MainWP_Utility::get_last_sync_info( $id );
                     $site_sync_tooltip  = '';
@@ -1447,45 +1447,45 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                             stripslashes( $website->name )
                         );
                     }
-                ?>
+                    ?>
                 <a class="ui green <?php echo 0 < $sites_count ? '' : 'disabled'; ?> button" id="mainwp-sync-sites" data-tooltip="<?php echo esc_attr( $site_sync_tooltip ); ?>" data-inverted="" data-position="left center" aria-label="<?php echo esc_attr( $site_sync_tooltip ); ?>" style="position: relative;">
                     <?php if ( $site_sync_outdated ) : ?>
                         <span class="ui red empty circular looping pulsating transition label" style="position: absolute; top: -4px; right: -4px;"></span>
                     <?php endif; ?>
-                    <i class="sync alternate icon"></i> <?php echo esc_html__( 'Sync', 'mainwp'); ?>
+                    <i class="sync alternate icon"></i> <span class="mainwp-768-hide"><?php echo esc_html__( 'Sync', 'mainwp'); ?></span>
                 </a>
             <?php endif; ?>
             <?php
                 else :
-                $el_id_syc_1    = 'mainwp-sync-sites';
-                $sync_info      = MainWP_Utility::get_last_sync_info();
-                $sync_tooltip   = '';
-                $sync_outdated  = false;
-                $current_time   = time();
-                $twenty_four_h  = 24 * HOUR_IN_SECONDS;
+                    $el_id_syc_1   = 'mainwp-sync-sites';
+                    $sync_info     = MainWP_Utility::get_last_sync_info();
+                    $sync_tooltip  = '';
+                    $sync_outdated = false;
+                    $current_time  = time();
+                    $twenty_four_h = 24 * HOUR_IN_SECONDS;
 
-                if ( ! empty( $sync_info['timestamp'] ) && ( $current_time - $sync_info['timestamp'] ) > $twenty_four_h ) {
-                    $sync_outdated = true;
-                    $sync_tooltip  = esc_attr__( 'Data not synced for more than 24h. Click here to sync all sites.', 'mainwp' );
-                } elseif ( ! empty( $sync_info['formatted'] ) ) {
-                    $sync_tooltip = sprintf(
-                        esc_attr__( 'Last sync: %s. Click here to sync all sites.', 'mainwp' ),
-                        $sync_info['formatted']
-                    );
-                } else {
-                    $sync_tooltip = esc_attr__( 'Click here to sync all sites.', 'mainwp' );
-                }
-            ?>
+                    if ( ! empty( $sync_info['timestamp'] ) && ( $current_time - $sync_info['timestamp'] ) > $twenty_four_h ) {
+                        $sync_outdated = true;
+                        $sync_tooltip  = esc_attr__( 'Data not synced for more than 24h. Click here to sync all sites.', 'mainwp' );
+                    } elseif ( ! empty( $sync_info['formatted'] ) ) {
+                        $sync_tooltip = sprintf(
+                            esc_attr__( 'Last sync: %s. Click here to sync all sites.', 'mainwp' ),
+                            $sync_info['formatted']
+                        );
+                    } else {
+                        $sync_tooltip = esc_attr__( 'Click here to sync all sites.', 'mainwp' );
+                    }
+                    ?>
                 <a class="ui green <?php echo 0 < $sites_count ? '' : 'disabled'; ?> button" id="<?php echo esc_attr( $el_id_syc_1 ); ?>" data-tooltip="<?php echo esc_attr( $sync_tooltip ); ?>" data-inverted="" data-position="left center" aria-label="<?php echo esc_attr( $sync_tooltip ); ?>" style="position: relative;">
-                <?php if ( $sync_outdated ) : ?>
+                    <?php if ( $sync_outdated ) : ?>
                     <span class="ui red empty circular looping pulsating transition label" style="position: absolute; top: -4px; right: -4px;"></span>
                 <?php endif; ?>
-                <i class="sync alternate icon"></i> <?php echo esc_html__( 'Sync', 'mainwp'); ?>
+                <i class="sync alternate icon"></i> <span class="mainwp-768-hide"><?php echo esc_html__( 'Sync', 'mainwp'); ?></span>
             </a>
         <?php endif; ?>
 
         <div class="ui top left pointing dropdown <?php echo empty( $sites_count ) ? 'green' : ''; ?> button" id="mainwp-add-new-buttons" aria-label="<?php esc_attr_e( 'Add new item to your MainWP Dashboard', 'mainwp' ); ?>">
-            <i class="plus icon"></i> <?php echo esc_html__( 'Add', 'mainwp'); ?>
+            <i class="plus icon"></i> <?php echo esc_html__( 'Add', 'mainwp' ); ?>
             <div class="menu">
                 <a class="item" href="<?php echo esc_url( admin_url( 'admin.php?page=managesites&do=new' ) ); ?>"><?php esc_html_e( 'Add Website', 'mainwp' ); ?></a>
                 <?php if ( \mainwp_current_user_can( 'dashboard', 'manage_clients' ) ) { ?>
@@ -1499,14 +1499,14 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 <a class="item" href="<?php echo esc_url( admin_url( 'admin.php?page=UserBulkAdd' ) ); ?>"><?php esc_html_e( ' Create User', 'mainwp' ); ?></a>
             </div>
         </div>
-        
+
         <?php if ( $screen && ( ( 'mainwp_tab' === $page ) || isset( $_GET['dashboard'] ) || ( ( 'ManageClients' === $page ) && isset( $_GET['client_id'] ) ) || ( 'CostSummary' === $page ) || ( 'InsightsOverview' === $page ) ) ) : ?>
             <span id="mainwp-header-layout-actions">
                 <?php MainWP_Ui_Manage_Widgets_Layout::render_edit_layout( $screen->id ); ?>
             </span>
         <?php endif; ?>
 
-        <span id="mainwp-header-secondary-actions">
+        <span id="mainwp-header-secondary-actions" class="mainwp-768-hide">
             <?php if ( ( 'mainwp_tab' === $page ) || isset( $_GET['dashboard'] ) || in_array( $page, $sidebar_pages ) ) : // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Recommended ?>
             <a id="mainwp-screen-options-button" class="ui icon button" onclick="jQuery( '#mainwp-overview-screen-options-modal' ).modal({allowMultiple:true}).modal( 'show' ); return false;" data-inverted="" data-position="bottom right" href="#" aria-label="<?php esc_attr_e( 'Page Settings', 'mainwp' ); ?>" data-tooltip="<?php esc_html_e( 'Page Settings', 'mainwp' ); ?>">
                 <i class="cog icon"></i>
@@ -1866,12 +1866,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
         if ( $selected_widget_layout ) {
             // to support saving selected layout.
             ?>
-            <input type="hidden" id="mainwp-widgets-selected-layout" layout-name="<?php echo esc_attr( $selected_layout['name'] ); ?>" layout-idx="<?php echo esc_attr( $layid ); ?>" >
-            <script type="text/javascript">
-                jQuery( document ).ready( function( $ ) {
-                    mainwp_overview_gridstack_save_layout(<?php echo (int) $client_id; ?>);
-                } );
-            </script>
+            <input type="hidden" id="mainwp-widgets-selected-layout" layout-name="<?php echo esc_attr( $selected_layout['name'] ); ?>" layout-idx="<?php echo esc_attr( $layid ); ?>" data-save-on-load="true" >
             <?php
         }
         ?>
@@ -1917,8 +1912,19 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 // $layout['h'] = 4;
                 // }
 
-                $layout_attrs_escaped  = ' gs-y="' . ( isset( $layout['y'] ) && -1 !== (int) ( $layout['y'] ) ? esc_attr( $layout['y'] ) : '' ) . '" gs-x="' . ( isset( $layout['x'] ) && - 1 !== (int) $layout['x'] ? esc_attr( $layout['x'] ) : '' ) . '" ';
-                $layout_attrs_escaped .= ' gs-w="' . ( isset( $layout['w'] ) ? esc_attr( $layout['w'] ) : '' ) . '" gs-h="' . ( isset( $layout['h'] ) ? esc_attr( $layout['h'] ) : '' ) . '" ';
+                $layout_attrs_escaped = '';
+                if ( isset( $layout['x'] ) && (int) $layout['x'] >= 0 ) {
+                    $layout_attrs_escaped .= ' gs-x="' . esc_attr( $layout['x'] ) . '"';
+                }
+                if ( isset( $layout['y'] ) && (int) $layout['y'] >= 0 ) {
+                    $layout_attrs_escaped .= ' gs-y="' . esc_attr( $layout['y'] ) . '"';
+                }
+                if ( isset( $layout['w'] ) && (int) $layout['w'] > 0 ) {
+                    $layout_attrs_escaped .= ' gs-w="' . esc_attr( $layout['w'] ) . '"';
+                }
+                if ( isset( $layout['h'] ) && (int) $layout['h'] > 0 ) {
+                    $layout_attrs_escaped .= ' gs-h="' . esc_attr( $layout['h'] ) . '"';
+                }
 
                 echo '<div id="widget-' . esc_html( $box['id'] ) . '" class="grid-stack-item" ' . $layout_attrs_escaped . '>' . "\n"; //phpcs:ignore -- escaped.
                     echo '<div class="grid-stack-item-content ui segment mainwp-widget">' . "\n";
@@ -1934,32 +1940,37 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 let page_sortablewidgets = '<?php echo esc_js( $page ); ?>';
                 let page_widget = '<?php echo esc_js( $page_widget ); ?>';
                 jQuery( document ).ready( function( $ ) {
-                    let wgIds = [];
-                    jQuery( ".mainwp-widget" ).each( function () {
-                        wgIds.push( jQuery( this ).attr('id') );
-                    } );
-                    let gsOpts = {
-                        auto: true,
-                        cellHeight: '1rem',
-                        float: false,
-                        resizable: {
-                            handles: 'e,se,s,sw,w'
-                        },
-                        margin: '1rem',
-                        itemClass: 'grid-stack-item',
-                        handleClass: 'handle-drag',
-                        columnOpts: {
-                            breakpointForWindow: true,  // test window vs grid size
-                            breakpoints: [{w:768, c:1}],
-                        },
-                    }
-
-                    let grid = GridStack.init(gsOpts);
-                    jQuery('#mainwp-widgets-placeholder').dimmer('hide');
-                    grid.on('change', function() {
-                        mainwp_overview_gridstack_save_layout(<?php echo (int) $client_id; ?>);
-                    });
-                });
+            let wgIds = [];
+            jQuery( ".mainwp-widget" ).each( function () {
+                wgIds.push( jQuery( this ).attr('id') );
+            } );
+            let gsOpts = {
+                auto: true,
+                cellHeight: '1rem',
+                float: false,
+                resizable: {
+                    handles: 'e,se,s,sw,w'
+                },
+                margin: '1rem',
+                itemClass: 'grid-stack-item',
+                handleClass: 'handle-drag',
+                columnOpts: {
+                    breakpointForWindow: true,  // test window vs grid size
+                    breakpoints: [{w:768, c:1}],
+                },
+            }
+            let grid = GridStack.init(gsOpts);
+            
+            grid.on('change', function() {
+                mainwp_overview_gridstack_save_layout(<?php echo (int) $client_id; ?>, grid);
+            });
+            
+            if (jQuery('#mainwp-widgets-selected-layout[data-save-on-load="true"]').length) {
+                mainwp_overview_gridstack_save_layout(<?php echo (int) $client_id; ?>, grid);
+            }
+            
+            jQuery('#mainwp-widgets-placeholder').dimmer('hide');
+        });
         </script>
         <?php
     }
@@ -2641,7 +2652,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                             </div>
                         </div>
                         <div class="left aligned extra content">
-                            <div class="ui toggle disabled checked checkbox" onclick="event.stopPropagation()">
+                            <div class="ui toggle disabled checked checkbox on-stop-propagation">
                                 <input type="checkbox" class="" name="" id="" checked="true" />
                                 <label><?php esc_html_e( 'Always On', 'mainwp' ); ?></label>
                             </div>
@@ -2668,7 +2679,16 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
             </div>
 
         </div>
-
+        <script type="text/javascript">
+            // to fix not keyboard accessible issue.
+            document.querySelector('.ui.toggle.on-stop-propagation')
+            .addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            });
+        </script>
         <?php
     }
 
@@ -3090,7 +3110,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
 
         if ( $echo_out ) {
             echo $out; //phpcs:ignore --ok.
-            return;
+            return '';
         }
         return $out;
     }

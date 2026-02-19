@@ -111,7 +111,7 @@ class MainWP_Actions_Handler { //phpcs:ignore Generic.Classes.OpeningBraceSameLi
      *
      * @since 4.5.1.1
      */
-    public function hook_mainwp_fetch_url_authed( $website, $information, $action, $params, $others ) {
+    public function hook_mainwp_fetch_url_authed( $website, $information, $action, $params, $others ) { // phpcs:ignore -- NOSONAR -complex method.
         if ( 'plugin_action' === $action ) {
             $plugin_act = isset( $params['action'] ) ? $params['action'] : '';
 

@@ -300,7 +300,7 @@ class Log_Admin {
     public function render_update_db_notice() {
         $status = '';
         $dbver  = Log_Install::instance()->get_current_logs_db_ver();
-        if ( version_compare( $dbver, '1.0.1.26', '=' ) && ! get_option( 'mainwp_module_logs_updates_dismissed_db_cancelled' ) ) { // checks ver <= 22 only.
+        if ( version_compare( $dbver, '1.0.1.26', '=' ) && ! get_option( 'mainwp_module_logs_updates_dismissed_db_cancelled' ) ) { // NOSONAR - no ip,checks ver <= 22 only.
             $status = get_option( 'mainwp_module_logs_updates_dismissed_db_process_status', '' );
         }
         ?>

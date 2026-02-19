@@ -58,10 +58,24 @@ class Log_Query {
                 $search_str = trim( $search_str );
                 // prepare search value for searching.
                 if ( ! empty( $search_str ) ) {
-                    $where_search  = ' AND (  wp.name LIKE  "%' . $search_str . '%" OR lg.action LIKE  "%' . $search_str . '%" OR action_display LIKE  "%' . $search_str . '%" OR lg.log_id LIKE  "%' . $search_str . '%" OR lg.user_id LIKE "%' . $search_str . '%" ';
+                    $where_search  = ' AND (  wp.name LIKE  "%' . $search_str . '%" OR lg.action LIKE  "%' . $search_str . '%" ';
+                    $where_search .= ' OR ( CASE ';
+                    $where_search .= " WHEN lg.action = 'sync' THEN '" . MainWP_DB::instance()->escape( esc_html__( 'Sync Data', 'mainwp' ) ) . "' ";
+                    $where_search .= " WHEN lg.action = 'activate' THEN '" . MainWP_DB::instance()->escape( esc_html__( 'Activated', 'mainwp' ) ) . "' ";
+                    $where_search .= " WHEN lg.action = 'deactivate' THEN '" . MainWP_DB::instance()->escape( esc_html__( 'Deactivated', 'mainwp' ) ) . "' ";
+                    $where_search .= " WHEN lg.action = 'install' THEN '" . MainWP_DB::instance()->escape( esc_html__( 'Installed', 'mainwp' ) ) . "' ";
+                    $where_search .= " WHEN lg.action = 'updated' THEN '" . MainWP_DB::instance()->escape( esc_html__( 'Updated', 'mainwp' ) ) . "' ";
+                    $where_search .= " WHEN lg.action = 'delete' THEN '" . MainWP_DB::instance()->escape( esc_html__( 'Deleted', 'mainwp' ) ) . "' ";
+                    $where_search .= " WHEN lg.action = 'suspend' THEN '" . MainWP_DB::instance()->escape( esc_html__( 'Suspended', 'mainwp' ) ) . "' ";
+                    $where_search .= ' ELSE lg.action ';
+                    $where_search .= ' END ) LIKE "%' . $search_str . '%" ';
+                    $where_search .= ' OR lg.log_id LIKE  "%' . $search_str . '%" OR lg.user_id LIKE "%' . $search_str . '%" ';
                     $where_search .= ' OR lg.item LIKE  "%' . $search_str . '%" ';
                     if ( 'events_list' === $view ) {
-                        $where_search .= ' OR source LIKE  "%' . $search_str . '%" ';
+                        $where_search .= ' OR ( CASE ';
+                        $where_search .= " WHEN lg.connector = 'non-mainwp-changes' THEN 'WP Admin' ";
+                        $where_search .= " ELSE 'Dashboard' ";
+                        $where_search .= ' END ) LIKE "%' . $search_str . '%" ';
                         $where_search .= ' OR lg.user_login LIKE  "%' . $search_str . '%" ';
                     }
                     $where_search .= ') ';
@@ -486,7 +500,7 @@ class Log_Query {
     public function get_log_meta_view() {
         global $wpdb;
         // Improve select.
-        $view = " ( SELECT
+        return " ( SELECT
             meta_log_id AS log_id,
             MAX(CASE WHEN meta_key = 'name' THEN meta_value END) AS meta_name,
             MAX(CASE WHEN meta_key = 'user_meta_json' THEN meta_value END) AS user_meta_json,
@@ -495,7 +509,6 @@ class Log_Query {
         FROM " . $wpdb->mainwp_tbl_logs_meta . "
         WHERE meta_key IN ('name', 'user_meta_json', 'user_meta', 'extra_info')
         GROUP BY meta_log_id ) ";
-        return $view;
     }
 
     /**

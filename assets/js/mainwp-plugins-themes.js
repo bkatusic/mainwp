@@ -378,7 +378,6 @@ let mainwp_manage_plugins_bulk_actions_check_done = function () {
         pluginCountReceived = 0;
         pluginCountSent = 0;
         jQuery('#mainwp_bulk_action_loading').hide();
-        //mainwp_fetch_plugins();
     }
 };
 
@@ -484,6 +483,11 @@ let mainwp_fetch_all_active_plugins = function () {
         response = response.trim();
         jQuery('#mainwp-auto-updates-plugins-content').find('.dimmer').removeClass('active');
         jQuery('#mainwp-auto-updates-plugins-table-wrapper').html(response);
+        if (jQuery('#mainwp-auto-updates-plugins-table-wrapper').find('.mainwp-empty-page-placeholder').length > 0) {
+            jQuery('#mainwp-plugin-auto-updates .mainwp-actions-bar').hide();
+        } else {
+            jQuery('#mainwp-plugin-auto-updates .mainwp-actions-bar').show();
+        }
     });
 };
 
@@ -501,6 +505,11 @@ let mainwp_fetch_all_themes = function () {
     jQuery.post(ajaxurl, data, function (response) {
         jQuery('#mainwp-auto-updates-themes-content').find('.dimmer').removeClass('active');
         jQuery('#mainwp-auto-updates-themes-table-wrapper').html(response);
+        if (jQuery('#mainwp-auto-updates-themes-table-wrapper').find('.mainwp-empty-page-placeholder').length > 0) {
+            jQuery('#mainwp-theme-auto-updates .mainwp-actions-bar').hide();
+        } else {
+            jQuery('#mainwp-theme-auto-updates .mainwp-actions-bar').show();
+        }
     });
 };
 
@@ -688,7 +697,7 @@ jQuery(function () {
 
 
 // Manage Themes -- Fetch themes from child sites
-window.mainwp_fetch_themes = function (notFetchContent) {
+globalThis.mainwp_fetch_themes = function (notFetchContent) {
     let errors = [];
     let selected_sites = [];
     let selected_groups = [];
@@ -774,11 +783,10 @@ jQuery(function () {
         return false;
     });
     jQuery(document).on('click', '.mainwp-manage-plugin-delete', function () {
-        let item = this;
-        let name = jQuery(item).closest('.mainwp-manage-plugin-item-website').attr('plugin-name');
+        let name = jQuery(this).closest('.mainwp-manage-plugin-item-website').attr('plugin-name');
         let confirmMsg = __('You are about to delete the %1?', name);
-        mainwp_confirm(confirmMsg, function () {
-            manage_plugin_Action(jQuery(item), 'delete');
+        mainwp_confirm(confirmMsg,() => {
+            manage_plugin_Action(jQuery(this), 'delete');
         });
         return false;
     });
@@ -928,11 +936,10 @@ jQuery(function () {
         return false;
     });
     jQuery(document).on('click', '.mainwp-manages-theme-delete', function () {
-        let item = this;
-        let name = jQuery(item).closest('.mainwp-manage-theme-item-website').attr('theme-name');
+        let name = jQuery(this).closest('.mainwp-manage-theme-item-website').attr('theme-name');
         let confirmMsg = __('You are about to delete the %1?', name);
-        mainwp_confirm(confirmMsg, function () {
-            manages_themeAction(jQuery(item), 'delete');
+        mainwp_confirm(confirmMsg, () => {
+            manages_themeAction(jQuery(this), 'delete');
         });
         return false;
     });

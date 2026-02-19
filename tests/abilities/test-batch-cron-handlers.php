@@ -34,7 +34,7 @@ use MainWP\Dashboard\MainWP_Abilities_Cron;
  *
  * Tests for cron handler execution logic for batch operations.
  */
-class MainWP_Abilities_Batch_Cron_Handlers_Test extends MainWP_Abilities_Test_Case {
+class MainWP_Abilities_Batch_Cron_Handlers_Test extends MainWP_Abilities_Test_Case { //phpcs:ignore -- NOSONAR - multi methods.
 
 	// =========================================================================
 	// Helper Methods

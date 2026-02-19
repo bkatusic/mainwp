@@ -209,6 +209,12 @@
   -webkit-border-radius: var(--button-radius) 0 0 var(--button-radius) !important;
 }
 
+.mainwp-ui.mainwp-custom-theme .button.disabled {
+  background: revert !important; 
+  opacity: 0.45 !important;
+}
+
+
 /* Labels */
 
 .mainwp-ui.mainwp-custom-theme .ui.red.label:not(.basic, .corner) {
@@ -922,8 +928,14 @@ body.mainwp-ui.mainwp-custom-theme,
 .mainwp-ui.mainwp-custom-theme #mainwp-header-secondary-actions {
   padding: 7px 10px;
   margin: 0 10px;
-  border-left: 1px solid var(--mainwp-border) !important;
-  border-right: 1px solid var(--mainwp-border) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+.mainwp-ui.mainwp-custom-theme #mainwp-header-layout-actions .button,
+.mainwp-ui.mainwp-custom-theme #mainwp-add-new-buttons {
+  background: none !important;
+  color: var(--mainwp-light) !important;
 }
 
 .mainwp-ui.mainwp-custom-theme #mainwp-top-header .ui.button {

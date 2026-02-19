@@ -96,11 +96,6 @@
 		min-width: auto !important;
 	}
 
-	#mainwp-top-header .ui.button {
-		width: auto !important;
-		min-width: auto !important;
-	}
-
 	#mainwp-main-mobile-navigation-container .ui.button {
 		width: 100% !important;
 	}
@@ -111,7 +106,6 @@
 
 	#mainwp-navigation-icon {
 		margin: 0 !important;
-		width: 35px !important;
 	}
 
 	.mainwp-content-wrap {
@@ -254,9 +248,9 @@
 	.mainwp-ui [data-tooltip]:after {
 		display: none !important;
 	}
-	.mainwp-ui .mainwp-actions-bar .ui.mini.form .ui.dropdown, 
-	.mainwp-ui .mainwp-actions-bar.ui.mini.form .ui.dropdown, 
-	.mainwp-ui .mainwp-sub-header .ui.mini.form .ui.dropdown, 
+	.mainwp-ui .mainwp-actions-bar .ui.mini.form .ui.dropdown,
+	.mainwp-ui .mainwp-actions-bar.ui.mini.form .ui.dropdown,
+	.mainwp-ui .mainwp-sub-header .ui.mini.form .ui.dropdown,
 	.mainwp-ui .mainwp-sub-header.ui.mini.form .ui.dropdown,
 	.mainwp-ui .ui.dropdown {
 		width: 100% !important;
@@ -283,12 +277,32 @@
 		width: auto !important;
 	}
 
-	#mainwp-top-header .ui.icon.button:not(#mainwp-mobile-menu-trigger) {
+	#mainwp-top-header .ui.icon.button:not(#mainwp-mobile-menu-trigger):not(#mainwp-sync-sites) {
 		display: none !important;
 	}
 
-	#mainwp-top-header .ui.icon.button#mainwp-sync-sites {
+	#mainwp-top-header .ui.icon.button#mainwp-sync-sites,
+	#mainwp-top-header #mainwp-header-layout-actions .ui.button {
 		display: inline-block !important;
+	}
+	
+	#mainwp-top-header #mainwp-sync-sites,
+	#mainwp-top-header #mainwp-header-layout-actions .ui.button {
+		margin-bottom: 0 !important;
+	}
+	#mainwp-top-header #mainwp-sync-sites .icon,
+	#mainwp-top-header #mainwp-header-layout-actions .ui.button .icon {
+		margin-right: 0 !important;
+	}
+
+	#mainwp-top-header #mainwp-header-layout-actions {
+		border: none !important;
+		padding: 0 !important;
+		margin: 0 !important;
+	}
+
+	#mainwp-top-header #mainwp-header-secondary-actions {
+		display: none !important;
 	}
 
 	.mainwp-widget .ui.icon.button {
@@ -560,7 +574,7 @@
 	/* ---  Contribution by Joris Kramer  --- */
 
 	.mainwp-ui #mainwp-top-header .ui.stackable.grid .left.floated.column {
-		display: none !important;
+		display: block !important;
 	}
 
 	.mainwp-ui #mainwp-top-header .ui.stackable.grid .right.floated.column.right.aligned {
@@ -611,7 +625,7 @@
 	#mainwp-abandoned-themes-sites-table th,
 	#mainwp-wordpress-updates-table th,
 	#mainwp-plugins-updates-table th,
-	#mainwp-themes-updates-table th,
+	.mainwp-themes-updates-items-table th,
 	#mainwp-abandoned-plugins-table th,
 	#mainwp-abandoned-themes-table th,
 	#mainwp-translations-sites-table th,
@@ -639,7 +653,7 @@
 	#mainwp-abandoned-themes-sites-table .caret.right.icon,
 	#mainwp-wordpress-updates-table .caret.right.icon,
 	#mainwp-plugins-updates-table .caret.right.icon,
-	#mainwp-themes-updates-table .caret.right.icon,
+	.mainwp-themes-updates-items-table .caret.right.icon,
 	#mainwp-abandoned-plugins-table .caret.right.icon,
 	#mainwp-abandoned-themes-table .caret.right.icon,
 	#mainwp-translations-sites-table .caret.right.icon,
@@ -663,7 +677,7 @@
 	#mainwp-abandoned-themes-sites-table .accordion-trigger,
 	#mainwp-wordpress-updates-table .accordion-trigger,
 	#mainwp-plugins-updates-table .accordion-trigger,
-	#mainwp-themes-updates-table .accordion-trigger,
+	.mainwp-themes-updates-items-table .accordion-trigger,
 	#mainwp-abandoned-plugins-table .accordion-trigger,
 	#mainwp-abandoned-themes-table .accordion-trigger,
 	#mainwp-translations-sites-table .accordion-trigger,
@@ -687,7 +701,7 @@
 	#mainwp-abandoned-themes-sites-table tr td .ui.button,
 	#mainwp-wordpress-updates-table tr td .ui.button,
 	#mainwp-plugins-updates-table tr td .ui.button,
-	#mainwp-themes-updates-table tr td .ui.button,
+	.mainwp-themes-updates-items-table tr td .ui.button,
 	#mainwp-abandoned-plugins-table tr td .ui.button,
 	#mainwp-abandoned-themes-table tr td .ui.button,
 	#mainwp-translations-sites-table tr td .ui.button,
@@ -720,7 +734,7 @@
 	#mainwp-abandoned-themes-sites-table tr table,
 	#mainwp-wordpress-updates-table tr table,
 	#mainwp-plugins-updates-table tr table,
-	#mainwp-themes-updates-table tr table,
+	.mainwp-themes-updates-items-table tr table,
 	#mainwp-abandoned-plugins-table tr table,
 	#mainwp-abandoned-themes-table tr table,
 	#mainwp-translations-sites-table tr table,

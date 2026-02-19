@@ -302,9 +302,9 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
 					$item_slug = MainWP_Utility::get_dir_slug( $priv_extension['slug'] );
 					?>
 					<?php if ( isset( $priv_extension['privacy'] ) && ( 2 === $priv_extension['privacy'] || 1 === (int) $priv_extension['privacy'] ) ) { ?>
-						<input
+						<input  <?php // NOSONAR - id ok. ?>
 							type="hidden"
-							id="<?php echo esc_attr( $priv_extension['slug'] ); // NOSONAR - id ok. ?>"
+							id="<?php echo esc_attr( $priv_extension['slug'] ); ?>"
 							name="<?php echo esc_attr( $priv_extension['slug'] ); ?>"
 							base-slug="<?php echo esc_attr( $item_slug ); ?>"
 							privacy="<?php echo esc_attr( $priv_extension['privacy'] ); ?>"
@@ -316,7 +316,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
 							value="<?php echo esc_attr( $priv_extension['title'] ); ?>"
 						/>
 					<?php } elseif ( isset( $priv_extension['privacy'] ) && 0 === (int) $priv_extension['privacy'] ) { ?>
-						<input
+						<input <?php // NOSONAR - id ok. ?>
 							type="hidden"
 							id="<?php echo esc_attr( $priv_extension['slug'] ); // NOSONAR - id ok. ?>"
 							name="<?php echo esc_attr( $priv_extension['slug'] ); ?>"
@@ -326,9 +326,9 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
 							value="<?php echo esc_attr( $priv_extension['title'] ); ?>"
 						/>
 					<?php } else { ?>
-						<input
+						<input <?php // NOSONAR - id ok. ?>
 							type="hidden"
-							id="<?php echo esc_attr( $priv_extension['slug'] ); // NOSONAR - id ok. ?>"
+							id="<?php echo esc_attr( $priv_extension['slug'] );  // NOSONAR - id ok. ?>"
 							name="<?php echo esc_attr( $priv_extension['slug'] ); ?>"
 							base-slug="<?php echo esc_attr( $item_slug ); ?>"
 							extension_title="<?php echo esc_attr( MainWP_Extensions_Handler::polish_string_name( $priv_extension['title'] ) ); ?>"
@@ -591,7 +591,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 <div class="ui card">
                     <div class="content">
                         <div class="ui mini grey right floated label"><?php esc_html_e( 'FREE', 'mainwp' ); ?></div>
-                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'advanced-uptime-monitor.png' ); ?>"></div>
+                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'advanced-uptime-monitor.png' ); ?>" alt="<?php esc_attr_e( 'Advanced Uptime Monitor', 'mainwp' ); ?>"></div>
                         <h3 class="ui header">
                             <a href="https://mainwp.com/add-on/advanced-uptime-monitor/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Advanced Uptime Monitor', 'mainwp' ); ?> →</a>
                             <div class="sub header"><?php esc_html_e( 'Real-time up time monitoring', 'mainwp' ); ?></div>
@@ -601,7 +601,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 <div class="ui card">
                     <div class="content">
                         <div class="ui mini green right floated label"><?php esc_html_e( 'PRO', 'mainwp' ); ?></div>
-                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'branding.png' ); ?>"></div>
+                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'branding.png' ); ?>" alt="<?php esc_attr_e( 'White Label', 'mainwp' ); ?>"></div>
                         <h3 class="ui header">
                             <a href="https://mainwp.com/add-on/white-label/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'White Label', 'mainwp' ); ?> →</a>
                             <div class="sub header"><?php esc_html_e( 'White label MainWP Child', 'mainwp' ); ?></div>
@@ -611,7 +611,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 <div class="ui card">
                     <div class="content">
                         <div class="ui mini green right floated label"><?php esc_html_e( 'PRO', 'mainwp' ); ?></div>
-                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'pro-reports.png' ); ?>"></div>
+                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'pro-reports.png' ); ?>" alt="<?php esc_attr_e( 'Pro Reports', 'mainwp' ); ?>"></div>
                         <h3 class="ui header">
                             <a href="https://mainwp.com/add-on/pro-reports/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Pro Reports', 'mainwp' ); ?> →</a>
                             <div class="sub header"><?php esc_html_e( 'Client reporting', 'mainwp' ); ?></div>
@@ -621,7 +621,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 <div class="ui card">
                     <div class="content">
                         <div class="ui mini grey right floated label"><?php esc_html_e( 'FREE', 'mainwp' ); ?></div>
-                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'updraftplus.png' ); ?>"></div>
+                        <div class="ui small image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'updraftplus.png' ); ?>" alt="<?php esc_attr_e( 'UpdraftPlus', 'mainwp' ); ?>"></div>
                         <h3 class="ui header">
                             <a href="https://mainwp.com/add-on/updraftplus/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'UpdraftPlus', 'mainwp' ); ?> →</a>
                             <div class="sub header"><?php esc_html_e( 'UpdraftPlus backups', 'mainwp' ); ?></div>
@@ -631,7 +631,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 <div class="ui card">
                     <div class="content">
                         <div class="ui mini green right floated label"><?php esc_html_e( 'PRO', 'mainwp' ); ?></div>
-                        <div class="ui small circular image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'maintenance.png' ); ?>"></div>
+                        <div class="ui small circular image"><img class="ui mini image" src="<?php echo esc_attr( $folder_url . 'maintenance.png' ); ?>" alt="<?php esc_attr_e( 'Maintenance', 'mainwp' ); ?>"></div>
                         <h3 class="ui header">
                             <a href="https://mainwp.com/add-on/maintenance/" rel="noopener noreferrer" target="_blank" class="ui grey text"><?php esc_html_e( 'Maintenance', 'mainwp' ); ?> →</a>
                             <div class="sub header"><?php esc_html_e( 'Database optimization', 'mainwp' ); ?></div>
@@ -766,9 +766,6 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
         </div>
         <?php } ?>
 
-        <!--<div class="extra content action-feedback" style="display:none;">
-            <div class="ui mini message"></div>
-        </div>-->
         <div class="ui active dimmer action-feedback" style="display:none;">
             <div class="ui text loader"></div>
         </div>
@@ -786,9 +783,6 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
             <?php } ?>
 
             <?php if ( isset( $extension['apiManager'] ) && $extension['apiManager'] ) { ?>
-            <!--<div class="extra content api-feedback" style="display:none;">
-                <div class="ui mini message"></div>
-            </div>-->
             <div class="ui active dimmer api-feedback" style="display:none;">
                 <div class="ui text loader"></div>
             </div>
@@ -889,7 +883,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
      * @param string|false $mainwp_api_key The MainWP API key or false if not set.
      * @return void
      */
-    public static function render_licensing_actions_bar( $mainwp_api_key ) {
+    public static function render_licensing_actions_bar( $mainwp_api_key ) { // NOSONAR - complexity function.
         $extensions = MainWP_Extensions_Handler::get_extensions();
 
         $count_enabled = is_array( $extensions ) ? count( $extensions ) : 0;
@@ -974,7 +968,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                             <input type="checkbox" <?php echo '' !== $mainwp_api_key ? 'checked="checked"' : ''; ?> name="extensions_api_savemylogin_chk" id="extensions_api_savemylogin_chk">
                             <label for="extensions_api_savemylogin_chk"><small><?php esc_html_e( 'Remember Key', 'mainwp' ); ?></small></label>
                         </div>&nbsp;&nbsp;
-                        <a href="javascript:void(0);" class="ui green basic tiny button" id="mainwp-extensions-savelogin"><i class="check icon"></i> <?php esc_html_e( 'Validate License', 'mainwp' ); ?></a>
+                        <a href="javascript:void(0);" class="ui green basic tiny button" id="mainwp-extensions-savelogin"><i class="check icon"></i> <?php esc_html_e( 'Validate License', 'mainwp' ); //NOSONAR - id ok. ?></a>
                         <a href="javascript:void(0);" class="ui grey basic tiny button" id="mainwp-extensions-manage-toggle-off"><?php esc_html_e( 'Close', 'mainwp' ); ?></a>
                     </div>
                 </div>

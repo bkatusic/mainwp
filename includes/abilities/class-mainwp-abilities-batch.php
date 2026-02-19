@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * >200 sites are automatically queued for background processing. This ability allows
  * clients to poll for job status, progress, and results.
  */
-class MainWP_Abilities_Batch {
+class MainWP_Abilities_Batch { //phpcs:ignore -- NOSONAR - multi methods.
 
     /**
      * Register all batch abilities.
@@ -91,7 +91,7 @@ class MainWP_Abilities_Batch {
      *
      * @return array
      */
-    public static function get_batch_job_status_output_schema(): array {
+    public static function get_batch_job_status_output_schema(): array { // phpcs:ignore -- NOSONAR - complex array.
         return array(
             'type'       => 'object',
             'properties' => array(
@@ -214,7 +214,7 @@ class MainWP_Abilities_Batch {
      * @param array $input Input parameters with job_id.
      * @return array|\WP_Error Job status array or WP_Error on failure.
      */
-    public static function execute_get_batch_job_status( array $input ) {
+    public static function execute_get_batch_job_status( array $input ) { // phpcs:ignore -- NOSONAR - complex function.
         $job_id = isset( $input['job_id'] ) ? $input['job_id'] : '';
 
         if ( empty( $job_id ) || ! is_string( $job_id ) ) {

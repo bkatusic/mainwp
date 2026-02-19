@@ -186,11 +186,10 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 </tbody>
             </table>
             <?php else : ?>
-                <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No updates available right now.', 'mainwp' ) ); ?>
+                <?php MainWP_UI::render_empty_page_placeholder( __( 'WordPress is up to date', 'mainwp' ), __( 'No WordPress core updates available right now.', 'mainwp' ) ); ?>
             <?php endif; ?>
         <?php
     }
-
 
     /**
      * Method render_plugins_updates()
@@ -264,7 +263,7 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     </tr>
                     <tr class="main-child-checkbox content" row-uid="uid_plugin_updates_<?php echo esc_attr( $group_id ); ?>">
                         <td colspan="4">
-                            <table id="mainwp-wordpress-updates-sites-inner-table" class="ui grey table mainwp-per-group-table mainwp-manage-updates-table mainwp-js-persistent-table">
+                            <table id="mainwp-plugins-updates-sites-inner-table" class="ui grey table mainwp-per-group-table mainwp-manage-updates-table mainwp-js-persistent-table">
                                 <thead class="mainwp-768-hide">
                                     <tr>
                                         <th scope="col" class="collapsing no-sort"></th>
@@ -448,7 +447,7 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
             </tbody>
         </table>
         <?php else : ?>
-            <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No updates available right now.', 'mainwp' ) ); ?>
+            <?php MainWP_UI::render_empty_page_placeholder( __( 'Plugins are up to date', 'mainwp' ), __( 'No plugin updates available right now.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
     }
@@ -525,7 +524,7 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
                     </tr>
                     <tr class="title main-child-checkbox content" row-uid="uid_theme_updates_<?php echo esc_attr( $group_id ); ?>">
                         <td colspan="4">
-                            <table id="mainwp-wordpress-updates-sites-inner-table" class="ui grey table mainwp-per-group-table mainwp-manage-updates-table mainwp-js-persistent-table">
+                            <table id="mainwp-themes-updates-sites-inner-table" class="ui grey table mainwp-per-group-table mainwp-manage-updates-table mainwp-js-persistent-table">
                                 <thead class="mainwp-768-hide">
                                     <tr>
                                         <th scope="col" class="collapsing no-sort"></th>
@@ -690,7 +689,7 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
             </tbody>
         </table>
         <?php else : ?>
-            <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No updates available right now.', 'mainwp' ) ); ?>
+            <?php MainWP_UI::render_empty_page_placeholder( __( 'Themes are up to date', 'mainwp' ), __( 'No theme updates available right now.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
     }
@@ -872,7 +871,7 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
             </tbody>
         </table>
         <?php else : ?>
-            <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No updates available right now.', 'mainwp' ) ); ?>
+            <?php MainWP_UI::render_empty_page_placeholder( __( 'Translations are up to date', 'mainwp' ), __( 'No translation updates available right now.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
     }
@@ -1029,7 +1028,7 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
             </tbody>
         </table>
         <?php else : ?>
-            <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No abandoned plugins detected.', 'mainwp' ) ); ?>
+            <?php MainWP_UI::render_empty_page_placeholder( __( 'No abandoned plugins detected', 'mainwp' ), __( 'None of your plugins are currently marked as abandoned.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
     }
@@ -1185,7 +1184,7 @@ class MainWP_Updates_Per_Group { // phpcs:ignore Generic.Classes.OpeningBraceSam
             </tbody>
         </table>
         <?php else : ?>
-            <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No abandoned themes detected.', 'mainwp' ) ); ?>
+            <?php MainWP_UI::render_empty_page_placeholder( __( 'No abandoned themes detected', 'mainwp' ), __( 'None of your themes are currently marked as abandoned.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
     }
