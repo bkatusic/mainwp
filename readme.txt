@@ -150,7 +150,7 @@ Yes, we have a quick FAQ with many more questions and answers [here](https://mai
 
 = 6.0 =
 
-* Comming soon
+* Coming soon
 
 [See Video Changelog](https://www.youtube.com/watch?v=36KRNYo6BMY)
 
