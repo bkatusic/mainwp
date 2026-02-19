@@ -1193,7 +1193,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
      */
     public function display( $optimize = true ) { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAfterBrace -- NOSONAR - complexity.
 
-        $count = MainWP_DB::instance()->get_websites_count( null, true );
+        $count = MainWP_DB::instance()->get_websites_count( null, false );
 
         if ( empty( $count ) ) {
             /**
@@ -1208,7 +1208,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             <div id="mainwp-manage-sites-empty" class="ui padded center aligned segment">
                 <?php MainWP_UI::render_empty_page_placeholder( __( 'No sites connected yet.', 'mainwp' ), __( 'Connect your first WordPress site and start managing updates, security, and backups from one command center.', 'mainwp' ), '<em data-emoji=":globe_with_meridians:" class="big"></em>' ); ?>
                 <div class="ui hidden divider"></div>
-                <a href="<?php echo esc_url( admin_url( 'admin.php?page=managesites&do=new' ) ); ?>" class="ui big green button"><i class="plus icon"></i> <?php esc_html_e( 'Connect Your First Sites', 'mainwp' ); ?></a>
+                <a href="<?php echo esc_url( admin_url( 'admin.php?page=managesites&do=new' ) ); ?>" class="ui big green button"><i class="plus icon"></i> <?php esc_html_e( 'Connect Your First Site', 'mainwp' ); ?></a>
                 <div class="ui hidden divider"></div>
                 <a class="ui grey text" href="https://docs.mainwp.com/getting-started/get-started-with-mainwp#add-a-site-to-your-dashboard"><?php esc_html_e( 'or learn how it works →', 'mainwp' ); ?></a>
             </div>

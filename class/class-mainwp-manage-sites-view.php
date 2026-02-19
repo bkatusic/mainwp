@@ -295,7 +295,7 @@ class MainWP_Manage_Sites_View { // phpcs:ignore Generic.Classes.OpeningBraceSam
         static::render_managesites_header( $site_pages, $managesites_pages, $subPages, $site_id, $shownPage );
 
         if ( $manage_sites ) {
-            $count = MainWP_DB::instance()->get_websites_count( null, true );
+            $count = MainWP_DB::instance()->get_websites_count( null, false );
             if ( ! empty( $count ) ) {
                 $which = strtolower( $shownPage );
                 MainWP_UI::render_second_top_header( $which );
