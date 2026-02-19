@@ -90,7 +90,7 @@ class Log_Install extends MainWP_Install {
     context varchar(100) NOT NULL,
     connector varchar(100) NOT NULL,
     state tinyint(1) unsigned NULL,
-    created created BIGINT(20) UNSIGNED NOT NULL,
+    created BIGINT(20) UNSIGNED NOT NULL,
     duration float(11,4) NOT NULL DEFAULT '0',
     dismiss tinyint(1) NOT NULL DEFAULT 0,
     KEY site_id (site_id),

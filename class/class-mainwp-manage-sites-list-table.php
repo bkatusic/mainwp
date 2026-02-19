@@ -1193,6 +1193,38 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
      */
     public function display( $optimize = true ) { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAfterBrace -- NOSONAR - complexity.
 
+        $count = MainWP_DB::instance()->get_websites_count( null, true );
+
+        if ( empty( $count ) ) {
+            /**
+             * Action: mainwp_before_empty_manage_sites_placeholder
+             *
+             * Fires before the placeholder on the empty Manage Sites page.
+             *
+             * @since 6.0
+             */
+            do_action( 'mainwp_before_empty_manage_sites_placeholder' );
+            ?>
+            <div id="mainwp-manage-sites-empty" class="ui padded center aligned segment">
+                <?php MainWP_UI::render_empty_page_placeholder( __( 'No sites connected yet.', 'mainwp' ), __( 'Connect your first WordPress site and start managing updates, security, and backups from one command center.', 'mainwp' ), '<em data-emoji=":globe_with_meridians:" class="big"></em>' ); ?>
+                <div class="ui hidden divider"></div>
+                <a href="<?php echo esc_url( admin_url( 'admin.php?page=managesites&do=new' ) ); ?>" class="ui big green button"><i class="plus icon"></i> <?php esc_html_e( 'Connect Your First Sites', 'mainwp' ); ?></a>
+                <div class="ui hidden divider"></div>
+                <a class="ui grey text" href="https://docs.mainwp.com/getting-started/get-started-with-mainwp#add-a-site-to-your-dashboard"><?php esc_html_e( 'or learn how it works →', 'mainwp' ); ?></a>
+            </div>
+            <?php
+            /**
+             * Action: mainwp_after_empty_manage_sites_placeholder
+             *
+             * Fires after the placeholder on the empty Manage Sites page.
+             *
+             * @since 6.0
+             */
+            do_action( 'mainwp_after_empty_manage_sites_placeholder' );
+
+            return;
+        }
+
         $sites_per_page = get_option( 'mainwp_default_sites_per_page', 25 );
 
         $sites_per_page = intval( $sites_per_page );
@@ -1242,12 +1274,6 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                 </thead>
             </table>
         </div>
-        <?php $count = MainWP_DB::instance()->get_websites_count( null, true ); ?>
-        <?php if ( empty( $count ) ) : ?>
-            <div id="sites-table-count-empty" style="display: none;">
-                <?php $this->no_items(); ?>
-            </div>
-        <?php endif; ?>
         <?php
         /**
          * Action: mainwp_after_manage_sites_table
@@ -1353,9 +1379,6 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                                     "emptyTable": "<?php esc_html_e( 'No websites found.', 'mainwp' ); ?>"
                                 },
                                 "drawCallback": function( settings ) {
-                                    if ( jQuery('#mainwp-manage-sites-body-table td.dt-empty').length > 0 && jQuery('#sites-table-count-empty').length ){
-                                        jQuery('#mainwp-manage-sites-body-table td.dt-empty').html(jQuery('#sites-table-count-empty').html());
-                                    }
                                 },
                                 deferRender: true,
                                 stateSaveParams: function (settings, data) {
@@ -1443,11 +1466,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                                 if ( typeof mainwp_preview_init_event !== "undefined" ) {
                                     mainwp_preview_init_event();
                                 }
-                                //jQuery( '#mainwp-sites-table-loader' ).hide();
                                 jQuery( '#mainwp-manage-sites-table-container' ).css( 'opacity', '1' );
-                                if ( jQuery('#mainwp-manage-sites-body-table td.dt-empty').length > 0 && jQuery('#sites-table-count-empty').length ){
-                                    jQuery('#mainwp-manage-sites-body-table td.dt-empty').html(jQuery('#sites-table-count-empty').html());
-                                }
                                 setTimeout(() => {
                                     mainwp_datatable_fix_menu_overflow('#mainwp-manage-sites-table');
                                 }, 1000);
