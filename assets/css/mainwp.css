@@ -1518,13 +1518,13 @@ body.show-upload-theme .mainwp-content-wrap .mainwp-upload-theme {
     box-shadow: none;
 }
 
-.trigger-all-accordion .trigger-handle-arrow .caret.down.icon,
-.trigger-all-accordion.active .trigger-handle-arrow .caret.right.icon {
+.trigger-all-accordion .trigger-handle-arrow .down.icon,
+.trigger-all-accordion.active .trigger-handle-arrow .right.icon {
     display: none;
 }
 
-.trigger-all-accordion.active .trigger-handle-arrow .caret.down.icon,
-.trigger-all-accordion .trigger-handle-arrow .caret.right.icon {
+.trigger-all-accordion.active .trigger-handle-arrow .down.icon,
+.trigger-all-accordion .trigger-handle-arrow .right.icon {
     display: block;
 }
 

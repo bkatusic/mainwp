@@ -4499,11 +4499,6 @@ function mainwp_according_table_sorting(pObj) { // NOSONAR - complex.
         th = jQuery(pObj).closest('th')[0];
     }
 
-    // Skip sorting if the column has no-sort class
-    if (jQuery(th).hasClass('no-sort')) {
-        return;
-    }
-
     n = th.cellIndex;
     switching = true;
 
@@ -4581,9 +4576,6 @@ function mainwp_according_table_sorting(pObj) { // NOSONAR - complex.
         }
     }
 
-    // Clear sorting indicators from all other columns in this table
-    jQuery(table).find('th.indicator-accordion-sorting').removeClass('ascending descending');
-    
     // add/remove class for arrows displaying
     if (dir == "asc") {
         jQuery(pObj).addClass('ascending');
@@ -4598,31 +4590,6 @@ function mainwp_according_table_sorting(pObj) { // NOSONAR - complex.
 jQuery(function () {
     jQuery('.handle-accordion-sorting').on('click', function () {
         mainwp_according_table_sorting(this);
-        return false;
-    });
-    
-    // Handle expand/collapse all rows toggle
-    jQuery(document).on('click', '.trigger-all-accordion', function () {
-        let $trigger = jQuery(this);
-        let $table = $trigger.closest('table');
-        let $accordion = $table.find('tbody.ui.accordion');
-        
-        $trigger.toggleClass('active');
-        
-        if ($trigger.hasClass('active')) {
-            // Expand all
-            $accordion.accordion('open', 0);
-            // Open all accordion items
-            $accordion.find('.title').each(function(index) {
-                $accordion.accordion('open', index);
-            });
-        } else {
-            // Collapse all
-            $accordion.find('.title').each(function(index) {
-                $accordion.accordion('close', index);
-            });
-        }
-        
         return false;
     });
 });
