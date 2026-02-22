@@ -198,6 +198,7 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
         do_action( 'mainwp_logs_manage_table_top', 'recent_events' );
         ?>
         <div id="mainwp-message-zone" style="display:none;" class="ui message"></div>
+        <div id="mainwp-message-zone-top" style="display: none;" class="ui message"></div>
         <?php
         MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' );
         $this->list_events_table->display();
@@ -482,7 +483,6 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
 
         ?>
         <div class="mainwp-sub-header" id="mainwp-module-log-overview-sub-header">
-            <div class="ui message" style="display: none;" id="mainwp-message-zone-top"></div>
             <div class="ui stackable grid">
                 <div class="eight wide middle aligned column">
                     <a href="javascript:void(0)" id="mainwp_sites_changes_bulk_dismiss_selected_btn" class="ui mini green button disabled"><?php esc_html_e( 'Dismiss Selected Changes', 'mainwp' ); ?></a>

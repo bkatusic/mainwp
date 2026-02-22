@@ -3276,10 +3276,13 @@ let dayHistory_SwitchViewHandler = function (btn) {
     let md = jQuery('#mainwp-plugin-theme-history-changes-modal');
     const type = jQuery(md).attr('history-type');
 
+    let siteId = ('plugin' === type ? pluginChangesLoadData.siteId : themeChangesLoadData.siteId) || 0;
+
     let data = mainwp_secure_data({
         action: 'mainwp_changes_logs_get_item_changes',
         type: type,
-        target_date: dt
+        target_date: dt,
+        siteId: siteId
     });
 
     jQuery.post(ajaxurl, data, function (response) { // NOSONAR - complex.
@@ -4138,12 +4141,20 @@ jQuery(function ($) {
         return mainwp_insights_row_actions_dismiss(this);
     });
 
-    let mainwp_sites_changes_update_dismiss_button_state = function () {
+    window.mainwp_sites_changes_update_dismiss_button_state = function () {
         let checkedCount = jQuery('#mainwp-module-log-records-body-table tr').find('input[type="checkbox"]:checked').length;
+        let totalRows = jQuery('#mainwp-module-log-records-body-table tr').not('.dt-empty').length;
+        
         if (checkedCount > 0) {
             jQuery('#mainwp_sites_changes_bulk_dismiss_selected_btn').removeClass('disabled');
         } else {
             jQuery('#mainwp_sites_changes_bulk_dismiss_selected_btn').addClass('disabled');
+        }
+        
+        if (totalRows > 0) {
+            jQuery('#mainwp_sites_changes_bulk_dismiss_all_btn').removeClass('disabled');
+        } else {
+            jQuery('#mainwp_sites_changes_bulk_dismiss_all_btn').addClass('disabled');
         }
     }
 
@@ -4173,7 +4184,11 @@ let mainwp_insights_row_actions_dismiss = function (obj) {
                 } else if (response['success'] == 'yes') {
                     row.html('<td></td><td colspan="999"><i class="green check icon"></i> The change has been dismissed.</td>');
                     setTimeout(function () {
-                        jQuery(row).fadeOut("slow");
+                        jQuery(row).fadeOut("slow", function() {
+                            if (typeof mainwp_sites_changes_update_dismiss_button_state !== 'undefined') {
+                                mainwp_sites_changes_update_dismiss_button_state();
+                            }
+                        });
                     }, 2000);
                 } else {
                     row.html('<td></td><td colspan="999"><i class="times red icon"></i> The change could not be dismissed.</td>');
@@ -4230,6 +4245,9 @@ let mainwp_sites_changes_actions_dismiss_start_next = function (selector) {
             jQuery('#mainwp_widget_sites_changes_bulk_dismiss_selected_btn').removeClass('disabled');
         } else {
             jQuery('#mainwp_sites_changes_bulk_dismiss_selected_btn').removeClass('disabled');
+        }
+        if (typeof mainwp_sites_changes_update_dismiss_button_state !== 'undefined') {
+            mainwp_sites_changes_update_dismiss_button_state();
         }
     }
 }
@@ -4481,6 +4499,11 @@ function mainwp_according_table_sorting(pObj) { // NOSONAR - complex.
         th = jQuery(pObj).closest('th')[0];
     }
 
+    // Skip sorting if the column has no-sort class
+    if (jQuery(th).hasClass('no-sort')) {
+        return;
+    }
+
     n = th.cellIndex;
     switching = true;
 
@@ -4558,6 +4581,9 @@ function mainwp_according_table_sorting(pObj) { // NOSONAR - complex.
         }
     }
 
+    // Clear sorting indicators from all other columns in this table
+    jQuery(table).find('th.indicator-accordion-sorting').removeClass('ascending descending');
+    
     // add/remove class for arrows displaying
     if (dir == "asc") {
         jQuery(pObj).addClass('ascending');
@@ -4572,6 +4598,31 @@ function mainwp_according_table_sorting(pObj) { // NOSONAR - complex.
 jQuery(function () {
     jQuery('.handle-accordion-sorting').on('click', function () {
         mainwp_according_table_sorting(this);
+        return false;
+    });
+    
+    // Handle expand/collapse all rows toggle
+    jQuery(document).on('click', '.trigger-all-accordion', function () {
+        let $trigger = jQuery(this);
+        let $table = $trigger.closest('table');
+        let $accordion = $table.find('tbody.ui.accordion');
+        
+        $trigger.toggleClass('active');
+        
+        if ($trigger.hasClass('active')) {
+            // Expand all
+            $accordion.accordion('open', 0);
+            // Open all accordion items
+            $accordion.find('.title').each(function(index) {
+                $accordion.accordion('open', index);
+            });
+        } else {
+            // Collapse all
+            $accordion.find('.title').each(function(index) {
+                $accordion.accordion('close', index);
+            });
+        }
+        
         return false;
     });
 });

@@ -33,7 +33,7 @@ class Log_Changes_Logs_Helper {
      *
      * @var array
      */
-    private static $last_log_created;
+    private static $last_log_created = array();
 
     /**
      * Return the single instance of the class.
@@ -66,23 +66,23 @@ class Log_Changes_Logs_Helper {
      */
     public function get_sync_changes_logs_last_created( $site_id ) {
 
-        if ( null === static::$last_log_created ) {
+        if ( ! isset( static::$last_log_created[ $site_id ] ) ) {
             $site_opts = MainWP_DB::instance()->get_website_options_array( $site_id, array( 'changes_logs_sync_last_created' ) );
 
             if ( ! is_array( $site_opts ) ) {
                 $site_opts = array();
             }
 
-            static::$last_log_created = isset( $site_opts['changes_logs_sync_last_created'] ) ? $site_opts['changes_logs_sync_last_created'] : 0;
+            static::$last_log_created[ $site_id ] = isset( $site_opts['changes_logs_sync_last_created'] ) ? $site_opts['changes_logs_sync_last_created'] : 0;
 
             // to sure.
-            if ( empty( static::$last_log_created ) ) {
-                static::$last_log_created = time() - DAY_IN_SECONDS; // to prevent "strange" issue.
-                MainWP_DB::instance()->update_website_option( $site_id, 'changes_logs_sync_last_created', static::$last_log_created );
+            if ( empty( static::$last_log_created[ $site_id ] ) ) {
+                static::$last_log_created[ $site_id ] = time() - DAY_IN_SECONDS; // to prevent "strange" issue.
+                MainWP_DB::instance()->update_website_option( $site_id, 'changes_logs_sync_last_created', static::$last_log_created[ $site_id ] );
             }
         }
 
-        return static::$last_log_created;
+        return static::$last_log_created[ $site_id ];
     }
 
 
@@ -377,12 +377,31 @@ class Log_Changes_Logs_Helper {
                 $name_meta = '';
 
                 if ( ! empty( $record->meta ) && is_array( $record->meta ) ) {
-                    $slug    = ! empty( $record->meta['slug'] ) ? $record->meta['slug'] : '';
-                    $slugidx = $slug;
-                    if ( empty( $slug ) ) {
-                        $name_meta = ! empty( $record->meta['name'] ) ? $record->meta['name'] : '';
-                        $slugidx   = $name_meta;
+                    $slug      = ! empty( $record->meta['slug'] ) ? $record->meta['slug'] : '';
+                    $name_meta = ! empty( $record->meta['name'] ) ? $record->meta['name'] : '';
+                }
+
+                if ( empty( $slug ) && ! empty( $record->extra_meta ) ) {
+                    $extra_data = json_decode( $record->extra_meta, true );
+                    if ( is_array( $extra_data ) && ! empty( $extra_data['slug'] ) ) {
+                        $slug = $extra_data['slug'];
                     }
+                }
+                
+                if ( ! empty( $slug ) ) {
+                    if ( false !== strpos( $slug, '/' ) ) {
+                        $parts   = explode( '/', $slug );
+                        $slugidx = $parts[0];
+                    } else {
+                        $slugidx = basename( $slug, '.php' );
+                    }
+                    $slugidx = strtolower( $slugidx );
+                } elseif ( ! empty( $name_meta ) ) {
+                    $slugidx = strtolower( sanitize_title( $name_meta ) );
+                }
+                
+                if ( empty( $slugidx ) && ! empty( $record->item ) ) {
+                    $slugidx = strtolower( sanitize_title( $record->item ) );
                 }
 
                 if ( 'date' === $index_by_date ) {
@@ -426,8 +445,10 @@ class Log_Changes_Logs_Helper {
 
                 } else { // group by plugin/theme name.
 
-                    if ( ! isset( $lists[ $slugidx ] ) ) {
-                        $lists[ $slugidx ] = array();
+                    $group_key = $slugidx . '_' . $record->site_id;
+
+                    if ( ! isset( $lists[ $group_key ] ) ) {
+                        $lists[ $group_key ] = array();
                     }
 
                     $list_item = array(
@@ -458,7 +479,7 @@ class Log_Changes_Logs_Helper {
                         }
                     }
 
-                    $lists[ $slugidx ][] = $list_item;
+                    $lists[ $group_key ][] = $list_item;
 
                 }
             }

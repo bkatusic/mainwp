@@ -292,20 +292,27 @@ class Log_DB_Helper extends MainWP_DB {
             $utc_start_micro = (int) $utc_start * 1000000;
             $utc_end_micro   = (int) $utc_end * 1000000;
 
+            $where_site = '';
+            $prepare_args = array( $type, $utc_start_micro, $utc_end_micro );
+            
+            if ( ! empty( $site_id ) ) {
+                $where_site = ' AND i.site_id = %d';
+                $prepare_args[] = $site_id;
+            }
+
             $query = '
                 SELECT i.*
                 FROM ' . $this->table_name( 'wp_logs' ) . ' i
                 WHERE i.context = %s
                 AND i.created >= %d
                 AND i.created < %d
+                ' . $where_site . '
                 ORDER BY i.created ASC
             ';
 
             $sql = $wpdb->prepare(
                 $query, //phpcs:ignore --ok.
-                $type,
-                $utc_start_micro,
-                $utc_end_micro
+                ...$prepare_args
             );
 
             $items = $wpdb->get_results( $sql); //phpcs:ignore --ok.
@@ -325,12 +332,17 @@ class Log_DB_Helper extends MainWP_DB {
             return array();
         }
 
-        $cond_meta = '';
+        $join_meta_cond = '';
+        $extra_prepare  = array();
 
         if ( 'plugin' === $type && ! empty( $slug_value ) ) {
-            $cond_meta .= $wpdb->prepare( ' AND m.meta_key = "slug" AND m.meta_value = %s ', $slug_value );
-        } elseif ( 'theme' === $type ) { // only themes have name value.
-            $cond_meta .= $wpdb->prepare( ' AND ( ( m.meta_key = "slug" AND m.meta_value = %s ) OR ( m.meta_key = "name" AND m.meta_value = %s ) ) ', $slug_value, $name_value );
+            $join_meta_cond  = ' AND ( m.meta_key = "slug" AND ( m.meta_value = %s OR m.meta_value = %s ) ) ';
+            $extra_prepare[] = $slug_value;
+            $extra_prepare[] = $slug_value . '/' . basename( $slug_value, '.php' ) . '.php';
+        } elseif ( 'theme' === $type ) {
+            $join_meta_cond  = ' AND ( ( m.meta_key = "slug" AND m.meta_value = %s ) OR ( m.meta_key = "name" AND m.meta_value = %s ) ) ';
+            $extra_prepare[] = $slug_value;
+            $extra_prepare[] = $name_value;
         } else {
             return array();
         }
@@ -338,19 +350,20 @@ class Log_DB_Helper extends MainWP_DB {
         $onward = '
             SELECT i.*
             FROM ' . $this->table_name( 'wp_logs' ) . ' i
-            INNER JOIN ' . $this->table_name( 'wp_logs_meta' ) . ' m
+            LEFT JOIN ' . $this->table_name( 'wp_logs_meta' ) . ' m
             ON i.log_id = m.meta_log_id
-            ' . $cond_meta . '
+            ' . $join_meta_cond . '
             WHERE i.site_id = %d
             AND i.context = %s
             ORDER BY i.created ASC
             LIMIT 1;
         ';
 
+        $onward_params = array_merge( array( $site_id, $type ), $extra_prepare );
+
         $sql_onward = $wpdb->prepare(
             $onward, //phpcs:ignore --ok.
-            $site_id,
-            $type
+            ...$onward_params
         );
 
         $found = $wpdb->get_row( $sql_onward ); //phpcs:ignore --ok.
@@ -358,14 +371,17 @@ class Log_DB_Helper extends MainWP_DB {
         $count = '
             SELECT count(*)
             FROM ' . $this->table_name( 'wp_logs' ) . ' i
-            INNER JOIN ' . $this->table_name( 'wp_logs_meta' ) . ' m
+            LEFT JOIN ' . $this->table_name( 'wp_logs_meta' ) . ' m
             ON i.log_id = m.meta_log_id
-            ' . $cond_meta . '
-            AND i.site_id = %d ';
+            ' . $join_meta_cond . '
+            WHERE i.site_id = %d
+            AND i.context = %s';
+
+        $count_params = array_merge( array( $site_id, $type ), $extra_prepare );
 
         $sql_count = $wpdb->prepare(
             $count, //phpcs:ignore --ok.
-            $site_id
+            ...$count_params
         );
 
         $total_count = $wpdb->get_var( $sql_count ); //phpcs:ignore --ok.
@@ -382,7 +398,7 @@ class Log_DB_Helper extends MainWP_DB {
         SELECT
             d.day_start,
             i.*,
-            m.meta_value
+            MAX(m.meta_value) as meta_value
         FROM (
             SELECT
                 ((FLOOR((created + %d) / %d) * %d) - %d) AS day_start
@@ -397,43 +413,98 @@ class Log_DB_Helper extends MainWP_DB {
             ON i.created >= d.day_start
             AND i.created < d.day_start + %d
             AND i.site_id = %d
-        INNER JOIN {$this->table_name('wp_logs_meta')} m
-            ON i.log_id = m.meta_log_id
             AND i.context = %s
-            {$cond_meta}
+        LEFT JOIN {$this->table_name('wp_logs_meta')} m
+            ON i.log_id = m.meta_log_id
+            {$join_meta_cond}
+        WHERE 1=1
+        GROUP BY i.log_id, d.day_start
         ORDER BY d.day_start DESC, i.created DESC
         ;";
 
+        $prepare_params = array(
+            $offset_micro,
+            $day_micros,
+            $day_micros,
+            $offset_micro,
+            $site_id,
+            $from_date_utc,
+            $days_number,
+            $day_micros,
+            $site_id,
+            $type,
+        );
+        
+        $prepare_params = array_merge( $prepare_params, $extra_prepare );
+        
         $query = $wpdb->prepare(
             $sql, //phpcs:ignore --ok.
-            // (created + %d).
-            $offset_micro,
-            // / %d.
-            $day_micros,
-            // * %d.
-            $day_micros,
-            // - %d.
-            $offset_micro,
-            // %d (site_id in inner WHERE).
-            $site_id,
-            // %s (current date string for UNIX_TIMESTAMP).
-            $from_date_utc, // ← use something like gmdate('Y-m-d H:i:s').
-            // %d (LIMIT).
-            $days_number,
-            // %d (d.day_start + %d).
-            $day_micros,
-            // %d (i.site_id).
-            $site_id,
-            // %s (type).
-            $type
+            ...$prepare_params
         );
-
-        error_log($query);
 
         $items = $wpdb->get_results( $query ); //phpcs:ignore --ok.
 
         if ( $items ) {
             $this->get_meta_items( $items );
+        }
+        
+        if ( ! empty( $items ) && in_array( $type, array( 'plugin', 'theme' ) ) && ! empty( $slug_value ) ) {
+            $items = array_filter(
+                $items,
+                function ( $item ) use ( $slug_value, $type, $name_value ) {
+                    $item_slug = '';
+                    $item_name = '';
+                    
+                    if ( ! empty( $item->meta['slug'] ) ) {
+                        $item_slug = $item->meta['slug'];
+                    }
+                    
+                    if ( ! empty( $item->meta['name'] ) ) {
+                        $item_name = $item->meta['name'];
+                    }
+                    
+                    if ( empty( $item_slug ) && ! empty( $item->extra_info ) ) {
+                        $extra_data = json_decode( $item->extra_info, true );
+                        if ( is_array( $extra_data ) && ! empty( $extra_data['slug'] ) ) {
+                            $item_slug = $extra_data['slug'];
+                        }
+                    }
+                    
+                    if ( 'theme' === $type ) {
+                        if ( ! empty( $slug_value ) && ! empty( $item_slug ) && $item_slug === $slug_value ) {
+                            return true;
+                        }
+                        if ( ! empty( $name_value ) && ! empty( $item_name ) && $item_name === $name_value ) {
+                            return true;
+                        }
+                        return false;
+                    }
+                    
+                    if ( empty( $item_slug ) ) {
+                        return false;
+                    }
+                    
+                    $normalized_item = $item_slug;
+                    if ( false !== strpos( $item_slug, '/' ) ) {
+                        $parts = explode( '/', $item_slug );
+                        $normalized_item = $parts[0];
+                    } else {
+                        $normalized_item = basename( $item_slug, '.php' );
+                    }
+                    
+                    $normalized_search = $slug_value;
+                    if ( false !== strpos( $slug_value, '/' ) ) {
+                        $parts = explode( '/', $slug_value );
+                        $normalized_search = $parts[0];
+                    } else {
+                        $normalized_search = basename( $slug_value, '.php' );
+                    }
+                    
+                    return $normalized_item === $normalized_search;
+                }
+            );
+            
+            $items = array_values( $items );
         }
 
         $more_date = '';
@@ -491,14 +562,13 @@ class Log_DB_Helper extends MainWP_DB {
                     'SELECT * FROM ' . $this->table_name( 'wp_logs_meta' ) . ' WHERE meta_log_id IN ( %s )',
                     implode( ',', $slice_ids )
                 );
-
+                
                 $meta_records = $wpdb->get_results( $sql_meta ); //phpcs:ignore -- ok.
                 $ids_flip     = array_flip( $ids );
 
                 if ( is_array( $meta_records ) ) {
                     foreach ( $meta_records as $meta_record ) {
                         if ( ! empty( $meta_record->meta_value ) ) {
-                            // compatible format.
                             if ( in_array( $meta_record->meta_key, array( 'user_meta_json', 'user_login', 'extra_info' ) ) ) {
                                 $items[ $ids_flip[ $meta_record->meta_log_id ] ]->{$meta_record->meta_key} = $meta_record->meta_value;
                             } else {

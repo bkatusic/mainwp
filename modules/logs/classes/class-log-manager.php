@@ -74,7 +74,7 @@ class Log_Manager {
      *
      * @var array
      */
-    private static $last_log_created;
+    private static $last_log_created = array();
 
 
     /**
@@ -257,23 +257,23 @@ class Log_Manager {
      */
     public function get_sync_actions_last_created( $site_id ) {
 
-        if ( null === static::$last_log_created ) {
+        if ( ! isset( static::$last_log_created[ $site_id ] ) ) {
             $site_opts = MainWP_DB::instance()->get_website_options_array( $site_id, array( 'non_mainwp_changes_sync_last_created' ) );
 
             if ( ! is_array( $site_opts ) ) {
                 $site_opts = array();
             }
 
-            static::$last_log_created = isset( $site_opts['non_mainwp_changes_sync_last_created'] ) ? $site_opts['non_mainwp_changes_sync_last_created'] : 0;
+            static::$last_log_created[ $site_id ] = isset( $site_opts['non_mainwp_changes_sync_last_created'] ) ? $site_opts['non_mainwp_changes_sync_last_created'] : 0;
 
             // to sure.
-            if ( empty( static::$last_log_created ) ) {
-                static::$last_log_created = time() - DAY_IN_SECONDS;
-                MainWP_DB::instance()->update_website_option( $site_id, 'non_mainwp_changes_sync_last_created', static::$last_log_created );
+            if ( empty( static::$last_log_created[ $site_id ] ) ) {
+                static::$last_log_created[ $site_id ] = time() - DAY_IN_SECONDS;
+                MainWP_DB::instance()->update_website_option( $site_id, 'non_mainwp_changes_sync_last_created', static::$last_log_created[ $site_id ] );
             }
         }
 
-        return static::$last_log_created;
+        return static::$last_log_created[ $site_id ];
     }
 
 

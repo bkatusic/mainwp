@@ -1138,6 +1138,9 @@ class Log_Events_List_Table { //phpcs:ignore -- NOSONAR - complex.
                                         jQuery(manage_tbl_id + ' .ui.checkbox').checkbox();
                                         mainwp_datatable_fix_menu_overflow(manage_tbl_id);
                                         mainwp_table_check_columns_init(manage_tbl_id);
+                                        if (typeof mainwp_sites_changes_update_dismiss_button_state !== 'undefined') {
+                                            mainwp_sites_changes_update_dismiss_button_state();
+                                        }
                                     }, 1000);
                                 }
                             },
