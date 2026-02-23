@@ -324,7 +324,7 @@ class Log_Install extends MainWP_Install {
                 $limit = 1000;
                 do {
                     // Update a safe batch.
-                    $updated = $this->wpdb->query(
+                    $updated = $this->wpdb->query( // phpcs:ignore -- esc table name ok.
                         $this->wpdb->prepare( //phpcs:ignore -- escaped table name ok.
                             "
                             UPDATE {$table}

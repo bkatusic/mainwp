@@ -1579,7 +1579,7 @@ KEY idx_wpid_issub (wpid, issub)";
             ORDER BY h.time ASC";
 
         $query = $this->wpdb->prepare( $sql, $monitor_id, $start, $end );
-        return $this->wpdb->get_results( $query, ARRAY_A );
+        return $this->wpdb->get_results( $query, ARRAY_A ); //phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- SQL from wpdb->prepare().
     }
 
     /**
@@ -1608,7 +1608,7 @@ KEY idx_wpid_issub (wpid, issub)";
 
         $sql = "SELECT COUNT(*) FROM {$table_name} {$where_clause}";
 
-        return (int) $this->wpdb->get_var( $sql );
+        return (int) $this->wpdb->get_var( $sql ); //phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- SQL from wpdb->prepare().
     }
 
 
@@ -1644,7 +1644,7 @@ KEY idx_wpid_issub (wpid, issub)";
 
         $sql = "SELECT * FROM {$table_name} {$where_clause} ORDER BY time DESC {$limit_clause}";
 
-        return $this->wpdb->get_results( $sql );
+        return $this->wpdb->get_results( $sql ); //phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- SQL from wpdb->prepare().
     }
 
     /**
@@ -1661,7 +1661,7 @@ KEY idx_wpid_issub (wpid, issub)";
             $monitor_id
         );
 
-        return $this->wpdb->get_results( $sql );
+        return $this->wpdb->get_results( $sql ); //phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- SQL from wpdb->prepare().
     }
 
     /**

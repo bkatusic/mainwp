@@ -1860,8 +1860,8 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
 
         // Only call prepare() when we have placeholders.
         $result = $sql_params
-            ? $this->wpdb->get_var( $this->wpdb->prepare( $qry, $sql_params ) )
-            : $this->wpdb->get_var( $qry );
+            ? $this->wpdb->get_var( $this->wpdb->prepare( $qry, $sql_params ) ) // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter  -- We have already prepared the query with the parameters.
+            : $this->wpdb->get_var( $qry ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter  -- We have already prepared the query with the parameters.
 
         return (int) $result;
     }
@@ -2662,7 +2662,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
             $id
         ) . $where_allowed;
 
-        return (int) $this->wpdb->get_var( $qry );
+        return (int) $this->wpdb->get_var( $qry ); //phpcs:ignore PluginCheck.Security.DirectDB.Unprepared -- $where_allowed is from validated get_sql_where_access_sites() with numeric IDs.
     }
 
     /**
@@ -3303,7 +3303,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
         if ( empty( $site_id ) ) {
             return;
         }
-        $this->wpdb->query( $this->wpdb->prepare( 'UPDATE ' . $this->table_name( 'wp' ) . ' SET http_code_noticed = 1 WHERE id = %d', $site_id ) );
+        $this->wpdb->query( $this->wpdb->prepare( 'UPDATE ' . esc_sql( $this->table_name( 'wp' ) ) . ' SET http_code_noticed = 1 WHERE id = %d', $site_id ) ); // phpcs:ignore PluginCheck.Security.DirectDB.UnpreparedSQL -- $site_id is an integer that is validated by ctype_digit() before being passed to this method.
     }
 
     /**
