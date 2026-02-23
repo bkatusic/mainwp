@@ -1162,6 +1162,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
             <?php static::render_help_modal(); ?>
             <?php static::render_loader_element(); ?>
             <?php
+            ob_start();
             /**
              * Action: mainwp_after_header
              *
@@ -1172,6 +1173,14 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
              * @since 4.0
              */
             do_action( 'mainwp_after_header', $websites );
+            $after_header_content = ob_get_clean();
+            if ( ! empty( trim( $after_header_content ) ) ) {
+                ?>
+                <div class="ui padded segment">
+                    <?php echo $after_header_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                </div>
+                <?php
+            }
             ?>
         <?php
     }

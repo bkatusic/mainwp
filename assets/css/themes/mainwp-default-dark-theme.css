@@ -479,7 +479,7 @@
 .mainwp-ui.mainwp-custom-theme .ui.attention.message:before {
   content: "\f061";
   font-family: 'Icons', sans-serif;
-  color: var(--mainwp-red) !important;
+  color: var(--mainwp-orange) !important;
   position: absolute;
   top: 1rem;
   left: 1.5rem;

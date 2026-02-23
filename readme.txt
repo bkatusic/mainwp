@@ -7,7 +7,7 @@ Plugin URI: https://mainwp.com
 Requires at least: 6.2
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 6.0-er.14
+Stable tag: 6.0-er.15
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -150,7 +150,7 @@ Yes, we have a quick FAQ with many more questions and answers [here](https://mai
 
 = 6.0 =
 
-* Comming soon
+* Coming soon
 
 [See Video Changelog](https://www.youtube.com/watch?v=36KRNYo6BMY)
 

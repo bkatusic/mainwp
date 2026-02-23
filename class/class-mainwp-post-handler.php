@@ -1962,6 +1962,17 @@ class MainWP_Post_Handler extends MainWP_Post_Base_Handler { // phpcs:ignore -- 
         $type   = isset( $_POST['type'] ) ? sanitize_text_field( wp_unslash( $_POST['type'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $slug   = isset( $_POST['slug'] ) ? sanitize_text_field( wp_unslash( $_POST['slug'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $name   = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( urldecode( $_POST['name'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        
+        if ( 'plugin' === $type && ! empty( $slug ) ) {
+            if ( false !== strpos( $slug, '/' ) ) {
+                $parts = explode( '/', $slug );
+                $slug  = $parts[0];
+            } else {
+                $slug = basename( $slug, '.php' );
+            }
+        } elseif ( 'theme' === $type && ! empty( $slug ) ) {
+            $slug = strtolower( $slug );
+        }
 
         // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $target_dt = ! empty( $_POST['target_date'] ) ? sanitize_text_field( wp_unslash( $_POST['target_date'] ) ) : '';
