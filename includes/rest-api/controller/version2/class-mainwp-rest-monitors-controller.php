@@ -15,6 +15,11 @@ use MainWP\Dashboard\MainWP_Utility;
 use MainWP\Dashboard\MainWP_Monitoring_Handler;
 use MainWP\Dashboard\MainWP_Uptime_Monitoring_Edit;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Rest_Monitors_Controller
  *

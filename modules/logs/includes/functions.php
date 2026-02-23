@@ -5,6 +5,11 @@
  * @package MainWP\Dashboard
  */
 
+// Exit.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Filters a variable with a specified filter.
  *

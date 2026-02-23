@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Client_List_Table
  *
@@ -510,10 +515,10 @@ class MainWP_Client_List_Table extends MainWP_Manage_Sites_List_Table { // phpcs
                     // to fix js error.
                 }
                 mainwp_datatable_fix_menu_overflow('#mainwp-manage-clients-table');
-                
+
                 // Initialize header checkboxes
                 jQuery( '#mainwp-manage-clients-table thead .ui.checkbox' ).checkbox();
-                
+
                 _init_manage_sites_screen = function() {
                     jQuery( '#mainwp-manage-sites-screen-options-modal input[type=checkbox][id^="mainwp_show_column_"]' ).each( function() {
                         let col_id = jQuery( this ).attr( 'id' );

@@ -17,6 +17,11 @@ use MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Rest_Api_Handle_V1;
 use MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Admin;
 use MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Add_Edit;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Rest_Costs_Controller
  *

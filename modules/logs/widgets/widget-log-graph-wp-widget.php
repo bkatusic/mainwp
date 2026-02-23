@@ -14,6 +14,11 @@ use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_Utility;
 use MainWP\Dashboard\MainWP_UI;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Log_Graph_WP_Widget
  *
@@ -159,7 +164,7 @@ class Log_Graph_WP_Widget {
                             colors: '#999'
                         }
                     },
-                    
+
                     stroke: {
                         width: 0
                     },

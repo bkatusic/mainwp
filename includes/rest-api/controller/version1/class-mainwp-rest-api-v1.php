@@ -25,6 +25,11 @@ use MainWP\Dashboard\MainWP_Error_Helper;
 use MainWP\Dashboard\MainWP_Exception;
 use Exception;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Rest_Api_V1
  *

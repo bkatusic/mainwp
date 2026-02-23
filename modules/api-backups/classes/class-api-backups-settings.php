@@ -14,6 +14,10 @@ use MainWP\Dashboard\MainWP_UI;
 use MainWP\Dashboard\MainWP_Settings_Indicator;
 use MainWP\Dashboard\MainWP_Settings;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 /**
  * MainWP API Backups Admin

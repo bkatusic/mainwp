@@ -18,6 +18,12 @@ use MainWP\Dashboard\MainWP_Common_Functions;
 use MainWP\Dashboard\MainWP_Cron_Jobs_Batch;
 use MainWP\Dashboard\MainWP_Logger;
 use MainWP\Dashboard\MainWP_Auto_Updates_DB;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Rest_Updates_Controller
  *

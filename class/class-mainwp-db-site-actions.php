@@ -11,6 +11,11 @@ namespace MainWP\Dashboard;
 
 use MainWP\Dashboard\Module\Log\Log_Query;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_DB_Site_Actions
  *

@@ -9,6 +9,11 @@ namespace MainWP\Dashboard;
 
 use stdClass;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Uptime_Monitoring_Schedule
  *

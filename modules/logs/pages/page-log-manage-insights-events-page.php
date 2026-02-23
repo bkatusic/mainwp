@@ -20,6 +20,11 @@ use MainWP\Dashboard\MainWP_Logger;
 use MainWP\Dashboard\MainWP_Cache_Helper;
 use MainWP\Dashboard\MainWP_Cache_Warm_Helper;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Log_Manage_Insights_Events_Page
  *
@@ -527,7 +532,7 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="two wide middle aligned column">
                         <div id="mainwp-module-log-filter-groups" class="ui selection multiple fluid dropdown seg_groups">
                             <input type="hidden" value="<?php echo esc_html( $filter_groups_ids ); ?>">

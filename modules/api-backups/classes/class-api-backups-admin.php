@@ -15,6 +15,11 @@ use MainWP\Dashboard\MainWP_UI;
 use MainWP\Dashboard\MainWP_Menu;
 use MainWP\Dashboard\MainWP_Utility;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 
 /**
  * Class Api_Backups_Admin

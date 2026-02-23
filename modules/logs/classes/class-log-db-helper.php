@@ -12,6 +12,11 @@ namespace MainWP\Dashboard\Module\Log;
 use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_Utility;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Log_DB
  *
@@ -292,11 +297,11 @@ class Log_DB_Helper extends MainWP_DB {
             $utc_start_micro = (int) $utc_start * 1000000;
             $utc_end_micro   = (int) $utc_end * 1000000;
 
-            $where_site = '';
+            $where_site   = '';
             $prepare_args = array( $type, $utc_start_micro, $utc_end_micro );
-            
+
             if ( ! empty( $site_id ) ) {
-                $where_site = ' AND i.site_id = %d';
+                $where_site     = ' AND i.site_id = %d';
                 $prepare_args[] = $site_id;
             }
 
@@ -434,9 +439,9 @@ class Log_DB_Helper extends MainWP_DB {
             $site_id,
             $type,
         );
-        
+
         $prepare_params = array_merge( $prepare_params, $extra_prepare );
-        
+
         $query = $wpdb->prepare(
             $sql, //phpcs:ignore --ok.
             ...$prepare_params
@@ -447,29 +452,29 @@ class Log_DB_Helper extends MainWP_DB {
         if ( $items ) {
             $this->get_meta_items( $items );
         }
-        
+
         if ( ! empty( $items ) && in_array( $type, array( 'plugin', 'theme' ) ) && ! empty( $slug_value ) ) {
             $items = array_filter(
                 $items,
                 function ( $item ) use ( $slug_value, $type, $name_value ) {
                     $item_slug = '';
                     $item_name = '';
-                    
+
                     if ( ! empty( $item->meta['slug'] ) ) {
                         $item_slug = $item->meta['slug'];
                     }
-                    
+
                     if ( ! empty( $item->meta['name'] ) ) {
                         $item_name = $item->meta['name'];
                     }
-                    
+
                     if ( empty( $item_slug ) && ! empty( $item->extra_info ) ) {
                         $extra_data = json_decode( $item->extra_info, true );
                         if ( is_array( $extra_data ) && ! empty( $extra_data['slug'] ) ) {
                             $item_slug = $extra_data['slug'];
                         }
                     }
-                    
+
                     if ( 'theme' === $type ) {
                         if ( ! empty( $slug_value ) && ! empty( $item_slug ) && $item_slug === $slug_value ) {
                             return true;
@@ -479,31 +484,29 @@ class Log_DB_Helper extends MainWP_DB {
                         }
                         return false;
                     }
-                    
+
                     if ( empty( $item_slug ) ) {
                         return false;
                     }
-                    
-                    $normalized_item = $item_slug;
+
                     if ( false !== strpos( $item_slug, '/' ) ) {
-                        $parts = explode( '/', $item_slug );
+                        $parts           = explode( '/', $item_slug );
                         $normalized_item = $parts[0];
                     } else {
                         $normalized_item = basename( $item_slug, '.php' );
                     }
-                    
-                    $normalized_search = $slug_value;
+
                     if ( false !== strpos( $slug_value, '/' ) ) {
-                        $parts = explode( '/', $slug_value );
+                        $parts             = explode( '/', $slug_value );
                         $normalized_search = $parts[0];
                     } else {
                         $normalized_search = basename( $slug_value, '.php' );
                     }
-                    
+
                     return $normalized_item === $normalized_search;
                 }
             );
-            
+
             $items = array_values( $items );
         }
 
@@ -562,7 +565,7 @@ class Log_DB_Helper extends MainWP_DB {
                     'SELECT * FROM ' . $this->table_name( 'wp_logs_meta' ) . ' WHERE meta_log_id IN ( %s )',
                     implode( ',', $slice_ids )
                 );
-                
+
                 $meta_records = $wpdb->get_results( $sql_meta ); //phpcs:ignore -- ok.
                 $ids_flip     = array_flip( $ids );
 
@@ -599,24 +602,35 @@ class Log_DB_Helper extends MainWP_DB {
      * @return string Return current db size.
      */
     public function get_db_size() {
-        $size = get_transient( 'mainwp_module_log_transient_db_logs_size' );
+        $cache_key   = 'db_logs_size';
+        $cache_group = 'mainwp_module_log';
+
+        $size = wp_cache_get( $cache_key, $cache_group );
+
         if ( false !== $size ) {
             return $size;
         }
 
+        $size = get_transient( 'mainwp_module_log_transient_db_logs_size' );
+
+        if ( false !== $size ) {
+            wp_cache_set( $cache_key, $size, $cache_group, 15 * MINUTE_IN_SECONDS );
+            return $size;
+        }
+
         global $wpdb;
+
         $sql = $wpdb->prepare(
             'SELECT
-        ROUND(SUM(DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024, 2)
-        FROM INFORMATION_SCHEMA.TABLES
-        WHERE
-        TABLE_SCHEMA = %s
-        AND (
-        table_name = %s
-        OR table_name = %s
-        OR table_name = %s
-        OR table_name = %s
-        )',
+            ROUND(SUM(DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024, 2)
+         FROM INFORMATION_SCHEMA.TABLES
+         WHERE TABLE_SCHEMA = %s
+         AND (
+            table_name = %s
+            OR table_name = %s
+            OR table_name = %s
+            OR table_name = %s
+         )',
             $wpdb->dbname,
             $wpdb->mainwp_tbl_logs,
             $wpdb->mainwp_tbl_logs_meta,
@@ -624,9 +638,10 @@ class Log_DB_Helper extends MainWP_DB {
             $this->table_name( 'wp_logs_meta_archive' )
         );
 
-        $dbsize_mb = $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery -- prepared SQL.
+        $dbsize_mb = (float) $wpdb->get_var( $sql ); // phpcs:ignore
 
         set_transient( 'mainwp_module_log_transient_db_logs_size', $dbsize_mb, 15 * MINUTE_IN_SECONDS );
+        wp_cache_set( $cache_key, $dbsize_mb, $cache_group, 15 * MINUTE_IN_SECONDS );
 
         return $dbsize_mb;
     }

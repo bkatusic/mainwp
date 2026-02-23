@@ -14,6 +14,12 @@ use MainWP\Dashboard\MainWP_Utility;
 use MainWP\Dashboard\MainWP_UI;
 use MainWP\Dashboard\MainWP_DB;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+
 /**
  * Class Log_Recent_Events_Widget
  *

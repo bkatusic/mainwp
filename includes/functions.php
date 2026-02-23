@@ -7,6 +7,11 @@
  * @package     MainWP/Dashboard
  */
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 if ( ! defined( 'FILTER_SANITIZE_STRING_COMPATIBLE' ) ) {  // to compatible.
     define( 'FILTER_SANITIZE_STRING_COMPATIBLE', 513 );
 }

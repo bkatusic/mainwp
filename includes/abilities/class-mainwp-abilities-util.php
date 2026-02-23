@@ -388,14 +388,14 @@ class MainWP_Abilities_Util { //phpcs:ignore -- NOSONAR - multi methods.
         // Use exact match on email with deterministic ordering.
         global $wpdb;
         $table = $wpdb->prefix . 'mainwp_wp_clients';
-        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Direct query needed for client lookup by email. Table name from $wpdb->prefix is safe.
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter  -- Direct query needed for client lookup by email. Table name from $wpdb->prefix is safe.
         $client = $wpdb->get_row(
             $wpdb->prepare(
                 "SELECT * FROM {$table} WHERE client_email = %s ORDER BY client_id ASC LIMIT 1",
                 $client_id_or_email
             )
         );
-        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.NoCaching, PluginCheck.Security.DirectDB.UnescapedDBParameter
 
         if ( $client ) {
             return $client;

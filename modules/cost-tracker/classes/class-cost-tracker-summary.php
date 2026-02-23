@@ -13,6 +13,11 @@ use MainWP\Dashboard\MainWP_Utility;
 use MainWP\Dashboard\MainWP_Overview;
 use MainWP\Dashboard\MainWP_Ui_Manage_Widgets_Layout;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class class Cost_Tracker_Summary {
  *
@@ -392,7 +397,7 @@ class Cost_Tracker_Summary {
                 <?php endif; ?>
             <?php endif; ?>
             <div id="mainwp-message-zone" class="ui message" style="display:none;"></div>
-        
+
             <?php
             /**
              * Action: mainwp_before_overview_widgets

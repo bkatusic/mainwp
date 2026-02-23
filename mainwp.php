@@ -15,6 +15,11 @@
  * @uses \MainWP\Dashboard\MainWP_System
  */
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 if ( ! defined( 'MAINWP_PLUGIN_FILE' ) ) {
 
     /**

@@ -9,6 +9,11 @@ namespace MainWP\Dashboard;
 
 use MainWP\Dashboard\Module\Log\Log_Manage_Insights_Events_Page;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 // phpcs:disable Generic.Metrics.CyclomaticComplexity -- complexity.
 
 const MAINWP_VIEW_PER_SITE         = 1;

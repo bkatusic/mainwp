@@ -11,6 +11,9 @@
 
 // phpcs:disable -- required to support custom wp-config.php file location
 
+
+// Do not prevent direct access ! defined( 'ABSPATH' ) exit to support custom wp-config.php file location, but do prevent direct access if WP is not loaded.
+
 // set php.ini variables.
 @ignore_user_abort( true );
 if ( false !== strpos( ini_get( 'disable_functions' ), 'set_time_limit' ) ) {

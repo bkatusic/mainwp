@@ -21,6 +21,13 @@ use MainWP\Dashboard\MainWP_DB_Common;
 use MainWP\Dashboard\MainWP_Utility;
 use MainWP\Dashboard\MainWP_DB_Site_Actions;
 use MainWP\Dashboard\MainWP_Logger;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+
 /**
  * Class MainWP_Rest_Sites_Controller
  *

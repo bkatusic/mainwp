@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_UI
  *
@@ -1969,15 +1974,15 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 },
             }
             let grid = GridStack.init(gsOpts);
-            
+
             grid.on('change', function() {
                 mainwp_overview_gridstack_save_layout(<?php echo (int) $client_id; ?>, grid);
             });
-            
+
             if (jQuery('#mainwp-widgets-selected-layout[data-save-on-load="true"]').length) {
                 mainwp_overview_gridstack_save_layout(<?php echo (int) $client_id; ?>, grid);
             }
-            
+
             jQuery('#mainwp-widgets-placeholder').dimmer('hide');
         });
         </script>

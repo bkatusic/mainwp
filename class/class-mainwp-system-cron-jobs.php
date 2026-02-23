@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 //phpcs:disable WordPress.WP.AlternativeFunctions -- for custom read/write file.
 
 /**

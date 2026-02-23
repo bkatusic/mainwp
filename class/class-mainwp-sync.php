@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Sync
  *
@@ -195,14 +200,14 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
 
             $individual_settings_json = MainWP_DB::instance()->get_website_option( $pWebsite, 'password_policy_individual_settings' );
             $individual_settings = array();
-            
+
             if ( ! empty( $individual_settings_json ) ) {
                 $individual_settings = json_decode( $individual_settings_json, true );
                 if ( ! is_array( $individual_settings ) ) {
                     $individual_settings = array();
                 }
             }
-            
+
             if ( ! empty( $individual_settings['overwrite_enabled'] ) ) {
                 $password_policy_settings = wp_parse_args(
                     $individual_settings,
@@ -222,7 +227,7 @@ class MainWP_Sync { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 );
                 $password_policy_settings = wp_parse_args( get_option( 'mainwp_password_policy_settings', array() ), $password_policy_defaults );
             }
-            
+
             $postdata['passwordPolicySettings'] = wp_json_encode( $password_policy_settings );
 
             $reg_verify = MainWP_DB::instance()->get_website_option( $pWebsite, 'register_verify_key', '' );

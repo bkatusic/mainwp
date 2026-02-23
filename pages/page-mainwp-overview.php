@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Overview
  *
@@ -373,7 +378,7 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
                 <?php endif; ?>
                 <?php do_action( 'mainwp_module_log_render_db_update_notice' ); ?>
                 <?php do_action( 'mainwp_module_log_render_db_size_notice' ); ?>
-            
+
                 <?php
                 /**
                  * Action: mainwp_before_overview_widgets

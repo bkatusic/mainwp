@@ -13,6 +13,12 @@ use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_Logger;
 use MainWP\Dashboard\MainWP_Utility;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+
 /**
  * Class Log_Changes_Logs_Helper
  *
@@ -387,7 +393,7 @@ class Log_Changes_Logs_Helper {
                         $slug = $extra_data['slug'];
                     }
                 }
-                
+
                 if ( ! empty( $slug ) ) {
                     if ( false !== strpos( $slug, '/' ) ) {
                         $parts   = explode( '/', $slug );
@@ -399,7 +405,7 @@ class Log_Changes_Logs_Helper {
                 } elseif ( ! empty( $name_meta ) ) {
                     $slugidx = strtolower( sanitize_title( $name_meta ) );
                 }
-                
+
                 if ( empty( $slugidx ) && ! empty( $record->item ) ) {
                     $slugidx = strtolower( sanitize_title( $record->item ) );
                 }

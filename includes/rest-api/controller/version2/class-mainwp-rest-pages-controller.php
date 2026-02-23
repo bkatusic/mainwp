@@ -14,6 +14,12 @@ use MainWP\Dashboard\MainWP_System_Utility;
 use MainWP\Dashboard\MainWP_Connect;
 use MainWP\Dashboard\MainWP_Exception;
 use MainWP\Dashboard\MainWP_Error_Helper;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Rest_Pages_Controller
  *

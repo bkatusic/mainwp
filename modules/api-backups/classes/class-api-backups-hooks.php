@@ -10,6 +10,11 @@ namespace MainWP\Dashboard\Module\ApiBackups;
 
 use MainWP\Dashboard\MainWP_Settings_Indicator;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Api_Backups_Hooks
  */

@@ -12,6 +12,11 @@ namespace MainWP\Dashboard;
 
 use MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Settings;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Settings
  *
