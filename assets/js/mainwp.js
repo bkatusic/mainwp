@@ -4200,9 +4200,9 @@ let mainwp_insights_row_actions_dismiss = function (obj) {
             log_id: jQuery(row).attr('log-id')
         });
         jQuery.post(ajaxurl, data, function (response) {
-            if (!response || response.success !== 'yes') {
+            if (response?.success !== 'yes') {
 
-                if (response && response.error) {
+                if (response?.error) {
                     renderMessage('times red', response.error);
                 } else {
                     renderMessage('times red', 'The change could not be dismissed.');
