@@ -1059,7 +1059,7 @@ class MainWP_Post_Handler extends MainWP_Post_Base_Handler { // phpcs:ignore -- 
         // phpcs:disable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $field_ids = isset( $_POST['field_ids'] ) && is_array( $_POST['field_ids'] ) ? array_map( 'intval', $_POST['field_ids'] ) : array();
         // phpcs:enable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-        
+
         if ( empty( $field_ids ) ) {
             $ret['data'] = array( 'message' => __( 'No fields selected.', 'mainwp' ) );
             echo wp_json_encode( $ret );
@@ -1955,14 +1955,14 @@ class MainWP_Post_Handler extends MainWP_Post_Base_Handler { // phpcs:ignore -- 
     /**
      * Handle ajax get changes logs for plugins/themes.
      */
-    public function ajax_get_item_changes_logs() {
+    public function ajax_get_item_changes_logs() { //phpcs:ignore -- NOSONAR -complex.
         $this->check_security( 'mainwp_changes_logs_get_item_changes' );
 
         $siteId = isset( $_POST['siteId'] ) ? intval( $_POST['siteId'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $type   = isset( $_POST['type'] ) ? sanitize_text_field( wp_unslash( $_POST['type'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $slug   = isset( $_POST['slug'] ) ? sanitize_text_field( wp_unslash( $_POST['slug'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $name   = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( urldecode( $_POST['name'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-        
+
         if ( 'plugin' === $type && ! empty( $slug ) ) {
             if ( false !== strpos( $slug, '/' ) ) {
                 $parts = explode( '/', $slug );
