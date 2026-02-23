@@ -2662,7 +2662,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
             $id
         ) . $where_allowed;
 
-        return (int) $this->wpdb->get_var( $qry ); //phpcs:ignore PluginCheck.Security.DirectDB.Unprepared -- $where_allowed is from validated get_sql_where_access_sites() with numeric IDs.
+        return (int) $this->wpdb->get_var( $qry ); //phpcs:ignore PluginCheck.Security.DirectDB.Unprepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $where_allowed is from validated get_sql_where_access_sites() with numeric IDs.
     }
 
     /**
