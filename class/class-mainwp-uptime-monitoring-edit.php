@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Uptime_Monitoring_Edit
  *
@@ -671,7 +676,7 @@ class MainWP_Uptime_Monitoring_Edit { // phpcs:ignore Generic.Classes.OpeningBra
                             <input type="button" name="delete_uptime_monitor_btn" id="<?php echo esc_attr( $el_id_del_mo_1 ); ?>" class="ui grey basic mini button" value="<?php esc_html_e( 'Disable Monitor', 'mainwp' ); ?>">
                         </div>
                     </div>
-                    
+
                     <?php
                 }
                 ?>

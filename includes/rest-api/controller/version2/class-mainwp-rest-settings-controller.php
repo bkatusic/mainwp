@@ -25,6 +25,13 @@ use MainWP\Dashboard\MainWP_Sync;
 use MainWP\Dashboard\MainWP_Manage_Sites_View;
 use MainWP\Dashboard\MainWP_Uptime_Monitoring_Handle;
 use MainWP\Dashboard\MainWP_Uptime_Monitoring_Edit;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+
 /**
  * Class MainWP_Rest_Settings_Controller
  *

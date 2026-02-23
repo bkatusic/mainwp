@@ -14,6 +14,11 @@ use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_DB_Client;
 use MainWP\Dashboard\MainWP_Exception;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Cost_Tracker_DB
  */

@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_DB_Common
  *
@@ -356,9 +361,11 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
                 $where .= ' AND  gr.id IN (' . implode( ',', $include ) . ') ';
             }
 
+            $gr_table = esc_sql( $this->table_name( 'group' ) );
+
             // Return count only if requested.
             if ( $count_only ) {
-                return (int) $this->wpdb->get_var( 'SELECT COUNT(*) FROM ' . $this->table_name( 'group' ) . ' gr WHERE 1 ' . $where );
+                return (int) $this->wpdb->get_var( 'SELECT COUNT(*) FROM ' . $gr_table . ' gr WHERE 1 ' . $where ); // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- $where is built with wpdb->prepare() and escaped table name, safe to use directly.
             }
 
             if ( ! empty( $page ) && ! empty( $per_page ) ) {
@@ -378,7 +385,7 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
         $where_sql      = $where ? $where : '';
         $limit_sql      = $limit ? $limit : '';
         $query          = "SELECT gr.* {$select_sql}, COUNT(DISTINCT(wpgr.wpid)) as count_sites FROM `{$table_group}` gr LEFT JOIN `{$table_wp_group}` wpgr ON gr.id = wpgr.groupid {$join_sql} WHERE 1 {$where_sql} GROUP BY gr.id ORDER BY gr.name {$limit_sql}";
-        return $this->wpdb->get_results( $query, OBJECT_K );
+        return $this->wpdb->get_results( $query, OBJECT_K ); // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- $query is built with proper escaping and parameterization above.
     }
 
     /**

@@ -13,6 +13,12 @@ use MainWP\Dashboard\MainWP_Utility;
 use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_DB_Client;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+
 /**
  * Class Cost_Tracker_DB_Query
  */

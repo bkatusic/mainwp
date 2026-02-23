@@ -11,6 +11,11 @@ namespace MainWP\Dashboard\Module\Log;
 use MainWP\Dashboard\MainWP_Install;
 use MainWP\Dashboard\MainWP_Utility;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Log_Install
  *
@@ -244,6 +249,7 @@ class Log_Install extends MainWP_Install {
                 //phpcs:ignore -- ok.
                 $wpdb->query( "CREATE TABLE IF NOT EXISTS {$meta_table}_dup_backup LIKE {$meta_table}" );
 
+                //phpcs:ignore -- custom query ok.
                 $wpdb->query(
                     "
                     INSERT IGNORE INTO {$meta_table}_dup_backup
@@ -291,12 +297,12 @@ class Log_Install extends MainWP_Install {
 
             // to save microsecords.
             if ( $is_db_ver_with_archive ) {
-                $table = $this->table_name( 'wp_logs' );
+                $table = esc_sql( $this->table_name( 'wp_logs' ) );
                 $limit = 1000;
                 do {
                     // Update a safe batch.
                     $updated = $this->wpdb->query(
-                        $this->wpdb->prepare(
+                        $this->wpdb->prepare( //phpcs:ignore -- esc table name ok.
                             "
                             UPDATE {$table}
                             SET created = created * 1000000
@@ -319,7 +325,7 @@ class Log_Install extends MainWP_Install {
                 do {
                     // Update a safe batch.
                     $updated = $this->wpdb->query(
-                        $this->wpdb->prepare(
+                        $this->wpdb->prepare( //phpcs:ignore -- escaped table name ok.
                             "
                             UPDATE {$table}
                             SET created = created * 1000000
@@ -327,7 +333,7 @@ class Log_Install extends MainWP_Install {
                             LIMIT %d
                             ",
                             10000000000,
-                            $limit
+                            $limit  //phpcs:ignore -- escaped ok.
                         )
                     );
                     usleep( 100000 ); // 100ms.
@@ -348,10 +354,10 @@ class Log_Install extends MainWP_Install {
 
         if ( ! empty( $currentVersion ) && version_compare( $currentVersion, '1.0.1.46', '<' ) ) { // NOSONAR - non-ip.
 
-            $log_table  = $this->table_name( 'wp_logs' );
-            $meta_table = $this->table_name( 'wp_logs_meta' );
+            $log_table  = esc_sql( $this->table_name( 'wp_logs' ) );
+            $meta_table = esc_sql( $this->table_name( 'wp_logs_meta' ) );
 
-            $meta_items = $this->wpdb->get_results(
+            $meta_items = $this->wpdb->get_results( // phpcs:ignore -- custom escaped query ok.
                 "
                     SELECT m.meta_log_id, m.meta_value
                     FROM {$log_table} l

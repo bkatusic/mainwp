@@ -17,6 +17,11 @@ use MainWP\Dashboard\MainWP_Post_Handler;
 use MainWP\Dashboard\MainWP_Logger;
 use MainWP\Dashboard\MainWP_Ui_Manage_Widgets_Layout;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Log_Insights_Page
  *
@@ -369,7 +374,7 @@ class Log_Insights_Page { //phpcs:ignore -- NOSONAR - multi methods.
             MainWP_UI::add_widget_box( 'log_graph_themes', array( Log_Graph_Themes_Widget::instance(), 'render' ), $page, array( -1, -1, 12, 36 ) );
         }
 
-        
+
 
         $i = 1;
         foreach ( $extMetaBoxs as $metaBox ) {
@@ -958,7 +963,7 @@ class Log_Insights_Page { //phpcs:ignore -- NOSONAR - multi methods.
                 </div>
             </div>
             <?php endif; ?>
-            
+
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'insights-widgets' ) ) : ?>
             <div class="ui segment" style="padding-bottom:0;margin-bottom:0;">
                 <div class="ui message" style="margin-bottom:0">

@@ -16,6 +16,11 @@ use MainWP\Dashboard\MainWP_DB_Client;
 use MainWP\Dashboard\MainWP_Utility;
 use MainWP\Dashboard\MainWP_UI;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Log_Graph_Tags_Widget
  *

@@ -1527,6 +1527,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
         if ( isset( $input['tag_ids'] ) && is_array( $input['tag_ids'] ) ) {
             global $wpdb;
             // Clear existing tag associations for this site.
+            //phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery -- for testing results.
             $wpdb->query(
                 $wpdb->prepare(
                     'DELETE FROM ' . $wpdb->prefix . 'mainwp_wp_group WHERE wpid = %d',

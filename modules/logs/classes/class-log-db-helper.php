@@ -12,6 +12,11 @@ namespace MainWP\Dashboard\Module\Log;
 use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_Utility;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Log_DB
  *
@@ -597,24 +602,35 @@ class Log_DB_Helper extends MainWP_DB {
      * @return string Return current db size.
      */
     public function get_db_size() {
-        $size = get_transient( 'mainwp_module_log_transient_db_logs_size' );
+        $cache_key   = 'db_logs_size';
+        $cache_group = 'mainwp_module_log';
+
+        $size = wp_cache_get( $cache_key, $cache_group );
+
         if ( false !== $size ) {
             return $size;
         }
 
+        $size = get_transient( 'mainwp_module_log_transient_db_logs_size' );
+
+        if ( false !== $size ) {
+            wp_cache_set( $cache_key, $size, $cache_group, 15 * MINUTE_IN_SECONDS );
+            return $size;
+        }
+
         global $wpdb;
+
         $sql = $wpdb->prepare(
             'SELECT
-        ROUND(SUM(DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024, 2)
-        FROM INFORMATION_SCHEMA.TABLES
-        WHERE
-        TABLE_SCHEMA = %s
-        AND (
-        table_name = %s
-        OR table_name = %s
-        OR table_name = %s
-        OR table_name = %s
-        )',
+            ROUND(SUM(DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024, 2)
+         FROM INFORMATION_SCHEMA.TABLES
+         WHERE TABLE_SCHEMA = %s
+         AND (
+            table_name = %s
+            OR table_name = %s
+            OR table_name = %s
+            OR table_name = %s
+         )',
             $wpdb->dbname,
             $wpdb->mainwp_tbl_logs,
             $wpdb->mainwp_tbl_logs_meta,
@@ -622,9 +638,10 @@ class Log_DB_Helper extends MainWP_DB {
             $this->table_name( 'wp_logs_meta_archive' )
         );
 
-        $dbsize_mb = $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery -- prepared SQL.
+        $dbsize_mb = (float) $wpdb->get_var( $sql ); // phpcs:ignore
 
         set_transient( 'mainwp_module_log_transient_db_logs_size', $dbsize_mb, 15 * MINUTE_IN_SECONDS );
+        wp_cache_set( $cache_key, $dbsize_mb, $cache_group, 15 * MINUTE_IN_SECONDS );
 
         return $dbsize_mb;
     }

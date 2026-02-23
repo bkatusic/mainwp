@@ -13,6 +13,11 @@ use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_Extensions_Handler;
 use MainWP\Dashboard\MainWP_Site_Open;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Api_Backups_3rd_Party
  *

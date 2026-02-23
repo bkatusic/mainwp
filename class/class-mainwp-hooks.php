@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 // phpcs:disable Generic.Metrics.CyclomaticComplexity -- complexity.
 
 /**

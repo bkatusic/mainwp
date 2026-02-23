@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Manage_Groups
  *
@@ -248,7 +253,7 @@ class MainWP_Manage_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
                         <input type="checkbox" name="sites" class="mainwp-site-checkbox" value="<?php echo esc_attr( $website->id ); ?>" id="<?php echo 'site-' . esc_attr( $website->id ); ?>" >
                     </div>
                 </td>
-                <td class="not-selectable"><?php echo MainWP_Utility::mainwp_display_site( $website->id ); ?></td>
+                <td class="not-selectable"><?php MainWP_Utility::mainwp_display_site( $website->id, true, true ); ?></td>
                 <td class="not-selectable"><?php echo MainWP_System_Utility::get_site_tags_belong( (array) $website ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
                 <td class="not-selectable">
                     <?php if ( ! empty( $website->client_name ) ) : ?>

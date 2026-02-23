@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_DB
  *
@@ -2228,7 +2233,7 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
             MainWP_Logger::instance()->log_events( 'cache-metrics', sprintf( '[sql search websites=%s]', $qry ) );
         }
         MainWP_Logger::instance()->log_events( 'db-queries', sprintf( '[sql search websites=%s]', $qry ) );
-        
+
         return $qry;
     }
 

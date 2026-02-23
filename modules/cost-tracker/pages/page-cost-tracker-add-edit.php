@@ -14,6 +14,11 @@ use MainWP\Dashboard\MainWP_UI;
 use MainWP\Dashboard\MainWP_System_Utility;
 use MainWP\Dashboard\MainWP_Settings_Indicator;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Cost_Tracker_Add_Edit
  */
@@ -190,7 +195,7 @@ class Cost_Tracker_Add_Edit {
                         </div>
                     <?php endif; ?>
                 <?php endif; ?>
-                
+
                 <div class="ui yellow message" id="mainwp-module-cost-tracker-error-zone" style="display:none">
                     <div class="error-message"></div>
                     <i class="ui close icon"></i>
@@ -340,7 +345,7 @@ class Cost_Tracker_Add_Edit {
                     <?php esc_html_e( 'License & Payment', 'mainwp' ); ?>
                     <div class="sub header"><?php esc_html_e( 'Enter license information and purchase details.', 'mainwp' ); ?></div>
                 </h2>
-                
+
                 <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-cost-add-edit" default-indi-value="single_site">
                     <label class="six wide column middle aligned">
                     <?php

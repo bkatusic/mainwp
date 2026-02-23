@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_DB_Client
  *
@@ -754,13 +759,13 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             // Handle count-only mode for efficient pagination total.
             if ( $count_only ) {
                 $sql  = ' SELECT COUNT(*) ';
-                $sql .= ' FROM ' . $this->table_name( 'wp_clients' ) . ' wc ';
+                $sql .= ' FROM ' . esc_sql( $this->table_name( 'wp_clients' ) ) . ' wc ';
                 $sql .= ' WHERE 1 ' . $where_clients;
-                return (int) $this->wpdb->get_var( $sql );
+                return (int) $this->wpdb->get_var( $sql ); // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- $sql uses wpdb->prepare() or escaped table name concatenation, safe to use directly.
             }
 
             $sql  = ' SELECT wc.*, cc.* ' . $select_sites . $select_tags;
-            $sql .= ' FROM ' . $table_clients . ' wc ';
+            $sql .= ' FROM ' . esc_sql( $this->table_name( 'wp_clients' ) ) . ' wc ';
             $sql .= $join_contact;
             $sql .= ' WHERE 1 ' . $where_clients;
             $sql .= ' ORDER BY wc.name';
@@ -1398,7 +1403,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
         // Build SQL.
         $sql = 'SELECT * FROM ' . $this->table_name( 'wp_clients_fields' ) . ' clients_fields WHERE 1=1 ' . $where . ' ORDER BY ' . $orderby . $limit;
 
-        return $this->wpdb->get_results( $sql, $obj );
+        return $this->wpdb->get_results( $sql, $obj ); // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- $sql built with wpdb->prepare() and escaped table name, safe to use directly.
     }
 
     /**

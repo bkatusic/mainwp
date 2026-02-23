@@ -10,6 +10,11 @@
 // include cron/bootstrap.php.
 require_once 'bootstrap.php'; // NOSONAR - WP compatible.
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 if ( isset( $mainWP ) ) {
     // fire off mainWP->mainwp_cronchecksitehealth_action.
     $mainWP->mainwp_cronchecksitehealth_action();

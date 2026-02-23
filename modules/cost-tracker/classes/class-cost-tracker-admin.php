@@ -20,6 +20,11 @@ use MainWP\Dashboard\MainWP_Settings_Indicator;
 use MainWP\Dashboard\MainWP_Exception;
 use MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Import;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Cost_Tracker_Admin
  */

@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Bulk_Update_Admin_Passwords
  *
@@ -97,7 +102,7 @@ class MainWP_Bulk_Update_Admin_Passwords { // phpcs:ignore Generic.Classes.Openi
 
             if ( empty( $errors ) ) {
                 $show_form = false;
-            
+
                 $new_password = wp_unslash( $_POST['password'] ); //phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- ok.
 
                 if ( 'site' === $_POST['select_by'] ) { // Get all selected websites.
@@ -170,7 +175,7 @@ class MainWP_Bulk_Update_Admin_Passwords { // phpcs:ignore Generic.Classes.Openi
         }
 
         $websites = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_websites_for_current_user( false, null, 'wp.url', false, false, null, false, array( 'admin_nicename', 'admin_useremail' ) ) );
-        
+
         MainWP_User::render_header( 'UpdateAdminPasswords' );
         if ( ! $show_form ) {
             static::render_modal( $dbwebsites, $output );
@@ -279,7 +284,7 @@ class MainWP_Bulk_Update_Admin_Passwords { // phpcs:ignore Generic.Classes.Openi
                             </div>
                         <?php endif; ?>
                     <?php endif; ?>
-                    
+
                         <?php
                         /**
                          * Action: mainwp_admin_pass_before_users_table
@@ -301,7 +306,7 @@ class MainWP_Bulk_Update_Admin_Passwords { // phpcs:ignore Generic.Classes.Openi
                             <tbody>
                                 <?php while ( $websites && $website = MainWP_DB::fetch_object( $websites ) ) : ?>
                                     <tr>
-                                        <td><?php echo MainWP_Utility::mainwp_display_site( $website->id ); ?></td>
+                                        <td><?php MainWP_Utility::mainwp_display_site( $website->id, true, true ); ?></td>
                                         <td><?php echo esc_html( $website->adminname ); ?></td>
                                         <td><?php echo esc_html( $website->admin_useremail ); ?></td>
                                     </tr>

@@ -12,6 +12,12 @@ namespace MainWP\Dashboard\Module\Log;
 
 use MainWP\Dashboard\MainWP_Utility;
 use MainWP\Dashboard\MainWP_UI;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Log_Pages_Widget
  *

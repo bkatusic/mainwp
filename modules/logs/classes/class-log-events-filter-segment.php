@@ -10,6 +10,11 @@ namespace MainWP\Dashboard\Module\Log;
 use MainWP\Dashboard\MainWP_Manage_Sites_Filter_Segment;
 use MainWP\Dashboard\MainWP_Post_Handler;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 
 /**
  * Class Log_Events_Filter_Segment

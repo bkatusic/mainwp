@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Extensions_Groups
  */
@@ -153,7 +158,7 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 'level'         => 1,
             ),
         );
-        
+
         $extensions_and_leftmenus[] = array(
             'title'         => esc_html__( 'Backups', 'mainwp' ),
             'parent_key'    => 'managesites',

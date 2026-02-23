@@ -12,6 +12,12 @@ use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_Logger;
 use MainWP\Dashboard\MainWP_System_Utility;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+
 /**
  * Class Api_Backups_Utility
  */

@@ -10,6 +10,11 @@
 
 namespace MainWP\Dashboard\Module\ApiBackups;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * MainWP API Backups Overview
  */

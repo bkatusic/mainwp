@@ -13,6 +13,11 @@ use MainWP\Dashboard\Module\CostTracker\Cost_Tracker_DB;
 use MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Rest_Api_Handle_V1;
 use MainWP\Dashboard\MainWP_Utility;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Rest_Clients_Controller
  *

@@ -8,6 +8,11 @@
 
 namespace MainWP\Dashboard\Module\ApiBackups;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Api_Backups_Manager
  */

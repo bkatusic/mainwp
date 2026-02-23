@@ -9,6 +9,12 @@ namespace MainWP\Dashboard;
 
 use MainWP\Dashboard\Module\Log\Log_DB_Helper;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+
 // phpcs:disable Generic.Metrics.CyclomaticComplexity -- complexity.
 /**
  * Class MainWP_Server_Information

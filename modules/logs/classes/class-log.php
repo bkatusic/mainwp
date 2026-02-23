@@ -11,6 +11,11 @@ namespace MainWP\Dashboard\Module\Log;
 
 use MainWP\Dashboard\MainWP_Execution_Helper;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Logs
  */

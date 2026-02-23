@@ -15,6 +15,11 @@ use MainWP\Dashboard\MainWP_Manage_Sites;
 use MainWP\Dashboard\MainWP_Updates_Helper;
 use MainWP\Dashboard\MainWP_Site_Open;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Log_Events_List_Table
  *

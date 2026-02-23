@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 // Include class-wp-list-table.php.
 if ( ! class_exists( '\WP_List_Table' ) ) {
     require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php'; // NOSONAR - WP compatible.

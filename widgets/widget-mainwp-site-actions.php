@@ -14,6 +14,10 @@ use MainWP\Dashboard\Module\Log\Log_Manager;
 use MainWP\Dashboard\Module\Log\Log_Events_List_Table;
 use MainWP\Dashboard\Module\Log\Log_DB_Helper;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 /**
  * Class MainWP_Site_Actions

@@ -11,6 +11,11 @@ use MainWP\Dashboard\MainWP_DB_Common;
 use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_DB_Client;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Rest_Tags_Controller
  *

@@ -16,6 +16,12 @@ use MainWP\Dashboard\MainWP_Bulk_Add;
 use MainWP\Dashboard\MainWP_Exception;
 use MainWP\Dashboard\MainWP_Error_Helper;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+
 /**
  * Class MainWP_Rest_Users_Controller
  *

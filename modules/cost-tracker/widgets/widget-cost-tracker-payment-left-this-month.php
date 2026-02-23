@@ -13,6 +13,11 @@ namespace MainWP\Dashboard\Module\CostTracker;
 use MainWP\Dashboard\MainWP_UI;
 use MainWP\Dashboard\MainWP_Utility;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Cost_Tracker_Payment_Left_This_Month
  *

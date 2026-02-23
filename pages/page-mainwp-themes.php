@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+
 /**
  * Class MainWP_Themes_Page
  *
@@ -2514,7 +2519,7 @@ class MainWP_Themes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
             <?php if ( empty( $ignoredThemes ) && 0 === $cnt ) : ?>
                 <?php MainWP_UI::render_empty_page_placeholder( __( 'No Ignored Updates', 'mainwp' ), __( 'All theme updates are being tracked. When you choose to ignore updates for a specific theme, they will appear here.', 'mainwp' ), '<em data-emoji=":compass:" class="big"></em>' ); ?>
             <?php endif; ?>
-        
+
             <?php
             /**
              * Action: mainwp_themes_after_ignored_updates

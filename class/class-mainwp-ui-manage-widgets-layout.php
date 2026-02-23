@@ -10,6 +10,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Ui_Manage_Widgets_Layout
  *
@@ -272,7 +277,7 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
             <div class="actions">
                 <div class="ui grid">
                     <div class="eight wide left aligned middle aligned column">
-                        
+
                     </div>
                     <div class="eight wide column">
                         <input type="button" class="ui green mini button disabled" id="mainwp-common-edit-widgets-layout-save-button" value="<?php esc_attr_e( 'Save Layout', 'mainwp' ); ?>"/>
