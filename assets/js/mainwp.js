@@ -4171,6 +4171,28 @@ let mainwp_insights_row_actions_dismiss = function (obj) {
     let row = jQuery(obj).closest('tr');
     let confirmMsg = __("You are about to dismiss the selected change?");
 
+    const renderMessage = (icon, message) => {
+        row.html(
+            '<td></td><td colspan="999"><i class="' +
+            icon +
+            ' icon"></i> ' +
+            message +
+            '</td>'
+        );
+    };
+
+    const updateDismissButtonState = () => {
+        if (typeof mainwp_sites_changes_update_dismiss_button_state !== 'undefined') {
+            mainwp_sites_changes_update_dismiss_button_state();
+        }
+    };
+
+    const fadeRow = () => {
+        setTimeout(() => {
+            jQuery(row).fadeOut('slow', updateDismissButtonState);
+        }, 2000);
+    };
+
     let _callback = () => {
         row.html('<td></td><td colspan="999"><i class="notched circle loading icon"></i> Please wait...</td>');
         let data = mainwp_secure_data({
@@ -4178,24 +4200,18 @@ let mainwp_insights_row_actions_dismiss = function (obj) {
             log_id: jQuery(row).attr('log-id')
         });
         jQuery.post(ajaxurl, data, function (response) {
-            if (response) {
-                if (response['error']) {
-                    row.html('<td></td><td colspan="999"><i class="times red icon"></i> ' + response['error'] + '</td>');
-                } else if (response['success'] == 'yes') {
-                    row.html('<td></td><td colspan="999"><i class="green check icon"></i> The change has been dismissed.</td>');
-                    setTimeout(() => {
-                        jQuery(row).fadeOut("slow", () => {
-                            if (typeof mainwp_sites_changes_update_dismiss_button_state !== 'undefined') {
-                                mainwp_sites_changes_update_dismiss_button_state();
-                            }
-                        });
-                    }, 2000);
+            if (!response || response.success !== 'yes') {
+
+                if (response && response.error) {
+                    renderMessage('times red', response.error);
                 } else {
-                    row.html('<td></td><td colspan="999"><i class="times red icon"></i> The change could not be dismissed.</td>');
+                    renderMessage('times red', 'The change could not be dismissed.');
                 }
-            } else {
-                row.html('<td></td><td colspan="999"><i class="times red icon"></i> The change could not be dismissed.</td>');
+
+                return;
             }
+            renderMessage('green check', 'The change has been dismissed.');
+            fadeRow();
         }, 'json');
     };
     mainwp_confirm(confirmMsg, _callback);
