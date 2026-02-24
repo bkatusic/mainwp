@@ -1,4 +1,4 @@
-=== MainWP Dashboard: WordPress Management without the SaaS  ===
+=== MainWP Dashboard: Self-hosted WordPress Management for Agencies  ===
 Contributors: mainwp
 Tags: manage multiple WordPress sites, WordPress maintenance, update, backups, security
 Author: mainwp
@@ -11,7 +11,7 @@ Stable tag: 6.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Streamline your WordPress management with a powerful, self-hosted dashboard for updates, backups, security, cost tracking, and client management.
+Run updates, backups, security and reporting across all client sites from your own server. Keep data private and prove your value with branded reports.
 
 == Description ==
 
