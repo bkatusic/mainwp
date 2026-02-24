@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Monitoring_View
  *
@@ -25,7 +30,7 @@ class MainWP_Monitoring_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
         <h3 class="ui dividing header">
             <?php MainWP_Settings_Indicator::render_indicator( 'header', 'settings-field-indicator-monitor-general' ); ?>
             <?php esc_html_e( 'Uptime Monitoring', 'mainwp' ); ?>
-            <div class="sub header"><?php printf( esc_html__( 'For additional help with setting up the Uptime Monitoring, please see %1$sthis help document%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/sites-monitoring/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?></div>
+            <div class="sub header"><?php printf( esc_html__( 'For additional help with setting up the Uptime Monitoring, please see %1$sthis help document%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/management/manage-child-sites#uptime-monitoring" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?></div>
         </h3>
 
         <?php
@@ -34,13 +39,13 @@ class MainWP_Monitoring_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
         <h3 class="ui dividing header">
             <?php MainWP_Settings_Indicator::render_indicator( 'header', 'settings-field-indicator-health-monitoring' ); ?>
             <?php esc_html_e( 'Site Health Monitoring', 'mainwp' ); ?>
-            <div class="sub header"><?php printf( esc_html__( 'For additional help with setting up the Site Health monitoring, please see %1$sthis help document%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/sites-monitoring/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?></div>
+            <div class="sub header"><?php printf( esc_html__( 'For additional help with setting up the Site Health monitoring, please see %1$sthis help document%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/management/manage-child-sites#uptime-monitoring" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?></div>
         </h3>
         <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-health-monitoring" default-indi-value="1">
             <label class="six wide column middle aligned">
             <?php
             MainWP_Settings_Indicator::render_not_default_indicator( 'mainwp_disableSitesHealthMonitoring', (int) $disableSitesHealthMonitoring );
-            esc_html_e( 'Enable Site Health monitoring', 'mainwp' );
+            esc_html_e( 'Enable site health monitoring', 'mainwp' );
             ?>
             </label>
             <div class="ten wide column ui toggle checkbox mainwp-checkbox-showhide-elements" hide-parent="health-monitoring">

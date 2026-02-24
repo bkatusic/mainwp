@@ -11,6 +11,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 // Exit if access directly.
 if ( ! defined( 'WP_CLI' ) ) {
     return; // NOSONAR - jump to avoid CLI.

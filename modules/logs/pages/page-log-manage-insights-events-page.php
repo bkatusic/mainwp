@@ -17,6 +17,13 @@ use MainWP\Dashboard\MainWP_DB_Client;
 use MainWP\Dashboard\MainWP_DB_Common;
 use MainWP\Dashboard\MainWP_Post_Handler;
 use MainWP\Dashboard\MainWP_Logger;
+use MainWP\Dashboard\MainWP_Cache_Helper;
+use MainWP\Dashboard\MainWP_Cache_Warm_Helper;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 /**
  * Class Log_Manage_Insights_Events_Page
@@ -51,7 +58,7 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
     private $table_id_prefix = 'manage-events';
 
     /**
-     * Private static variable to hold the current page.
+     * Public static variable to hold the current page.
      *
      * @var mixed Default null
      */
@@ -95,13 +102,13 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
     /**
      * Method init_menu()
      *
-     * Add Insights Overview sub menu "Insights".
+     * Add Insights Operations sub menu "Insights".
      */
     public function init_menu() {
         static::$page_current = add_submenu_page(
             'mainwp_tab',
-            esc_html__( 'Sites Changes', 'mainwp' ),
-            '<div class="mainwp-hidden" id="mainwp-insights-actions">' . esc_html__( 'Sites Changes', 'mainwp' ) . '</div>',
+            esc_html__( 'Network Activity', 'mainwp' ),
+            '<div class="mainwp-hidden" id="mainwp-insights-actions">' . esc_html__( 'Network Activity', 'mainwp' ) . '</div>',
             'read',
             'InsightsManage',
             array(
@@ -119,12 +126,12 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
     public static function init_left_menu() {
         MainWP_Menu::add_left_menu(
             array(
-                'title'                => esc_html__( 'Sites Changes', 'mainwp' ),
+                'title'                => esc_html__( 'Network Activity', 'mainwp' ),
                 'parent_key'           => 'managesites',
                 'slug'                 => 'InsightsManage',
                 'href'                 => 'admin.php?page=InsightsManage',
                 'icon'                 => '<i class="pie chart icon"></i>',
-                'desc'                 => 'Sites Changes',
+                'desc'                 => 'Network Activity',
                 'leftsub_order_level2' => 3.4,
             ),
             2
@@ -179,11 +186,13 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
      */
     public function on_show_page() {
 
+        $optimize_tbl = apply_filters( 'mainwp_manage_events_sites_changes_optimize_view', false );
+
         static::render_header( 'overview' );
 
         $insights_filters = $this->get_insights_filters( true );
-        static::render_logs_overview_top( $insights_filters );
-        $this->load_events_list_table(); // for events table list.
+        static::render_logs_overview_top( $insights_filters, $optimize_tbl );
+        $this->load_events_list_table( $optimize_tbl ); // for events table list.
         /**
          * Action: mainwp_logs_manage_table_top
          *
@@ -194,8 +203,9 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
         do_action( 'mainwp_logs_manage_table_top', 'recent_events' );
         ?>
         <div id="mainwp-message-zone" style="display:none;" class="ui message"></div>
+        <div id="mainwp-message-zone-top" style="display: none;" class="ui message"></div>
         <?php
-        wp_nonce_field( 'mainwp-admin-nonce' );
+        MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' );
         $this->list_events_table->display();
 
         /**
@@ -224,10 +234,13 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
         $filters = array( 'client', 'range', 'group', 'user', 'dtsstart', 'dtsstop', 'source', 'sites', 'events' );
 
         $get_saved = true;
-        foreach ( $filters as $filter ) {
-            if ( isset( $_REQUEST[ $filter ] ) ) { //phpcs:ignore -- safe.
-                $get_saved = false;
-                break;
+
+        if ( isset( $_GET['_insights_opennonce'] ) && wp_verify_nonce( sanitize_key( $_GET['_insights_opennonce'] ), 'mainwp-admin-nonce' ) ) { //phpcs:ignore -- NOSONAR -ok.
+            foreach ( $filters as $filter ) {
+                if ( isset( $_REQUEST[ $filter ] ) ) { //phpcs:ignore -- safe.
+                    $get_saved = false;
+                    break;
+                }
             }
         }
 
@@ -389,23 +402,33 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
             );
         }
 
-        return compact(
+        $filters_params = compact(
             'filter_ranges',
             'filter_groups_ids',
             'filter_client_ids',
             'filter_user_ids',
             'filter_dtsstart',
             'filter_dtsstop',
-            'array_clients_ids',
-            'array_groups_ids',
-            'array_usersfilter_sites_ids',
             'filter_source',
             'filter_sites',
             'filter_events',
-            'sources_conds',
-            'array_sites_ids',
-            'array_events_list',
-            'array_source_list',
+        );
+
+        if ( $save_filter ) { // check invalidate for request to open the page only.
+            MainWP_Cache_Warm_Helper::maybe_invalidate_page_by_params( 'InsightsManage', $filters_params );
+        }
+
+        return array_merge(
+            $filters_params,
+            compact(
+                'array_clients_ids',
+                'array_groups_ids',
+                'array_usersfilter_sites_ids',
+                'sources_conds',
+                'array_sites_ids',
+                'array_events_list',
+                'array_source_list'
+            )
         );
     }
 
@@ -425,8 +448,9 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
      * Render Manage Tasks Table Top.
      *
      * @param array $insights_filters Insights filters.
+     * @param bool  $optimize Optimize table view or not.
      */
-    public static function render_logs_overview_top( $insights_filters ) { //phpcs:ignore -- NOSONAR - complex.
+    public static function render_logs_overview_top( $insights_filters, $optimize = false ) { //phpcs:ignore -- NOSONAR - complex.
         $manager = Log_Manager::instance();
 
         $filter_ranges               = '';
@@ -463,24 +487,24 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
         }
 
         ?>
-    <div class="mainwp-sub-header" id="mainwp-module-log-overview-sub-header">
-        <div class="ui message" style="display: none;" id="mainwp-message-zone-top"></div>
-        <div class="ui stackable grid">
-            <div class="eight wide middle aligned column">
-                <a href="javascript:void(0)" id="mainwp_sites_changes_bulk_dismiss_selected_btn" class="ui button mini basic"><?php esc_html_e( 'Dismiss Selected Changes', 'mainwp' ); ?></a>
-                <a href="javascript:void(0)" id="mainwp_sites_changes_bulk_dismiss_all_btn" class="ui mini green button"><?php esc_html_e( 'Dismiss All Changes', 'mainwp' ); ?></a>
-            </div>
-            <div class="eight wide right aligned middle aligned column">
-                <span data-tooltip="<?php esc_html_e( 'Click to filter sites.', 'mainwp' ); ?>" data-position="bottom right" data-inverted="">
-                    <a href="#" class="ui mini icon basic button" id="mainwp-sites-changes-filter-toggle-button">
-                        <i class="filter icon"></i> <?php esc_html_e( 'Filter Sites Changes', 'mainwp' ); ?>
+        <div class="mainwp-sub-header" id="mainwp-module-log-overview-sub-header">
+            <div class="ui stackable grid">
+                <div class="eight wide middle aligned column">
+                    <a href="javascript:void(0)" id="mainwp_sites_changes_bulk_dismiss_selected_btn" class="ui mini green button disabled"><?php esc_html_e( 'Dismiss Selected Changes', 'mainwp' ); ?></a>
+                    <a href="javascript:void(0)" id="mainwp_sites_changes_bulk_dismiss_all_btn" class="ui mini basic button"><?php esc_html_e( 'Dismiss All Changes', 'mainwp' ); ?></a>
+                </div>
+                <div class="eight wide right aligned middle aligned column">
+                    <span id="mainwp-module-log-segment-buttons">
+                        <?php Log_Events_Filter_Segment::get_instance()->render_filters_segment( 'module_log_manage' ); ?>
+                    </span>
+                    <a href="#" class="ui mini basic button" id="mainwp-sites-changes-filter-toggle-button">
+                        <i class="filter icon"></i> <?php esc_html_e( 'Show Filters', 'mainwp' ); ?>
                     </a>
-                </span>
+                </div>
             </div>
-        </div>
 
-        <div class="ui stackable grid" id="mainwp-module-log-filters-row" style="display:none">
-            <div class="twelve wide column ui">
+        <div id="mainwp-module-log-filters-row" style="display:none">
+            <div class="ui divider"></div>
                 <div class="ui stackable compact grid mini form">
                     <div class="two wide middle aligned column">
                         <div id="mainwp-module-log-filter-ranges" class="ui selection fluid dropdown seg_ranges not-auto-init">
@@ -508,22 +532,7 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
                             </div>
                         </div>
                     </div>
-                    <div class="two wide middle aligned column">
-                        <div class="ui calendar mainwp_datepicker seg_dtsstart" id="mainwp-module-log-filter-dtsstart" >
-                            <div class="ui input left fluid icon">
-                                <i class="calendar icon"></i>
-                                <input type="text" <?php echo $disable_dt ? 'disabled="disabled"' : ''; ?> autocomplete="off" placeholder="<?php esc_attr_e( 'Start date', 'mainwp' ); ?>" value="<?php echo ! empty( $filter_dtsstart ) ? esc_attr( $filter_dtsstart ) : ''; ?>"/>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="two wide middle aligned column">
-                        <div class="ui calendar mainwp_datepicker seg_dtsstop" id="mainwp-module-log-filter-dtsstop" >
-                            <div class="ui input left icon">
-                                <i class="calendar icon"></i>
-                                <input type="text" <?php echo $disable_dt ? 'disabled="disabled"' : ''; ?> autocomplete="off" placeholder="<?php esc_attr_e( 'End date', 'mainwp' ); ?>" value="<?php echo ! empty( $filter_dtsstop ) ? esc_attr( $filter_dtsstop ) : ''; ?>"/>
-                            </div>
-                        </div>
-                    </div>
+
                     <div class="two wide middle aligned column">
                         <div id="mainwp-module-log-filter-groups" class="ui selection multiple fluid dropdown seg_groups">
                             <input type="hidden" value="<?php echo esc_html( $filter_groups_ids ); ?>">
@@ -559,6 +568,7 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
                             </div>
                         </div>
                     </div>
+                    <?php if ( ! $optimize ) { ?>
                     <div class="two wide middle aligned column">
                         <div id="mainwp-module-log-filter-users" class="ui selection multiple fluid dropdown seg_users">
                             <input type="hidden" value="<?php echo esc_html( $filter_user_ids ); ?>">
@@ -569,7 +579,7 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
                                 $users = $manager->admin->get_all_users();
                                 foreach ( $users as $item ) {
                                     ?>
-                                    <div class="item" data-value="<?php echo intval( $item['id'] ) . '-' . (int) $item['site_id'] . '-' . ( empty( $item['wp_user_id'] ) ? 1 : 0 ); ?>"><?php echo ( ! empty( $item['login'] ) ? esc_html( $item['login'] ) : esc_html( $item['nicename'] ) ) . ' (' . esc_html( $item['source'] ) . ')'; ?></div>
+                                    <div class="item" data-value="<?php echo intval( $item['id'] ) . '-' . (int) $item['site_id'] . '-' . ( ! empty( $item['is_dashboard_user'] ) ? 1 : 0 ); ?>"><?php echo ( ! empty( $item['login'] ) ? esc_html( $item['login'] ) : esc_html( $item['nicename'] ) ) . ' (' . esc_html( $item['source'] ) . ')'; ?></div>
                                     <?php
                                 }
                                 ?>
@@ -577,6 +587,7 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
                             </div>
                         </div>
                     </div>
+                    <?php } ?>
                     <?php
                     // add filters: filter_events, filter_source and filter_sites.
                     ?>
@@ -627,33 +638,47 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
 
                     <div class="two wide middle aligned column">
                         <div id="mainwp-module-log-filter-sites" class="ui selection multiple fluid dropdown seg_sites">
-                                <input type="hidden" value="<?php echo esc_attr( $filter_sites ); ?>">
-                                <i class="dropdown icon"></i>
-                                <div class="default text"><?php esc_html_e( 'All Websites', 'mainwp' ); ?></div>
-                                <div class="menu">
-                                    <?php
-                                    $websites = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_websites_for_current_user_by_params() );
-                                    while ( $websites && ( $website = MainWP_DB::fetch_object( $websites ) ) ) {
-                                        ?>
-                                        <div class="item" data-value="<?php echo esc_attr( $website->id ); ?>"><?php echo esc_html( MainWP_Utility::get_nice_url( stripslashes( $website->name ) ) ); ?></div>
-                                        <?php
-                                    }
-
+                            <input type="hidden" value="<?php echo esc_attr( $filter_sites ); ?>">
+                            <i class="dropdown icon"></i>
+                            <div class="default text"><?php esc_html_e( 'All Websites', 'mainwp' ); ?></div>
+                            <div class="menu">
+                                <?php
+                                $wpsite_fields = array( 'id', 'name' );
+                                $websites      = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_websites_for_current_user_by_params( array( 'select_wp_fields' => $wpsite_fields ) ) );
+                                while ( $websites && ( $website = MainWP_DB::fetch_object( $websites ) ) ) {
                                     ?>
-                                    <div class="item" data-value="allsites"><?php esc_html_e( 'All Websites', 'mainwp' ); ?></div>
+                                    <div class="item" data-value="<?php echo esc_attr( $website->id ); ?>"><?php echo esc_html( MainWP_Utility::get_nice_url( stripslashes( $website->name ) ) ); ?></div>
+                                    <?php
+                                }
+                                MainWP_DB::free_result( $websites );
+                                ?>
+                                <div class="item" data-value="allsites"><?php esc_html_e( 'All Websites', 'mainwp' ); ?></div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="four wide middle aligned left aligned column">
-                        <button onclick="mainwp_module_log_manage_events_filter()" class="ui mini green button"><?php esc_html_e( 'Filter Data', 'mainwp' ); ?></button>
-                        <button onclick="mainwp_module_log_manage_events_reset_filters(this)" class="ui mini button" <?php echo $default_filter ? 'disabled="disabled"' : ''; ?>><?php esc_html_e( 'Reset Filters', 'mainwp' ); ?></button>
+                    <div class="two wide middle aligned right aligned column">
+                        <a onclick="mainwp_module_log_manage_events_filter()" href="#" class="ui mini green basic button"><i class="filter icon"></i> <?php esc_html_e( 'Filter', 'mainwp' ); ?></a>
+                        <a onclick="mainwp_module_log_manage_events_reset_filters(this)" href="#" class="ui mini basic button" <?php echo $default_filter ? 'disabled="disabled"' : ''; ?>><i class="times icon"></i> <?php esc_html_e( 'Reset', 'mainwp' ); ?></a>
+                    </div>
+                    <div class="two wide middle aligned column" id="mainwp-module-log-filter-dtsstart-column" <?php echo $disable_dt ? 'style="display:none"' : ''; ?>>
+                        <div class="ui calendar mainwp_datepicker seg_dtsstart" id="mainwp-module-log-filter-dtsstart" >
+                            <div class="ui input left fluid icon">
+                                <i class="calendar icon"></i>
+                                <input type="text"<?php echo $disable_dt ? 'disabled="disabled"' : ''; ?> autocomplete="off" placeholder="<?php esc_attr_e( 'Start date', 'mainwp' ); ?>" value="<?php echo ! empty( $filter_dtsstart ) ? esc_attr( $filter_dtsstart ) : ''; ?>"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="two wide middle aligned column" id="mainwp-module-log-filter-dtsstop-column" <?php echo $disable_dt ? 'style="display:none"' : ''; ?>>
+                        <div class="ui calendar mainwp_datepicker seg_dtsstop" id="mainwp-module-log-filter-dtsstop" >
+                            <div class="ui input left icon">
+                                <i class="calendar icon"></i>
+                                <input type="text" <?php echo $disable_dt ? 'disabled="disabled"' : ''; ?> autocomplete="off" placeholder="<?php esc_attr_e( 'End date', 'mainwp' ); ?>" value="<?php echo ! empty( $filter_dtsstop ) ? esc_attr( $filter_dtsstop ) : ''; ?>"/>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <?php Log_Events_Filter_Segment::get_instance()->render_filters_segment( 'module_log_manage' ); ?>
         </div>
-    </div>
         <?php
         MainWP_UI::render_modal_save_segment( 'manage-events' );
 
@@ -703,14 +728,23 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
                         if(value == 'custom'){
                             $('#mainwp-module-log-filter-dtsstart input[type=text]').attr('disabled', false);
                             $('#mainwp-module-log-filter-dtsstop input[type=text]').attr('disabled', false);
+                            $('#mainwp-module-log-filter-dtsstart-column').show();
+                            $('#mainwp-module-log-filter-dtsstop-column').show();
                         } else {
                             $('#mainwp-module-log-filter-dtsstart input[type=text]').attr('disabled', 'disabled');
                             $('#mainwp-module-log-filter-dtsstop input[type=text]').attr('disabled', 'disabled');
+                            $('#mainwp-module-log-filter-dtsstart-column').hide();
+                            $('#mainwp-module-log-filter-dtsstop-column').hide();
                         }
                         $('#mainwp-module-log-filter-dtsstart').calendar('set date', dateRanges[value]['start']);
                         $('#mainwp-module-log-filter-dtsstop').calendar('set date', dateRanges[value]['end']);
                     }
                 });
+
+                if($( '#mainwp-module-log-filter-ranges').length && 'custom' === $( '#mainwp-module-log-filter-ranges').dropdown('get value') && dateRanges?.custom?.start !== undefined ){
+                    $('#mainwp-module-log-filter-dtsstart').calendar('set date', dateRanges['custom']['start']);
+                    $('#mainwp-module-log-filter-dtsstop').calendar('set date', dateRanges['custom']['end']);
+                }
 
                 mainwp_module_log_manage_events_filter = function() {
                     let range = jQuery( '#mainwp-module-log-filter-ranges').dropdown('get value');
@@ -772,10 +806,12 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
      * Method load_sites_table()
      *
      * Load sites table.
+     *
+     * @param bool $optimize Optimize table view or not.
      */
-    public function load_events_list_table() {
+    public function load_events_list_table( $optimize = false ) {
         $manager                 = Log_Manager::instance();
-        $this->list_events_table = new Log_Events_List_Table( $manager, $this->table_id_prefix );
+        $this->list_events_table = new Log_Events_List_Table( $manager, $this->table_id_prefix, $optimize );
     }
 
     /**
@@ -801,7 +837,7 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
      */
     public static function render_header() {
         $params = array(
-            'title'      => esc_html__( 'Sites Changes', 'mainwp' ),
+            'title'      => esc_html__( 'Network Activity', 'mainwp' ),
             'which'      => 'page_log_manage_insights',
             'wrap_class' => 'mainwp-log-mananage-insights-wrapper',
         );
@@ -823,10 +859,9 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
             wp_die( wp_json_encode( array( 'error' => 'Invalid change ID or Change not found.' ) ) );
         }
         $update = array(
-            'log_id'  => $log_id,
-            'dismiss' => 1,
+            'log_id' => $log_id,
         );
-        Log_DB_Helper::instance()->update_log( $update );
+        Log_DB_Archive::instance()->archive_log( $update );
         wp_die( wp_json_encode( array( 'success' => 'yes' ) ) );
     }
 
@@ -835,7 +870,7 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
      */
     public function ajax_sites_changes_dismiss_all() {
         MainWP_Post_Handler::instance()->secure_request( 'mainwp_insight_events_dismiss_all' );
-        Log_DB_Helper::instance()->dismiss_all_changes();
+        Log_DB_Archive::instance()->archive_sites_changes();
         wp_die( wp_json_encode( array( 'success' => 'yes' ) ) );
     }
 
@@ -885,7 +920,7 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
             <div class="header"><?php esc_html_e( 'Page Settings', 'mainwp' ); ?></div>
             <div class="scrolling content ui form">
                 <form method="POST" action="" id="manage-events-screen-options-form" name="manage_sites_screen_options_form">
-                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                     <input type="hidden" name="wp_nonce" value="<?php echo esc_attr( wp_create_nonce( 'ManageEventsScrOptions' ) ); ?>" />
                     <div class="ui grid field">
                         <label class="six wide column"><?php esc_html_e( 'Default items per page value', 'mainwp' ); ?></label>
@@ -948,11 +983,11 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
         <script type="text/javascript">
             jQuery( document ).ready( function () {
                 jQuery('#reset-manage-events-settings').on( 'click', function () {
-                    mainwp_confirm(__( 'Are you sure.' ), function(){
+                    mainwp_confirm(__( 'Are you sure?' ), function(){
                         jQuery('input[name=mainwp_default_sites_per_page]').val(25);
                         jQuery('.mainwp_hide_wpmenu_checkboxes input[id^="mainwp_show_column_"]').prop( 'checked', false );
                         //default columns.
-                        let cols = ['event', 'log_object', 'created','log_site_name','user_id', 'source', 'col_action'];
+                        let cols = ['created', 'user_id', 'action', 'log_object', 'name', 'event', 'source', 'col_action'];
                         jQuery.each( cols, function ( index, value ) {
                             jQuery('.mainwp_hide_wpmenu_checkboxes input[id="mainwp_show_column_' + value + '"]').prop( 'checked', true );
                         } );

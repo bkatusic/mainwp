@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Site_Info
  *
@@ -134,7 +139,7 @@ class MainWP_Site_Info { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Co
             ?>
             <?php
             if ( ! is_array( $website_info ) || ! isset( $website_info['wpversion'] ) ) {
-                MainWP_UI::render_empty_element_placeholder();
+                MainWP_UI::render_empty_element_placeholder( __( 'View Site Details', 'mainwp' ), __( 'No site information available.', 'mainwp' ), '<em data-emoji=":globe_with_meridians:" class="medium"></em>' );
             } else {
 
                 $website_info['group'] = empty( $website->wpgroups ) ? 'None' : $website->wpgroups;

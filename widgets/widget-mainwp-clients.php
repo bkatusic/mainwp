@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Clients
  *
@@ -155,7 +160,7 @@ class MainWP_Clients { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                 } );
                 </script>
                 <?php else : ?>
-                    <?php MainWP_UI::render_empty_element_placeholder(); ?>
+                    <?php MainWP_UI::render_empty_element_placeholder( __( 'No Clients yet', 'mainwp' ), __( 'Create your first client to see them listed here.', 'mainwp' ), '<em data-emoji=":bust_in_silhouette:" class="medium"></em>' ); ?>
                 <?php endif; ?>
                 <?php
                 /**

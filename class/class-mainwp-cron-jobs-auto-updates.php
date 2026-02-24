@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Cron_Jobs_Auto_Updates
  *
@@ -219,6 +224,7 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
                     'trans_update_check',
                     'premium_upgrades',
                     'ignored_wp_upgrades',
+                    'ignored_trans_updates',
                     'bulk_wp_upgrades',
                     'bulk_plugin_upgrades',
                     'bulk_theme_upgrades',
@@ -680,10 +686,6 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
                         * @since 4.1
                         */
                         do_action( 'mainwp_after_plugin_theme_translation_update', $information, 'plugin', implode( ',', $slugs ), $website );
-
-                        if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-                            MainWP_Sync::sync_information_array( $website, $information['sync'] );
-                        }
                     } catch ( \Exception $e ) {
                         // ok.
                     }
@@ -753,10 +755,6 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
                                 'list' => urldecode( implode( ',', $slugs ) ),
                             )
                         );
-
-                        if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-                            MainWP_Sync::sync_information_array( $website, $information['sync'] );
-                        }
                     } catch ( \Exception $e ) {
                         // ok.
                     }
@@ -835,9 +833,6 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
                                 'list' => urldecode( implode( ',', $slugs ) ),
                             )
                         );
-                        if ( isset( $information['sync'] ) && ! empty( $information['sync'] ) ) {
-                            MainWP_Sync::sync_information_array( $website, $information['sync'] );
-                        }
                     } catch ( \Exception $e ) {
                         // ok.
                     }

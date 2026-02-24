@@ -9,6 +9,12 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+
 /**
  * Class MainWP_Install
  *
@@ -25,7 +31,7 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
      *
      * @var string DB version info.
      */
-    protected $mainwp_db_version = '9.0.0.62'; // NOSONAR - no IP.
+    protected $mainwp_db_version = '9.0.1.3'; // NOSONAR - no IP.
 
     /**
      * Protected variable to hold the database option name.
@@ -155,7 +161,11 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
   is_staging tinyint(1) NOT NULL DEFAULT 0,
   client_id int(11) NOT NULL DEFAULT 0,
   `suspended` tinyint(1) NOT NULL DEFAULT 0,
-  KEY idx_userid (userid)";
+  KEY idx_wp_staging_name_id (is_staging, name(191), id),
+  KEY idx_userid (userid),
+  KEY idx_client_id (client_id),
+  KEY idx_url (url(191))";
+
         if ( empty( $currentVersion ) ) {
             $tbl .= ',
   PRIMARY KEY  (id)  ';
@@ -196,6 +206,7 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
   wpid int(11) NOT NULL,
   name text NOT NULL DEFAULT '',
   value longtext NOT NULL DEFAULT '',
+  KEY idx_options_wpid_name (wpid, name(191)),
   KEY idx_wpid (wpid)";
 
         if ( empty( $currentVersion ) ) {
@@ -370,8 +381,8 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
             $tbl .= ',
     PRIMARY KEY  (key_id)  ';
         }
-            $tbl  .= ') ' . $charset_collate . ';';
-            $sql[] = $tbl;
+        $tbl  .= ') ' . $charset_collate . ';';
+        $sql[] = $tbl;
 
         $tbl = 'CREATE TABLE ' . $this->table_name( 'action_log' ) . " (
     id int(11) NOT NULL auto_increment,
@@ -384,8 +395,8 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
             $tbl .= ',
     PRIMARY KEY  (id)  ';
         }
-            $tbl  .= ') ' . $charset_collate . ';';
-            $sql[] = $tbl;
+        $tbl  .= ') ' . $charset_collate . ';';
+        $sql[] = $tbl;
 
         $tbl = 'CREATE TABLE ' . $this->table_name( 'request_log' ) . " (
   id int(11) NOT NULL auto_increment,
@@ -411,7 +422,7 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
     dts_process_init_time int(11) NOT NULL DEFAULT 0,
     dts_process_stop int(11) NOT NULL DEFAULT 0";
 
-        if ( empty( $currentVersion ) || version_compare( $currentVersion, '9.0.0.45', '<' ) ) { //phpcs:ignore -- NOSONAR - no ip.
+    if ( empty( $currentVersion ) || version_compare( $currentVersion, '9.0.0.45', '<' ) ) { //phpcs:ignore -- NOSONAR - no ip.
             $tbl .= ',
     PRIMARY KEY  (process_id)  ';
         }
@@ -558,8 +569,29 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
             $this->wpdb->query( "ALTER TABLE {$wp_sync_table} ADD sync_id int NOT NULL AUTO_INCREMENT PRIMARY KEY" );
         }
 
+        $this->update_optimize_indexes_55( $currentVersion );
+
         $this->wpdb->suppress_errors( $suppress );
         MainWP_DB_Client::instance()->check_to_updates_reports_data_861( $currentVersion );
+    }
+
+    /**
+     * Handle optimize tables indexes.
+     *
+     * @param string $current_ver Current DB version.
+     *
+     * @return void
+     */
+    public function update_optimize_indexes_55( $current_ver ) {
+        if ( ! empty( $current_ver ) && version_compare( $current_ver, '9.0.1.1', '<' ) ) { // NOSONAR - no ip.
+            $this->wpdb->query( 'ALTER TABLE ' . $this->table_name( 'wp' ) . ' ADD INDEX idx_wp_staging_name_id (is_staging, name(191), id)' ); //phpcs:ignore -- ok.
+            $this->wpdb->query( 'ALTER TABLE ' . $this->table_name( 'wp_options' ) . ' ADD INDEX KEY idx_options_wpid_name (wpid, name(191))' ); //phpcs:ignore -- ok.
+        }
+        if ( ! empty( $current_ver ) && version_compare( $current_ver, '9.0.1.3', '<' ) ) { // NOSONAR - no ip.
+            $this->wpdb->query( 'ALTER TABLE ' . $this->table_name( 'wp' ) . ' ADD INDEX idx_userid (userid)' ); //phpcs:ignore -- ok.
+            $this->wpdb->query( 'ALTER TABLE ' . $this->table_name( 'wp' ) . ' ADD INDEX idx_client_id (client_id)' ); //phpcs:ignore -- ok.
+            $this->wpdb->query( 'ALTER TABLE ' . $this->table_name( 'wp' ) . ' ADD INDEX idx_url (url(191))' ); //phpcs:ignore -- ok.
+        }
     }
 
     /**

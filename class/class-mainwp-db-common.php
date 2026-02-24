@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_DB_Common
  *
@@ -50,8 +55,16 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
      * @return string $return all_synced|not_synced|last_sync
      */
     public function get_last_sync_status() {
-        $sql      = $this->get_sql_websites_for_current_user();
-        $websites = $this->query( $sql );
+        $wpsite_fields = array( 'id' );
+        $sync_fields   = array( 'sync_errors', 'dtsSync' );
+        $websites      = $this->query(
+            $this->get_sql_websites_for_current_user_by_params(
+                array(
+                    'select_wp_fields'   => $wpsite_fields,
+                    'select_sync_fields' => $sync_fields,
+                )
+            )
+        );
 
         $return = array(
             'sync_status' => false,
@@ -289,15 +302,23 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
 
 
     /**
-     * Medthod get_groups_and_count()
+     * Method get_tags()
      *
-     * Get groups and count.
+     * Get tags (groups) with optional filtering and pagination.
      *
      * @since 5.1.1
      *
-     * @param array $params      params.
+     * @param array $params Optional parameters for filtering and pagination.
+     *                      - 's'              (string) Search term for tag name or ID.
+     *                      - 'exclude'        (array)  Tag IDs to exclude.
+     *                      - 'include'        (array)  Tag IDs to include.
+     *                      - 'page'           (int)    Page number for pagination.
+     *                      - 'per_page'       (int)    Items per page for pagination.
+     *                      - 'with_sites_ids' (bool)   Include associated site IDs.
+     *                      - 'count'          (bool)   Return count only instead of results.
      *
-     * @return object|null Database query result for groups and count or null on failure.
+     * @return object[]|int When $params['count'] is true, returns an integer count of matching tags.
+     *                      Otherwise, returns an array of tag objects keyed by ID, or empty array on failure.
      */
     public function get_tags( $params = array() ) { //phpcs:ignore -- NOSONAR - complex.
 
@@ -316,13 +337,20 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             $page           = isset( $params['page'] ) ? intval( $params['page'] ) : false;
             $per_page       = isset( $params['per_page'] ) ? intval( $params['per_page'] ) : false;
             $with_sites_ids = isset( $params['with_sites_ids'] ) && $params['with_sites_ids'] ? true : false;
+            $count_only     = ! empty( $params['count'] );
 
             if ( $with_sites_ids ) {
                 $select .= ', wp_tagview.* ';
             }
 
             if ( ! empty( $s ) ) {
-                $where .= ' AND ( gr.name LIKE "%' . $this->escape( $s ) . '%" OR gr.id LIKE "%' . $this->escape( $s ) . '%" ) ';
+                $s            = trim( $s );
+                $like_pattern = '%' . $this->wpdb->esc_like( $s ) . '%';
+                $where       .= $this->wpdb->prepare(
+                    ' AND ( gr.name LIKE %s OR gr.id LIKE %s ) ',
+                    $like_pattern,
+                    $like_pattern
+                );
             }
 
             if ( ! empty( $exclude ) ) {
@@ -333,8 +361,15 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
                 $where .= ' AND  gr.id IN (' . implode( ',', $include ) . ') ';
             }
 
+            $gr_table = esc_sql( $this->table_name( 'group' ) );
+
+            // Return count only if requested.
+            if ( $count_only ) {
+                return (int) $this->wpdb->get_var( 'SELECT COUNT(*) FROM ' . $gr_table . ' gr WHERE 1 ' . $where ); // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- $where is built with wpdb->prepare() and escaped table name, safe to use directly.
+            }
+
             if ( ! empty( $page ) && ! empty( $per_page ) ) {
-                $limit = ' LIMIT ' . ( $page - 1 ) * $per_page . ',' . $per_page;
+                $limit = $this->wpdb->prepare( ' LIMIT %d, %d', ( $page - 1 ) * $per_page, $per_page );
             }
 
             $join = '';
@@ -343,9 +378,14 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
                 $join = ' JOIN ' . $this->get_tag_view() . ' wp_tagview ON gr.id = wp_tagview.id ';
             }
         }
-        $table_group = esc_sql( $this->table_name( 'group' ) );
+        $table_group    = esc_sql( $this->table_name( 'group' ) );
         $table_wp_group = esc_sql( $this->table_name( 'wp_group' ) );
-        return $this->wpdb->get_results( "SELECT gr.* " . esc_sql( $select ) . ", COUNT(DISTINCT(wpgr.wpid)) as count_sites FROM `{$table_group}` gr LEFT JOIN `{$table_wp_group}` wpgr ON gr.id = wpgr.groupid " . esc_sql( $join ) . " WHERE 1 " . esc_sql( $where ) . " GROUP BY gr.id ORDER BY gr.name " . esc_sql( $limit ), OBJECT_K );
+        $select_sql     = $select ? $select : '';
+        $join_sql       = $join ? $join : '';
+        $where_sql      = $where ? $where : '';
+        $limit_sql      = $limit ? $limit : '';
+        $query          = "SELECT gr.* {$select_sql}, COUNT(DISTINCT(wpgr.wpid)) as count_sites FROM `{$table_group}` gr LEFT JOIN `{$table_wp_group}` wpgr ON gr.id = wpgr.groupid {$join_sql} WHERE 1 {$where_sql} GROUP BY gr.id ORDER BY gr.name {$limit_sql}";
+        return $this->wpdb->get_results( $query, OBJECT_K ); // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- $query is built with proper escaping and parameterization above.
     }
 
     /**

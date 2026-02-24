@@ -9,6 +9,12 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+
 /**
  * Class MainWP_Client_Info
  *
@@ -177,7 +183,7 @@ class MainWP_Client_Info { //phpcs:ignore Generic.Classes.OpeningBraceSameLine.C
                 do_action( 'mainwp_clients_info_table_bottom', $website );
                 ?>
             <?php else : ?>
-                <?php MainWP_UI::render_empty_element_placeholder(); ?>
+                <?php MainWP_UI::render_empty_element_placeholder( __( 'No Client selected', 'mainwp' ), __( 'Create a client to display their information in this widget.', 'mainwp' ), '<em data-emoji=":bust_in_silhouette:" class="medium"></em>' ); ?>
             <?php endif; ?>
             <?php
             /**

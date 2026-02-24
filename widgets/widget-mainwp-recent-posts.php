@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Recent_Posts
  *
@@ -90,12 +95,21 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
         } else {
             if ( $current_wpid ) {
                 $sql        = MainWP_DB::instance()->get_sql_website_by_id( $current_wpid );
+                $websites   = MainWP_DB::instance()->query( $sql );
                 $individual = true;
             } else {
-                $sql        = MainWP_DB::instance()->get_sql_websites_for_current_user();
-                $individual = false;
+                $wpsite_fields = array( 'id', 'name', 'url' );
+                $websites      = MainWP_DB::instance()->query(
+                    MainWP_DB::instance()->get_sql_websites_for_current_user_by_params(
+                        array(
+                            'view'             => 'custom_view',
+                            'others_fields'    => array( 'recent_posts' ),
+                            'select_wp_fields' => $wpsite_fields,
+                        )
+                    )
+                );
+                $individual    = false;
             }
-            $websites = MainWP_DB::instance()->query( $sql );
 
             if ( $websites ) {
                 while ( $websites && ( $website = MainWP_DB::fetch_object( $websites ) ) ) {
@@ -242,7 +256,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
              */
             do_action( 'mainwp_recent_posts_before_publised_list', $allPosts, $recent_number );
             if ( empty( $recent_posts_published ) ) {
-                MainWP_UI::render_empty_element_placeholder();
+                MainWP_UI::render_empty_element_placeholder( __( 'No Recent Posts Found', 'mainwp' ), __( 'Recent post changes will appear here once activity is detected.', 'mainwp' ), '<em data-emoji=":pencil:" class="medium"></em>' );
             }
             ?>
             <div class="ui middle aligned divided list">
@@ -260,7 +274,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
 
                 ?>
                 <div class="item">
-                    <div class="ui stackable grid">
+                    <div class="ui grid">
                         <input class="postId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_published[ $i ]['id'] ); ?>"/>
                         <input class="websiteId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_published[ $i ]['website']->id ); ?>"/>
                         <div class="fourteen wide column middle aligned">
@@ -277,7 +291,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                                 <i class="ellipsis vertical icon"></i>
                                 <div class="menu">
                                     <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item mainwp-post-unpublish" href="#"><?php esc_html_e( 'Unpublish', 'mainwp' ); ?></a>
-                                    <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item" href="admin.php?page=SiteOpen&newWindow=yes&websiteid=<?php echo intval( $recent_posts_published[ $i ]['website']->id ); ?>&location=<?php echo esc_attr( base64_encode( 'post.php?action=editpost&post=' . $recent_posts_published[ $i ]['id'] . '&action=edit' ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible. ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank"><?php esc_html_e( 'Edit', 'mainwp' ); ?></a>
+                                    <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item" href="<?php MainWP_Site_Open::get_open_site_admin_link( $recent_posts_published[ $i ]['website']->id, true ); ?>&location=<?php echo esc_attr( base64_encode( 'post.php?action=editpost&post=' . $recent_posts_published[ $i ]['id'] . '&action=edit' ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible. ?>" target="_blank"><?php esc_html_e( 'Edit', 'mainwp' ); ?></a>
                                     <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item mainwp-post-trash" href="#"><?php esc_html_e( 'Trash', 'mainwp' ); ?></a>
                                     <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item" href="<?php echo esc_url( $recent_posts_published[ $i ]['website']->url ) . ( '/' !== substr( $recent_posts_published[ $i ]['website']->url, - 1 ) ? '/' : '' ) . '?p=' . esc_attr( $recent_posts_published[ $i ]['id'] ); ?>" target="_blank"><?php esc_html_e( 'View', 'mainwp' ); ?></a>
                                 </div>
@@ -336,7 +350,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
              */
             do_action( 'mainwp_recent_posts_before_draft_list', $allPosts, $recent_number );
             if ( empty( $recent_posts_draft ) ) {
-                MainWP_UI::render_empty_element_placeholder();
+                MainWP_UI::render_empty_element_placeholder( __( 'No Recent Posts Found', 'mainwp' ), __( 'Recent post changes will appear here once activity is detected.', 'mainwp' ), '<em data-emoji=":pencil:" class="medium"></em>' );
             }
             ?>
             <div class="ui middle aligned divided list">
@@ -352,7 +366,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                 $name = wp_strip_all_tags( $recent_posts_draft[ $i ]['website']->name );
                 ?>
                 <div class="item">
-                    <div class="ui stackable grid">
+                    <div class="ui grid">
                         <input class="postId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_draft[ $i ]['id'] ); ?>"/>
                         <input class="websiteId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_draft[ $i ]['website']->id ); ?>"/>
                         <div class="fourteen wide column middle aligned">
@@ -369,7 +383,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                                 <i class="ellipsis vertical icon"></i>
                                     <div class="menu">
                                         <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item mainwp-post-publish" href="#"><?php esc_html_e( 'Publish', 'mainwp' ); ?></a>
-                                        <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item" href="admin.php?page=SiteOpen&newWindow=yes&websiteid=<?php echo esc_attr( $recent_posts_draft[ $i ]['website']->id ); ?>&location=<?php echo esc_attr( base64_encode( 'post.php?action=editpost&post=' . $recent_posts_draft[ $i ]['id'] . '&action=edit' ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible. ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank"><?php esc_html_e( 'Edit', 'mainwp' ); ?></a>
+                                        <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item" href="<?php MainWP_Site_Open::get_open_site_admin_link( $recent_posts_draft[ $i ]['website']->id, true ); ?>&location=<?php echo esc_attr( base64_encode( 'post.php?action=editpost&post=' . $recent_posts_draft[ $i ]['id'] . '&action=edit' ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible. ?>" target="_blank"><?php esc_html_e( 'Edit', 'mainwp' ); ?></a>
                                         <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item mainwp-post-trash" href="#"><?php esc_html_e( 'Trash', 'mainwp' ); ?></a>
                                     </div>
                             </div>
@@ -427,7 +441,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                  */
                 do_action( 'mainwp_recent_posts_before_pending_list', $allPosts, $recent_number );
                 if ( empty( $recent_posts_pending ) ) {
-                    MainWP_UI::render_empty_element_placeholder();
+                    MainWP_UI::render_empty_element_placeholder( __( 'No Recent Posts Found', 'mainwp' ), __( 'Recent post changes will appear here once activity is detected.', 'mainwp' ), '<em data-emoji=":pencil:" class="medium"></em>' );
                 }
                 ?>
             <div class="ui middle aligned divided list">
@@ -443,7 +457,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                 $name = wp_strip_all_tags( $recent_posts_pending[ $i ]['website']->name );
                 ?>
                 <div class="item">
-                    <div class="ui stackable grid">
+                    <div class="ui grid">
                         <input class="postId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_pending[ $i ]['id'] ); ?>"/>
                         <input class="websiteId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_pending[ $i ]['website']->id ); ?>"/>
                         <div class="fourteen wide column middle aligned">
@@ -460,7 +474,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                                 <i class="ellipsis vertical icon"></i>
                                     <div class="menu">
                                         <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item mainwp-post-publish" href="#"><?php esc_html_e( 'Publish', 'mainwp' ); ?></a>
-                                        <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item" href="admin.php?page=SiteOpen&newWindow=yes&websiteid=<?php echo esc_attr( $recent_posts_pending[ $i ]['website']->id ); ?>&location=<?php echo esc_attr( base64_encode( 'post.php?action=editpost&post=' . $recent_posts_pending[ $i ]['id'] . '&action=edit' ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible. ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank"><?php esc_html_e( 'Edit', 'mainwp' ); ?></a>
+                                        <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item" href="<?php MainWP_Site_Open::get_open_site_admin_link( $recent_posts_pending[ $i ]['website']->id, true ); ?>&location=<?php echo esc_attr( base64_encode( 'post.php?action=editpost&post=' . $recent_posts_pending[ $i ]['id'] . '&action=edit' ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible. ?>" target="_blank"><?php esc_html_e( 'Edit', 'mainwp' ); ?></a>
                                         <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item mainwp-post-trash" href="#"><?php esc_html_e( 'Trash', 'mainwp' ); ?></a>
                                     </div>
                             </div>
@@ -518,7 +532,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
          */
         do_action( 'mainwp_recent_posts_before_future_list', $allPosts, $recent_number );
         if ( empty( $recent_posts_future ) ) {
-            MainWP_UI::render_empty_element_placeholder();
+            MainWP_UI::render_empty_element_placeholder( __( 'No Recent Posts Found', 'mainwp' ), __( 'Recent post changes will appear here once activity is detected.', 'mainwp' ), '<em data-emoji=":pencil:" class="medium"></em>' );
         }
         ?>
         <div class="ui middle aligned divided list">
@@ -534,7 +548,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
             $name = wp_strip_all_tags( $recent_posts_future[ $i ]['website']->name );
             ?>
                 <div class="item">
-                    <div class="ui stackable grid">
+                    <div class="ui grid">
                         <input class="postId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_future[ $i ]['id'] ); ?>"/>
                         <input class="websiteId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_future[ $i ]['website']->id ); ?>"/>
                         <div class="fourteen wide column middle aligned">
@@ -551,9 +565,9 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                                 <i class="ellipsis vertical icon"></i>
                                     <div class="menu">
                                         <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item mainwp-post-publish" href="#"><?php esc_html_e( 'Publish', 'mainwp' ); ?></a>
-                                        <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item" href="admin.php?page=SiteOpen&newWindow=yes&websiteid=<?php echo esc_attr( $recent_posts_future[ $i ]['website']->id ); ?>&location=<?php echo esc_attr( base64_encode( 'post.php?action=editpost&post=' . $recent_posts_future[ $i ]['id'] . '&action=edit' ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible. ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank"><?php esc_html_e( 'Edit', 'mainwp' ); ?></a>
+                                        <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item" href="<?php MainWP_Site_Open::get_open_site_admin_link( $recent_posts_future[ $i ]['website']->id, true ); ?>&location=<?php echo esc_attr( base64_encode( 'post.php?action=editpost&post=' . $recent_posts_future[ $i ]['id'] . '&action=edit' ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible. ?>" target="_blank"><?php esc_html_e( 'Edit', 'mainwp' ); ?></a>
                                         <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item mainwp-post-trash" href="#"><?php esc_html_e( 'Trash', 'mainwp' ); ?></a>
-                                        <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item" href="admin.php?page=SiteOpen&newWindow=yes&websiteid=<?php echo esc_attr( $recent_posts_future[ $i ]['website']->id ); ?>&openUrl=yes&location=<?php echo esc_attr( base64_encode( '?p=' . $recent_posts_future[ $i ]['id'] . '&preview=true' ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible. ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank"><?php esc_html_e( 'Preview', 'mainwp' ); ?></a>
+                                        <a class="<?php echo $is_demo ? 'disabled' : ''; ?> item" href="<?php MainWP_Site_Open::get_open_site_admin_link( $recent_posts_future[ $i ]['website']->id, true ); ?>&openUrl=yes&location=<?php echo esc_attr( base64_encode( '?p=' . $recent_posts_future[ $i ]['id'] . '&preview=true' ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible. ?>" target="_blank"><?php esc_html_e( 'Preview', 'mainwp' ); ?></a>
                                     </div>
                             </div>
                         </div>
@@ -610,7 +624,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
          */
         do_action( 'mainwp_recent_posts_before_trash_list', $allPosts, $recent_number );
         if ( empty( $recent_posts_trash ) ) {
-            MainWP_UI::render_empty_element_placeholder();
+            MainWP_UI::render_empty_element_placeholder( __( 'No Recent Posts Found', 'mainwp' ), __( 'Recent post changes will appear here once activity is detected.', 'mainwp' ), '<em data-emoji=":pencil:" class="medium"></em>' );
         }
         ?>
         <div class="ui middle aligned divided list">
@@ -626,7 +640,7 @@ class MainWP_Recent_Posts { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
             $name = wp_strip_all_tags( $recent_posts_trash[ $i ]['website']->name );
             ?>
             <div class="item">
-                <div class="ui stackable grid">
+                <div class="ui grid">
                     <input class="postId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_trash[ $i ]['id'] ); ?>"/>
                     <input class="websiteId" type="hidden" name="id" value="<?php echo esc_attr( $recent_posts_trash[ $i ]['website']->id ); ?>"/>
                     <div class="fourteen wide column middle aligned">

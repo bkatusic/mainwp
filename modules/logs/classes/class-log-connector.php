@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard\Module\Log;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Log_Connector
  *
@@ -29,6 +34,12 @@ abstract class Log_Connector {
      */
     public $actions = array();
 
+        /**
+         * Filter registered for this connector
+         *
+         * @var array
+         */
+    public $filters = array();
 
     /**
      * Holds connector registration status flag.
@@ -57,6 +68,12 @@ abstract class Log_Connector {
 
         foreach ( $this->actions as $action ) {
             add_action( $action, array( $this, 'callback' ), 10, 99 );
+        }
+
+        if ( ! empty( $this->filters ) && is_array( $this->filters ) ) {
+            foreach ( $this->filters as $filter ) {
+                add_action( $filter, array( $this, 'callback' ), 10, 99 );
+            }
         }
 
         $this->is_registered = true;

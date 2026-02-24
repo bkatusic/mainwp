@@ -1,0 +1,373 @@
+<?php
+/**
+ * MainWP Abilities Discovery Tests
+ *
+ * Tests for ability and category registration and discoverability.
+ *
+ * @package MainWP\Dashboard\Tests
+ */
+
+namespace MainWP\Dashboard\Tests;
+
+/**
+ * Class MainWP_Abilities_Discovery_Test
+ *
+ * Tests that abilities and categories are properly registered and discoverable.
+ */
+class MainWP_Abilities_Discovery_Test extends MainWP_Abilities_Test_Case { //phpcs:ignore -- NOSONAR - multi methods.
+
+	/**
+	 * Test that all MainWP abilities are discoverable.
+	 *
+	 * @return void
+	 */
+	public function test_abilities_are_discoverable() {
+		$this->skip_if_no_abilities_api();
+
+		$abilities = wp_get_abilities();
+
+		$mainwp_abilities = array_filter(
+			$abilities,
+			function ( $ability ) {
+				return 0 === strpos( $ability->get_name(), 'mainwp/' );
+			}
+		);
+
+		// Verify expected abilities exist (at least these 9).
+		$expected = [
+			'mainwp/list-sites-v1',
+			'mainwp/get-site-v1',
+			'mainwp/sync-sites-v1',
+			'mainwp/get-site-plugins-v1',
+			'mainwp/get-site-themes-v1',
+			'mainwp/list-updates-v1',
+			'mainwp/run-updates-v1',
+			'mainwp/list-ignored-updates-v1',
+			'mainwp/set-ignored-updates-v1',
+		];
+
+		$ability_names = array_map(
+			function ( $ability ) {
+				return $ability->get_name();
+			},
+			$mainwp_abilities
+		);
+
+		foreach ( $expected as $name ) {
+			$this->assertContains(
+				$name,
+				$ability_names,
+				"Expected ability {$name} to be registered."
+			);
+		}
+
+		// Allow additional abilities beyond the expected set (future-proof).
+		$this->assertGreaterThanOrEqual(
+			count( $expected ),
+			count( $mainwp_abilities ),
+			'MainWP should register at least ' . count( $expected ) . ' abilities.'
+		);
+	}
+
+	/**
+	 * Test that MainWP categories are registered.
+	 *
+	 * @return void
+	 */
+	public function test_categories_are_registered() {
+		$this->skip_if_no_abilities_api();
+
+		if ( ! function_exists( 'wp_get_ability_categories' ) ) {
+			$this->markTestSkipped( 'wp_get_ability_categories function not available.' );
+		}
+
+		$categories = wp_get_ability_categories();
+
+		$this->assertArrayHasKey(
+			'mainwp-sites',
+			$categories,
+			'mainwp-sites category should be registered.'
+		);
+		$this->assertArrayHasKey(
+			'mainwp-updates',
+			$categories,
+			'mainwp-updates category should be registered.'
+		);
+	}
+
+	/**
+	 * Test that ability schemas are valid.
+	 *
+	 * Validates both input and output schema structure for all abilities,
+	 * including checking that output schemas have the expected keys for
+	 * their ability type (list, sync, updates, etc.).
+	 *
+	 * Note: Some schema properties are conditional at runtime:
+	 * - sync-sites: 'synced'/'errors' only present for immediate execution,
+	 *   'job_id'/'status_url' only present when queued=true.
+	 * - run-updates: similar conditional structure based on queued state.
+	 *
+	 * These tests validate the schema declares these properties, not that
+	 * they're always present in responses.
+	 *
+	 * @return void
+	 */
+	public function test_ability_schemas_are_valid() {
+		$this->skip_if_no_abilities_api();
+
+		// Map abilities to their expected output properties.
+		// These are keys that must exist in the output schema definition.
+		// Note: Some properties are conditional at runtime (e.g., 'synced' only
+		// for immediate responses, 'job_id' only for queued responses).
+		$abilities_with_expected_output = [
+			// List abilities should have items and total.
+			'mainwp/list-sites-v1'           => [ 'items', 'total' ],
+			// Get abilities return single object, properties vary.
+			'mainwp/get-site-v1'             => [ 'id', 'url', 'name' ],
+			// Sync abilities - schema includes both immediate and queued response properties.
+			// At runtime, 'synced' only present for immediate; 'job_id' only for queued.
+			'mainwp/sync-sites-v1'           => [ 'synced', 'errors', 'queued' ],
+			// Plugin getter returns site_id and plugins array.
+			'mainwp/get-site-plugins-v1'     => [ 'site_id', 'plugins' ],
+			// Theme getter returns site_id, themes array, and active_theme.
+			'mainwp/get-site-themes-v1'      => [ 'site_id', 'themes', 'active_theme' ],
+			// Update abilities.
+			'mainwp/list-updates-v1'         => [ 'updates', 'summary' ],
+			'mainwp/run-updates-v1'          => [ 'updated', 'errors', 'queued' ],
+			// List ignored returns 'ignored' array and 'total' count.
+			'mainwp/list-ignored-updates-v1' => [ 'ignored', 'total' ],
+			// Set ignored echoes back the action performed.
+			'mainwp/set-ignored-updates-v1'  => [ 'success', 'action', 'site_id', 'type', 'slug' ],
+		];
+
+		foreach ( $abilities_with_expected_output as $name => $expected_keys ) {
+			$ability = wp_get_ability( $name );
+			$this->assertNotNull( $ability, "Ability {$name} should exist." );
+
+			// Check input schema.
+			$input_schema = $ability->get_input_schema();
+			$this->assertIsArray( $input_schema, "Input schema for {$name} should be an array." );
+			$this->assertArrayHasKey( 'type', $input_schema, "Input schema for {$name} should have 'type' key." );
+			// Type can be a string ('object') or an array (['object', 'null']) for nullable schemas.
+			$type = $input_schema['type'];
+			$is_object_type = ( 'object' === $type ) || ( is_array( $type ) && in_array( 'object', $type, true ) );
+			$this->assertTrue( $is_object_type, "Input schema for {$name} should include 'object' type." );
+			$this->assertArrayHasKey( 'properties', $input_schema, "Input schema for {$name} should have 'properties' key." );
+
+			// Check output schema structure.
+			$output_schema = $ability->get_output_schema();
+			$this->assertIsArray( $output_schema, "Output schema for {$name} should be an array." );
+			$this->assertArrayHasKey( 'type', $output_schema, "Output schema for {$name} should have 'type' key." );
+			$this->assertEquals( 'object', $output_schema['type'], "Output schema for {$name} should be of type 'object'." );
+
+			// Handle polymorphic schemas (using oneOf) vs standard properties.
+			// Some abilities like run-updates-v1 use oneOf to define different response shapes
+			// for immediate vs queued execution modes.
+			if ( isset( $output_schema['oneOf'] ) && is_array( $output_schema['oneOf'] ) ) {
+				// For oneOf schemas, collect all properties from all variants.
+				$output_properties = [];
+				foreach ( $output_schema['oneOf'] as $variant ) {
+					if ( isset( $variant['properties'] ) ) {
+						$output_properties = array_merge( $output_properties, $variant['properties'] );
+					}
+				}
+				$this->assertNotEmpty( $output_properties, "Output schema for {$name} with oneOf should have properties in variants." );
+			} else {
+				$this->assertArrayHasKey( 'properties', $output_schema, "Output schema for {$name} should have 'properties' key." );
+				$output_properties = $output_schema['properties'];
+			}
+
+			// Check expected output properties exist.
+			foreach ( $expected_keys as $key ) {
+				$this->assertArrayHasKey(
+					$key,
+					$output_properties,
+					"Output schema for {$name} should have '{$key}' property."
+				);
+			}
+		}
+	}
+
+	/**
+	 * Test that ability annotations are present.
+	 *
+	 * Validates readonly, destructive, and idempotent flags for all abilities
+	 * according to the integration plan:
+	 * - Readonly abilities: readonly=true, destructive=false, idempotent=true
+	 * - Write abilities: readonly=false, destructive=false
+	 *   - sync-sites and set-ignored-updates: idempotent=true
+	 *   - run-updates: idempotent=false (each run has side effects)
+	 *
+	 * @return void
+	 */
+	public function test_ability_annotations_are_present() {
+		$this->skip_if_no_abilities_api();
+
+		$readonly_abilities = [
+			'mainwp/list-sites-v1',
+			'mainwp/get-site-v1',
+			'mainwp/get-site-plugins-v1',
+			'mainwp/get-site-themes-v1',
+			'mainwp/list-updates-v1',
+			'mainwp/list-ignored-updates-v1',
+		];
+
+		// Write abilities with their expected idempotent values per integration plan.
+		$write_abilities = [
+			'mainwp/sync-sites-v1'          => true,  // Syncing same sites again has no additional effect.
+			'mainwp/run-updates-v1'         => false, // Each run may apply different updates.
+			'mainwp/set-ignored-updates-v1' => true,  // Ignoring same item again has no additional effect.
+		];
+
+		// Check readonly abilities - all should be idempotent.
+		foreach ( $readonly_abilities as $name ) {
+			$ability = wp_get_ability( $name );
+			$this->assertNotNull( $ability, "Ability {$name} should exist." );
+
+			$meta = $ability->get_meta();
+			$this->assertIsArray( $meta, "Meta for {$name} should be an array." );
+			$this->assertArrayHasKey( 'annotations', $meta, "Meta for {$name} should have 'annotations' key." );
+
+			$annotations = $meta['annotations'];
+			$this->assertTrue( $annotations['readonly'], "Ability {$name} should be readonly." );
+			$this->assertFalse( $annotations['destructive'], "Ability {$name} should not be destructive." );
+
+			// All readonly abilities should be idempotent.
+			if ( isset( $annotations['idempotent'] ) ) {
+				$this->assertTrue(
+					$annotations['idempotent'],
+					"Readonly ability {$name} should be idempotent."
+				);
+			}
+		}
+
+		// Check write abilities with expected idempotent values.
+		foreach ( $write_abilities as $name => $expected_idempotent ) {
+			$ability = wp_get_ability( $name );
+			$this->assertNotNull( $ability, "Ability {$name} should exist." );
+
+			$meta = $ability->get_meta();
+			$this->assertIsArray( $meta, "Meta for {$name} should be an array." );
+			$this->assertArrayHasKey( 'annotations', $meta, "Meta for {$name} should have 'annotations' key." );
+
+			$annotations = $meta['annotations'];
+			$this->assertFalse( $annotations['readonly'], "Ability {$name} should not be readonly." );
+			$this->assertFalse( $annotations['destructive'], "Ability {$name} should not be destructive." );
+
+			// Check idempotent flag matches expected value.
+			if ( isset( $annotations['idempotent'] ) ) {
+				$this->assertSame(
+					$expected_idempotent,
+					$annotations['idempotent'],
+					"Ability {$name} idempotent should be " . ( $expected_idempotent ? 'true' : 'false' ) . "."
+				);
+			}
+		}
+	}
+
+	/**
+	 * Test that list-sites ability is registered with correct properties.
+	 *
+	 * @return void
+	 */
+	public function test_list_sites_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$ability = wp_get_ability( 'mainwp/list-sites-v1' );
+		$this->assertNotNull( $ability, 'Ability mainwp/list-sites-v1 should be registered.' );
+
+		// Check category.
+		$this->assertEquals( 'mainwp-sites', $ability->get_category(), 'Ability should be in mainwp-sites category.' );
+
+		// Check input schema has expected properties.
+		$input_schema = $ability->get_input_schema();
+		$this->assertArrayHasKey( 'page', $input_schema['properties'], 'Input schema should have page property.' );
+		$this->assertArrayHasKey( 'per_page', $input_schema['properties'], 'Input schema should have per_page property.' );
+		$this->assertArrayHasKey( 'status', $input_schema['properties'], 'Input schema should have status property.' );
+		$this->assertArrayHasKey( 'search', $input_schema['properties'], 'Input schema should have search property.' );
+
+		// Check output schema has expected properties.
+		$output_schema = $ability->get_output_schema();
+		$this->assertArrayHasKey( 'items', $output_schema['properties'], 'Output schema should have items property.' );
+		$this->assertArrayHasKey( 'page', $output_schema['properties'], 'Output schema should have page property.' );
+		$this->assertArrayHasKey( 'per_page', $output_schema['properties'], 'Output schema should have per_page property.' );
+		$this->assertArrayHasKey( 'total', $output_schema['properties'], 'Output schema should have total property.' );
+	}
+
+	/**
+	 * Test that get-site ability is registered with correct properties.
+	 *
+	 * @return void
+	 */
+	public function test_get_site_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$ability = wp_get_ability( 'mainwp/get-site-v1' );
+		$this->assertNotNull( $ability, 'Ability mainwp/get-site-v1 should be registered.' );
+
+		// Check category.
+		$this->assertEquals( 'mainwp-sites', $ability->get_category(), 'Ability should be in mainwp-sites category.' );
+
+		// Check input schema has required site_id_or_domain.
+		$input_schema = $ability->get_input_schema();
+		$this->assertArrayHasKey( 'site_id_or_domain', $input_schema['properties'], 'Input schema should have site_id_or_domain property.' );
+		$this->assertContains( 'site_id_or_domain', $input_schema['required'], 'site_id_or_domain should be required.' );
+	}
+
+	/**
+	 * Test that sync-sites ability is registered with correct properties.
+	 *
+	 * @return void
+	 */
+	public function test_sync_sites_ability_is_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$ability = wp_get_ability( 'mainwp/sync-sites-v1' );
+		$this->assertNotNull( $ability, 'Ability mainwp/sync-sites-v1 should be registered.' );
+
+		// Check category.
+		$this->assertEquals( 'mainwp-sites', $ability->get_category(), 'Ability should be in mainwp-sites category.' );
+
+		// Check meta.
+		$meta = $ability->get_meta();
+		$this->assertFalse( $meta['annotations']['readonly'], 'sync-sites should not be readonly.' );
+		$this->assertTrue( $meta['annotations']['idempotent'], 'sync-sites should be idempotent.' );
+	}
+
+	/**
+	 * Test that update abilities are registered.
+	 *
+	 * @return void
+	 */
+	public function test_update_abilities_are_registered() {
+		$this->skip_if_no_abilities_api();
+
+		$update_abilities = [
+			'mainwp/list-updates-v1',
+			'mainwp/run-updates-v1',
+			'mainwp/list-ignored-updates-v1',
+			'mainwp/set-ignored-updates-v1',
+		];
+
+		foreach ( $update_abilities as $name ) {
+			$ability = wp_get_ability( $name );
+			$this->assertNotNull( $ability, "Ability {$name} should be registered." );
+			$this->assertEquals( 'mainwp-updates', $ability->get_category(), "Ability {$name} should be in mainwp-updates category." );
+		}
+	}
+
+	/**
+	 * Test that run-updates ability is not idempotent.
+	 *
+	 * @return void
+	 */
+	public function test_run_updates_is_not_idempotent() {
+		$this->skip_if_no_abilities_api();
+
+		$ability = wp_get_ability( 'mainwp/run-updates-v1' );
+		$this->assertNotNull( $ability, 'Ability mainwp/run-updates-v1 should be registered.' );
+
+		$meta = $ability->get_meta();
+		$this->assertFalse( $meta['annotations']['idempotent'], 'run-updates should not be idempotent.' );
+	}
+}

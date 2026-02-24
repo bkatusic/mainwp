@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Notes
  *
@@ -79,7 +84,7 @@ class MainWP_Notes { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conten
             do_action( 'mainwp_notes_widget_top', $website );
 
             if ( empty( $website->note ) ) {
-                MainWP_UI::render_empty_element_placeholder();
+                MainWP_UI::render_empty_element_placeholder( __( 'Add your first note', 'mainwp' ), __( 'Create a website note for updates, reminders, or anything you want to track.', 'mainwp' ), '<em data-emoji=":pencil2:" class="medium"></em>' );
             } else {
                 ?>
                 <div class="content">

@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 // phpcs:disable WordPress.DB.RestrictedFunctions, WordPress.WP.AlternativeFunctions, WordPress.PHP.NoSilencedErrors, Generic.Metrics.CyclomaticComplexity -- Using cURL functions.
 
 /**
@@ -674,7 +679,7 @@ class MainWP_System_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
 
                     if ( isset( $tags_ids[ $idx ] ) && ! empty( $tags_ids[ $idx ] ) ) {
                         $tag_id       = $tags_ids[ $idx ];
-                        $tags_labels .= '<span ' . $tag_style . ' class="ui tag mini label"><a ' . $tag_a_style . ' href="' . esc_url( $href . $tag_id ) . '">' . esc_html( $tag ) . '</a></span>';
+                        $tags_labels .= '<span ' . $tag_style . ' tag_id="' . $tag_id . '" class="ui tag mini label"><a ' . $tag_a_style . ' href="' . esc_url( $href . $tag_id ) . '">' . esc_html( $tag ) . '</a></span>';
                     } else {
                         $tags_labels .= '<span ' . $tag_style . ' class="ui tag mini label">' . esc_html( $tag ) . '</span>';
                     }
@@ -726,7 +731,7 @@ class MainWP_System_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
 
                     if ( isset( $tags_ids[ $idx ] ) && ! empty( $tags_ids[ $idx ] ) ) {
                         $tag_id       = $tags_ids[ $idx ];
-                        $tags_labels .= '<span ' . $tag_style . ' class="ui tag mini label"><a ' . $tag_a_style . ' href="' . esc_url( $href . $tag_id ) . '">' . esc_html( $tag ) . '</a></span>';
+                        $tags_labels .= '<span ' . $tag_style . ' tag_id="' . $tag_id . '" class="ui tag mini label"><a ' . $tag_a_style . ' href="' . esc_url( $href . $tag_id ) . '">' . esc_html( $tag ) . '</a></span>';
                     } else {
                         $tags_labels .= '<span ' . $tag_style . ' class="ui tag mini label">' . esc_html( $tag ) . '</span>';
                     }
@@ -1790,5 +1795,33 @@ class MainWP_System_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
             return false;
         }
         return wp_verify_nonce( $nonce, $type . '-' . $current_user->ID . '-' . $slug );
+    }
+
+
+    /**
+     * Method get_http_version_const_str().
+     *
+     * @param  int $http_ver_int Version value.
+     *
+     * @return string Version const string.
+     */
+    public static function get_http_version_const_str( $http_ver_int ) {
+        $const_names = array(
+            'CURL_HTTP_VERSION_1_0',
+            'CURL_HTTP_VERSION_1_1',
+            'CURL_HTTP_VERSION_2',
+            'CURL_HTTP_VERSION_2TLS',
+            'CURL_HTTP_VERSION_2_0',
+            'CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE',
+            'CURL_HTTP_VERSION_3',
+            'CURL_HTTP_VERSION_3ONLY',
+            'CURL_HTTP_VERSION_NONE',
+        );
+        foreach ( $const_names as $const ) {
+            if ( defined( $const ) && constant( $const ) === $http_ver_int ) {
+                    return $const;
+            }
+        }
+        return $http_ver_int;
     }
 }

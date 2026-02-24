@@ -383,7 +383,7 @@ backup_upload_file = function (pSiteId, pFile, pRegexFile, pSubfolder, pRemoteDe
 
                             if (backupUploadRunning[pUnique]) {
                                 let progressBar = jQuery('#managesite-upload-status-progress-' + pUnique);
-                                if ((progressBar.length > 0) && (progressBar.progress('get value') < progressBar.progress('get total')) && (progressBar.progress('get value') < parseInt(response.result))) {
+                                if ((progressBar.length > 0) && (progressBar.progress('get value') < progressBar.progress('get total')) && (progressBar.progress('get value') < Number.parseInt(response.result))) {
                                     progressBar.progress('set progress', response.result);
                                 }
 
@@ -823,7 +823,7 @@ managebackups_backup_upload_file = function (pSiteId, pSiteName, pFile, pRegexFi
 
                             if (backupUploadRunning[pUnique]) {
                                 let progressBar = jQuery('#managesite-upload-status-progress-' + pUnique);
-                                if ((progressBar.length > 0) && (progressBar.progress('get value') < progressBar.progress('get total')) && (progressBar.progress('get value') < parseInt(response.result))) {
+                                if ((progressBar.length > 0) && (progressBar.progress('get value') < progressBar.progress('get total')) && (progressBar.progress('get value') < Number.parseInt(response.result))) {
                                     progressBar.progress('set progress', response.result);
                                 }
 
@@ -1020,7 +1020,7 @@ mainwp_managebackups_update = function () {
     }
     let selected_groups = [];
     let selected_sites = [];
-    if (jQuery('#select_by').val() == 'site') {
+    if (jQuery('input[name="select_by"]').val() == 'site') {
         jQuery("input[name='selected_sites[]']:checked").each(function () {
             selected_sites.push(jQuery(this).val());
         });
@@ -1089,7 +1089,7 @@ mainwp_managebackups_add = function () {
     }
     let selected_sites = [];
     let selected_groups = [];
-    if (jQuery('#select_by').val() == 'site') {
+    if (jQuery('input[name="select_by"]').val() == 'site') {
         jQuery("input[name='selected_sites[]']:checked").each(function () {
             selected_sites.push(jQuery(this).val());
         });
@@ -1105,7 +1105,6 @@ mainwp_managebackups_add = function () {
         }
     }
 
-    console.log(errors);
 
     if (errors.length > 0) {
         feedback('mainwp-message-zone', errors.join('<br />'), 'red');
@@ -1272,7 +1271,6 @@ managebackups_pause = function (element) {
 jQuery(document).on('click', '#updatesoverview-backup-ignore', function () {
     if (updatesoverviewContinueAfterBackup != undefined) {
         mainwpPopup('#updatesoverview-backup-box').close();
-        console.log(updatesoverviewContinueAfterBackup);
         updatesoverviewContinueAfterBackup();
         updatesoverviewContinueAfterBackup = undefined;
     }

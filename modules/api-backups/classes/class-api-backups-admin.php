@@ -15,6 +15,11 @@ use MainWP\Dashboard\MainWP_UI;
 use MainWP\Dashboard\MainWP_Menu;
 use MainWP\Dashboard\MainWP_Utility;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 
 /**
  * Class Api_Backups_Admin
@@ -259,19 +264,6 @@ class Api_Backups_Admin {
      * @param array $subPages API Backups sub pages.
      */
     public static function init_left_menu( $subPages ) {
-        MainWP_Menu::add_left_menu(
-            array(
-                'title'         => esc_html__( 'API Backups', 'mainwp' ),
-                'parent_key'    => 'managesites',
-                'slug'          => 'ManageApiBackups',
-                'href'          => 'admin.php?page=ManageApiBackups',
-                'icon'          => '<i class="pie chart icon"></i>',
-                'desc'          => 'API Backups Overview',
-                'nosubmenu'     => true,
-                'leftsub_order' => 8,
-            ),
-            1
-        );
 
         $init_sub_subleftmenu = array();
 

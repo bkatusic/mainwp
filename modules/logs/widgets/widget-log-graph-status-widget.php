@@ -12,6 +12,12 @@ namespace MainWP\Dashboard\Module\Log;
 
 use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_Utility;
+use MainWP\Dashboard\MainWP_UI;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 /**
  * Class Log_Graph_Status_Widget
@@ -61,6 +67,7 @@ class Log_Graph_Status_Widget {
      * Render client overview Info.
      */
     public function render_widget() {
+        $sites_count = MainWP_DB::instance()->get_websites_count();
         ?>
         <div class="mainwp-widget-header">
             <h2 class="ui header handle-drag">
@@ -71,7 +78,7 @@ class Log_Graph_Status_Widget {
             </h2>
         </div>
 
-        <div class="mainwp-widget-insights-card">
+        <div class="mainwp-widget-insights-card mainwp-scrolly-overflow">
                 <?php
                 /**
                  * Action: mainwp_logs_widget_top
@@ -84,8 +91,12 @@ class Log_Graph_Status_Widget {
                 ?>
                 <div id="mainwp-message-zone" style="display:none;" class="ui message"></div>
                 <?php
-                wp_nonce_field( 'mainwp-admin-nonce' );
-                $this->render_widget_content();
+                MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' );
+                if ( 0 < intval( $sites_count ) ) {
+                    $this->render_widget_content();
+                } else {
+                    MainWP_UI::render_empty_element_placeholder( __( 'No Connection Status Data', 'mainwp' ), '<a href="admin.php?page=managesites&do=new">' . __( 'Start connecting your sites now', 'mainwp' ) . '</a>', '<em data-emoji=":bar_chart:" class="medium"></em>' );
+                }
                 ?>
                 <?php
                 /**
@@ -134,7 +145,19 @@ class Log_Graph_Status_Widget {
             jQuery( document ).ready( function() {
                 let options = {
                     chart: {
-                        type: 'bar'
+                        type: 'pie',
+                        height: 350,
+                    },
+                    legend: {
+                        labels: {
+                            colors: '#999'
+                        }
+                    },
+                    stroke: {
+                        width: 0
+                    },
+                    tooltip: {
+                        theme: 'dark'
                     },
                     series: [ {
                         name: 'Sites',
@@ -145,23 +168,6 @@ class Log_Graph_Status_Widget {
                             { x: 'Suspended',    y: <?php echo esc_js( $suspended ); ?>, fillColor: '#ffd300' },
                         ]
                     } ],
-                    xaxis: {
-                        labels: {
-                            style: {
-                                colors: '#999999',
-                            }
-                        }
-                    },
-                    yaxis: {
-                        labels: {
-                            style: {
-                                colors: '#999999',
-                            }
-                        }
-                    },
-                    tooltip: {
-                        theme: 'dark'
-                    },
                 }
                 let status = new ApexCharts(document.querySelector("#mainwp-module-log-chart-status-wrapper"), options);
                 setTimeout(() => {

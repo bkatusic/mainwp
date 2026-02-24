@@ -9,6 +9,12 @@
 namespace MainWP\Dashboard\Module\CostTracker;
 
 use MainWP\Dashboard\MainWP_DB_Client;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Cost_Tracker_Hooks
  */
@@ -97,7 +103,7 @@ class Cost_Tracker_Hooks {
      * @return array $input Input.
      */
     public function hook_widgets_screen_options( $input ) {
-        $input['advanced-cost-tracker-widget'] = esc_html__( 'Cost Tracker', 'mainwp' );
+        $input['advanced-cost-tracker-widget'] = esc_html__( 'Cost Tracker (Individual Site Operations page)', 'mainwp' );
         return $input;
     }
 

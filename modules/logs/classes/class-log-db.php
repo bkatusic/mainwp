@@ -11,6 +11,11 @@ namespace MainWP\Dashboard\Module\Log;
 
 use MainWP\Dashboard\MainWP_DB;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Log_DB
  *
@@ -31,6 +36,14 @@ class Log_DB extends MainWP_DB {
      * @var int
      */
     protected $found_records_count = 0;
+
+
+    /**
+     * Hold logs sites options.
+     *
+     * @var int
+     */
+    protected $logs_wp_options;
 
     /**
      * Constructor.
@@ -64,6 +77,17 @@ class Log_DB extends MainWP_DB {
          * @return array
          */
         $record = apply_filters( 'mainwp_module_log_record_array', $record );
+
+        /**
+         * Hook mainwp_module_log_enable_insert_log_type.
+         *
+         * @since 5.5.
+         */
+        $enable_log_type = apply_filters( 'mainwp_module_log_enable_insert_log_type', true, $record );
+
+        if ( ! $enable_log_type ) {
+            return false;
+        }
 
         $data = $this->sanitize_record( $record );
 
@@ -109,17 +133,18 @@ class Log_DB extends MainWP_DB {
         }
 
         $record_defaults = array(
-            'site_id'   => null,
-            'user_id'   => null,
-            'object_id' => null,
-            'created'   => null,
-            'item'      => null,
-            'connector' => null,
-            'context'   => null,
-            'action'    => null,
-            'state'     => null,
-            'duration'  => null,
-            'meta'      => array(),
+            'site_id'     => null,
+            'user_id'     => null,
+            'user_login'  => null,
+            'created'     => null,
+            'log_type_id' => null,
+            'item'        => null,
+            'connector'   => null,
+            'context'     => null,
+            'action'      => null,
+            'state'       => null,
+            'duration'    => null,
+            'meta'        => array(),
         );
 
         // Records can have only these fields.
@@ -168,6 +193,7 @@ class Log_DB extends MainWP_DB {
 
         $result                    = (array) $this->driver->get_records( $args );
         $this->found_records_count = isset( $result['count'] ) ? $result['count'] : 0;
+        $this->logs_wp_options     = isset( $result['sites_opts'] ) && is_array( $result['sites_opts'] ) ? $result['sites_opts'] : array();
 
         return empty( $result['items'] ) ? array() : $result['items'];
     }
@@ -190,6 +216,15 @@ class Log_DB extends MainWP_DB {
      */
     public function get_found_records_count() {
         return $this->found_records_count;
+    }
+
+    /**
+     * Return the number of records found in last request
+     *
+     * @return int
+     */
+    public function get_logs_sites_opts() {
+        return $this->logs_wp_options;
     }
 
     /**
@@ -230,7 +265,7 @@ class Log_DB extends MainWP_DB {
                 continue;
             }
 
-            $year = (int) gmdate( 'Y', $item->created );
+            $year = (int) gmdate( 'Y', intval( $item->created / 1000000 ) );
 
             if ( $year < 2020 ) {
                 return;
@@ -301,28 +336,7 @@ class Log_DB extends MainWP_DB {
      *
      * @return mixed Results.
      */
-    public function is_site_action_log_existed( $site_id, $object_id ) {
-        global $wpdb;
-
-        $cache_key = 'mainwp_log_exists_' . md5( $site_id . '_' . $object_id ); // NOSONAR - MD5 used for cache key generation only, not cryptographic purposes.
-        $cached    = wp_cache_get( $cache_key );
-
-        if ( false !== $cached ) {
-            return $cached;
-        }
-
-        $result = $wpdb->query( //phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-            $wpdb->prepare(
-                "SELECT `log_id`
-                FROM {$wpdb->mainwp_tbl_logs}
-                WHERE `site_id` = %d AND `object_id` = %s LIMIT 1 ",
-                $site_id,
-                $object_id
-            )
-        );
-
-        wp_cache_set( $cache_key, $result, '', HOUR_IN_SECONDS );
-
-        return $result;
+    public function is_site_action_log_existed( $site_id = false, $object_id = false ) { //phpcs:ignore -- NOSONAR compatible.
+        return false;
     }
 }

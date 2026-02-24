@@ -4,6 +4,22 @@
 let userCountSent = 0;
 let userCountReceived = 0;
 
+let updateUsersBulkActionsState = function() {
+    let checkedCount = jQuery('#mainwp-users-table input[name="user[]"]:checked').length;
+    let dropdown = jQuery('#mainwp-manage-users #mainwp-bulk-actions');
+    let applyButton = jQuery('#mainwp-do-users-bulk-actions');
+    
+    if (checkedCount > 0) {
+        dropdown.removeClass('disabled');
+        dropdown.parent('.ui.dropdown').removeClass('disabled');
+        applyButton.removeClass('disabled');
+    } else {
+        dropdown.addClass('disabled');
+        dropdown.parent('.ui.dropdown').addClass('disabled');
+        dropdown.dropdown('set selected', 'none');
+        applyButton.addClass('disabled');
+    }
+};
 
 let import_user_stop_by_user = false;
 let import_user_current_line_number = 0;
@@ -12,6 +28,12 @@ let import_user_count_created_users = 0;
 let import_user_count_create_fails = 0;
 
 jQuery(function () {
+
+    updateUsersBulkActionsState();
+
+    jQuery(document).on('change', '#mainwp-users-table .check-column INPUT:checkbox', function() {
+        updateUsersBulkActionsState();
+    });
 
     // Fetch users
     jQuery(document).on('click', '#mainwp_show_users', function () {
@@ -106,6 +128,16 @@ jQuery(function () {
             }
         );
     });
+
+    jQuery(document).on('click', '#bulk_updateadminpassword', function () {
+        mainwp_confirm(
+            'You are about to update administrator passwords on selected sites. This will overwrite the current password for the admin account used for connection.',
+            function() {
+                jQuery('#mainwp-update-admin-password-form').submit()
+            }
+        );
+        return false;
+    });
 });
 
 let mainwp_edit_users_box_init = function () {
@@ -139,9 +171,6 @@ let mainwpuser_postAction = function (elem, what) {
     if (what == 'update_user') {
         data['user_data'] = jQuery('form#update_user_profile').serialize();
     }
-
-
-
 
     rowElement.find('.row-actions').hide();
     if (what === 'delete') {
@@ -224,14 +253,14 @@ let mainwp_fetch_users = function () {
     let selected_groups = [];
     let selected_clients = [];
 
-    if (jQuery('#select_by').val() == 'site') {
+    if (jQuery('input[name="select_by"]').val() == 'site') {
         jQuery("input[name='selected_sites[]']:checked").each(function () {
             selected_sites.push(jQuery(this).val());
         });
         if (selected_sites.length == 0) {
             errors.push(__('Please select at least one website or group or clients.'));
         }
-    } else if (jQuery('#select_by').val() == 'client') {
+    } else if (jQuery('input[name="select_by"]').val() == 'client') {
         jQuery("input[name='selected_clients[]']:checked").each(function () {
             selected_clients.push(jQuery(this).val());
         });
@@ -294,12 +323,13 @@ let mainwp_fetch_users = function () {
                 "targets": 'no-sort',
                 "orderable": false
             }],
-            "preDrawCallback": function () {
+            "drawCallback": function () {
                 setTimeout(() => {
-                    jQuery('#mainwp_users_wrap_table table .ui.dropdown').dropdown();
-                    jQuery('#mainwp_users_wrap_table table .ui.checkbox').checkbox();
-                    mainwp_datatable_fix_menu_overflow();
+                    jQuery('#mainwp-users-table .ui.dropdown').dropdown();
+                    jQuery('#mainwp-users-table .ui.checkbox').checkbox();
+                    mainwp_datatable_fix_menu_overflow('#mainwp-users-table');
                     mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
+                    updateUsersBulkActionsState();
                 }, 1000);
             },
             select: {
@@ -312,19 +342,20 @@ let mainwp_fetch_users = function () {
                 dt.rows(indexes)
                     .nodes()
                     .to$().find('td.check-column .ui.checkbox').checkbox('set checked');
+                updateUsersBulkActionsState();
             }
         }).on('deselect', function (e, dt, type, indexes) {
             if ('row' == type) {
                 dt.rows(indexes)
                     .nodes()
                     .to$().find('td.check-column .ui.checkbox').checkbox('set unchecked');
+                updateUsersBulkActionsState();
             }
         }).on('columns-reordered', function () {
-            console.log('columns-reordered');
             setTimeout(() => {
-                jQuery('#mainwp_users_wrap_table table .ui.dropdown').dropdown();
-                jQuery('#mainwp_users_wrap_table table .ui.checkbox').checkbox();
-                mainwp_datatable_fix_menu_overflow();
+                jQuery('#mainwp-users-table .ui.dropdown').dropdown();
+                jQuery('#mainwp-users-table .ui.checkbox').checkbox();
+                mainwp_datatable_fix_menu_overflow('#mainwp-users-table');
                 mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
             }, 1000);
         });

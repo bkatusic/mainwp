@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Updates_Table_Helper
  *
@@ -73,8 +78,8 @@ class MainWP_Updates_Table_Helper { // phpcs:ignore Generic.Classes.OpeningBrace
         }
 
         $columns = array(
+            'site'    => esc_html__( 'Website', 'mainwp' ),
             'title'   => $title,
-            'login'   => '<i class="sign in alternate icon"></i>',
             'version' => esc_html__( 'Version', 'mainwp' ),
             'latest'  => esc_html__( 'Latest', 'mainwp' ),
             'trusted' => esc_html__( 'Trusted', 'mainwp' ),
@@ -84,8 +89,10 @@ class MainWP_Updates_Table_Helper { // phpcs:ignore Generic.Classes.OpeningBrace
         );
 
         if ( MAINWP_VIEW_PER_PLUGIN_THEME !== $this->view_per ) {
-            unset( $columns['login'] );
+            unset( $columns['site'] );
             unset( $columns['client'] );
+        } else {
+            unset( $columns['title'] );
         }
         if ( MAINWP_VIEW_PER_PLUGIN_THEME === $this->view_per ) {
             unset( $columns['trusted'] );
@@ -131,7 +138,6 @@ class MainWP_Updates_Table_Helper { // phpcs:ignore Generic.Classes.OpeningBrace
      */
     public function get_collapsing_columns() {
         return array(
-            'login'   => true,
             'version' => true,
             'latest'  => true,
             'trusted' => true,
@@ -192,6 +198,59 @@ class MainWP_Updates_Table_Helper { // phpcs:ignore Generic.Classes.OpeningBrace
         }
         return '<td class="mainwp-768-half-width-cell">' . $label . '</td>';
     }
+    /**
+     * Title column.
+     *
+     * @param mixed  $value Value of column.
+     * @param object $website The website.
+     *
+     * @return string Column HTML.
+     */
+    public function column_site( $value, $website = null ) {
+        if ( true !== $value ) {
+            return '<td></td>';
+        }
+
+        $current_wpid = MainWP_System_Utility::get_current_wpid();
+
+        $column_content = '';
+
+        if ( empty( $current_wpid ) || $this->show_select ) {
+            $column_content .= '<div class="ui child checkbox">
+            <input type="checkbox" name="">
+          </div>';
+        }
+
+        if ( empty( $current_wpid ) && ! empty( $website ) ) {
+            $column_content .= MainWP_Utility::mainwp_display_site( $website );
+        }
+
+        return '<td>' . $column_content . '</td>';
+    }
+
+    /**
+     * Title column.
+     *
+     * @param mixed $value Value of column.
+     *
+     * @return string Column HTML.
+     */
+    public function column_title( $value ) {
+
+        $current_wpid = MainWP_System_Utility::get_current_wpid();
+
+        $column_content = '';
+
+        if ( empty( $current_wpid ) || $this->show_select ) {
+            $column_content .= '<div class="ui child checkbox">
+            <input type="checkbox" name="">
+          </div>';
+        }
+
+        $column_content .= $value;
+
+        return '<td>' . $column_content . '</td>';
+    }
 
     /**
      * Default column.
@@ -199,21 +258,16 @@ class MainWP_Updates_Table_Helper { // phpcs:ignore Generic.Classes.OpeningBrace
      * @param mixed $value Value of column.
      * @param mixed $column_name Name of column.
      * @param array $others others data.
+     *
+     * @return string Column HTML.
      */
     public function column_default( $value, $column_name, $others = array() ) {
-        $current_wpid = MainWP_System_Utility::get_current_wpid();
-        $class        = '';
+        $class = '';
         if ( 'version' === $column_name || 'latest' === $column_name ) {
             $class = 'mainwp-768-half-width-cell';
         }
 
-        $column_content = '';
-        if ( 'title' === $column_name && ( empty( $current_wpid ) || $this->show_select ) ) {
-            $column_content .= '<div class="ui child checkbox">
-            <input type="checkbox" name="">
-          </div>';
-        }
-        $column_content .= $value;
+        $column_content = $value;
 
         if ( 'latest' === $column_name && ! empty( $others['roll_info'] ) ) {
             $column_content = $others['roll_info'] . ' ' . $column_content;
@@ -238,7 +292,7 @@ class MainWP_Updates_Table_Helper { // phpcs:ignore Generic.Classes.OpeningBrace
             if ( isset( $row_columns[ $col ] ) ) {
                 $value = $row_columns[ $col ];
                 if ( method_exists( $this, 'column_' . $col ) ) {
-                    echo call_user_func( array( &$this, 'column_' . $col ), $value ); // phpcs:ignore WordPress.Security.EscapeOutput
+                    echo call_user_func( array( &$this, 'column_' . $col ), $value, $website, $others ); // phpcs:ignore WordPress.Security.EscapeOutput
                 } else {
                     echo $this->column_default( $value, $col, $others ); // phpcs:ignore WordPress.Security.EscapeOutput
                 }

@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Widget_Plugins
  */
@@ -120,6 +125,17 @@ class MainWP_Widget_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         $inactive_plugins = MainWP_Utility::get_sub_array_having( $allPlugins, 'active', 0 );
         $inactive_plugins = MainWP_Utility::sortmulti( $inactive_plugins, 'name', 'asc' );
 
+        $wp_info = MainWP_DB::instance()->get_website_option( $website, 'site_info' );
+        $wp_info = ! empty( $wp_info ) ? json_decode( $wp_info, true ) : array();
+
+        if ( ! is_array( $wp_info ) ) {
+            $wp_info = array();
+        }
+
+        $use_tzformat = ! empty( $wp_info['format_datetime'] ) && is_array( $wp_info['format_datetime'] ) ? $wp_info['format_datetime'] : array();
+        $offs         = ! empty( $use_tzformat['gmt_offset'] ) ? intval( $use_tzformat['gmt_offset'] ) : 0;
+        $offs_info    = esc_html__( ' - Timezone:', 'mainwp' ) . ' UTC' . ( $offs >= 0 ? '+' . $offs : $offs );
+
         ?>
         <div class="ui grid mainwp-widget-header">
             <div class="twelve wide column">
@@ -162,8 +178,9 @@ class MainWP_Widget_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
          * @since 4.1
          */
         do_action( 'mainwp_plugins_widget_top', $website, $allPlugins );
+        $site_info = $website->name . ' (' . $website->url . ') ' . ( ! empty( $offs_info ) ? $offs_info : '' );
         ?>
-        <div id="mainwp-widget-active-plugins" class="ui tab active" data-tab="active_plugins">
+        <div id="mainwp-widget-active-plugins" class="ui tab active" data-tab="active_plugins" site-info="<?php echo esc_attr( $site_info ); ?>" site-id="<?php echo intval( $website->id ); ?>">
             <?php
             /**
              * Action: mainwp_before_active_plugins_list
@@ -183,24 +200,31 @@ class MainWP_Widget_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                 for ( $i = 0; $i < $_count; $i++ ) {
                     $slug             = wp_strip_all_tags( $actived_plugins[ $i ]['slug'] );
                     $plugin_directory = dirname( $slug );
+                    $plugin_name      = $actived_plugins[ $i ]['name'];
+                    $plugin_title     = $plugin_name . ' ' . $actived_plugins[ $i ]['version'];
                     ?>
-                    <div class="item <?php echo esc_html( dirname( $slug ) ); ?> row-manage-item">
+                    <div class="item <?php echo esc_html( dirname( $slug ) ); ?> row-manage-item" plugin-title="<?php echo esc_attr( $plugin_title ); ?>" plugin-name="<?php echo esc_attr( $plugin_name ); ?>" plugin-slug="<?php echo esc_attr( $slug ); ?>">
                         <input class="pluginSlug" type="hidden" name="slug" value="<?php echo esc_attr( wp_strip_all_tags( $actived_plugins[ $i ]['slug'] ) ); ?>"/>
                         <input class="websiteId" type="hidden" name="id" value="<?php echo esc_attr( $website->id ); ?>"/>
                         <div class="right floated pluginsAction">
-                            <?php if ( \mainwp_current_user_can( 'dashboard', 'activate_deactivate_plugins' ) ) { ?>
                                 <div class="ui right pointing dropdown">
                                     <i class="ellipsis vertical icon"></i>
                                     <div class="menu">
+                                    <?php if ( \mainwp_current_user_can( 'dashboard', 'activate_deactivate_plugins' ) ) { ?>
                                         <div class="mainwp-plugin-deactivate item <?php echo $is_demo ? 'disabled' : ''; ?>"><?php esc_html_e( 'Deactivate', 'mainwp' ); ?></div>
+                                    <?php } ?>
+                                    <?php if ( \mainwp_current_user_can( 'dashboard', 'delete_plugins' ) ) { ?>
+                                        <a href="#" class="mainwp-plugin-delete item <?php echo $is_demo ? 'disabled' : ''; ?>"><?php esc_html_e( 'Delete', 'mainwp' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></a>
+                                    <?php } ?>
+                                        <a href="#" history-view="widget-plugins" class="mainwp-show-history item <?php echo $is_demo ? 'disabled' : ''; ?>"><?php esc_html_e( 'History', 'mainwp' ); ?></a>
                                     </div>
                                 </div>
-                            <?php } ?>
+
                         </div>
                         <div class="middle aligned content">
                             <?php echo MainWP_System_Utility::get_plugin_icon( $plugin_directory ); // phpcs:ignore WordPress.Security.EscapeOutput ?>&nbsp;&nbsp;&nbsp;&nbsp;
                             <a href="<?php echo esc_url( admin_url() . 'plugin-install.php?tab=plugin-information&wpplugin=' . intval( $website->id ) . '&plugin=' . esc_html( dirname( wp_strip_all_tags( $actived_plugins[ $i ]['slug'] ) ) ) ); ?>" target="_blank" class="open-plugin-details-modal" title="More information about <?php echo wp_strip_all_tags( $actived_plugins[ $i ]['name'] ); // phpcs:ignore WordPress.Security.EscapeOutput ?>">
-                                <?php echo esc_html( $actived_plugins[ $i ]['name'] . ' ' . $actived_plugins[ $i ]['version'] ); ?>
+                                <?php echo esc_html( $plugin_title ); ?>
                             </a>
                             </div>
                         <div class="mainwp-row-actions-working">
@@ -243,8 +267,10 @@ class MainWP_Widget_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                 for ( $i = 0; $i < $_count; $i++ ) {
                     $slug             = $inactive_plugins[ $i ]['slug'];
                     $plugin_directory = dirname( $slug );
+                    $plugin_name      = $inactive_plugins[ $i ]['name'];
+                    $plugin_title     = $plugin_name . ' ' . $inactive_plugins[ $i ]['version'];
                     ?>
-                    <div class="item <?php echo esc_html( sanitize_text_field( dirname( $slug ) ) ); ?> row-manage-item">
+                    <div class="item <?php echo esc_html( sanitize_text_field( dirname( $slug ) ) ); ?> row-manage-item" plugin-title="<?php echo esc_attr( $plugin_title ); ?>" plugin-name="<?php echo esc_attr( $plugin_name ); ?>" plugin-slug="<?php echo esc_attr( $slug ); ?>">
                         <input class="pluginSlug" type="hidden" name="slug" value="<?php echo esc_attr( wp_strip_all_tags( $inactive_plugins[ $i ]['slug'] ) ); ?>"/>
                         <input class="websiteId" type="hidden" name="id" value="<?php echo esc_attr( $website->id ); ?>"/>
                         <div class="right floated content pluginsAction">
@@ -257,13 +283,14 @@ class MainWP_Widget_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                                 <?php if ( \mainwp_current_user_can( 'dashboard', 'delete_plugins' ) ) { ?>
                                     <a href="#" class="mainwp-plugin-delete item <?php echo $is_demo ? 'disabled' : ''; ?>"><?php esc_html_e( 'Delete', 'mainwp' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></a>
                                 <?php } ?>
+                                    <a href="#" history-view="widget-plugins" class="mainwp-show-history item <?php echo $is_demo ? 'disabled' : ''; ?>"><?php esc_html_e( 'History', 'mainwp' ); ?></a>
                                 </div>
                             </div>
                         </div>
                         <div class="middle aligned content">
                             <?php echo MainWP_System_Utility::get_plugin_icon( $plugin_directory ); // phpcs:ignore WordPress.Security.EscapeOutput ?>&nbsp;&nbsp;&nbsp;&nbsp;
                             <a href="<?php echo esc_url( admin_url() . 'plugin-install.php?tab=plugin-information&wpplugin=' . intval( $website->id ) . '&plugin=' . esc_html( dirname( $inactive_plugins[ $i ]['slug'] ) ) ); ?>" target="_blank" class="open-plugin-details-modal" title="More information about <?php echo wp_strip_all_tags( $inactive_plugins[ $i ]['name'] ); // phpcs:ignore WordPress.Security.EscapeOutput ?>">
-                                <?php echo esc_html( $inactive_plugins[ $i ]['name'] . ' ' . $inactive_plugins[ $i ]['version'] ); ?>
+                                <?php echo esc_html( $plugin_title ); ?>
                             </a>
                         </div>
                         <div class="mainwp-row-actions-working">
@@ -290,7 +317,7 @@ class MainWP_Widget_Plugins { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         <div class="ui two column grid mainwp-widget-footer">
             <div class="left aligned middle aligned column"></div>
             <div class="right aligned middle aligned column">
-                <a href="admin.php?page=PluginsManage"><?php esc_html_e( 'Manage Plugins', 'mainwp' ); ?></a>
+                <a href="admin.php?page=PluginsManage" class="ui mini basic button"><?php esc_html_e( 'Manage Plugins', 'mainwp' ); ?></a>
             </div>
         </div>
         <?php

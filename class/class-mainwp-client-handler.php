@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Client_Handler
  *
@@ -50,9 +55,10 @@ class MainWP_Client_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
 
         return array(
             'client.name'              => array(
-                'title'    => esc_html__( 'Client Name (Required)', 'mainwp' ),
+                'title'    => esc_html__( 'Client Name', 'mainwp' ),
                 'desc'     => esc_html__( 'Displays the Client name', 'mainwp' ),
                 'db_field' => 'name',
+                'required' => true,
             ),
             'client.email'             => array(
                 'title'    => esc_html__( 'Client email', 'mainwp' ),
@@ -127,7 +133,6 @@ class MainWP_Client_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
             'client.created'           => array(
                 'title'    => esc_html__( 'Added on', 'mainwp' ),
                 'desc'     => esc_html__( 'Displays the client added on', 'mainwp' ),
-                'tooltip'  => esc_html__( 'Set the date your client was added to your MainWP Dashboard.', 'mainwp' ),
                 'db_field' => 'created',
             ),
         );
@@ -142,19 +147,22 @@ class MainWP_Client_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
 
         return array(
             'client.name'  => array(
-                'title'    => esc_html__( 'Client Name (Required)', 'mainwp' ),
+                'title'    => esc_html__( 'Client Name', 'mainwp' ),
                 'desc'     => esc_html__( 'Displays the Client name', 'mainwp' ),
                 'db_field' => 'name',
+                'required' => true,
             ),
             'client.email' => array(
                 'title'    => esc_html__( 'Client email', 'mainwp' ),
                 'desc'     => esc_html__( 'Displays the client email', 'mainwp' ),
                 'db_field' => 'client_email',
+                'required' => false,
             ),
             'client.phone' => array(
                 'title'    => esc_html__( 'Client phone', 'mainwp' ),
                 'desc'     => esc_html__( 'Displays the client phone', 'mainwp' ),
                 'db_field' => 'client_phone',
+                'required' => false,
             ),
         );
     }
@@ -168,14 +176,16 @@ class MainWP_Client_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
     public static function get_default_contact_fields() {
         return array(
             'client.contact.name' => array(
-                'title'    => esc_html__( 'Contact name (Required)', 'mainwp' ),
+                'title'    => esc_html__( 'Contact name', 'mainwp' ),
                 'desc'     => esc_html__( 'Displays the client contact name', 'mainwp' ),
                 'db_field' => 'contact_name',
+                'required' => true,
             ),
             'contact.email'       => array(
-                'title'    => esc_html__( 'Contact email (Required)', 'mainwp' ),
+                'title'    => esc_html__( 'Contact email', 'mainwp' ),
                 'desc'     => esc_html__( 'Displays the contact email', 'mainwp' ),
                 'db_field' => 'contact_email',
+                'required' => true,
             ),
             'contact.role'        => array(
                 'title'    => esc_html__( 'Contact role', 'mainwp' ),
@@ -218,19 +228,22 @@ class MainWP_Client_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
     public static function get_mini_default_contact_fields() {
         return array(
             'client.contact.name' => array(
-                'title'    => esc_html__( 'Contact name (Required)', 'mainwp' ),
+                'title'    => esc_html__( 'Contact name', 'mainwp' ),
                 'desc'     => esc_html__( 'Displays the client contact name', 'mainwp' ),
                 'db_field' => 'contact_name',
+                'required' => true,
             ),
             'contact.email'       => array(
-                'title'    => esc_html__( 'Contact email (Required)', 'mainwp' ),
+                'title'    => esc_html__( 'Contact email', 'mainwp' ),
                 'desc'     => esc_html__( 'Displays the contact email', 'mainwp' ),
                 'db_field' => 'contact_email',
+                'required' => true,
             ),
             'contact.role'        => array(
                 'title'    => esc_html__( 'Contact role', 'mainwp' ),
                 'desc'     => esc_html__( 'Displays the contact role', 'mainwp' ),
                 'db_field' => 'contact_role',
+                'required' => false,
             ),
         );
     }
@@ -399,8 +412,9 @@ class MainWP_Client_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                 }
 
                 return array(
-                    'success'  => true,
-                    'clientid' => $client_id,
+                    'success'   => true,
+                    'client_id' => $client_id,
+                    'clientid'  => $client_id, // Legacy key for backwards compatibility.
                 );
 
             } else {
@@ -441,8 +455,9 @@ class MainWP_Client_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                 MainWP_DB_Client::instance()->update_selected_sites_for_client( $inserted->client_id, $selected_sites );
 
                 return array(
-                    'success'  => true,
-                    'clientid' => $inserted->client_id,
+                    'success'   => true,
+                    'client_id' => $inserted->client_id,
+                    'clientid'  => $inserted->client_id, // Legacy key for backwards compatibility.
                 );
             }
         } catch ( \Exception $e ) {

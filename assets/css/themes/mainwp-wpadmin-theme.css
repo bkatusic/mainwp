@@ -26,6 +26,8 @@
   /* Sets color for yellow elements. */
   --yellow-color: #dba617;
 
+  --orange-color: #c47335;
+
   /* Sets color for red elements. */
   --red-color: #d63638;
 
@@ -182,15 +184,15 @@ body.mainwp-ui.mainwp-custom-theme,
 
 /* Invert Side Bar */
 
-.mainwp-ui.mainwp-custom-theme #mainwp-select-sites-header .ui.menu {
+.mainwp-ui.mainwp-custom-theme .mainwp-select-sites-header .ui.menu {
   border-color: var(--border-color);
 }
 
-.mainwp-ui.mainwp-custom-theme #mainwp-select-sites-header .ui.menu a.item {
+.mainwp-ui.mainwp-custom-theme .mainwp-select-sites-header .ui.menu a.item {
   color: var(--font-color);
 }
 
-.mainwp-ui.mainwp-custom-theme #mainwp-select-sites-header .ui.menu a.item.active {
+.mainwp-ui.mainwp-custom-theme .mainwp-select-sites-header .ui.menu a.item.active {
   color: var(--accent-color);
 }
 
@@ -202,7 +204,7 @@ body.mainwp-ui.mainwp-custom-theme,
   color: var(--font-color) !important;
 }
 
-.mainwp-ui.mainwp-custom-theme #mainwp-select-sites-select-all-actions {
+.mainwp-ui.mainwp-custom-theme .mainwp-select-sites-select-all-actions {
   background-color: var(--border-color);
   border-color: var(--border-color);
 }
@@ -558,6 +560,14 @@ body.mainwp-ui.mainwp-custom-theme,
 
 .mainwp-ui.mainwp-custom-theme .ui.button.red {
   background-color: var(--red-color);
+}
+
+.mainwp-ui.mainwp-custom-theme .ui.button.yellow {
+  background-color: var(--yellow-color);
+}
+
+.mainwp-ui.mainwp-custom-theme .ui.button.orange {
+  background-color: var(--orange-color);
 }
 
 .mainwp-ui.mainwp-custom-theme .ui.mini.compact.button {

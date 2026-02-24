@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Page
  *
@@ -92,13 +97,17 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         add_action( 'load-' . $_page, array( static::get_class_name(), 'on_load_page' ) );
         add_filter( 'manage_' . $_page . '_columns', array( static::get_class_name(), 'get_manage_columns' ) );
 
-        $_page = add_submenu_page( 'mainwp_tab', esc_html__( 'Pages', 'mainwp' ), '<div class="mainwp-hidden">' . esc_html__( 'Add New', 'mainwp' ) . '</div>', 'read', 'PageBulkAdd', array( static::get_class_name(), 'render_bulk_add' ) );
-        add_action( 'load-' . $_page, array( static::get_class_name(), 'on_load_add_edit' ) );
+        if ( ! MainWP_Menu::is_disable_menu_item( 3, 'PageBulkAdd' ) ) {
+            $_page = add_submenu_page( 'mainwp_tab', esc_html__( 'Pages', 'mainwp' ), '<div class="mainwp-hidden">' . esc_html__( 'Add New', 'mainwp' ) . '</div>', 'read', 'PageBulkAdd', array( static::get_class_name(), 'render_bulk_add' ) );
+            add_action( 'load-' . $_page, array( static::get_class_name(), 'on_load_add_edit' ) );
+        }
 
-        $_page = add_submenu_page( 'mainwp_tab', esc_html__( 'Pages', 'mainwp' ), '<div class="mainwp-hidden">' . esc_html__( 'Edit Page', 'mainwp' ) . '</div>', 'read', 'PageBulkEdit', array( static::get_class_name(), 'render_bulk_edit' ) );
-        add_action( 'load-' . $_page, array( static::get_class_name(), 'on_load_add_edit' ) );
+        if ( ! MainWP_Menu::is_disable_menu_item( 3, 'PageBulkEdit' ) ) {
+            $_page = add_submenu_page( 'mainwp_tab', esc_html__( 'Pages', 'mainwp' ), '<div class="mainwp-hidden">' . esc_html__( 'Edit Page', 'mainwp' ) . '</div>', 'read', 'PageBulkEdit', array( static::get_class_name(), 'render_bulk_edit' ) );
+            add_action( 'load-' . $_page, array( static::get_class_name(), 'on_load_add_edit' ) );
+        }
 
-        add_submenu_page( 'mainwp_tab', esc_html__( 'Posting new bulkpage', 'mainwp' ), '<div class="mainwp-hidden">' . esc_html__( 'Add New Page', 'mainwp' ) . '</div>', 'read', 'PostingBulkPage', array( static::get_class_name(), 'posting' ) ); // removed from menu afterwards.
+        add_submenu_page( 'mainwp_tab', esc_html__( 'Posting new bulkpage', 'mainwp' ), '<div class="mainwp-hidden">' . esc_html__( 'Add New Page', 'mainwp' ) . '</div>', 'read', 'PostingBulkPage', array( static::get_class_name(), 'posting' ), ); // removed from menu afterwards.
 
         /**
          * Pages Subpages
@@ -135,9 +144,6 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      * @uses \MainWP\Dashboard\MainWP_Post::on_load_bulkpost()
      */
     public static function on_load_add_edit() {
-
-        global $_mainwp_menu_active_slugs;
-
         if ( isset( $_GET['page'] ) && 'PageBulkAdd' === $_GET['page'] ) { // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
             /**
@@ -151,8 +157,7 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             $_mainwp_default_post_to_edit = get_default_post_to_edit( $post_type, true );
             $post_id                      = $_mainwp_default_post_to_edit ? $_mainwp_default_post_to_edit->ID : 0;
         } else {
-            $post_id                                   = isset( $_GET['post_id'] ) ? intval( $_GET['post_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-            $_mainwp_menu_active_slugs['PageBulkEdit'] = 'PageBulkManage'; // to fix hidden second menu level.
+            $post_id = isset( $_GET['post_id'] ) ? intval( $_GET['post_id'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         }
 
         if ( ! $post_id ) {
@@ -160,45 +165,6 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         }
 
         MainWP_Post::on_load_bulkpost( $post_id );
-    }
-
-    /**
-     * Method init_subpages_menu()
-     *
-     * Initiate subpages menu.
-     *
-     * @uses \MainWP\Dashboard\MainWP_Menu::is_disable_menu_item()
-     */
-    public static function init_subpages_menu() { // phpcs:ignore -- NOSONAR - complex.
-        ?>
-        <div id="menu-mainwp-Pages" class="mainwp-submenu-wrapper">
-            <div class="wp-submenu sub-open" style="">
-                <div class="mainwp_boxout">
-                    <div class="mainwp_boxoutin"></div>
-                    <?php if ( \mainwp_current_user_can( 'dashboard', 'manage_pages' ) ) { ?>
-                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=PageBulkManage' ) ); ?>" class="mainwp-submenu"><?php esc_html_e( 'Manage Pages', 'mainwp' ); ?></a>
-                        <?php if ( ! MainWP_Menu::is_disable_menu_item( 3, 'PageBulkAdd' ) ) { ?>
-                            <a href="<?php echo esc_url( admin_url( 'admin.php?page=PageBulkAdd' ) ); ?>" class="mainwp-submenu"><?php esc_html_e( 'Add New', 'mainwp' ); ?></a>
-                        <?php } ?>
-                    <?php } ?>
-                    <?php
-                    if ( isset( static::$subPages ) && is_array( static::$subPages ) ) {
-                        foreach ( static::$subPages as $subPage ) {
-                            if ( ! isset( $subPage['menu_hidden'] ) || ( isset( $subPage['menu_hidden'] ) && true !== $subPage['menu_hidden'] ) ) {
-                                if ( MainWP_Menu::is_disable_menu_item( 3, 'Page' . $subPage['slug'] ) ) {
-                                    continue;
-                                }
-                                ?>
-                                <a href="<?php echo esc_url( admin_url( 'admin.php?page=Page' . $subPage['slug'] ) ); ?>" class="mainwp-submenu"><?php echo esc_html( $subPage['title'] ); ?></a>
-                                <?php
-                            }
-                        }
-                    }
-                    ?>
-                </div>
-            </div>
-        </div>
-        <?php
     }
 
     /**
@@ -213,32 +179,32 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      * @uses \MainWP\Dashboard\MainWP_Menu::is_disable_menu_item()
      */
     public static function init_left_menu( $subPages = array() ) {
-
-        MainWP_Menu::add_left_menu(
-            array(
-                'title'         => esc_html__( 'Pages', 'mainwp' ),
-                'parent_key'    => 'managesites',
-                'slug'          => 'PageBulkManage',
-                'href'          => 'admin.php?page=PageBulkManage',
-                'icon'          => '<i class="file icon"></i>',
-                'leftsub_order' => 8,
-            ),
-            1
-        );
         $init_sub_subleftmenu = array(
             array(
                 'title'                => esc_html__( 'Manage Pages', 'mainwp' ),
-                'parent_key'           => 'PageBulkManage',
+                'parent_key'           => 'Extensions-Mainwp-Content-Operations',
                 'href'                 => 'admin.php?page=PageBulkManage',
                 'slug'                 => 'PageBulkManage',
                 'right'                => 'manage_pages',
-                'leftsub_order_level2' => 1,
+                'leftsub_order_level2' => 2,
+                'active_path'          => array(
+                    'PageBulkEdit' => 'PageBulkManage',
+                    'PageBulkAdd'  => 'PageBulkManage',
+                ),
             ),
             array(
                 'title'                => esc_html__( 'Add New', 'mainwp' ),
-                'parent_key'           => 'PageBulkManage',
+                'parent_key'           => 'Extensions-Mainwp-Content-Operations',
                 'href'                 => 'admin.php?page=PageBulkAdd',
                 'slug'                 => 'PageBulkAdd',
+                'right'                => 'manage_pages',
+                'leftsub_order_level2' => 2,
+            ),
+            array(
+                'title'                => esc_html__( 'Edit Page', 'mainwp' ),
+                'parent_key'           => 'Extensions-Mainwp-Content-Operations',
+                'href'                 => 'admin.php?page=PageBulkEdit',
+                'slug'                 => 'PageBulkEdit',
                 'right'                => 'manage_pages',
                 'leftsub_order_level2' => 2,
             ),
@@ -249,7 +215,8 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             if ( MainWP_Menu::is_disable_menu_item( 3, $item['slug'] ) ) {
                 continue;
             }
-            MainWP_Menu::add_left_menu( $item, 2 );
+            $level = ( 'PageBulkManage' === $item['slug'] ) ? 2 : 3;
+            MainWP_Menu::add_left_menu( $item, $level );
         }
     }
 
@@ -512,15 +479,19 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                                  */
                                 do_action( 'mainwp_pages_actions_bar_right' );
                                 ?>
+                                <a href="admin.php?page=PageBulkAdd" class="ui mini green button"><?php esc_html_e( 'Create New Page', 'mainwp' ); ?></a>
+                                <?php if ( MainWP_Extensions_Handler::is_extension_available( 'boilerplate-extension' ) ) : ?>
+                                    <a href="admin.php?page=PageBulkAdd&boilerplate=1" class="ui mini green basic button"><?php esc_html_e( 'Create New Boilerplate', 'mainwp' ); ?></a>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="ui segment" id="mainwp_pages_wrap_table">
+                <div class="ui padded segment" id="mainwp_pages_wrap_table">
                     <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-manage-pages-info-message' ) ) : ?>
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-manage-pages-info-message"></i>
-                            <?php printf( esc_html__( 'Manage existing pages on your child sites.  Here you can edit, view and delete pages.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/manage-pages/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
+                            <?php printf( esc_html__( 'Monitor and manage the lifecycle of content across all connected sites. Perform safe, bulk operations without editing layouts or page design. For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/content/manage-pages" target="_blank">', '</a> <i class="external alternate icon"></i>' ); ?>
                         </div>
                     <?php endif; ?>
                     <?php static::render_table( true ); ?>
@@ -680,24 +651,26 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         }
         ?>
         <div class="ui mini form">
-            <div class="field">
-                <div class="ui input fluid">
-                    <input type="text" placeholder="<?php esc_attr_e( 'Containing keyword', 'mainwp' ); ?>" id="mainwp_page_search_by_keyword" class="text" value="<?php echo ( null !== $cachedSearch ) ? esc_attr( $cachedSearch['keyword'] ) : ''; ?>" />
+            <div class="two fields">
+                <div class="field">
+                    <div class="ui input fluid">
+                        <input type="text" placeholder="<?php esc_attr_e( 'Containing keyword', 'mainwp' ); ?>" id="mainwp_page_search_by_keyword" class="text" value="<?php echo ( null !== $cachedSearch ) ? esc_attr( $cachedSearch['keyword'] ) : ''; ?>" />
+                    </div>
                 </div>
-            </div>
-            <div class="field">
-                <?php
-                $searchon = 'all';
-                if ( null !== $cachedSearch ) {
-                    $searchon = $cachedSearch['search_on'];
-                }
-                ?>
-                <select class="ui dropdown fluid" id="mainwp_page_search_on">
-                    <option value=""><?php esc_html_e( 'Search in...', 'mainwp' ); ?></option>
-                    <option value="title" <?php echo 'title' === $searchon ? 'selected' : ''; ?>><?php esc_html_e( 'Title', 'mainwp' ); ?></option>
-                    <option value="content" <?php echo 'content' === $searchon ? 'selected' : ''; ?>><?php esc_html_e( 'Body', 'mainwp' ); ?></option>
-                    <option value="all" <?php echo 'all' === $searchon ? 'selected' : ''; ?>><?php esc_html_e( 'Title and Body', 'mainwp' ); ?></option>
-                </select>
+                <div class="field">
+                    <?php
+                    $searchon = 'all';
+                    if ( null !== $cachedSearch ) {
+                        $searchon = $cachedSearch['search_on'];
+                    }
+                    ?>
+                    <select class="ui dropdown fluid" id="mainwp_page_search_on">
+                        <option value=""><?php esc_html_e( 'Search in...', 'mainwp' ); ?></option>
+                        <option value="title" <?php echo 'title' === $searchon ? 'selected' : ''; ?>><?php esc_html_e( 'Title', 'mainwp' ); ?></option>
+                        <option value="content" <?php echo 'content' === $searchon ? 'selected' : ''; ?>><?php esc_html_e( 'Body', 'mainwp' ); ?></option>
+                        <option value="all" <?php echo 'all' === $searchon ? 'selected' : ''; ?>><?php esc_html_e( 'Title and Body', 'mainwp' ); ?></option>
+                    </select>
+                </div>
             </div>
             <div class="field">
                 <label><?php esc_html_e( 'Date range', 'mainwp' ); ?></label>
@@ -782,11 +755,13 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         $search_on = isset( $params['search_on'] ) ? $params['search_on'] : 'all';
         $clients   = isset( $params['clients'] ) ? $params['clients'] : '';
 
+        $has_cached_results = $cached && isset( $_SESSION['MainWPPageSearch'] ) && ! empty( $_SESSION['MainWPPageSearch'] );
+
         ?>
         <div id="mainwp_pages_error"></div>
         <div id="mainwp-loading-pages-row" style="display: none;">
-            <div class="ui active inverted dimmer">
-                <div class="ui indeterminate large text loader"><?php esc_html_e( 'Loading Pages...', 'mainwp' ); ?></div>
+            <div class="ui active page dimmer">
+                <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
             </div>
         </div>
         <?php
@@ -798,7 +773,9 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
          * @since 4.1
          */
         do_action( 'mainwp_before_pages_table' );
-        ?>
+
+        if ( ! $cached || $has_cached_results ) {
+            ?>
         <table id="mainwp-pages-table" class="ui unstackable single line table" style="width:100%">
             <thead>
                 <tr>
@@ -838,7 +815,14 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 ?>
             </tbody>
         </table>
-        <?php
+            <?php
+        } else {
+            MainWP_UI::render_empty_page_placeholder(
+                esc_html__( 'Find Pages', 'mainwp' ),
+                esc_html__( 'Select the Child Sites you want, choose any filters, then click Show Pages.', 'mainwp' ),
+                '<em data-emoji=":page_facing_up:" class="big"></em>'
+            );
+        }
         /**
          * Action: mainwp_after_pages_table
          *
@@ -890,13 +874,12 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         "targets": 'no-sort',
                         "orderable": false
                     } ],
-                    "language" : { "emptyTable": "<?php esc_html_e( 'Use the search options to find the page you want to manage.', 'mainwp' ); ?>" },
+                    "language" : { "emptyTable": "<?php esc_html_e( 'No pages found matching your search criteria.', 'mainwp' ); ?>" },
                     "drawCallback": function( settings ) {
-                        console.log('drawCallback page');
                         setTimeout(() => { // to fix.
-                            jQuery( '#mainwp_pages_wrap_table table .ui.dropdown' ).dropdown();
-                            jQuery( '#mainwp_pages_wrap_table table .ui.checkbox' ).checkbox();
-                            mainwp_datatable_fix_menu_overflow();
+                            jQuery( '#mainwp-pages-table .ui.dropdown' ).dropdown();
+                            jQuery( '#mainwp-pages-table .ui.checkbox' ).checkbox();
+                            mainwp_datatable_fix_menu_overflow('#mainwp-pages-table');
                             mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
                         }, 1000);
                     },
@@ -918,11 +901,10 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         .to$().find('td.check-column .ui.checkbox' ).checkbox('set unchecked');
                     }
                 }).on( 'columns-reordered', function () {
-                    console.log('columns-reordered');
                     setTimeout(() => { // to fix.
-                        jQuery( '#mainwp_pages_wrap_table table .ui.dropdown' ).dropdown();
-                        jQuery( '#mainwp_pages_wrap_table table .ui.checkbox' ).checkbox();
-                        mainwp_datatable_fix_menu_overflow();
+                        jQuery( '#mainwp-pages-table .ui.dropdown' ).dropdown();
+                        jQuery( '#mainwp-pages-table .ui.checkbox' ).checkbox();
+                        mainwp_datatable_fix_menu_overflow('#mainwp-pages-table');
                         mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
                     }, 1000);
                 });
@@ -1155,11 +1137,11 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                      */
                     do_action( 'mainwp_pages_table_column', $page, $website );
                     ?>
-                    <td class="page-title  column-title">
+                    <td class="page-title  column-title not-selectable">
                         <strong>
                             <abbr title="<?php echo esc_html( $page['title'] ); ?>">
                                 <?php if ( 'trash' !== $page['status'] ) { ?>
-                                    <a class="row-title" href="admin.php?page=SiteOpen&newWindow=yes&websiteid=<?php echo esc_attr( $website->id ); ?>&location=<?php echo esc_attr( base64_encode( 'post.php?post=' . $page['id'] . '&action=edit' ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible. ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank" title="Edit '<?php echo esc_html( $page['title'] ); ?>'?"><?php echo esc_html( $page['title'] ); ?></a>
+                                    <a class="row-title" href="<?php MainWP_Site_Open::get_open_site_admin_link( $website->id, true ); //phpcs:ignore -- ok. ?>&location=<?php echo esc_attr( base64_encode( 'post.php?post=' . $page['id'] . '&action=edit' ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible. ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank" title="Edit '<?php echo esc_html( $page['title'] ); ?>'?"><?php echo esc_html( $page['title'] ); ?></a>
                                 <?php } else { ?>
                                     <?php echo esc_html( $page['title'] ); ?>
                                 <?php } ?>
@@ -1167,20 +1149,20 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         </strong>
 
                     </td>
-                    <td class="author column-author">
+                    <td class="author column-author not-selectable">
                         <?php echo esc_html( $page['author'] ); ?>
                     </td>
-                    <td class="comments">
+                    <td class="comments not-selectable">
                         <div class="page-com-count-wrapper">
                             <a href="#" title="0 pending" class="post-com-count">
                                 <span class="comment-count"><abbr title="<?php echo esc_attr( $page['comment_count'] ); ?>"><?php echo esc_html( $page['comment_count'] ); ?></abbr></span>
                             </a>
                         </div>
                     </td>
-                    <td class="date" data-order="<?php echo esc_attr( $raw_dts ); ?>">
+                    <td class="date not-selectable" data-order="<?php echo esc_attr( $raw_dts ); ?>">
                         <abbr raw_value="<?php echo esc_attr( $raw_dts ); ?>" title="<?php echo esc_attr( $page['dts'] ); ?>"><?php echo esc_html( $page['dts'] ); ?></abbr>
                     </td>
-                    <td class="status column-status <?php echo 'trash' === $page['status'] ? 'post-trash' : ''; ?>"><?php echo esc_html( static::get_status( $page['status'] ) ); ?>
+                    <td class="status column-status not-selectable <?php echo 'trash' === $page['status'] ? 'post-trash' : ''; ?>"><?php echo esc_html( static::get_status( $page['status'] ) ); ?>
                     </td>
                     <?php
                     if ( MainWP_Utility::enabled_wp_seo() ) {
@@ -1196,14 +1178,14 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             $readability_score = MainWP_Utility::esc_content( $seo_data['readability_score'], 'mixed' );
                         }
                         ?>
-                        <td class="column-seo-links"><abbr raw_value="<?php echo null !== $count_seo_links ? $count_seo_links : -1; ?>" title=""><?php echo null !== $count_seo_links ? $count_seo_links : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
-                        <td class="column-seo-linked"><abbr raw_value="<?php echo null !== $count_seo_linked ? $count_seo_linked : -1; ?>" title=""><?php echo null !== $count_seo_linked ? $count_seo_linked : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
-                        <td class="column-seo-score"><abbr raw_value="<?php echo $seo_score ? 1 : 0; ?>" title=""><?php echo $seo_score; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
-                        <td class="column-seo-readability"><abbr raw_value="<?php echo $readability_score ? 1 : 0; ?>" title=""><?php echo $readability_score; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
+                        <td class="column-seo-links not-selectable"><abbr raw_value="<?php echo null !== $count_seo_links ? $count_seo_links : -1; ?>" title=""><?php echo null !== $count_seo_links ? $count_seo_links : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
+                        <td class="column-seo-linked not-selectable"><abbr raw_value="<?php echo null !== $count_seo_linked ? $count_seo_linked : -1; ?>" title=""><?php echo null !== $count_seo_linked ? $count_seo_linked : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
+                        <td class="column-seo-score not-selectable"><abbr raw_value="<?php echo $seo_score ? 1 : 0; ?>" title=""><?php echo $seo_score; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
+                        <td class="column-seo-readability not-selectable"><abbr raw_value="<?php echo $readability_score ? 1 : 0; ?>" title=""><?php echo $readability_score; // phpcs:ignore WordPress.Security.EscapeOutput ?></abbr></td>
                         <?php
                     }
                     ?>
-                    <td class="website">
+                    <td class="website not-selectable">
                         <a href="<?php echo esc_html( $website->url ); ?>" class="mainwp-may-hide-referrer" target="_blank"><?php echo esc_html( $website->url ); ?></a>
                     </td>
                     <td class="right aligned  not-selectable">
@@ -1228,7 +1210,7 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                                     <a class="item page_submitrestore" href="#"><?php esc_html_e( 'Restore', 'mainwp' ); ?></a>
                                     <a class="item page_submitdelete_perm" href="#"><?php esc_html_e( 'Delete permanently', 'mainwp' ); ?></a>
                                 <?php } ?>
-                                <a class="item" href="<?php echo 'admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" data-tooltip="<?php esc_attr_e( 'Jump to the site WP Admin', 'mainwp' ); ?>"  data-position="bottom right"  data-inverted="" class="open_newwindow_wpadmin ui green basic icon button" target="_blank"><?php esc_html_e( 'Go to WP Admin', 'mainwp' ); ?></a>
+                                <a class="item" href="<?php MainWP_Site_Open::get_open_site_admin_link( $website->id, true ); //phpcs:ignore -- ok. ?>" data-tooltip="<?php esc_attr_e( 'Jump to the site WP Admin', 'mainwp' ); ?>"  data-position="bottom right"  data-inverted="" class="open_newwindow_wpadmin ui green basic icon button" target="_blank"><?php esc_html_e( 'Go to WP Admin', 'mainwp' ); ?></a>
                                 <?php
                                 /**
                                  * Action: mainwp_pages_table_action
@@ -1704,8 +1686,8 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 <a href="admin.php?page=PageBulkAdd" class="ui green button new-bulk-page"><?php esc_html_e( 'New Page', 'mainwp' ); ?></a>
             </div>
         </div>
-        <div class="ui active inverted dimmer" id="mainwp-posting-running">
-            <div class="ui indeterminate large text loader"><?php esc_html_e( 'Running ...', 'mainwp' ); ?></div>
+        <div class="ui active dimmer" id="mainwp-posting-running">
+            <div class="ui double text loader"><?php esc_html_e( 'Running ...', 'mainwp' ); ?></div>
         </div>
         <script type="text/javascript">
             jQuery( document ).ready( function () {
@@ -1713,7 +1695,7 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 jQuery( "#mainwp-posting-page-modal" ).modal( {
                     closable: true,
                     onHide: function() {
-                        location.href = 'admin.php?page=PageBulkManage';
+                        mainwp_forceReload('admin.php?page=PageBulkManage');
                     }
                 } ).modal( 'show' );
             } );
@@ -1731,12 +1713,12 @@ class MainWP_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             ?>
             <p><?php esc_html_e( 'If you need help with managing pages, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-pages/" target="_blank">Manage Pages</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-pages/#create-a-new-page" target="_blank">Create a New Page</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-pages/#edit-a-page" target="_blank">Edit an Existing Page</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-pages/#view-existing-page" target="_blank">View an Existing Page</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-pages/#delete-a-page" target="_blank">Delete Page(s)</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-pages/#restore-a-page" target="_blank">Restore Page(s)</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/content/manage-pages" target="_blank">Manage Pages</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/content/manage-pages#create-a-new-page" target="_blank">Create a New Page</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/content/manage-pages#edit-an-existing-page" target="_blank">Edit an Existing Page</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/content/manage-pages#view-a-page-on-its-site" target="_blank">View an Existing Page</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/content/manage-pages#delete-pages" target="_blank">Delete Page(s)</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/content/manage-pages#restore-a-page" target="_blank">Restore Page(s)</a></div>
                 <?php
                 /**
                  * Action: mainwp_pages_help_item

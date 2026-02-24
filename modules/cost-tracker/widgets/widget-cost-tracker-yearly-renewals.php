@@ -13,6 +13,12 @@ namespace MainWP\Dashboard\Module\CostTracker;
 use MainWP\Dashboard\MainWP_UI;
 use MainWP\Dashboard\MainWP_Utility;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+
 /**
  * Class Cost_Tracker_Yearly_Renewals
  *
@@ -84,13 +90,11 @@ class Cost_Tracker_Yearly_Renewals { // phpcs:ignore -- NOSONAR - multi methods.
             jQuery( document ).ready( function () {
                 var $topSelect = jQuery( '#cost-tracker-widget-yearly-renewals-top-select' ).dropdown( {
                     onChange: function( value ) {
-                        console.log('value:' + value);
                         mainwp_ui_state_save('cost-widget-yearly-renewals', value);
                     }
                 } );
 
                 var curTab = mainwp_ui_state_load('cost-widget-yearly-renewals');
-                console.log('curTab:' + curTab);
                 if(  curTab != '' && curTab != null ){
                     $topSelect.dropdown( 'set selected', curTab );
                     jQuery( '.cost_tracker_yearly_renewals').removeClass('active'); //to fix preset.
@@ -202,7 +206,7 @@ class Cost_Tracker_Yearly_Renewals { // phpcs:ignore -- NOSONAR - multi methods.
              */
             do_action( 'mainwp_module_yearly_renewals_before_costs_list', $tab, $cost_data );
             if ( empty( $lists ) ) {
-                MainWP_UI::render_empty_element_placeholder( __( 'No upcoming renewals for the selected priod.', 'mainwp' ) );
+                MainWP_UI::render_empty_element_placeholder( __( 'No Upcoming Renewals', 'mainwp' ), '<a href="admin.php?page=CostTrackerAdd">' . __( 'Add yearly renewals to see your upcoming annual costs.', 'mainwp' ) . '</a>', '<em data-emoji=":calendar_spiral:" class="medium"></em>' );
             } else {
                 ?>
                 <table class="ui stacking table" id="mainwp-yearly-renewals-table-<?php echo esc_attr( $tab ); ?>">

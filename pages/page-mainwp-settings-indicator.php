@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Settings_Indicator
  *
@@ -65,7 +70,7 @@ class MainWP_Settings_Indicator { // phpcs:ignore Generic.Classes.OpeningBraceSa
         if ( 'header' === $indi_type ) {
             return '<i style="display:none;" field-indicator-wrapper-class="' . esc_html( $wrapper_cls ) . '" class="ui circle icon tiny yellow settings-field-header-indicator ' . $cls . ' "></i>';
         } else {
-            return '<i class="ui circle icon tiny yellow settings-field-icon-indicator ' . $cls . '"></i>';
+            return '<span data-tooltip="' . esc_attr__( 'Changed from default', 'mainwp' ) . '" data-variation="mini" data-position="top center" data-inverted=""><i class="ui circle icon tiny yellow settings-field-icon-indicator ' . $cls . '"></i></span>';
         }
     }
 
@@ -180,6 +185,7 @@ class MainWP_Settings_Indicator { // phpcs:ignore Generic.Classes.OpeningBraceSa
             'mainwp_site_is_ignoreCoreUpdates'           => 0,
             'mainwp_site_is_ignorePluginUpdates'         => 0,
             'mainwp_site_is_ignoreThemeUpdates'          => 0,
+            'mainwp_site_is_ignore_trans_updates'        => 0,
             'mainwp_site_monitoring_notification_emails' => '',
             'mainwp_site_disable_health_check'           => 0,
             'mainwp_site_verify_certificate'             => 2,
@@ -205,6 +211,7 @@ class MainWP_Settings_Indicator { // phpcs:ignore Generic.Classes.OpeningBraceSa
             'mainwp_edit_monitor_maxretries_global'      => 1,
             'mainwp_edit_monitor_monitoring_emails'      => '',
             'mainwp_check_http_response_method'          => 'head',
+            'mainwp_warm_cache_pages_ttl'                => 10,
         );
 
         if ( 'all' === $field ) {

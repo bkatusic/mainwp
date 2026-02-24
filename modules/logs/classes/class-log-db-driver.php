@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard\Module\Log;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Interface - Log_DB_Driver
  */

@@ -18,6 +18,12 @@ use MainWP\Dashboard\MainWP_Common_Functions;
 use MainWP\Dashboard\MainWP_Cron_Jobs_Batch;
 use MainWP\Dashboard\MainWP_Logger;
 use MainWP\Dashboard\MainWP_Auto_Updates_DB;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Rest_Updates_Controller
  *
@@ -266,9 +272,6 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
      */
     public function get_items( $request ) { //phpcs:ignore -- NOSONAR complex function.
 
-        $all_updates = array();
-        $websites    = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_websites_for_current_user( true, null, 'wp.url', false, false, null, false, array( 'ignored_wp_upgrades', 'rollback_updates_data' ) ) );
-
         $args = $this->prepare_objects_query( $request );
         $args = $this->validate_rest_args( $args, $this->get_validate_args_params( 'get_sites' ) );
         if ( is_wp_error( $args ) ) {
@@ -280,6 +283,63 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
         $s      = isset( $args['s'] ) ? trim( $args['s'] ) : '';
         $exclud = isset( $args['exclude'] ) ? wp_parse_id_list( $args['exclude'] ) : array();
         $includ = isset( $args['include'] ) ? wp_parse_id_list( $args['include'] ) : array();
+
+        // Try abilities-first approach (with fallback to legacy logic).
+        $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/list-updates-v1' ) : null;
+
+        if ( null !== $ability ) {
+            // Build ability input from REST parameters.
+            // Note: For backward compatibility, we do NOT paginate here. The legacy path
+            // returns ALL updates (no page/per_page constraints), so we omit pagination
+            // to maintain consistent behavior. Callers who need paginated results should
+            // use the ability directly with explicit page/per_page values.
+            // See: .mwpdev/plans/abilities-api/phase-3-rest-integration-notes.md
+
+            // Determine site IDs to include.
+            // The ability uses site_ids_or_domains (array of IDs or domains).
+            // REST API uses 'include' for site IDs to include.
+            $site_ids = ! empty( $includ ) ? $includ : array();
+
+            // Map REST 'type' parameter to ability 'types' parameter.
+            // REST uses 'type' (singular), ability uses 'types' (plural).
+            $ability_types = ! empty( $type ) ? $type : array();
+
+            $ability_input = array(
+                'site_ids_or_domains' => $site_ids,
+                'types'               => $ability_types,
+            );
+
+            $result = $ability->execute( $ability_input );
+
+            if ( is_wp_error( $result ) ) {
+                $error_data = $result->get_error_data();
+                $status     = isset( $error_data['status'] ) ? $error_data['status'] : 500;
+                return new WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => $status ) );
+            }
+
+            // Re-apply exclude filter for backward compatibility.
+            // The ability doesn't support this parameter, so we filter post-fetch.
+            // This matches the pattern used in the Sites controller.
+            $updates = isset( $result['updates'] ) ? $result['updates'] : array();
+            if ( ! empty( $exclud ) && ! empty( $updates ) ) {
+                foreach ( $exclud as $excluded_id ) {
+                    unset( $updates[ $excluded_id ] );
+                }
+            }
+
+            // Transform ability output to REST response format.
+            // Ability returns 'updates' keyed by site ID with nested type arrays.
+            return rest_ensure_response(
+                array(
+                    'success' => 1,
+                    'data'    => $updates,
+                )
+            );
+        }
+
+        // Fallback: Legacy logic when Abilities API is not available.
+        $all_updates = array();
+        $websites    = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_websites_for_current_user( true, null, 'wp.url', false, false, null, false, array( 'ignored_wp_upgrades', 'rollback_updates_data' ) ) );
 
         if ( empty( $type ) ) {
             $type[] = 'all';
@@ -616,6 +676,49 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
      */
     public function get_all_global_ignored_updates( $request ) { //phpcs:ignore -- NOSONAR - complex.
 
+        $args = $this->prepare_objects_query( $request );
+
+        $type = isset( $args['type'] ) && ! empty( $args['type'] ) ? wp_parse_list( $args['type'] ) : array();
+        $type = array_filter( array_map( 'trim', $type ) );
+        $s    = isset( $args['s'] ) ? trim( $args['s'] ) : '';
+
+        // Normalize type array: add 'all' if empty or missing both 'plugins' and 'themes'.
+        // This ensures consistent behavior between ability and legacy paths.
+        if ( empty( $type ) || ( ! in_array( 'plugins', $type ) && ! in_array( 'themes', $type ) ) ) {
+            $type[] = 'all';
+        }
+
+        // Try abilities-first approach (with fallback to legacy logic).
+        $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/list-ignored-updates-v1' ) : null;
+
+        if ( null !== $ability ) {
+            // Build ability input using normalized type.
+            $ability_input = array(
+                'scope'  => 'global',
+                'type'   => $type,
+                'search' => $s,
+            );
+
+            $result = $ability->execute( $ability_input );
+
+            if ( is_wp_error( $result ) ) {
+                $error_data = $result->get_error_data();
+                $status     = isset( $error_data['status'] ) ? $error_data['status'] : 500;
+                return new WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => $status ) );
+            }
+
+            // Transform ability output to REST response format.
+            // Ability returns 'ignored' object with 'plugins' and 'themes' keys.
+            return rest_ensure_response(
+                array(
+                    'success' => 1,
+                    'data'    => isset( $result['ignored'] ) ? $result['ignored'] : array(),
+                )
+            );
+        }
+
+        // Fallback: Legacy logic when Abilities API is not available.
+        // Note: $type is already normalized above before the ability check.
         $userExtension   = MainWP_DB_Common::instance()->get_user_extension();
         $ignored_plugins = ! empty( $userExtension->ignored_plugins ) ? json_decode( $userExtension->ignored_plugins, true ) : array();
         $ignored_themes  = ! empty( $userExtension->ignored_themes ) ? json_decode( $userExtension->ignored_themes, true ) : array();
@@ -625,16 +728,6 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
         }
         if ( ! is_array( $ignored_themes ) ) {
             $ignored_themes = array();
-        }
-
-        $args = $this->prepare_objects_query( $request );
-
-        $type = isset( $args['type'] ) && ! empty( $args['type'] ) ? wp_parse_list( $args['type'] ) : array();
-        $type = array_filter( array_map( 'trim', $type ) );
-        $s    = isset( $args['s'] ) ? trim( $args['s'] ) : '';
-
-        if ( empty( $type ) || ( ! in_array( 'plugins', $type ) && ! in_array( 'themes', $type ) ) ) {
-            $type[] = 'all';
         }
 
         $all = in_array( 'all', $type ) ? true : false;
@@ -677,6 +770,50 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
             return $website;
         }
 
+        $args = $this->prepare_objects_query( $request );
+
+        $type = isset( $args['type'] ) && ! empty( $args['type'] ) ? wp_parse_list( $args['type'] ) : array();
+        $type = array_filter( array_map( 'trim', $type ) );
+        $s    = isset( $args['s'] ) ? trim( $args['s'] ) : '';
+
+        // Normalize type array: add 'all' if empty or missing both 'plugins' and 'themes'.
+        // This ensures consistent behavior between ability and legacy paths.
+        if ( empty( $type ) || ( ! in_array( 'plugins', $type ) && ! in_array( 'themes', $type ) ) ) {
+            $type[] = 'all';
+        }
+
+        // Try abilities-first approach (with fallback to legacy logic).
+        $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/list-ignored-updates-v1' ) : null;
+
+        if ( null !== $ability ) {
+            // Build ability input using normalized type.
+            $ability_input = array(
+                'scope'              => 'site',
+                'site_id_or_domain'  => (int) $website->id,
+                'type'               => $type,
+                'search'             => $s,
+            );
+
+            $result = $ability->execute( $ability_input );
+
+            if ( is_wp_error( $result ) ) {
+                $error_data = $result->get_error_data();
+                $status     = isset( $error_data['status'] ) ? $error_data['status'] : 500;
+                return new WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => $status ) );
+            }
+
+            // Transform ability output to REST response format.
+            // Ability merges per-site and global ignores, matching REST behavior.
+            return rest_ensure_response(
+                array(
+                    'success' => 1,
+                    'data'    => isset( $result['ignored'] ) ? $result['ignored'] : array(),
+                )
+            );
+        }
+
+        // Fallback: Legacy logic when Abilities API is not available.
+        // Note: $type is already normalized above before the ability check.
         $ignored_plugins = ! empty( $website->ignored_plugins ) ? json_decode( $website->ignored_plugins, true ) : array();
         $ignored_themes  = ! empty( $website->ignored_themes ) ? json_decode( $website->ignored_themes, true ) : array();
 
@@ -700,17 +837,6 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
 
         $ignored_plugins = $ignored_plugins + $ignored_plugins2;
         $ignored_themes  = $ignored_themes + $ignored_themes2;
-
-        $args = $this->prepare_objects_query( $request );
-
-        $type = isset( $args['type'] ) && ! empty( $args['type'] ) ? wp_parse_list( $args['type'] ) : array();
-        $type = array_filter( array_map( 'trim', $type ) );
-
-        $s = isset( $args['s'] ) ? trim( $args['s'] ) : '';
-
-        if ( empty( $type ) || ( ! in_array( 'plugins', $type ) && ! in_array( 'themes', $type ) ) ) {
-            $type[] = 'all';
-        }
 
         $all = in_array( 'all', $type ) ? true : false;
 
@@ -744,7 +870,7 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
      * @param WP_REST_Request $request Full details about the request.
      * @return WP_Error|WP_REST_Response
      */
-    public function update_all_items_start( $request ) {
+    public function update_all_items_start( $request ) { //phpcs:ignore -- NOSONAR complex function.
 
         $batch_updates_running = get_option( 'mainwp_batch_updates_is_running', 0 );
         $start_time            = get_option( 'mainwp_batch_updates_start_time', 0 );
@@ -759,6 +885,50 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
             return rest_ensure_response( $resp_data );
         }
 
+        // Try abilities-first approach (with fallback to legacy logic).
+        $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/run-updates-v1' ) : null;
+
+        if ( null !== $ability ) {
+            // Build ability input for updating all sites with all update types.
+            // Empty arrays mean "all sites" and "all types" respectively.
+            $ability_input = array(
+                'site_ids_or_domains' => array(),  // All sites.
+                'types'               => array(),  // All types.
+            );
+
+            $result = $ability->execute( $ability_input );
+
+            if ( is_wp_error( $result ) ) {
+                $error_data = $result->get_error_data();
+                $status     = isset( $error_data['status'] ) ? $error_data['status'] : 500;
+                return new WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => $status ) );
+            }
+
+            // Check if updates were queued for background processing.
+            if ( isset( $result['job_id'] ) ) {
+                return rest_ensure_response(
+                    array(
+                        'success'                       => 1,
+                        'message'                       => esc_html__( 'Batch updates queued.', 'mainwp' ),
+                        'job_id'                        => $result['job_id'],
+                        'queued_count'                  => isset( $result['queued_count'] ) ? $result['queued_count'] : 0,
+                        'last_time_start_batch_updates' => mainwp_rest_prepare_date_response( current_time( 'mysql' ) ),
+                    )
+                );
+            }
+
+            // Transform immediate results.
+            return rest_ensure_response(
+                array(
+                    'success'                       => 1,
+                    'message'                       => esc_html__( 'Batch updates completed.', 'mainwp' ),
+                    'summary'                       => isset( $result['summary'] ) ? $result['summary'] : array(),
+                    'last_time_start_batch_updates' => mainwp_rest_prepare_date_response( current_time( 'mysql' ) ),
+                )
+            );
+        }
+
+        // Fallback: Legacy logic when Abilities API is not available.
         $local_timestamp = MainWP_Utility::get_timestamp();
         $start_time      = $local_timestamp;
         MainWP_Utility::update_option( 'mainwp_batch_updates_start_time', $start_time );
@@ -795,13 +965,15 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
      * @param WP_REST_Request $request Full details about the request.
      * @return WP_Error|WP_REST_Response
      */
-    public function update_all_items_inidividual_site_start( $request ) {
+    public function update_all_items_inidividual_site_start( $request ) { //phpcs:ignore -- NOSONAR complex function.
         $website = $this->get_request_item( $request );
 
         if ( is_wp_error( $website ) ) {
             return $website;
         }
 
+        // Fetch full site data with options needed for business rule checks.
+        // This is done BEFORE checking abilities to ensure consistent behavior.
         $fetch_one = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_websites_for_current_user( true, null, 'wp.url', false, false, null, false, array( 'ignored_wp_upgrades', 'batch_individual_queue_time', 'premium_upgrades' ), 'no', array( 'include' => array( $website->id ) ) ) );
         $website   = $fetch_one ? MainWP_DB::fetch_object( $fetch_one ) : false;
         MainWP_DB::free_result( $fetch_one );
@@ -810,15 +982,16 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
             return $this->get_rest_data_error( 'id', 'site' );
         }
 
-        if ( 1 === $website->suspended ) {
+        // Enforce business rules BEFORE checking abilities.
+        // This ensures consistent behavior regardless of whether Abilities API is available.
+        if ( 1 === (int) $website->suspended ) {
             return new \WP_Error( 'mainwp_rest_updates_site_error', __( 'Website suspended. Please unsuspended the website and try again.', 'mainwp' ), array( 'status' => 400 ) );
-
         }
 
         $batch_individual_updates_running = get_option( 'mainwp_batch_individual_updates_is_running', 0 );
         $start_individual_time            = get_option( 'mainwp_batch_updates_individual_start_time', 0 );
 
-        // check if the site in batch updates queue.
+        // Check if the site is already in the batch updates queue.
         if ( $batch_individual_updates_running && ! empty( $website->batch_individual_queue_time ) && (int) $website->batch_individual_queue_time >= (int) $start_individual_time ) {
             $datetime  = get_date_from_gmt( gmdate( 'Y-m-d H:i:s', $start_individual_time ) );
             $resp_data = array(
@@ -826,11 +999,59 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
                 'message'                       => esc_html__( 'A batch updates for the site are queuing to run.', 'mainwp' ),
                 'last_time_start_batch_updates' => mainwp_rest_prepare_date_response( $datetime ),
                 'site'                          => apply_filters( 'mainwp_rest_routes_sites_controller_filter_allowed_fields_by_context', $website, 'simple_view' ),
-
             );
             return rest_ensure_response( $resp_data );
         }
 
+        // Try abilities-first approach (with fallback to legacy logic).
+        $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/run-updates-v1' ) : null;
+
+        if ( null !== $ability ) {
+            // Build ability input for single-site update.
+            // Empty types array means "all types".
+            $ability_input = array(
+                'site_ids_or_domains' => array( (int) $website->id ),
+                'types'               => array(),  // All types.
+            );
+
+            $result = $ability->execute( $ability_input );
+
+            if ( is_wp_error( $result ) ) {
+                $error_data = $result->get_error_data();
+                $status     = isset( $error_data['status'] ) ? $error_data['status'] : 500;
+                return new \WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => $status ) );
+            }
+
+            // Normalize site data through REST response filters for consistency.
+            $site_filtered = apply_filters( 'mainwp_rest_routes_sites_controller_filter_allowed_fields_by_context', $website, 'simple_view' );
+
+            // Handle queued response (background job).
+            if ( isset( $result['job_id'] ) ) {
+                return rest_ensure_response(
+                    array(
+                        'success'                       => 1,
+                        'message'                       => esc_html__( 'Batch updates for the site queued successfully.', 'mainwp' ),
+                        'job_id'                        => $result['job_id'],
+                        'last_time_start_batch_updates' => mainwp_rest_prepare_date_response( current_time( 'mysql' ) ),
+                        'site'                          => $site_filtered,
+                    )
+                );
+            }
+
+            // Transform immediate results - extract first result from results array.
+            $site_result = isset( $result['results'][0] ) ? $result['results'][0] : array();
+            return rest_ensure_response(
+                array(
+                    'success'                       => 1,
+                    'message'                       => esc_html__( 'Batch updates for the site completed.', 'mainwp' ),
+                    'summary'                       => isset( $site_result['summary'] ) ? $site_result['summary'] : array(),
+                    'last_time_start_batch_updates' => mainwp_rest_prepare_date_response( current_time( 'mysql' ) ),
+                    'site'                          => $site_filtered,
+                )
+            );
+        }
+
+        // Fallback: Legacy logic when Abilities API is not available.
         // reload full data.
         $website = MainWP_DB::instance()->get_website_by_id( $website->id );
         MainWP_Cron_Jobs_Batch::instance()->prepare_bulk_updates( $website );
@@ -1137,7 +1358,7 @@ class MainWP_Rest_Updates_Controller extends MainWP_REST_Controller{ //phpcs:ign
         }
 
         try {
-            MainWP_Connect::fetch_url_authed(
+            $information = MainWP_Connect::fetch_url_authed(
                 $website,
                 'upgradetranslation',
                 array(

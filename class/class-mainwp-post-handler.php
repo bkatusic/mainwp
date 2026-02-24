@@ -7,6 +7,14 @@
 
 namespace MainWP\Dashboard;
 
+use MainWP\Dashboard\Module\Log\Log_DB_Helper;
+use MainWP\Dashboard\Module\Log\Log_Changes_Logs_Helper;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 // phpcs:disable Generic.Metrics.CyclomaticComplexity -- complexity.
 
 /**
@@ -130,6 +138,7 @@ class MainWP_Post_Handler extends MainWP_Post_Base_Handler { // phpcs:ignore -- 
 
         $this->add_action( 'mainwp_clients_save_field', array( &$this, 'mainwp_clients_save_field' ) );
         $this->add_action( 'mainwp_clients_delete_general_field', array( &$this, 'mainwp_clients_delete_general_field' ) );
+        $this->add_action( 'mainwp_clients_bulk_delete_fields', array( &$this, 'mainwp_clients_bulk_delete_fields' ) );
         $this->add_action( 'mainwp_clients_delete_field', array( &$this, 'mainwp_clients_delete_field' ) );
         $this->add_action( 'mainwp_clients_notes_save', array( &$this, 'mainwp_clients_notes_save' ) );
         $this->add_action( 'mainwp_clients_suspend_client', array( &$this, 'mainwp_clients_suspend_client' ) );
@@ -153,6 +162,9 @@ class MainWP_Post_Handler extends MainWP_Post_Base_Handler { // phpcs:ignore -- 
         // Page:: mainwp-setup.
         $this->add_action( 'mainwp_clients_add_multi_client', array( &$this, 'ajax_clients_add_multi_client' ) );
         $this->add_action( 'mainwp_increase_connection_security', array( &$this, 'ajax_increase_connection_security' ) );
+        $this->add_action( 'mainwp_qsw_ui_mode_detected', array( &$this, 'ajax_ui_mode_detected' ) );
+
+        $this->add_action( 'mainwp_changes_logs_get_item_changes', array( &$this, 'ajax_get_item_changes_logs' ) );
     }
 
     /**
@@ -200,6 +212,7 @@ class MainWP_Post_Handler extends MainWP_Post_Base_Handler { // phpcs:ignore -- 
         $search  = isset( $_POST['search'] ) ? sanitize_text_field( wp_unslash( $_POST['search'] ) ) : '';
         // phpcs:enable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         MainWP_User::render_table( false, $role, $groups, $sites, $search, $clients );
+        session_write_close();
         die();
     }
 
@@ -643,9 +656,10 @@ class MainWP_Post_Handler extends MainWP_Post_Base_Handler { // phpcs:ignore -- 
         $user = wp_get_current_user();
         // phpcs:disable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         if ( $user && ! empty( $_POST['page'] ) ) {
-            $page  = isset( $_POST['page'] ) ? sanitize_text_field( wp_unslash( $_POST['page'] ) ) : '';
-            $order = isset( $_POST['order'] ) ? sanitize_text_field( wp_unslash( $_POST['order'] ) ) : '';
-            $wgids = isset( $_POST['wgids'] ) ? sanitize_text_field( wp_unslash( $_POST['wgids'] ) ) : '';
+            $page        = isset( $_POST['page'] ) ? sanitize_text_field( wp_unslash( $_POST['page'] ) ) : '';
+            $order       = isset( $_POST['order'] ) ? sanitize_text_field( wp_unslash( $_POST['order'] ) ) : '';
+            $wgids       = isset( $_POST['wgids'] ) ? sanitize_text_field( wp_unslash( $_POST['wgids'] ) ) : '';
+            $page_widget = isset( $_POST['page_widget'] ) ? sanitize_text_field( wp_unslash( $_POST['page_widget'] ) ) : '';
 
             $wgs_orders = array();
 
@@ -679,6 +693,7 @@ class MainWP_Post_Handler extends MainWP_Post_Base_Handler { // phpcs:ignore -- 
             } else {
                 update_user_option( $user->ID, 'mainwp_widgets_sorted_' . $page, wp_json_encode( $wgs_orders ), true );
             }
+            MainWP_Cache_Warm_Helper::invalidate_manage_pages( array( $page_widget ) );
             die( 'ok' );
         }
         // phpcs:enable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
@@ -996,6 +1011,7 @@ class MainWP_Post_Handler extends MainWP_Post_Base_Handler { // phpcs:ignore -- 
             MainWP_DB_Client::instance()->delete_client( $client_id );
             $ret['success'] = 'SUCCESS';
             $ret['result']  = esc_html__( 'Client removed successfully.', 'mainwp' );
+            MainWP_Client::invalidate_warm_cache();
         } else {
             $ret['result'] = esc_html__( 'Client ID empty.', 'mainwp' );
         }
@@ -1011,6 +1027,7 @@ class MainWP_Post_Handler extends MainWP_Post_Base_Handler { // phpcs:ignore -- 
      */
     public function mainwp_clients_save_field() {
         $this->check_security( 'mainwp_clients_save_field' );
+        MainWP_Client::invalidate_warm_cache();
         MainWP_Client::save_client_field();
         die();
     }
@@ -1030,7 +1047,45 @@ class MainWP_Post_Handler extends MainWP_Post_Base_Handler { // phpcs:ignore -- 
         if ( MainWP_DB_Client::instance()->delete_client_field_by( 'field_id', $field_id, $client_id ) ) {
             $ret['success'] = true;
         }
+        MainWP_Client::invalidate_warm_cache();
         // phpcs:enable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        echo wp_json_encode( $ret );
+        exit;
+    }
+
+    /**
+     * Method mainwp_clients_bulk_delete_fields()
+     *
+     * Bulk delete client general fields.
+     */
+    public function mainwp_clients_bulk_delete_fields() {
+        $this->check_security( 'mainwp_clients_bulk_delete_fields' );
+        $ret = array( 'success' => false );
+        // phpcs:disable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $field_ids = isset( $_POST['field_ids'] ) && is_array( $_POST['field_ids'] ) ? array_map( 'intval', $_POST['field_ids'] ) : array();
+        // phpcs:enable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+
+        if ( empty( $field_ids ) ) {
+            $ret['data'] = array( 'message' => __( 'No fields selected.', 'mainwp' ) );
+            echo wp_json_encode( $ret );
+            exit;
+        }
+
+        $client_id      = 0; // 0 general fields.
+        $deleted_count  = 0;
+        foreach ( $field_ids as $field_id ) {
+            if ( MainWP_DB_Client::instance()->delete_client_field_by( 'field_id', $field_id, $client_id ) ) {
+                ++$deleted_count;
+            }
+        }
+
+        if ( $deleted_count > 0 ) {
+            $ret['success'] = true;
+            MainWP_Client::invalidate_warm_cache();
+        } else {
+            $ret['data'] = array( 'message' => __( 'Failed to delete fields.', 'mainwp' ) );
+        }
+
         echo wp_json_encode( $ret );
         exit;
     }
@@ -1880,6 +1935,78 @@ class MainWP_Post_Handler extends MainWP_Post_Base_Handler { // phpcs:ignore -- 
         wp_die( wp_json_encode( array( 'success' => 1 ) ) );
     }
 
+    /**
+     * Method ajax_ui_mode_detected
+     */
+    public function ajax_ui_mode_detected() {
+        $this->check_security( 'mainwp_qsw_ui_mode_detected' );
+
+        $detected_ui = isset( $_POST['ui_mode'] ) ? sanitize_text_field( wp_unslash( $_POST['ui_mode'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+
+        $current_user_theme = get_user_option( 'mainwp_selected_theme' );
+        if ( empty( $current_user_theme ) ) {
+            if ( 'dark' === $detected_ui ) {
+                MainWP_Utility::update_user_option( 'mainwp_selected_theme', 'default-dark' );
+            } else {
+                MainWP_Utility::update_user_option( 'mainwp_selected_theme', 'default' );
+            }
+        }
+
+        wp_die( wp_json_encode( array( 'success' => 1 ) ) );
+    }
+
+
+
+    /**
+     * Handle ajax get changes logs for plugins/themes.
+     */
+    public function ajax_get_item_changes_logs() { //phpcs:ignore -- NOSONAR -complex.
+        $this->check_security( 'mainwp_changes_logs_get_item_changes' );
+
+        $siteId = isset( $_POST['siteId'] ) ? intval( $_POST['siteId'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $type   = isset( $_POST['type'] ) ? sanitize_text_field( wp_unslash( $_POST['type'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $slug   = isset( $_POST['slug'] ) ? sanitize_text_field( wp_unslash( $_POST['slug'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $name   = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( urldecode( $_POST['name'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+
+        if ( 'plugin' === $type && ! empty( $slug ) ) {
+            if ( false !== strpos( $slug, '/' ) ) {
+                $parts = explode( '/', $slug );
+                $slug  = $parts[0];
+            } else {
+                $slug = basename( $slug, '.php' );
+            }
+        } elseif ( 'theme' === $type && ! empty( $slug ) ) {
+            $slug = strtolower( $slug );
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $target_dt = ! empty( $_POST['target_date'] ) ? sanitize_text_field( wp_unslash( $_POST['target_date'] ) ) : '';
+
+        if ( ! in_array( $type, array( 'plugin', 'theme' ) ) || ( empty( $target_dt ) && ( empty( $siteId ) || ( empty( $slug ) && empty( $name ) ) ) ) ) {
+            wp_send_json( array( 'error' => esc_html__( 'Invalid request data. Please try again.', 'mainwp' ) ) );
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $from_date = isset( $_POST['from_date'] ) ? sanitize_text_field( wp_unslash( $_POST['from_date'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+
+        $results = Log_Changes_Logs_Helper::instance()->get_history_changes(
+            array(
+                'wpid'        => $siteId,
+                'from_date'   => $from_date,
+                'days_number' => 10,
+                'slug'        => $slug,
+                'type'        => $type,
+                'name'        => $name,
+                'target_date' => $target_dt,
+            )
+        );
+
+        if ( ! is_array( $results ) ) {
+            $results = array();
+        }
+
+        wp_send_json( $results );
+    }
 
 
     /**

@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Extensions_Handler
  */
@@ -136,6 +141,7 @@ class MainWP_Extensions_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSa
                 'Mainwp',
                 'Extension',
                 'MainWP',
+                'Add-on',
             ),
             '',
             $name

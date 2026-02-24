@@ -14,6 +14,12 @@ use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_DB_Common;
 use MainWP\Dashboard\MainWP_DB_Client;
 use MainWP\Dashboard\MainWP_Utility;
+use MainWP\Dashboard\MainWP_UI;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 /**
  * Class Log_Graph_Tags_Widget
@@ -63,6 +69,7 @@ class Log_Graph_Tags_Widget {
      * Render client overview Info.
      */
     public function render_widget() {
+        $sites_count = MainWP_DB::instance()->get_websites_count();
         ?>
         <div class="mainwp-widget-header">
             <h2 class="ui header handle-drag">
@@ -73,7 +80,7 @@ class Log_Graph_Tags_Widget {
             </h2>
         </div>
 
-        <div class="mainwp-widget-insights-card">
+        <div class="mainwp-widget-insights-card mainwp-scrolly-overflow">
                 <?php
                 /**
                  * Action: mainwp_logs_widget_top
@@ -86,8 +93,12 @@ class Log_Graph_Tags_Widget {
                 ?>
                 <div id="mainwp-message-zone" style="display:none;" class="ui message"></div>
                 <?php
-                wp_nonce_field( 'mainwp-admin-nonce' );
-                $this->render_widget_content();
+                MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' );
+                if ( 0 < intval( $sites_count ) ) {
+                    $this->render_widget_content();
+                } else {
+                    MainWP_UI::render_empty_element_placeholder( __( 'No Tags Data', 'mainwp' ), '<a href="admin.php?page=managesites&do=new">' . __( 'Start connecting your sites now', 'mainwp' ) . '</a>', '<em data-emoji=":bar_chart:" class="medium"></em>' );
+                }
                 ?>
                 <?php
                 /**
@@ -166,7 +177,8 @@ class Log_Graph_Tags_Widget {
             jQuery( document ).ready( function() {
                 let options = {
                     chart: {
-                        type: 'bar'
+                        type: 'bar',
+                        height: 350,
                     },
                     series: [ {
                         name: 'Sites',

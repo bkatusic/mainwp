@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Uptime_Monitoring_Handle
  *
@@ -67,6 +72,7 @@ class MainWP_Uptime_Monitoring_Handle { // phpcs:ignore Generic.Classes.OpeningB
             );
         }
         $this->clear_outdated_hourly_uptime_stats();
+        $this->handle_cleanup_heartbeat_data();
     }
 
 
@@ -91,14 +97,16 @@ class MainWP_Uptime_Monitoring_Handle { // phpcs:ignore Generic.Classes.OpeningB
             'timeout'         => -1, // use global setting default.
         );
         if ( ! $individual ) {
+            $up_codes = array( 200, 201, 202, 203, 204, 205, 206 );
             // global defaults.
-            $default['up_status_codes'] = '';
-            $default['active']          = 0;
-            $default['type']            = 'http';
-            $default['maxretries']      = 1;
-            $default['method']          = 'head';
-            $default['timeout']         = 60; // seconds.
-            $default['interval']        = 60; // mins.
+            $default['up_status_codes']  = implode( ',', $up_codes );
+            $default['active']           = 0;
+            $default['type']             = 'http';
+            $default['maxretries']       = 1;
+            $default['method']           = 'head';
+            $default['timeout']          = 60; // seconds.
+            $default['interval']         = 60; // mins.
+            $default['retention_limits'] = 180; // days.
             unset( $default['suburl'] );
         }
         return $default;
@@ -114,6 +122,10 @@ class MainWP_Uptime_Monitoring_Handle { // phpcs:ignore Generic.Classes.OpeningB
         $global_settings = get_option( 'mainwp_global_uptime_monitoring_settings', array() );
         if ( empty( $global_settings ) || ! is_array( $global_settings ) ) {
             $global_settings = static::get_default_monitoring_settings( false );
+        }
+        if ( ! isset( $global_settings['retention_limits'] ) ) {
+            $global_settings['retention_limits'] = 0; // to compatible.
+            self::update_uptime_global_settings( $global_settings );
         }
         return $global_settings;
     }
@@ -384,7 +396,6 @@ class MainWP_Uptime_Monitoring_Handle { // phpcs:ignore Generic.Classes.OpeningB
      *
      * @return mixed Check result.
      *
-     * @uses \MainWP\Dashboard\MainWP_Connect::check_ignored_http_code()
      * @uses \MainWP\Dashboard\MainWP_DB::update_website_values()
      */
     public function handle_update_website_legacy_uptime_status( $website, $params ) {
@@ -397,15 +408,24 @@ class MainWP_Uptime_Monitoring_Handle { // phpcs:ignore Generic.Classes.OpeningB
         $status   = isset( $params['new_uptime_status'] ) ? (int) $params['new_uptime_status'] : 0;
         $time     = isset( $params['check_offline_time'] ) ? $params['check_offline_time'] : time();
 
-        // Save last status.
+        $new_check_result = 99; // pending.
+        if ( MainWP_Uptime_Monitoring_Connect::UP === $status ) {
+            $new_check_result = 1; // 1 - online, -1 offline.
+        } elseif ( MainWP_Uptime_Monitoring_Connect::DOWN === $status ) {
+            $new_check_result = -1;
+        }
+
+        // Save last status, do not update http status notification.
         MainWP_DB::instance()->update_website_values(
             $website->id,
             array(
-                'offline_check_result' => $status ? 1 : -1, // 1 - online, -1 offline.
+                'offline_check_result' => $new_check_result, // 1 - online, -1 offline.
                 'offline_checks_last'  => $time,
                 'http_response_code'   => $new_code,
             )
         );
+
+        MainWP_Logger::instance()->log_uptime_check( 'Check website status :: [website=' . (string) $website->url . '] :: [offline_check_result=' . ( $status ? 1 : -1 ) . '] :: [http_response_code=' . esc_html( $new_code ) . ']' );
 
         return true;
     }
@@ -554,5 +574,23 @@ class MainWP_Uptime_Monitoring_Handle { // phpcs:ignore Generic.Classes.OpeningB
                 )
             );
         }
+    }
+
+    /**
+     * Cleanup monitoring data.
+     *
+     * @return mixed Results.
+     */
+    public function handle_cleanup_heartbeat_data() {
+        $glo_settings = static::get_global_monitoring_settings();
+        if ( empty( $glo_settings['retention_limits'] ) || ( (int) $glo_settings['retention_limits'] <= 0 ) ) {
+            return false;
+        }
+        $cleanup_at = (int) get_option( 'mainwp_uptime_monitor_cleanup_heartbeat_at', 0 );
+        if ( empty( $cleanup_at ) || ( MainWP_Utility::get_timestamp() > ( $cleanup_at + DAY_IN_SECONDS ) ) ) {
+            MainWP_Utility::update_option( 'mainwp_uptime_monitor_cleanup_heartbeat_at', MainWP_Utility::get_timestamp() );
+            return MainWP_DB_Uptime_Monitoring::instance()->cleanup_heartbeat_data( $glo_settings['retention_limits'] );
+        }
+        return false;
     }
 }

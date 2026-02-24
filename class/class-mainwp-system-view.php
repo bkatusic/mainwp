@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_System_View
  *
@@ -275,9 +280,9 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
     public static function mainwp_4_update_notice() {
         if ( MainWP_Utility::show_mainwp_message( 'notice', 'upgrade_4' ) ) {
             ?>
-            <div class="ui icon message yellow" style="margin-bottom: 0; border-radius: 0;">
+            <div class="ui icon message yellow">
                 <i class="exclamation circle icon"></i>
-                <strong><?php echo esc_html__( 'Important Notice: ', 'mainwp' ); ?></strong>&nbsp;<?php printf( esc_html__( 'MainWP Version 4 is a major upgrade from MainWP Version 3. Please, read this&nbsp; %1$supdating FAQ%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/faq-on-upgrading-from-mainwp-version-3-to-mainwp-version-4/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
+                <strong><?php echo esc_html__( 'Important Notice: ', 'mainwp' ); ?></strong>&nbsp;<?php printf( esc_html__( 'MainWP Version 4 is a major upgrade from MainWP Version 3. Please, read this&nbsp; %1$supdating FAQ%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
                 <i class="close icon mainwp-notice-dismiss" notice-id="upgrade_4"></i>
             </div>
             <?php
@@ -404,7 +409,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
     public static function mainwp_ver5_update_clear_cache_notice() {
         if ( MainWP_Utility::show_mainwp_message( 'notice', 'upgrade_ver5_clear_cache' ) ) {
             ?>
-            <div class="ui message info" style="margin-bottom: 0; border-radius: 0;">
+            <div class="ui message info">
                 <div><?php echo esc_html__( 'Please perform a hard refresh of your browser to ensure optimal performance and access to all new features. This step is crucial for loading the latest updates effectively.', 'mainwp' ); ?></div>
                 <div class="ui list">
                     <div class="item"><?php echo esc_html__( 'Windows users: Press `Ctrl + F5`', 'mainwp' ); ?></div>
@@ -427,35 +432,58 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
      */
     public static function admin_notices() {
 
-        $current_options = get_option( 'mainwp_showhide_events_notice' );
-        if ( ! is_array( $current_options ) ) {
-            $current_options = array();
-        }
-
-        static::render_notice_version();
-        static::render_notice_php_version8();
+        static::mainwp_tmpfile_check();
 
         static::render_notice_config_warning();
 
-        if ( is_multisite() && ( ! isset( $current_options['hide_multi_site_notice'] ) || empty( $current_options['hide_multi_site_notice'] ) ) ) {
-            static::render_notice_multi_sites();
-        }
-
-        if ( ( ! isset( $current_options['trust_child'] ) || empty( $current_options['trust_child'] ) ) && MainWP_System::is_mainwp_pages() && ! MainWP_Plugins_Handler::check_auto_update_plugin( 'mainwp-child/mainwp-child.php' ) ) {
-            static::render_notice_trust_update();
-        }
-
-        static::render_trours_notice();
-
-        static::check_rating_notice( $current_options );
+        static::render_notice_multi_sites();
 
         static::render_wp_mail_warning();
 
-        static::render_browser_extensions_notice();
-
         static::render_secure_priv_key_connection();
 
-        static::mainwp_tmpfile_check();
+        static::render_notice_php_version8();
+
+        static::render_notice_trust_update();
+
+        static::render_mainwp_themes_deprecation_notice();
+
+        static::render_tours_notice();
+
+        static::check_rating_notice();
+
+        static::render_browser_extensions_notice();
+
+    }
+
+    /**
+     * Render MainWP themes deprecation notice.
+     *
+     * @uses \MainWP\Dashboard\MainWP_Settings::get_instance()
+     * @uses \MainWP\Dashboard\MainWP_Utility::show_mainwp_message()
+     */
+    public static function render_mainwp_themes_deprecation_notice() {
+        $selected_theme = MainWP_Settings::get_instance()->get_selected_theme();
+        $legacy_themes  = array( 'dark', 'wpadmin', 'minimalistic', 'classic', 'default-2024' );
+
+        if ( in_array( $selected_theme, $legacy_themes, true ) && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_themes_deprecation_notice' ) ) {
+            $message_class = 'default-2024' === $selected_theme ? 'attention' : 'yellow';
+            ?>
+            <div class="ui <?php echo esc_attr( $message_class ); ?> message">
+                <div class="header"><?php esc_html_e( 'MainWP Dashboard Theme Support Notice', 'mainwp' ); ?></div>
+                <div>
+                    <?php
+                    printf(
+                        esc_html__( 'You\'re currently using a legacy or custom MainWP theme. With MainWP v6, only Light and Dark themes are actively maintained. Your current theme will keep working for now, but it may not receive updates and could have visual issues in future releases. Switch anytime in %1$sMainWP → Tools%2$s.', 'mainwp' ),
+                        '<a href="' . esc_url( admin_url( 'admin.php?page=MainWPTools' ) ) . '">',
+                        '</a>'
+                    );
+                    ?>
+                </div>
+                <i class="close icon mainwp-notice-dismiss" notice-id="mainwp_themes_deprecation_notice"></i>
+            </div>
+            <?php
+        }
     }
 
     /**
@@ -469,11 +497,10 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
         }
         if ( ! static::is_tmpfile_enable() && MainWP_Utility::show_mainwp_message( 'notice', 'tmpfile_notice' ) ) {
             ?>
-            <div class="ui red message" style="margin-bottom: 0; border-radius: 0;">
+            <div class="ui red message">
+                <div class="header"><?php esc_html_e( 'Server configuration required (tmpfile disabled)', 'mainwp' ); ?></div>
+                <div><?php esc_html_e( 'Your server has tmpfile() disabled. MainWP uses temporary files for some background tasks, so parts of the Dashboard may not work correctly until this is enabled. Please ask your host to enable tmpfile() (PHP function).', 'mainwp' ); ?></div>
                 <i class="close icon mainwp-notice-dismiss" notice-id="tmpfile_notice"></i>
-                <div><?php esc_html_e( 'tmpfile() function is currently disabled on your server.', 'mainwp' ); ?></div>
-                <div><?php esc_html_e( 'This function is essential for creating temporary files, and its unavailability may affect certain functionalities of your MainWP Dashboard.', 'mainwp' ); ?></div>
-                <div><?php esc_html_e( 'If you are unsure how to enable it, please contact your host support and have them do it for you.', 'mainwp' ); ?></div>
             </div>
             <?php
         }
@@ -498,17 +525,15 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
      * @uses  \MainWP\Dashboard\MainWP_Utility::show_mainwp_message()
      */
     public static function render_browser_extensions_notice() {
-        $is_demo = MainWP_Demo_Handle::is_demo_mode();
-        if ( MainWP_DB::instance()->get_websites_count() > 4 && ! $is_demo && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_browser_extensions_notice' ) ) {
+        if ( MainWP_DB::instance()->get_websites_count() > 4 && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_browser_extensions_notice' ) ) {
             ?>
-            <div class="ui info message" style="margin-bottom: 0; border-radius: 0;">
-                <h3><?php esc_html_e( 'Track Updates and Non-MainWP Changes from Your Browser!', 'mainwp' ); ?></h3>
+            <div class="ui info message">
+                <div class="header"><?php esc_html_e( 'Track Updates and Non-MainWP Changes from Your Browser!', 'mainwp' ); ?></div>
                 <div><?php esc_html_e( 'The MainWP Browser Extension helps you easily track available updates across all your connected Child Sites, including changes to your plugins and themes status made outside your MainWP Dashboard.', 'mainwp' ); ?></div>
                 <div><?php esc_html_e( 'The extension quickly connects to your MainWP Dashboard via MainWP REST API, eliminating the need to log in to your MainWP Dashboard repeatedly to check available updates and non-MainWP changes.', 'mainwp' ); ?></div>
                 <br/>
                 <div>
                     <a href="https://chrome.google.com/webstore/detail/mainwp-browser-extension/kjlehednpnfgplekjminjpocdechbnge" target="_blank" class="ui green tiny button"><i class="chrome icon"></i> <?php echo esc_html__( 'Get Chrome Extension', 'mainwp' ); ?></a>
-                    <a href="https://addons.mozilla.org/en-US/firefox/addon/mainwp-browser-extension/" target="_blank" class="ui green tiny button"><i class="firefox icon"></i> <?php echo esc_html__( 'Get Firefox Extension', 'mainwp' ); ?></a>
                     <a href="https://mainwp.com/mainwp-browser-extension/" target="_blank" class="ui tiny button"><?php echo esc_html__( 'Read More', 'mainwp' ); // NOSONAR - noopener - open safe. ?></a>
                 </div>
                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp_browser_extensions_notice"></i>
@@ -526,8 +551,8 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
         if ( MainWP_DB::instance()->get_websites_count() > 0 && ! static::check_keys_encrypted() && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_secure_priv_key_notice' ) ) {
             ?>
             <div class="ui attention message">
-                <h3><?php esc_html_e( 'New Security Feature: OpenSSL Key Encryption', 'mainwp' ); ?></h3>
-                <div><?php esc_html_e( 'To enhance security, we\'ve added a feature to encrypt your private keys stored in the database. This provides an extra layer of protection in the unlikely event your database is compromised.', 'mainwp' ); ?> <a href="https://mainwp.com/kb/openssl-keys-encryption/" target="_blank"><?php esc_html_e( 'Learn more here.', 'mainwp' ); ?></a></div>
+                <div class="header"><?php esc_html_e( 'New Security Feature: OpenSSL Key Encryption', 'mainwp' ); ?></div>
+                <div><?php esc_html_e( 'To enhance security, we\'ve added a feature to encrypt your private keys stored in the database. This provides an extra layer of protection in the unlikely event your database is compromised.', 'mainwp' ); ?> <a href="https://docs.mainwp.com/sites/management/mainwp-dashboard-settings#force-new-openssl-keys" target="_blank"><?php esc_html_e( 'Learn more here.', 'mainwp' ); ?></a></div>
                 <p><button class="ui green mini button" id="increase-connection-security-btn"><?php echo esc_html__( 'Encrypt Keys Now', 'mainwp' ); ?></button></p>
                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp_secure_priv_key_notice"></i>
             </div>
@@ -564,27 +589,10 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
         $mail_failed = get_option( 'mainwp_notice_wp_mail_failed' );
         if ( 'yes' === $mail_failed ) {
             ?>
-            <div class="ui yellow message" style="margin-bottom: 0; border-radius: 0;">
-                <?php echo esc_html__( 'wp_mail() error detected! It is more than likely that your MainWP Dashboard will fail to send any email. Please check for possible plugin conflicts with your Dashboard or contact your host support to determine why the wp_mail() function fails.', 'mainwp' ); ?>
+            <div class="ui yellow message">
+                <div class="header"><?php esc_html_e( 'Email sending failed (wp_mail)', 'mainwp' ); ?></div>
+                <div><?php esc_html_e( 'Your Dashboard failed to send email using wp_mail(). This may affect alerts, reports, and notifications. Common causes include SMTP/server configuration or a plugin conflict. Check your email setup or contact your host for help.', 'mainwp' ); ?></div>
                 <i class="close icon mainwp-notice-dismiss" notice-id="mail_failed"></i>
-            </div>
-            <?php
-        }
-    }
-
-    /**
-     * Renders PHP Version Notice.
-     *
-     * @uses  \MainWP\Dashboard\MainWP_Utility::show_mainwp_message()
-     */
-    public static function render_notice_version() {
-        $phpver = phpversion();
-        if ( version_compare( $phpver, '7.0', '<' ) && MainWP_Utility::show_mainwp_message( 'notice', 'phpver_5_5' ) ) {
-            ?>
-            <div class="ui icon yellow message" style="margin-bottom: 0; border-radius: 0;display:block;">
-                <i class="exclamation circle icon" style="float:left;"></i>
-                <?php printf( esc_html__( 'Your server is currently running PHP version %1$s. In the next few months your MainWP Dashboard will require PHP 7.4 as a minimum. Please upgrade your server to at least 7.4 but we recommend PHP 8 or newer. You can find a template email to send your host %2$shere%3$s.', 'mainwp' ), esc_html( $phpver ), '<a href="https://wordpress.org/about/requirements/" target="_blank">', '</a>' ); ?>
-                <i class="close icon mainwp-notice-dismiss" notice-id="phpver_5_5"></i>
             </div>
             <?php
         }
@@ -601,12 +609,12 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             $last_hidden = (int) get_user_option( 'lasttime_hidden_phpver_8_0' );
             if ( time() > $last_hidden + 30 * DAY_IN_SECONDS || MainWP_Utility::show_mainwp_message( 'notice', 'phpver_8_0' ) ) {
                 ?>
-                <div class="ui yellow message" style="margin-bottom: 0; border-radius: 0;display:block;">
-                    <div class="ui header"><?php esc_html_e( 'Upcoming PHP Requirement Change', 'mainwp' ); ?></div>
-                    <?php esc_html_e( 'In the coming months, support for PHP versions earlier than 8.1 will be discontinued on your MainWP Dashboard. To ensure continued functionality and security, please update your PHP version to a currently supported release, such as PHP 8.3.', 'mainwp' ); ?>
+                <div class="ui attention message">
+                    <div class="header"><?php esc_html_e( 'Upcoming PHP requirement (Dashboard)', 'mainwp' ); ?></div>
+                    <?php esc_html_e( 'In the coming months, MainWP Dashboard will require PHP 8.1+. To avoid issues and stay secure, please update your Dashboard site to a supported version (for example PHP 8.3).', 'mainwp' ); ?>
                     <?php printf( esc_html__( 'You can check the list of actively maintained PHP versions %shere%s.', 'mainwp' ), '<a href="https://www.php.net/supported-versions.php" target="_blank">', '</a>' ); ?>
                     <br/><br/>
-                    <strong><?php esc_html_e( 'This upcoming change does not affect your child sites, only your MainWP Dashboard.', 'mainwp' ); ?></strong>
+                    <strong><?php esc_html_e( 'This change affects only your MainWP Dashboard site, not your connected child sites.', 'mainwp' ); ?></strong>
                     <i class="close icon mainwp-notice-dismiss" notice-id="phpver_8_0"></i>
                 </div>
                 <?php
@@ -620,20 +628,20 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
      *
      * @uses  \MainWP\Dashboard\MainWP_Utility::show_mainwp_message()
      */
-    public static function render_trours_notice() {
-        if ( 0 === (int) get_option( 'mainwp_enable_guided_tours', 0 ) && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_guided_tours_notice' ) ) {
+    public static function render_tours_notice() {
+        if ( MainWP_DB::instance()->get_websites_count() > 4 && 0 === (int) get_option( 'mainwp_enable_guided_tours', 0 ) && MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_guided_tours_notice' ) ) {
             ?>
-            <div class="ui info message" style="margin-bottom: 0; border-radius: 0;">
-                <h3><?php esc_html_e( 'Would you like to turn on guided tours?', 'mainwp' ); ?> <span class="ui green mini label"><?php esc_html_e( 'RECOMMENDED', 'mainwp' ); ?></span></h3>
-                <div><?php esc_html_e( 'MainWP guided tours are designed to provide information about all essential features on each MainWP Dashboard page.', 'mainwp' ); ?></div>
+            <div class="ui info message">
+                <div class="header"><?php esc_html_e( 'Enable guided tours?', 'mainwp' ); ?></div>
+                <div><?php esc_html_e( 'Guided tours highlight essential features on each Dashboard page. You can turn them off anytime.', 'mainwp' ); ?></div>
+                <div class="ui hidden divider"></div>
                 <div class="ui form">
-            <div class="field">
-            <div class="ui hidden divider"></div>
-                <div class="ui toggle checkbox">
-                    <input type="checkbox" name="mainwp-select-guided-tours-option" onchange="mainwp_guidedtours_onchange(this);" id="mainwp-select-guided-tours-option" <?php echo 1 === (int) get_option( 'mainwp_enable_guided_tours', 0 ) ? 'checked="true"' : ''; ?>>
-                    <label for="mainwp-select-guided-tours-option"><?php esc_html_e( 'Select to enable the MainWP Guided Tours.', 'mainwp' ); ?></label>
+                    <div class="field">
+                        <div class="ui toggle checkbox">
+                            <input type="checkbox" name="mainwp-select-guided-tours-option" onchange="mainwp_guidedtours_onchange(this);" id="mainwp-select-guided-tours-option" <?php echo 1 === (int) get_option( 'mainwp_enable_guided_tours', 0 ) ? 'checked="true"' : ''; ?>>
+                            <label for="mainwp-select-guided-tours-option"><?php esc_html_e( 'Select to enable the MainWP Guided Tours.', 'mainwp' ); ?></label>
+                        </div>
                     </div>
-            </div>
                 </div>
                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp_guided_tours_notice"></i>
             </div>
@@ -649,34 +657,44 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
     public static function render_notice_config_warning() {
         if ( MainWP_Server_Information_Handler::is_openssl_config_warning() && isset( $_GET['page'] ) && 'SettingsAdvanced' !== $_GET['page'] && MainWP_Utility::show_mainwp_message( 'notice', 'ssl_warn' ) ) { //phpcs:ignore WordPress.Security.NonceVerification.Recommended
             ?>
-            <div class="ui yellow message" style="margin-bottom: 0; border-radius: 0;">
-                <button class="ui mini button yellow close icon mainwp-notice-dismiss" style="top:30%;margin-right:10px !important" notice-id="ssl_warn"><?php echo esc_html__( 'Error Fixed', 'mainwp' ); ?></button>
-                <div><?php printf( esc_html__( 'MainWP has detected that the&nbsp;%1$sOpenSSL.cnf%2$s&nbsp;file is not configured properly.  It is required to configure this so you can start connecting your child sites.  Please,&nbsp;%3$sclick here to configure it!%4$s', 'mainwp' ), '<strong>', '</strong>', '<a href="admin.php?page=SettingsAdvanced">', '</a>' ); ?></div>
-                <div><?php echo esc_html__( 'If your MainWP Dashboard has no issues with connecting child sites, you can dismiss this warning by clicking the Error Fixed button.', 'mainwp' ); ?></div>
-                </div>
+            <div class="ui yellow message">
+                <div class="header"><?php esc_html_e( 'OpenSSL configuration required', 'mainwp' ); ?></div>
+                <div><?php esc_html_e( 'MainWP detected that OpenSSL.cnf isn’t configured correctly. This may prevent you from connecting child sites. Fix it in Settings → Advanced. If connections work fine, you can dismiss this message.', 'mainwp' ); ?></div>
+                <i class="close icon mainwp-notice-dismiss" notice-id="ssl_warn"></i>
+            </div>
             <?php
         }
     }
 
     /** Renders WP Multisite Error Message. */
     public static function render_notice_multi_sites() {
-        ?>
-        <div class="ui icon red message" style="margin-bottom: 0; border-radius: 0;">
-            <i class="exclamation circle icon"></i>
-            <?php esc_html_e( 'MainWP plugin is not designed nor fully tested on WordPress Multisite installations. Various features may not work properly. We highly recommend installing it on a single site installation!', 'mainwp' ); ?>
-            <i class="close icon mainwp-notice-dismiss" notice-id="multi_site"></i>
-        </div>
-        <?php
+        $current_options = get_option( 'mainwp_showhide_events_notice' );
+        if ( ! is_array( $current_options ) ) {
+            $current_options = array();
+        }
+
+        if ( is_multisite() && ( ! isset( $current_options['hide_multi_site_notice'] ) || empty( $current_options['hide_multi_site_notice'] ) ) ) {
+            ?>
+            <div class="ui yellow message">
+                <div class="header"><?php esc_html_e( 'Multisite detected (limited support)', 'mainwp' ); ?></div>
+                <?php esc_html_e( 'MainWP Dashboard is not fully tested on WordPress Multisite, and some features may not work as expected. For the best experience, install MainWP on a single-site WordPress installation.', 'mainwp' ); ?>
+                <i class="close icon mainwp-notice-dismiss" notice-id="multi_site"></i>
+            </div>
+            <?php
+        }
     }
 
     /**
      * Renders MainWP Review Request.
      *
-     * @param bool $current_options false|true Weather or not to display request.
-     *
      * @uses \MainWP\Dashboard\MainWP_Extensions_Handler::get_extensions()
      */
-    public static function check_rating_notice( $current_options ) { // phpcs:ignore -- NOSONAR - complex.
+    public static function check_rating_notice() { // phpcs:ignore -- NOSONAR - complex.
+        $current_options = get_option( 'mainwp_showhide_events_notice' );
+        if ( ! is_array( $current_options ) ) {
+            $current_options = array();
+        }
+
         $display_request1 = false;
         $display_request2 = false;
 
@@ -694,112 +712,84 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             update_option( 'mainwp_showhide_events_notice', $current_options );
         }
 
-        if ( isset( $current_options['request_reviews2'] ) ) {
-            if ( 'forever' === $current_options['request_reviews2'] ) {
-                $display_request2 = false;
-            } else {
-                $days             = intval( $current_options['request_reviews2'] );
-                $start_time       = $current_options['request_reviews2_starttime'];
-                $display_request2 = ( ( time() - $start_time ) > $days * 24 * 3600 ) ? true : false;
-            }
-        } else {
-            $currentExtensions = MainWP_Extensions_Handler::get_extensions();
-            if ( is_array( $currentExtensions ) && count( $currentExtensions ) > 10 ) {
-                $display_request2 = true;
-            }
-        }
+        $currentExtensions = MainWP_Extensions_Handler::get_extensions();
+        $has_many_addons   = is_array( $currentExtensions ) && count( $currentExtensions ) > 10;
 
-        if ( $display_request1 ) {
-            static::render_rating_notice_1();
-        } elseif ( $display_request2 ) {
-            static::render_rating_notice_2();
+        if ( $display_request1 && $has_many_addons ) {
+            static::render_review_mainwp_notice( true );
+        } elseif ( $display_request1 ) {
+            static::render_review_mainwp_notice( false );
         }
+    }
+
+    /**
+     * Renders MainWP review request notice.
+     *
+     * Displays a dismissible notice encouraging users to leave a review on WordPress.org.
+     * Message content varies based on whether user has extensions installed.
+     *
+     * @since 6.0.0
+     *
+     * @param bool $addons Whether user has add-ons/extensions installed. Default false.
+     * @return void
+     */
+    public static function render_review_mainwp_notice( $addons = false ) {
+        ?>
+        <div class="ui segment">
+            <div class="ui icon message">
+                <i class="yellow star icon"></i>
+                <div class="content">
+                    <div class="header"><?php esc_html_e( 'Enjoying MainWP?', 'mainwp' ); ?></div>
+                    <div>
+                        <?php if ( $addons ) : ?>
+                        <?php esc_html_e( 'You\'ve been using MainWP for a while and it looks like you\'ve built a solid setup with add-ons.', 'mainwp' ); ?>
+                        <?php else : ?>
+                        <?php esc_html_e( 'You\'ve been using MainWP for a while.', 'mainwp' ); ?>
+                        <?php endif; ?>
+                    </div>
+                    <div><?php esc_html_e( 'If MainWP has been helpful, would you mind leaving a quick review on WordPress.org? It helps others find the plugin and supports ongoing improvements.', 'mainwp' ); ?></div>
+                </div>
+                <div class="" style="float:right">
+                    <div class="ui buttons">
+                        <a href="https://wordpress.org/support/plugin/mainwp/reviews/#new-post" class="ui green mini button" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Review on WordPress.org', 'mainwp' ); ?></a>
+                        <div class="ui floating dropdown icon green mini button" style="opacity:0.85">
+                            <i class="dropdown icon"></i>
+                            <div class="menu">
+                                <a href="https://www.g2.com/products/mainwp/reviews" target="_blank" rel="noopener noreferrer" class="item" style="text-decoration:none!important;"><?php esc_html_e( 'Review on G2', 'mainwp' ); ?></a>
+                                <a href="https://www.trustpilot.com/review/mainwp.com" target="_blank" rel="noopener noreferrer" class="item" style="text-decoration:none!important;"><?php esc_html_e( 'Review on Trustpilot', 'mainwp' ); ?></a>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="" class="ui mini basic grey button mainwp-events-notice-dismiss" notice="request_reviews1"><?php esc_html_e( 'Remind me later', 'mainwp' ); ?></a>
+                </div>
+                <i class="close icon mainwp-events-notice-dismiss" notice="request_reviews1_forever"></i>
+            </div>
+        </div>
+        <?php
     }
 
     /**
      * Renders MainWP Dashboard & Child Plugin auto update Alert.
      */
     public static function render_notice_trust_update() {
-        $is_demo = MainWP_Demo_Handle::is_demo_mode();
-        if ( ! $is_demo ) {
+        $current_options = get_option( 'mainwp_showhide_events_notice' );
+        if ( ! is_array( $current_options ) ) {
+            $current_options = array();
+        }
+
+        if ( MainWP_DB::instance()->get_websites_count() > 4 && ( ! isset( $current_options['trust_child'] ) || empty( $current_options['trust_child'] ) ) && MainWP_System::is_mainwp_pages() && ! MainWP_Plugins_Handler::check_auto_update_plugin( 'mainwp-child/mainwp-child.php' ) ) {
             ?>
-        <div class="ui blue message" style="margin-bottom: 0; border-radius: 0;">
-            <?php esc_html_e( 'Do you want MainWP Child to be updated automatically on your websites? This is highly recommended!', 'mainwp' ); ?>
-            <div class="ui hidden divider"></div>
-            <a id="mainwp_btn_autoupdate_and_trust" class="ui mini green button" href="#"><?php esc_html_e( 'Update MainWP Child Plugin Automatically', 'mainwp' ); ?></a>
-            <i class="close icon mainwp-events-notice-dismiss" notice="trust_child"></i>
-        </div>
+            <div class="ui info message">
+                <div class="header"><?php esc_html_e( 'Keep MainWP Child up to date', 'mainwp' ); ?></div>
+                <div><?php esc_html_e( 'Enable automatic updates for MainWP Child on connected sites to improve security and reduce connection issues. You can change this anytime.', 'mainwp' ); ?></div>
+                <p><a id="mainwp_btn_autoupdate_and_trust" class="ui mini green button" href="#"><?php esc_html_e( 'Update MainWP Child Plugin Automatically', 'mainwp' ); ?></a></p>
+                <i class="close icon mainwp-events-notice-dismiss" notice="trust_child"></i>
+            </div>
             <?php
         }
     }
 
-    /**
-     * Renders MainWP 30 day review request.
-     */
-    public static function render_rating_notice_1() {
-        ?>
-        <div class="ui huge icon message" style="margin-bottom: 0; border-radius: 0;">
-            <i class="star yellow icon"></i>
-            <div>
-                <p><?php esc_html_e( 'Hi, I noticed you have been using MainWP for over 30 days and that\'s awesome!', 'mainwp' ); ?></p>
-                <p><?php esc_html_e( 'Could you please do me a BIG favor and give it a 5-star rating? Reviews from users like YOU really help the MainWP community to grow.', 'mainwp' ); ?></p>
-                <p><?php esc_html_e( 'Thanks, Dennis.', 'mainwp' ); ?></p>
-                <div class="ui green floating mini labeled icon top pointing dropdown button">
-                    <i class="star icon"></i>
-                    <span class="text">Rate MainWP</span>
-                    <div class="menu">
-                    <a href="https://wordpress.org/support/plugin/mainwp/reviews/#new-post" class="item" target="_blank">
-                        <span class="text">WordPress.org</span>
-                    </a>
-                    <a href="https://www.trustpilot.com/review/mainwp.com" class="item" target="_blank">
-                        <span class="text">Trustpilot</span>
-                    </a>
-                    <a href="https://www.g2.com/products/mainwp/reviews" class="item" target="_blank">
-                        <span class="text">G2</span>
-                    </a>
-                    </div>
-                </div>
-                <a href="" class="ui mini button mainwp-events-notice-dismiss" notice="request_reviews1"><?php esc_html_e( 'Nope, maybe later', 'mainwp' ); ?></a>
-                <a href="" class="ui mini button mainwp-events-notice-dismiss" notice="request_reviews1_forever"><?php esc_html_e( 'I already did', 'mainwp' ); ?></a>
-            </div>
-            <i class="close icon mainwp-events-notice-dismiss" notice="request_reviews1_forever"></i>
-        </div>
-        <?php
-    }
 
-    /**
-     * Renders MainWP review notice after a few extensions have been installed.
-     */
-    public static function render_rating_notice_2() {
-        ?>
-        <div class="ui huge icon message" style="margin-bottom: 0; border-radius: 0;">
-            <i class="star yellow icon"></i>
-            <div>
-                <p><?php esc_html_e( 'Hi, I noticed you have a few MainWP Extensions installed and that\'s awesome!', 'mainwp' ); ?></p>
-                <p><?php esc_html_e( 'Could you please do me a BIG favor and give it a 5-star rating? Reviews from users like YOU really help the MainWP community to grow.', 'mainwp' ); ?></p>
-                <p><?php esc_html_e( 'Thanks, Dennis.', 'mainwp' ); ?></p>
-                <div class="ui green floating mini labeled icon top pointing dropdown button">
-                    <i class="star icon"></i>
-                    <span class="text">Rate MainWP</span>
-                    <div class="menu">
-                    <a href="https://wordpress.org/support/plugin/mainwp/reviews/#new-post" class="item" target="_blank">
-                        <span class="text">WordPress.org</span>
-                    </a>
-                    <a href="https://www.trustpilot.com/review/mainwp.com" class="item" target="_blank">
-                        <span class="text">Trustpilot</span>
-                    </a>
-                    <a href="https://www.g2.com/products/mainwp/reviews" class="item" target="_blank">
-                        <span class="text">G2</span>
-                    </a>
-                    </div>
-                </div>
-                <a href="" class="ui mini button mainwp-events-notice-dismiss" notice="request_reviews2"><?php esc_html_e( 'Nope, maybe later', 'mainwp' ); ?></a>
-                <a href="" class="ui mini button mainwp-events-notice-dismiss" notice="request_reviews2_forever"><?php esc_html_e( 'I already did', 'mainwp' ); ?></a>
-            </div>
-            <i class="close icon mainwp-events-notice-dismiss" notice="request_reviews2_forever"></i>
-        </div>
-        <?php
-    }
 
     /** Renders Send Mail Function may have failed error. */
     public static function wp_admin_notices() {
@@ -927,7 +917,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             }
         }
         ?>
-        <div class="ui blue message" style="margin-bottom: 0; border-radius: 0;">
+        <div class="ui blue message">
             <h4><?php esc_html_e( 'This appears to be a production site', 'mainwp' ); ?></h4>
             <?php esc_html_e( 'We HIGHLY recommend a NEW WordPress install for your MainWP Dashboard.', 'mainwp' ); ?> <?php printf( esc_html__( 'Using a new WordPress install will help to cut down on plugin conflicts and other issues that can be caused by trying to run your MainWP Dashboard off an active site. Most hosting companies provide free subdomains %s and we recommend creating one if you do not have a specific dedicated domain to run your MainWP Dashboard.', 'mainwp' ), '("<strong>demo.yourdomain.com</strong>")' ); ?>
             <br /><br />
@@ -1005,7 +995,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             if ( isset( $_GET['page'] ) && 'ManageClients' === $_GET['page'] && isset( $_GET['client_id'] ) && ! empty( $_GET['client_id'] ) ) {
                 $class_string .= ' mainwp-individual-client-overview ';
             }
-            if ( isset( $_GET['page'] ) && ( 'CostTrackerSettings' === $_GET['page'] || 'ServerInformation' === $_GET['page'] || 'ServerInformationCron' === $_GET['page'] || 'ErrorLog' === $_GET['page'] || 'ActionLogs' === $_GET['page'] || 'PluginPrivacy' === $_GET['page'] || 'Settings' === $_GET['page'] || 'SettingsAdvanced' === $_GET['page'] || 'SettingsMonitors' === $_GET['page'] || 'SettingsEmail' === $_GET['page'] || 'MainWPTools' === $_GET['page'] || 'SettingsInsights' === $_GET['page'] || 'SettingsApiBackups' === $_GET['page'] ) ) {
+            if ( isset( $_GET['page'] ) && ( 'CostTrackerSettings' === $_GET['page'] || 'ServerInformation' === $_GET['page'] || 'ServerInformationCron' === $_GET['page'] || 'ErrorLog' === $_GET['page'] || 'ActionLogs' === $_GET['page'] || 'PluginPrivacy' === $_GET['page'] || 'Settings' === $_GET['page'] || 'SettingsAdvanced' === $_GET['page'] || 'SettingsMonitors' === $_GET['page'] || 'SettingsEmail' === $_GET['page'] || 'MainWPTools' === $_GET['page'] || 'SettingsInsights' === $_GET['page'] || 'SettingsApiBackups' === $_GET['page'] || 'MonitoringSettings' === $_GET['page'] ) ) {
                 $class_string .= ' mainwp-individual-site-view ';
             }
             if ( isset( $_GET['page'] ) && 'CostTrackerAdd' !== $_GET['page'] && ( ( isset( $_GET['id'] ) && ! empty( $_GET['id'] ) ) || ( isset( $_GET['dashboard'] ) && ! empty( $_GET['dashboard'] ) ) || ( isset( $_GET['updateid'] ) && ! empty( $_GET['updateid'] ) ) || ( isset( $_GET['monitor_wpid'] ) && ! empty( $_GET['monitor_wpid'] ) ) || ( isset( $_GET['emailsettingsid'] ) && ! empty( $_GET['emailsettingsid'] ) ) || ( isset( $_GET['scanid'] ) && ! empty( $_GET['scanid'] ) ) ) ) {
@@ -1176,7 +1166,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
                 'page'     => 'Extensions-Mainwp-Ithemes-Security-Extension',
                 'slug'     => 'better-wp-security/better-wp-security.php',
                 'slug_pro' => 'ithemes-security-pro/ithemes-security-pro.php',
-                'name'     => 'iThemes Security',
+                'name'     => 'Solid Security Integration',
             ),
             array(
                 'page' => 'Extensions-Mainwp-Updraftplus-Extension',
@@ -1248,7 +1238,16 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
             return;
         }
 
-        $websites = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_websites_for_current_user() );
+        $wpsite_fields = array( 'id', 'name', 'url', 'plugins' );
+        $sync_fields   = array( 'sync_errors', 'totalsize' );
+        $websites      = MainWP_DB::instance()->query(
+            MainWP_DB::instance()->get_sql_websites_for_current_user_by_params(
+                array(
+                    'select_wp_fields'   => $wpsite_fields,
+                    'select_sync_fields' => $sync_fields,
+                )
+            )
+        );
 
         if ( empty( $websites ) ) {
             return;
@@ -1330,7 +1329,7 @@ class MainWP_System_View { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.
                         let noti_id = jQuery('#mainwp-install-check-modal').attr('noti-slug');
                         mainwp_notice_dismiss(noti_id, 1);
                         setTimeout(function () {
-                            window.location.href = location.href;
+                            mainwp_forceReload();
                         }, 1000);
                     },
                 }).modal('show');

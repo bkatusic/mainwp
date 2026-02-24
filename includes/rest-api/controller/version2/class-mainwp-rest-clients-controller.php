@@ -13,6 +13,11 @@ use MainWP\Dashboard\Module\CostTracker\Cost_Tracker_DB;
 use MainWP\Dashboard\Module\CostTracker\Cost_Tracker_Rest_Api_Handle_V1;
 use MainWP\Dashboard\MainWP_Utility;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Rest_Clients_Controller
  *
@@ -20,7 +25,7 @@ use MainWP\Dashboard\MainWP_Utility;
  */
 class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ignore -- NOSONAR - multi methods.
 
-    // phpcs:disable Generic.Metrics.CyclomaticComplexity -- complexity.
+	// phpcs:disable Generic.Metrics.CyclomaticComplexity -- complexity.
 
     /**
      * Protected static variable to hold the single instance of the class.
@@ -44,7 +49,6 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
      */
     protected $rest_base = 'clients';
 
-
     /**
      * Method instance()
      *
@@ -60,11 +64,12 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
         return static::$instance;
     }
 
-        /**
-         * Constructor.
-         */
+    /**
+     * Constructor.
+     */
     public function __construct() {
         add_filter( 'mainwp_rest_routes_clients_controller_filter_allowed_fields_by_context', array( $this, 'hook_filter_allowed_fields_by_context' ), 10, 2 );
+        add_filter( 'mainwp_rest_client_fields_object_query', array( $this, 'client_fields_custom_query_args' ), 10, 2 );
     }
 
     /**
@@ -80,12 +85,28 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
     }
 
     /**
+     * Add custom query args.
+     *
+     * @param array           $args    Query args.
+     * @param WP_REST_Request $request Request object.
+     *
+     * @return array
+     */
+    public function client_fields_custom_query_args( $args, $request ) {
+        if ( ! empty( $request['client_id'] ) ) {
+            $args['client_id'] = $request['client_id'];
+        }
+
+        return $args;
+    }
+
+    /**
      * Method register_routes()
      *
      * Creates the necessary endpoints for the api.
      * Note, for a request to be successful the URL query parameters consumer_key and consumer_secret need to be set and correct.
      */
-    public function register_routes() { // phpcs:ignore -- NOSONAR - complex.
+	public function register_routes() { // phpcs:ignore -- NOSONAR - complex.
 
         // Retrieves all clients.
         register_rest_route(
@@ -130,7 +151,7 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
         // Retrieves client by ID or Email.
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/(?P<id_email>[\d]+)',
+            '/' . $this->rest_base . '/(?P<id_email>(?!fields$)[\d]+)',
             array(
                 array(
                     'methods'             => WP_REST_Server::READABLE,
@@ -143,7 +164,7 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
         // Retrieves client by ID or Email.
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/(?P<id_email>[a-zA-Z0-9\.\_\%\+\-\@]+)',
+            '/' . $this->rest_base . '/(?P<id_email>(?!fields$)[a-zA-Z0-9\.\_\%\+\-\@]+)',
             array(
                 array(
                     'methods'             => WP_REST_Server::READABLE,
@@ -156,7 +177,7 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
         // Edit client by ID or Email.
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/(?P<id_email>[a-zA-Z0-9\_\-\.\@]+)/edit',
+            '/' . $this->rest_base . '/(?P<id_email>(?!fields$)[a-zA-Z0-9\_\-\.\@]+)/edit',
             array(
                 array(
                     'methods'             => WP_REST_Server::EDITABLE,
@@ -169,7 +190,7 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
         // Removes client by ID or Email from the Dashboard.
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/(?P<id_email>[a-zA-Z0-9\_\-\.\@]+)/remove',
+            '/' . $this->rest_base . '/(?P<id_email>(?!fields$)[a-zA-Z0-9\_\-\.\@]+)/remove',
             array(
                 array(
                     'methods'             => WP_REST_Server::DELETABLE,
@@ -182,7 +203,7 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
         // Retrieves all sites for a client by client ID or Email.
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/(?P<id_email>[a-zA-Z0-9\_\-\.\@]+)/sites',
+            '/' . $this->rest_base . '/(?P<id_email>(?!fields$)[a-zA-Z0-9\_\-\.\@]+)/sites',
             array(
                 array(
                     'methods'             => WP_REST_Server::READABLE,
@@ -195,7 +216,7 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
         // Retrieves all costs for a client by client ID or Email.
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/(?P<id_email>[a-zA-Z0-9\_\-\.\@]+)/costs',
+            '/' . $this->rest_base . '/(?P<id_email>(?!fields$)[a-zA-Z0-9\_\-\.\@]+)/costs',
             array(
                 array(
                     'methods'             => WP_REST_Server::READABLE,
@@ -208,7 +229,7 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
         // Retrieves the number of sites for a client by client ID or Email.
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/(?P<id_email>[a-zA-Z0-9\_\-\.\@]+)/sites/count',
+            '/' . $this->rest_base . '/(?P<id_email>(?!fields$)[a-zA-Z0-9\_\-\.\@]+)/sites/count',
             array(
                 array(
                     'methods'             => WP_REST_Server::READABLE,
@@ -221,7 +242,7 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
         // Suspends client by ID or Domain.
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/(?P<id_email>[a-zA-Z0-9\_\-\.\@]+)/suspend',
+            '/' . $this->rest_base . '/(?P<id_email>(?!fields$)[a-zA-Z0-9\_\-\.\@]+)/suspend',
             array(
                 array(
                     'methods'             => WP_REST_Server::EDITABLE,
@@ -234,7 +255,7 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
         // Unsuspends client by ID or Domain.
         register_rest_route(
             $this->namespace,
-            '/' . $this->rest_base . '/(?P<id_email>[a-zA-Z0-9\_\-\.\@]+)/unsuspend',
+            '/' . $this->rest_base . '/(?P<id_email>(?!fields$)[a-zA-Z0-9\_\-\.\@]+)/unsuspend',
             array(
                 array(
                     'methods'             => WP_REST_Server::EDITABLE,
@@ -256,6 +277,57 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
                 'schema' => array( $this, 'get_public_batch_schema' ),
             )
         );
+
+        // Client Fields.
+        register_rest_route(
+            $this->namespace,
+            '/' . $this->rest_base . '/fields',
+            array(
+                array(
+                    'methods'             => WP_REST_Server::READABLE,
+                    'callback'            => array( $this, 'client_fields' ),
+                    'permission_callback' => array( $this, 'get_rest_permissions_check' ),
+                    'args'                => $this->get_client_fields_allowed_fields(),
+                ),
+            )
+        );
+
+        register_rest_route(
+            $this->namespace,
+            '/' . $this->rest_base . '/fields/add',
+            array(
+                array(
+                    'methods'             => WP_REST_Server::CREATABLE,
+                    'callback'            => array( $this, 'create_client_fields' ),
+                    'permission_callback' => array( $this, 'get_rest_permissions_check' ),
+                    'args'                => $this->create_client_fields_allowed_fields(),
+                ),
+            )
+        );
+
+        register_rest_route(
+            $this->namespace,
+            '/' . $this->rest_base . '/fields/(?P<id_name>[^/]+)/edit',
+            array(
+                array(
+                    'methods'             => 'PUT, PATCH',
+                    'callback'            => array( $this, 'edit_client_fields' ),
+                    'permission_callback' => array( $this, 'get_rest_permissions_check' ),
+                    'args'                => $this->edit_client_fields_allowed_fields(),
+                ),
+            )
+        );
+        register_rest_route(
+            $this->namespace,
+            '/' . $this->rest_base . '/fields/(?P<id_name>[^/]+)/delete',
+            array(
+                array(
+                    'methods'             => WP_REST_Server::DELETABLE,
+                    'callback'            => array( $this, 'delete_client_fields' ),
+                    'permission_callback' => array( $this, 'get_rest_permissions_check' ),
+                ),
+            )
+        );
     }
 
     /**
@@ -263,10 +335,11 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
      *
      * @param WP_REST_Request $request Full details about the request.
      *
-     * @return WP_Error|Object Item.
+     * @return WP_Error|bool|Object Item.
      */
     public function get_request_item( $request ) {
         $route = $request->get_route();
+
         if ( MainWP_Utility::string_ends_by( $route, '/batch' ) ) {
             $by    = 'id';
             $value = intval( $request['id'] );
@@ -305,7 +378,7 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
         if ( ! empty( $data['created'] ) ) {
             $data['created'] = mainwp_rest_prepare_date_response( $data['created'] );
         }
-        if ( isset( $data['client_id'] ) ) {
+        if ( isset( $data['client_id'] ) && ! isset( $data['field_id'] ) ) {
             $data['id'] = $data['client_id'];
             unset( $data['client_id'] );
         }
@@ -342,7 +415,7 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
      * @param WP_REST_Request $request Full details about the request.
      * @return WP_Error|WP_REST_Response
      */
-    public function get_items( $request ) { //phpcs:ignore -- NOSONAR - complex.
+	public function get_items( $request ) { //phpcs:ignore -- NOSONAR - complex.
 
         $args = $this->prepare_objects_query( $request );
 
@@ -430,8 +503,8 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
                 $item['selected_sites'] = array_unique( wp_parse_list( $item['selected_sites'] ) );
             }
             $result = MainWP_Client_Handler::rest_api_add_client( $item );
-            if ( is_array( $result ) && isset( $result['clientid'] ) ) {
-                $client               = MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $result['clientid'], OBJECT, array( 'with_selected_sites' => true ) );
+            if ( is_array( $result ) && isset( $result['client_id'] ) ) {
+                $client               = MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $result['client_id'], OBJECT, array( 'with_selected_sites' => true ) );
                 $resp_data['success'] = 1;
                 $resp_data['message'] = esc_html__( 'Client created Successfully.', 'mainwp' );
                 $resp_data['data']    = $this->filter_response_data_by_allowed_fields( $client, 'simple_view', array( 'selected_sites' ) );
@@ -472,8 +545,8 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
                 $data['selected_sites'] = array_unique( wp_parse_list( $data['selected_sites'] ) );
             }
             $result = MainWP_Client_Handler::rest_api_add_client( $data, true );
-            if ( is_array( $result ) && isset( $result['clientid'] ) ) {
-                $client               = MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $result['clientid'], OBJECT, array( 'with_selected_sites' => true ) );
+            if ( is_array( $result ) && isset( $result['client_id'] ) ) {
+                $client               = MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $result['client_id'], OBJECT, array( 'with_selected_sites' => true ) );
                 $resp_data['success'] = 1;
                 $resp_data['message'] = esc_html__( 'Client updated Successfully.', 'mainwp' );
                 $resp_data['data']    = $this->filter_response_data_by_allowed_fields( $client, 'simple_view', array( 'selected_sites' ) );
@@ -509,8 +582,6 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
         );
         return rest_ensure_response( $resp_data );
     }
-
-
 
     /**
      * Get sites of client.
@@ -601,7 +672,6 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
         return rest_ensure_response( $resp_data );
     }
 
-
     /**
      * Suspend client.
      *
@@ -662,6 +732,334 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
         return rest_ensure_response( $resp_data );
     }
 
+    /**
+     * Get client fields.
+     *
+     * @param WP_REST_Request $request Full details about the request.
+     *
+     * @uses MainWP_DB_Client::instance()->get_client_fields_by_params()
+     *
+     * @return WP_Error|WP_REST_Response
+     */
+	public function client_fields( $request ) {  // phpcs:ignore -- NOSONAR - complex.
+        // Prepare query args.
+        $args     = $this->prepare_objects_query( $request, 'client_fields' );
+        $page     = ! empty( $args['paged'] ) ? (int) $args['paged'] : 1;
+        $per_page = ! empty( $args['items_per_page'] ) ? (int) $args['items_per_page'] : 20;
+        $params   = array(
+            'exclude' => ! empty( $args['exclude'] ) ? $args['exclude'] : '',
+            'include' => ! empty( $args['include'] ) ? $args['include'] : '',
+            'search'  => ! empty( $args['s'] ) ? $args['s'] : '',
+        );
+
+        // Get client fields.
+        $fields = MainWP_DB_Client::instance()->get_client_fields_by_params( $params );
+        if ( empty( $fields ) ) {
+            return rest_ensure_response(
+                array(
+                    'success' => 0,
+                    'message' => __( 'No client fields found.', 'mainwp' ),
+                )
+            );
+        }
+
+        $data = array();
+        foreach ( $fields as $field ) {
+            $record = array(
+                'field_id'    => (int) $field->field_id ? $field->field_id : 0,
+                'name'        => $field->field_name ? $field->field_name : '',
+                'description' => $field->field_desc ? $field->field_desc : '',
+            );
+            $data[] = $this->filter_response_data_by_allowed_fields( $record, 'field_view' );
+        }
+
+        // Page navigation.
+        $total = count( $data );
+        $pages = (int) max( 1, ceil( $total / max( 1, $per_page ) ) );
+        if ( $page > $pages ) {
+            $page = $pages;
+        }
+
+        $offset = ( $page - 1 ) * $per_page;
+        $data   = array_slice( $data, $offset, $per_page );
+
+        return rest_ensure_response(
+            array(
+                'success' => 1,
+                'total'   => $total,
+                'pages'   => $pages,
+                'data'    => $data,
+            )
+        );
+    }
+
+    /**
+     * Create client fields.
+     *
+     * @param WP_REST_Request $request Full details about the request.
+     *
+     * @uses MainWP_DB_Client::instance()->add_client_field()
+     * @uses MainWP_DB_Client::instance()->get_wp_client_by()
+     *
+     * @return WP_Error|WP_REST_Response
+     */
+    public function create_client_fields( $request ) {
+        // Get request body.
+        $body = $request->get_body_params();
+        if ( empty( $body ) ) {
+            return new WP_Error(
+                'empty_body',
+                __( 'Request body is empty.', 'mainwp' ),
+            );
+        }
+
+        // Validate request body.
+        if ( empty( $body['name'] ) || empty( $body['description'] ) ) {
+            return new WP_Error(
+                'empty_name',
+                __( 'Name and description are required.', 'mainwp' ),
+            );
+        }
+
+        $client_id = 0;
+        $name      = sanitize_text_field( wp_unslash( $body['name'] ) );
+        $desc      = sanitize_text_field( wp_unslash( $body['description'] ) );
+
+        $field = MainWP_DB_Client::instance()->add_client_field(
+            array(
+                'field_name' => $name,
+                'field_desc' => $desc,
+                'client_id'  => $client_id,
+            )
+        );
+
+        if ( ! $field ) {
+            return new WP_Error(
+                'create_field_failed',
+                __( 'Create client field failed.', 'mainwp' ),
+            );
+        }
+
+        // Prepare response data.
+        $data = array(
+            'field_id'    => (int) $field->field_id ? $field->field_id : 0,
+            'name'        => $field->field_name ? $field->field_name : '',
+            'description' => $field->field_desc ? $field->field_desc : '',
+        );
+
+        return rest_ensure_response(
+            array(
+                'success' => 1,
+                'message' => __( 'Client field created successfully.', 'mainwp' ),
+                'data'    => $this->filter_response_data_by_allowed_fields( $data, 'field_edit' ),
+            )
+        );
+    }
+
+    /**
+     * Edit client fields.
+     *
+     * @param WP_REST_Request $request Full details about the request.
+     *
+     * @users MainWP_DB_Client::instance()->update_client_field()
+     *
+     * @return WP_Error|WP_REST_Response
+     */
+    public function edit_client_fields( $request ) {
+        // Get client field.
+        $field = $this->get_request_client_fields_item( $request );
+        if ( empty( $field ) ) {
+            return new WP_Error(
+                'invalid_field_id',
+                __( 'Invalid client field.', 'mainwp' ),
+            );
+        }
+
+        // Get request body.
+        $body = $request->get_json_params();
+        if ( empty( $body ) ) {
+            return new WP_Error(
+                'empty_body',
+                __( 'Request body is empty.', 'mainwp' ),
+            );
+        }
+
+        $name = ! empty( $body['name'] ) ? sanitize_text_field( wp_unslash( $body['name'] ) ) : $field->field_name;
+        $desc = ! empty( $body['description'] ) ? sanitize_text_field( wp_unslash( $body['description'] ) ) : $field->field_desc;
+
+        $updated = MainWP_DB_Client::instance()->update_client_field(
+            $field->field_id,
+            array(
+                'field_name' => $name,
+                'field_desc' => $desc,
+            )
+        );
+        if ( ! $updated ) {
+            return new WP_Error(
+                'update_field_failed',
+                __( 'Field already exists, try different field name.', 'mainwp' ),
+            );
+        }
+
+        return rest_ensure_response(
+            array(
+                'success' => 1,
+                'message' => __( 'Client field updated successfully.', 'mainwp' ),
+            )
+        );
+    }
+
+    /**
+     * Delete client fields.
+     *
+     * @param WP_REST_Request $request Full details about the request.
+     *
+     * @users MainWP_DB_Client::instance()->delete_client_field_by()
+     *
+     * @return WP_Error|WP_REST_Response
+     */
+    public function delete_client_fields( $request ) {
+        // Get client field.
+        $field = $this->get_request_client_fields_item( $request );
+        if ( empty( $field ) ) {
+            return new WP_Error(
+                'invalid_field_id',
+                __( 'Invalid client field.', 'mainwp' ),
+            );
+        }
+
+        // Delete client field.
+        $field_id  = ! empty( $field->field_id ) ? $field->field_id : 0;
+        $client_id = ! empty( $field->client_id ) ? $field->client_id : 0;
+        $deleted   = MainWP_DB_Client::instance()->delete_client_field_by( 'field_id', $field_id, $client_id );
+
+        if ( ! $deleted ) {
+            return new WP_Error(
+                'delete_field_failed',
+                __( 'Delete client field failed.', 'mainwp' ),
+            );
+        }
+
+        return rest_ensure_response(
+            array(
+                'success' => 1,
+                'message' => esc_html__( 'Client field deleted successfully.', 'mainwp' ),
+            )
+        );
+    }
+
+    /**
+     * Edit client fields allowed fields.
+     *
+     * @return array
+     */
+    public function edit_client_fields_allowed_fields() {
+        return array(
+            'name'        => array(
+                'required'          => false,
+                'type'              => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'description'       => __( 'Field name.', 'mainwp' ),
+            ),
+            'description' => array(
+                'required'          => false,
+                'type'              => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'description'       => __( 'Field description.', 'mainwp' ),
+            ),
+        );
+    }
+
+    /**
+     * Create client fields allowed fields.
+     *
+     * @return WP_Error|WP_REST_Response
+     */
+    public function create_client_fields_allowed_fields() {
+        return array(
+            'name'        => array(
+                'required'          => true,
+                'type'              => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'description'       => __( 'Field name.', 'mainwp' ),
+            ),
+            'description' => array(
+                'required'          => true,
+                'type'              => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'description'       => __( 'Field description.', 'mainwp' ),
+            ),
+        );
+    }
+
+    /**
+     * Get client fields allowed fields.
+     *
+     * @return array
+     */
+    public function get_client_fields_allowed_fields() {
+        return array(
+            'search'   => array(
+                'required'          => false,
+                'type'              => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'description'       => __( 'Search client field name.', 'mainwp' ),
+            ),
+            'include'  => array(
+                'required'          => false,
+                'type'              => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'description'       => __( 'Include client field IDs.', 'mainwp' ),
+            ),
+            'exclude'  => array(
+                'required'          => false,
+                'type'              => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'description'       => __( 'Exclude client field IDs.', 'mainwp' ),
+            ),
+            'page'     => array(
+                'required'          => false,
+                'type'              => 'integer',
+                'minimum'           => 1,
+                'sanitize_callback' => 'absint',
+                'description'       => __( 'Page number.', 'mainwp' ),
+            ),
+            'pre_page' => array(
+                'required'          => false,
+                'type'              => 'integer',
+                'sanitize_callback' => 'absint',
+                'minimum'           => 1,
+                'maximum'           => 200,
+                'description'       => __( 'Number of client fields per page.', 'mainwp' ),
+            ),
+        );
+    }
+
+    /**
+     * Get client field request id or name
+     *
+     * @param WP_REST_Request $request Full details about the request.
+     *
+     * @uses MainWP_DB_Client::instance()->get_client_fields_by()
+     *
+     * @return Object|bool Item.
+     */
+    private function get_request_client_fields_item( $request ) {
+        $raw         = $request->get_param( 'id_name' );
+        $decoded     = rawurldecode( (string) $raw );
+        $field_value = trim( sanitize_text_field( wp_unslash( $decoded ) ) );
+
+        if ( empty( $field_value ) ) {
+            return false;
+        }
+
+        // Get client field by id.
+        if ( ctype_digit( $field_value ) ) {
+            return MainWP_DB_Client::instance()->get_client_fields_by( 'field_id', (int) $field_value );
+        }
+
+        return MainWP_DB_Client::instance()->get_client_fields_by( 'field_name', $field_value );
+    }
 
     /**
      * Get the Tags schema, conforming to JSON Schema.
@@ -688,7 +1086,7 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
                 'name'               => array(
                     'type'        => 'string',
                     'description' => __( 'Client name.', 'mainwp' ),
-                    'context'     => array( 'view', 'edit', 'simple_view' ),
+                    'context'     => array( 'view', 'edit', 'simple_view', 'field_view', 'field_edit' ),
                 ),
                 'address_1'          => array(
                     'type'        => 'string',
@@ -769,6 +1167,16 @@ class MainWP_Rest_Clients_Controller extends MainWP_REST_Controller { //phpcs:ig
                     'type'        => 'integer',
                     'description' => __( 'Primary contact id.', 'mainwp' ),
                     'context'     => array( 'view', 'edit' ),
+                ),
+                'field_id'           => array(
+                    'type'        => 'integer',
+                    'description' => __( 'Field ID.', 'mainwp' ),
+                    'context'     => array( 'field_view', 'field_edit' ),
+                ),
+                'description'        => array(
+                    'type'        => 'string',
+                    'description' => __( 'Field description.', 'mainwp' ),
+                    'context'     => array( 'field_view', 'field_edit' ),
                 ),
             ),
         );

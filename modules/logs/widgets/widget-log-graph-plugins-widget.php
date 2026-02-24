@@ -12,6 +12,12 @@ namespace MainWP\Dashboard\Module\Log;
 
 use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_Utility;
+use MainWP\Dashboard\MainWP_UI;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 /**
  * Class Log_Graph_Plugins_Widget
@@ -61,6 +67,7 @@ class Log_Graph_Plugins_Widget {
      * Render client overview Info.
      */
     public function render_widget() {
+        $sites_count = MainWP_DB::instance()->get_websites_count();
         ?>
         <div class="mainwp-widget-header">
             <h2 class="ui header handle-drag">
@@ -71,7 +78,7 @@ class Log_Graph_Plugins_Widget {
             </h2>
         </div>
 
-        <div class="mainwp-widget-insights-card">
+        <div class="mainwp-widget-insights-card mainwp-scrolly-overflow">
                 <?php
                 /**
                  * Action: mainwp_logs_widget_top
@@ -84,8 +91,12 @@ class Log_Graph_Plugins_Widget {
                 ?>
                 <div id="mainwp-message-zone" style="display:none;" class="ui message"></div>
                 <?php
-                wp_nonce_field( 'mainwp-admin-nonce' );
-                $this->render_widget_content();
+                MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' );
+                if ( 0 < intval( $sites_count ) ) {
+                    $this->render_widget_content();
+                } else {
+                    MainWP_UI::render_empty_element_placeholder( __( 'No Plugin Data', 'mainwp' ), '<a href="admin.php?page=managesites&do=new">' . __( 'Start connecting your sites now', 'mainwp' ) . '</a>', '<em data-emoji=":bar_chart:" class="medium"></em>' );
+                }
                 ?>
                 <?php
                 /**
@@ -111,8 +122,9 @@ class Log_Graph_Plugins_Widget {
      * Method render_widget_content()
      */
     public function render_widget_content() {
-        $wp_plugins = array();
-        $websites   = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_websites_for_current_user() );
+        $wp_plugins    = array();
+        $wpsite_fields = array( 'id', 'name', 'plugins' );
+        $websites      = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_websites_for_current_user_by_params( array( 'select_wp_fields' => $wpsite_fields ) ) );
         while ( $websites && ( $website  = MainWP_DB::fetch_object( $websites ) ) ) {
             $plugins = ! empty( $website->plugins ) ? json_decode( $website->plugins, 1 ) : array();
             if ( ! is_array( $plugins ) ) {
@@ -139,7 +151,8 @@ class Log_Graph_Plugins_Widget {
                 let options = {
                     chart: {
                         type: 'bar',
-                        stacked: true
+                        stacked: true,
+                        height: '100%',
                     },
                     plotOptions: {
                         bar: {

@@ -14,6 +14,11 @@ use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_DB_Client;
 use MainWP\Dashboard\MainWP_Exception;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Cost_Tracker_DB
  */
@@ -605,6 +610,21 @@ PRIMARY KEY  (`id`)  ';
             $wpdb->query( $wpdb->prepare( "DELETE FROM {$lookup_table} WHERE item_id=%d AND item_name = \"cost\"", $value ) ); //phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- delete operation; caching is not applicable for write operations.
             $this->invalidate_cost_tracker_caches( 'id' === $by ? $value : null );
         }
+
+        $snapshot_info = Cost_Tracker_Admin::get_costs_snapshot_info();
+
+        /**
+         * Action mainwp_cost_tracker_deleted.
+         *
+         * @param string $by Delete by.
+         * @param mixed $value Value.
+         * @param bool $deleted Deleted.
+         * @param array $snapshot_info costs snapshot info.
+         *
+         * @since 6.0
+         *
+         */
+        do_action( 'mainwp_cost_tracker_deleted', $by, $value, $deleted, $snapshot_info );
 
         return $deleted;
     }

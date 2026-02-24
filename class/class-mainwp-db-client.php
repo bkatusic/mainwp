@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_DB_Client
  *
@@ -170,13 +175,13 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
 
         if ( ! $convert_pro_reports_dt && ! $convert_client_reports_dt ) {
             $table_token = esc_sql( $this->table_name( 'pro_reports_token' ) );
-            $rslt = $this->query( 'SHOW TABLES LIKE ' . $this->wpdb->prepare( '%s', $table_token ) );
+            $rslt        = $this->query( 'SHOW TABLES LIKE ' . $this->wpdb->prepare( '%s', $table_token ) );
             if ( static::num_rows( $rslt ) ) {
                 $convert_pro_reports_dt = true;
             }
 
             $table_report_token = esc_sql( $this->table_name( 'client_report_token' ) );
-            $rslt = $this->query( 'SHOW TABLES LIKE ' . $this->wpdb->prepare( '%s', $table_report_token ) );
+            $rslt               = $this->query( 'SHOW TABLES LIKE ' . $this->wpdb->prepare( '%s', $table_report_token ) );
             if ( static::num_rows( $rslt ) ) {
                 $convert_client_reports_dt = true;
             }
@@ -551,7 +556,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
      */
     public function get_wp_client_contact_by( $by = 'contact_id', $value = null, $obj = OBJECT, $params = array() ) { // phpcs:ignore -- NOSONAR - complex.
 
-        $sql = '';
+        $sql            = '';
         $table_contacts = esc_sql( $this->table_name( 'wp_clients_contacts' ) );
 
         if ( 'client_id' === $by && ! empty( $value ) ) {
@@ -596,7 +601,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
      * @return bool Results.
      */
     public function delete_client_contact( $client_id, $contact_id ) {
-        $current = $this->get_wp_client_contact_by( 'contact_id', $contact_id );
+        $current        = $this->get_wp_client_contact_by( 'contact_id', $contact_id );
         $table_contacts = esc_sql( $this->table_name( 'wp_clients_contacts' ) );
         if ( $current && $this->wpdb->query( $this->wpdb->prepare( 'DELETE FROM ' . $table_contacts . ' WHERE contact_client_id=%d AND contact_id = %d', $client_id, $contact_id ) ) ) {
             if ( ! empty( $current->contact_image ) ) {
@@ -644,7 +649,13 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
      * @param string $by by.
      * @param mixed  $value by value.
      * @param mixed  $obj Format data.
-     * @param bool   $params Others params.
+     * @param array  $params Others params. Supports:
+     *               - 'with_selected_sites' (bool) Include selected sites.
+     *               - 'with_tags' (bool) Include tags info.
+     *               - 'by_tags' (array) Filter by tag IDs.
+     *               - 'offset' (int) SQL offset for pagination.
+     *               - 'limit' (int) SQL limit for pagination.
+     *               - 'count_only' (bool) Return only count instead of results.
      *
      * @return mixed $result results.
      */
@@ -653,6 +664,9 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
         $with_selected_sites = isset( $params['with_selected_sites'] ) && $params['with_selected_sites'] ? true : false;
         $with_tags           = isset( $params['with_tags'] ) && $params['with_tags'] ? true : false;
         $group_ids           = isset( $params['by_tags'] ) ? $params['by_tags'] : '';
+        $count_only          = isset( $params['count_only'] ) && $params['count_only'] ? true : false;
+        $offset              = isset( $params['offset'] ) ? intval( $params['offset'] ) : null;
+        $limit               = isset( $params['limit'] ) ? intval( $params['limit'] ) : null;
 
         // valid group ids.
         if ( is_array( $group_ids ) ) {
@@ -674,11 +688,11 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
         $where_clients = '';
 
         $sql = '';
-        
-        $table_wp = esc_sql( $this->table_name( 'wp' ) );
-        $table_wp_group = esc_sql( $this->table_name( 'wp_group' ) );
-        $table_group = esc_sql( $this->table_name( 'group' ) );
-        $table_clients = esc_sql( $this->table_name( 'wp_clients' ) );
+
+        $table_wp               = esc_sql( $this->table_name( 'wp' ) );
+        $table_wp_group         = esc_sql( $this->table_name( 'wp_group' ) );
+        $table_group            = esc_sql( $this->table_name( 'group' ) );
+        $table_clients          = esc_sql( $this->table_name( 'wp_clients' ) );
         $table_clients_contacts = esc_sql( $this->table_name( 'wp_clients_contacts' ) );
 
         if ( $with_selected_sites ) {
@@ -716,11 +730,11 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             $result_tags = $this->wpdb->get_results( $sql_tags ); // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- $sql_tags built with escaped table names and validated numeric IDs, safe to use directly.
 
             if ( empty( $result_tags ) ) {
-                return array();
+                return $count_only ? 0 : array();
             } else {
                 $cli_ids = array();
                 foreach ( $result_tags as $item ) {
-                    $cli_ids[] = $item->client_id;
+                    $cli_ids[] = (int) $item->client_id;
                 }
                 $cli_ids       = array_values( array_unique( $cli_ids ) );
                 $where_clients = ' AND wc.client_id IN (' . implode( ',', $cli_ids ) . ') ';
@@ -742,11 +756,24 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
         $join_contact = ' LEFT JOIN ' . $table_clients_contacts . ' cc ON wc.primary_contact_id = cc.contact_id ';
 
         if ( 'all' === $by ) {
+            // Handle count-only mode for efficient pagination total.
+            if ( $count_only ) {
+                $sql  = ' SELECT COUNT(*) ';
+                $sql .= ' FROM ' . esc_sql( $this->table_name( 'wp_clients' ) ) . ' wc ';
+                $sql .= ' WHERE 1 ' . $where_clients;
+                return (int) $this->wpdb->get_var( $sql ); // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- $sql uses wpdb->prepare() or escaped table name concatenation, safe to use directly.
+            }
+
             $sql  = ' SELECT wc.*, cc.* ' . $select_sites . $select_tags;
-            $sql .= ' FROM ' . $table_clients . ' wc ';
+            $sql .= ' FROM ' . esc_sql( $this->table_name( 'wp_clients' ) ) . ' wc ';
             $sql .= $join_contact;
             $sql .= ' WHERE 1 ' . $where_clients;
             $sql .= ' ORDER BY wc.name';
+
+            // Add pagination if offset and limit are provided.
+            if ( null !== $offset && null !== $limit && $limit > 0 ) {
+                $sql .= $this->wpdb->prepare( ' LIMIT %d, %d', $offset, $limit );
+            }
         }
 
         if ( ! empty( $sql ) ) {
@@ -798,11 +825,11 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
 
         $where       = '';
         $select_tags = '';
-        
-        $table_wp = esc_sql( $this->table_name( 'wp' ) );
+
+        $table_wp       = esc_sql( $this->table_name( 'wp' ) );
         $table_wp_group = esc_sql( $this->table_name( 'wp_group' ) );
-        $table_group = esc_sql( $this->table_name( 'group' ) );
-        $table_clients = esc_sql( $this->table_name( 'wp_clients' ) );
+        $table_group    = esc_sql( $this->table_name( 'group' ) );
+        $table_clients  = esc_sql( $this->table_name( 'wp_clients' ) );
 
         if ( $params && is_array( $params ) ) {
             $client = isset( $params['client'] ) ? sanitize_text_field( wp_unslash( $params['client'] ) ) : '';
@@ -820,7 +847,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
 
                 $where .= ' AND wc.client_id IN (' . $clientWhere . ') ';
             }
-            $custom_field = $params['custom_fields'] ? true : false;
+            $custom_field = isset( $params['custom_fields'] ) && $params['custom_fields'] ? true : false;
 
             $with_tags     = isset( $params['with_tags'] ) && $params['with_tags'] ? true : false;
             $with_contacts = isset( $params['with_contacts'] ) && $params['with_contacts'] ? true : false;
@@ -834,7 +861,15 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             $per_page = isset( $params['per_page'] ) ? intval( $params['per_page'] ) : false;
 
             if ( ! empty( $s ) ) {
-                $where .= ' AND ( wc.client_id LIKE "%' . $this->escape( $s ) . '%" OR wc.name LIKE "%' . $this->escape( $s ) . '%" OR wc.client_email LIKE "%' . $this->escape( $s ) . '%" ) ';
+                $s = trim( $s );
+                // Use esc_like() to escape LIKE wildcards (%, _) then prepare() for SQL safety.
+                $like   = '%' . $this->wpdb->esc_like( $s ) . '%';
+                $where .= $this->wpdb->prepare(
+                    ' AND ( wc.client_id LIKE %s OR wc.name LIKE %s OR wc.client_email LIKE %s ) ',
+                    $like,
+                    $like,
+                    $like
+                );
             }
 
             if ( ! empty( $exclude ) ) {
@@ -1005,12 +1040,12 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
      */
     public function delete_client( $client_id ) {
 
-        $current = $this->get_wp_client_by( 'client_id', $client_id );
-        $table_clients = esc_sql( $this->table_name( 'wp_clients' ) );
-        $table_wp = esc_sql( $this->table_name( 'wp' ) );
-        $table_fields = esc_sql( $this->table_name( 'wp_clients_fields' ) );
+        $current            = $this->get_wp_client_by( 'client_id', $client_id );
+        $table_clients      = esc_sql( $this->table_name( 'wp_clients' ) );
+        $table_wp           = esc_sql( $this->table_name( 'wp' ) );
+        $table_fields       = esc_sql( $this->table_name( 'wp_clients_fields' ) );
         $table_field_values = esc_sql( $this->table_name( 'wp_clients_field_values' ) );
-        
+
         if ( $current && $this->wpdb->query( $this->wpdb->prepare( 'DELETE FROM ' . $table_clients . ' WHERE client_id=%d ', $client_id ) ) ) {
             $this->wpdb->query( $this->wpdb->prepare( 'UPDATE ' . $table_wp . ' SET client_id=0 WHERE client_id=%d ', $client_id ) );
             $fields = $this->get_client_fields_by( 'client_id', $client_id );
@@ -1030,6 +1065,8 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
 
             $this->delete_client_contacts_by_client_id( $client_id );
 
+            $snapshot_info = $this->get_clients_snapshot_info();
+
             /**
              * Delete client
              *
@@ -1038,20 +1075,54 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
              * @param object $current client deleted.
              *
              * @since 4.5.1.1
+             *
+             * @since 6.0 Added $snapshot_info parameter.
              */
-            do_action( 'mainwp_client_deleted', $current );
+            do_action( 'mainwp_client_deleted', $current, $snapshot_info );
 
             return true;
         }
         return false;
     }
 
+
+    /**
+     * Get clients snapshot info.
+     *
+     * @return array
+     */
+    public function get_clients_snapshot_info() {
+
+        $total_clients        = $this->get_wp_clients( array( 'count_only' => true ) );
+        $total_active_clients = $this->get_wp_clients(
+            array(
+                'status'     => '0',
+                'count_only' => true,
+            )
+        );
+        $total_suspended      = $this->get_wp_clients(
+            array(
+                'status'     => '1',
+                'count_only' => true,
+            )
+        );
+        $count_sites          = MainWP_DB::instance()->get_websites_count();
+        $avg_sites_per_client = $total_clients && $count_sites ? round( $count_sites / $total_clients, 2 ) : 0;
+
+        return array(
+            'clients_active_count'   => $total_active_clients,
+            'clients_inactive_count' => $total_suspended,
+            'avg_sites_per_client'   => $avg_sites_per_client,
+        );
+    }
+
+
     /**
      * Method get_websites_by_client_ids.
      *
      * Get websites by client.
      *
-     * @param int   $client_ids Client ids.
+     * @param array $client_ids Client ids.
      * @param array $params other params.
      *
      * @return mixed $result Results.
@@ -1170,7 +1241,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
     public function update_client_field_value( $field_id, $value, $client_id ) {
         if ( ! empty( $field_id ) ) {
             $table_field_values = esc_sql( $this->table_name( 'wp_clients_field_values' ) );
-            $row = $this->wpdb->get_row( $this->wpdb->prepare( 'SELECT * FROM ' . $table_field_values . ' WHERE field_id = %d AND value_client_id=%d ', $field_id, $client_id ) );
+            $row                = $this->wpdb->get_row( $this->wpdb->prepare( 'SELECT * FROM ' . $table_field_values . ' WHERE field_id = %d AND value_client_id=%d ', $field_id, $client_id ) );
             if ( $row ) {
                 if ( $row->field_value != $value ) { //phpcs:ignore -- to valid.
                     $this->wpdb->update( $table_field_values, array( 'field_value' => $value ), array( 'value_id' => $row->value_id ) );
@@ -1207,7 +1278,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             return null;
         }
 
-        $sql = '';
+        $sql          = '';
         $table_fields = esc_sql( $this->table_name( 'wp_clients_fields' ) );
 
         if ( 'client_id' === $by ) {
@@ -1232,6 +1303,107 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
         }
 
         return $field;
+    }
+
+    /**
+     * Method get_client_fields_by_params.
+     *
+     * Get client fields by params.
+     *
+     * @param array  $params params.
+     * @param string $obj OBJECT|ARRAY_A.
+     *
+     * @return mixed|null $fields fields data.
+     */
+    public function get_client_fields_by_params( $params = array(), $obj = OBJECT ) {  // phpcs:ignore -- NOSONAR - complex.
+
+        if ( ! is_array( $params ) ) {
+            $params = array();
+        }
+
+        // Initialize custom_where if it does not exist.
+        $where   = '';
+        $limit   = '';
+        $orderby = 'clients_fields.field_id DESC';
+
+        // Parse exclude and include lists.
+        $parse_lists = static function ( $lists ) {
+            // Convert string to array.
+            if ( is_string( $lists ) ) {
+                $lists = array_map( 'trim', explode( ',', $lists ) );
+            }
+
+            // Out default.
+            $out = array(
+                'ids'   => array(),
+                'names' => array(),
+            );
+
+            foreach ( (array) $lists as $v ) {
+                if ( '' === $v || null === $v ) {
+                    continue;
+                }
+
+                if ( is_int( $v ) || ( is_string( $v ) && ctype_digit( $v ) ) ) {
+                    $out['ids'][] = (int) $v;
+                } else {
+                    $out['names'][] = (string) $v;
+                }
+            }
+            return $out;
+        };
+
+        // Handle exclude.
+        if ( isset( $params['exclude'] ) && ! empty( $params['exclude'] ) ) {
+            ['ids' => $ids, 'names' => $names] = $parse_lists( $params['exclude'] );
+            $sub_conditions                    = array();
+            $sub_conditions[]                  = empty( $ids ) ? '' : $this->wpdb->prepare( 'clients_fields.field_id NOT IN (' . implode( ',', array_fill( 0, count( $ids ), '%d' ) ) . ')', ...$ids );
+            $sub_conditions[]                  = empty( $names ) ? '' : $this->wpdb->prepare( 'clients_fields.field_name NOT IN (' . implode( ',', array_fill( 0, count( $names ), '%s' ) ) . ')', ...$names );
+            $sub_conditions                    = array_filter( $sub_conditions );
+            $where                            .= empty( $sub_conditions ) ? '' : ' AND (' . implode( ' AND ', $sub_conditions ) . ')';
+        }
+
+        // Handle include.
+        if ( isset( $params['include'] ) && ! empty( $params['include'] ) ) {
+            ['ids' => $ids, 'names' => $names] = $parse_lists( $params['include'] );
+            $sub_conditions                    = array();
+            $sub_conditions[]                  = empty( $ids ) ? '' : $this->wpdb->prepare( 'clients_fields.field_id IN (' . implode( ',', array_fill( 0, count( $ids ), '%d' ) ) . ')', ...$ids );
+            $sub_conditions[]                  = empty( $names ) ? '' : $this->wpdb->prepare( 'clients_fields.field_name IN (' . implode( ',', array_fill( 0, count( $names ), '%s' ) ) . ')', ...$names );
+            $sub_conditions                    = array_filter( $sub_conditions );
+            $where                            .= empty( $sub_conditions ) ? '' : ' AND (' . implode( ' AND ', $sub_conditions ) . ')';
+        }
+
+        // Handle search.
+        if ( isset( $params['search'] ) && ! empty( $params['search'] ) ) {
+            $search_term = $this->escape( htmlspecialchars( $params['search'] ) );
+            $where      .= ' AND clients_fields.field_name LIKE "%' . $search_term . '%"';
+        }
+
+        // Handle client id.
+        if ( isset( $params['client_id'] ) && ! empty( $params['client_id'] ) ) {
+            $client_ids = wp_parse_id_list( $params['client_id'] );
+            $where     .= empty( $client_ids ) ? '' : ' AND clients_fields.client_id IN (' . implode( ',', $client_ids ) . ')';
+        }
+
+        // Handel page and per_page.
+        $page     = '';
+        $per_page = '';
+        if ( isset( $params['page'] ) && ! empty( $params['page'] ) ) {
+            $page = (int) $params['page'];
+        }
+
+        if ( isset( $params['per_page'] ) && ! empty( $params['per_page'] ) ) {
+            $per_page = (int) $params['per_page'];
+        }
+
+        if ( ! empty( $page ) && ! empty( $per_page ) ) {
+            $limit = ' LIMIT ' . ( $page - 1 ) * $per_page . ', ' . $per_page;
+        }
+
+        // Build SQL.
+        $sql = 'SELECT * FROM ' . $this->table_name( 'wp_clients_fields' ) . ' clients_fields WHERE 1=1 ' . $where . ' ORDER BY ' . $orderby . $limit;
+
+        return $this->wpdb->get_results( $sql, $obj ); // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- $sql built with wpdb->prepare() and escaped table name, safe to use directly.
     }
 
     /**
@@ -1262,8 +1434,8 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
             return false;
         }
 
-        $gene_results = array();
-        $table_fields = esc_sql( $this->table_name( 'wp_clients_fields' ) );
+        $gene_results       = array();
+        $table_fields       = esc_sql( $this->table_name( 'wp_clients_fields' ) );
         $table_field_values = esc_sql( $this->table_name( 'wp_clients_field_values' ) );
 
         if ( $general ) {
@@ -1345,7 +1517,7 @@ class MainWP_DB_Client extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
      */
     public function delete_client_field_by( $by = 'field_id', $value = false, $client_id = false ) {
 
-        $table_fields = esc_sql( $this->table_name( 'wp_clients_fields' ) );
+        $table_fields       = esc_sql( $this->table_name( 'wp_clients_fields' ) );
         $table_field_values = esc_sql( $this->table_name( 'wp_clients_field_values' ) );
 
         if ( 'field_id' === $by && $this->wpdb->query( $this->wpdb->prepare( 'DELETE FROM ' . $table_fields . ' WHERE field_id=%d AND client_id=%d', $value, $client_id ) ) ) { // delete individual or general client field.

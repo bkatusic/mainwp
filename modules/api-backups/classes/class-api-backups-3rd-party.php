@@ -11,6 +11,12 @@ namespace MainWP\Dashboard\Module\ApiBackups;
 use WP_Error;
 use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_Extensions_Handler;
+use MainWP\Dashboard\MainWP_Site_Open;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 /**
  * Class Api_Backups_3rd_Party
@@ -303,7 +309,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                 <div class="ui grid">
                     <div class="ui two column row">
                         <div class="middle aligned column ui">
-                            <button id="action_backup_selected_sites" class="ui green mini button"><?php esc_html_e( 'Backup Selected Sites', 'mainwp' ); ?></button>
+                            <button id="action_backup_selected_sites" class="ui green mini button disabled"><?php esc_html_e( 'Backup Selected Sites', 'mainwp' ); ?></button>
                         </div>
                         <div class="right aligned middle aligned column">
                             <a href="admin.php?page=SettingsApiBackups" class="ui mini green basic button"><?php esc_html_e( 'Manage API Backups Settings', 'mainwp' ); ?></a>
@@ -311,16 +317,9 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                     </div>
                 </div>
             </div>
-            <div class="ui segment" id="mainwp-3rd-party-api-backups">
-            <?php if ( Api_Backups_Utility::show_mainwp_message( 'mainwp-module-api-backups-info-message' ) ) : ?>
-                    <div class="ui info message">
-                        <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-module-api-backups-info-message"></i>
-                        <div><?php esc_html_e( 'This page will list the last backups created by the API Backups Extension for each Child Site that is setup with an API provider.', 'mainwp' ); ?></div>
-                    </div>
-                <?php endif; ?>
+            <div class="ui padded segment" id="mainwp-3rd-party-api-backups">
             <?php static::action_notifications(); ?>
             <?php static::render_api_backups_table( '3rd-party-api-backups' ); ?>
-
             </div>
             <?php
     }
@@ -354,9 +353,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                         </span>
                     </th>
                     <th scope="col"><?php esc_html_e( 'Site', 'mainwp' ); ?></th>
-                    <th scope="col" class="no-sort collapsing"><i class="sign in alternate icon"></i></th>
-                    <th scope="col"><?php esc_html_e( 'URL', 'mainwp' ); ?></th>
-                    <th scope="col"><?php esc_html_e( 'Provider', 'mainwp' ); ?></th>
+                    <th scope="col"><?php esc_html_e( 'API Provider', 'mainwp' ); ?></th>
                     <th scope="col"><?php esc_html_e( 'Last Manual Backup Date', 'mainwp' ); ?></th>
                     <th scope="col" class="no-sort collapsing"></th>
                 </tr>
@@ -403,14 +400,18 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                 </span>
                             <?php endif; ?>
                         </td>
-                        <td><a href="admin.php?page=ManageSitesApiBackups&id=<?php echo intval( $website->id ); ?>"><?php esc_html_e( $website->name, 'mainwp' ); ?></a> <span class="running"></span></td>
                         <td>
-                            <a href="<?php echo 'admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ); ?>&_opennonce=<?php echo esc_attr( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank">
-                                <i class="sign in alternate icon"></i>
-                            </a>
+                            <div>
+                                <a href="<?php MainWP_Site_Open::get_open_site_admin_link( $website->id, true ); //phpcs:ignore -- ok. ?>" target="_blank">
+                                    <i class="sign in alternate icon"></i>
+                                </a>
+                                <a href="admin.php?page=ManageSitesApiBackups&id=<?php echo intval( $website->id ); ?>"><?php esc_html_e( $website->name, 'mainwp' ); ?></a> <span class="running"></span>
+                            </div>
+                            <span class="ui small text">
+                                <a href="<?php echo esc_url( $website->url ); ?>" target="_blank" class="ui grey text"><?php echo esc_url( $website->url ); ?></a>
+                            </span>
                         </td>
-                        <td><a href="<?php echo esc_url( $website->url ); ?>" target="_blank"><?php echo esc_url( $website->url ); ?></a></td>
-                        <td><?php esc_html_e( $api_provider, 'mainwp' ); ?></td>
+                        <td><?php echo esc_html( $api_provider ); ?></td>
                         <td class="last-backup-date" ><?php echo ( $last_backup ) ? esc_html( $last_backup ) : esc_html__( 'Awaiting first backup', 'mainwp' ); ?></td>
                         <td class="collapsing not-selectable">
                             <i class="ui notched circle loading icon" style="display:none;"></i>
@@ -459,7 +460,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                             setTimeout(() => {
                                 jQuery('#mainwp-3rd-party-backups-table .ui.checkbox').checkbox();
                                 jQuery('.mainwp-api-backup-table .ui.dropdown').dropdown();
-                                mainwp_datatable_fix_menu_overflow();
+                                mainwp_datatable_fix_menu_overflow('#mainwp-3rd-party-backups-table');
                             }, 1000);
                         },
                         select: {
@@ -480,11 +481,10 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                             .to$().find('td.check-column .ui.checkbox' ).checkbox('set unchecked');
                         }
                     }).on( 'columns-reordered', function () {
-                        console.log('columns-reordered');
                         setTimeout(() => {
                             jQuery( '#mainwp-3rd-party-backups-table .ui.dropdown' ).dropdown();
                             jQuery( '#mainwp-3rd-party-backups-table .ui.checkbox' ).checkbox();
-                            mainwp_datatable_fix_menu_overflow();
+                            mainwp_datatable_fix_menu_overflow('#mainwp-3rd-party-backups-table');
                             mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
                         }, 1000);
                     });
@@ -534,45 +534,25 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
         }
 
         if ( empty( $backup_api ) ) {
+            $title   = esc_html__( 'No API Backup Solution has been chosen.', 'mainwp' );
+            $message = sprintf(
+                __( 'Please double check that you have set the API Key on the %1$s page and have set the Instance ID on the %2$s page.', 'mainwp' ),
+                '<a href="' . esc_url( admin_url( 'admin.php?page=SettingsApiBackups' ) ) . '">' . esc_html__( 'API Backups Settings', 'mainwp' ) . '</a>',
+                '<a href="' . esc_url( admin_url( 'admin.php?page=managesites&id=' . intval( $website_id ) ) ) . '">' . esc_html__( 'Child Site &rarr; Settings page', 'mainwp' ) . '</a>'
+            );
+            $icon    = '<em data-emoji=":closed_lock_with_key:" class="big"></em>';
+            \MainWP\Dashboard\MainWP_UI::render_empty_page_placeholder( $title, $message, $icon );
+        } else {
+            $columns = 'one';
+            if ( 'cpanel' === $backup_api || 'plesk' === $backup_api ) {
+                $columns = 'two';
+            }
             ?>
-                <div class="ui placeholder segment">
-                    <div class="ui icon header">
-                        <i class="key icon"></i>
-                    <?php
-                        printf(
-                            esc_html__(
-                                '%1$sNo API Backup Solution has been chosen.%2$s
-                    Please double check that you have set the %3$sAPI Key%4$s
-                    on the %5$s page%6$s
-                    and have set the %7$sInstance ID%8$s on the %9$s page.',
-                                'mainwp'
-                            ),
-                            '<em>',
-                            '</em> <br/><br>',
-                            '<em>',
-                            '</em>',
-                            '<a href="admin.php?page=SettingsApiBackups">API Backups Settings</a>',
-                            '</br>',
-                            '<em>',
-                            '</em>',
-                            '<a href="admin.php?page=managesites&id=' . intval( $website_id ) . '">Child Site -> Edit</a>'
-                        );
-                    ?>
-                    </div>
-                </div>
-            <?php } else { ?>
-
-                <?php
-                $columns = 'one';
-                if ( 'cpanel' === $backup_api || 'plesk' === $backup_api ) {
-                    $columns = 'two';
-                }
-                ?>
-                <div class="mainwp-sub-header">
+                <div class="mainwp-actions-bar">
                     <div class="ui grid">
                         <div class="ui <?php echo esc_html( $columns ); ?> column row">
                                 <div class="middle aligned column ui">
-                                    <?php if ( 'cpanel' === $backup_api ) : ?>
+                                <?php if ( 'cpanel' === $backup_api ) : ?>
                                         <div id="mainwp_api_cpanel_backup_tabs" class="ui top attached tabular menu">
                                             <div class="active item" data-tab="cpanel-native"><i class="fitted cpanel big icon"></i></div>
                                             <div class="item" data-tab="cpanel-wp-toolkit"><i class="fitted wordpress big icon"></i></div><?php //phpcs:ignore -- skip wordpress.?>
@@ -580,7 +560,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                     <?php endif; ?>
                                 </div>
                             <div class="right aligned middle aligned column">
-                                <?php if ( 'cpanel' === $backup_api ) : ?>
+                            <?php if ( 'cpanel' === $backup_api ) : ?>
                                     <button id="mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_create_full_backup" website_id="<?php echo intval( $website['id'] ); ?>" class="ui mini green button"><?php esc_html_e( 'Backup Files &amp; Database', 'mainwp' ); ?></button>
                                     <button id="mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_create_wptk_backup" website_id="<?php echo intval( $website['id'] ); ?>" class="ui mini green button hidden"><?php esc_html_e( 'Backup Now', 'mainwp' ); ?></button>
                                 <?php else : ?>
@@ -588,21 +568,21 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                 <?php endif; ?>
                                 <button id="mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_refresh_available_backups" website_id="<?php echo intval( $website['id'] ); ?>" class="ui mini green button"><?php esc_html_e( 'Refresh Available Backups', 'mainwp' ); ?></button>
 
-                                <?php // Render DigitalOcean specific action buttons. ?>
-                                <?php
-                                if ( 'digitalocean' === $backup_api ) {
-                                    // Grab Linode instance id.
-                                    $digitalocean_droplet_id = Api_Backups_Helper::get_website_options(
-                                        $website,
-                                        array(
-                                            'mainwp_3rd_party_instance_id',
-                                        )
-                                    );
-                                    $droplet_id              = isset( $digitalocean_droplet_id['mainwp_3rd_party_instance_id'] ) ? $digitalocean_droplet_id['mainwp_3rd_party_instance_id'] : null;
-                                    ?>
+                            <?php // Render DigitalOcean specific action buttons. ?>
+                            <?php
+                            if ( 'digitalocean' === $backup_api ) {
+                                // Grab Linode instance id.
+                                $digitalocean_droplet_id = Api_Backups_Helper::get_website_options(
+                                    $website,
+                                    array(
+                                        'mainwp_3rd_party_instance_id',
+                                    )
+                                );
+                                $droplet_id              = isset( $digitalocean_droplet_id['mainwp_3rd_party_instance_id'] ) ? $digitalocean_droplet_id['mainwp_3rd_party_instance_id'] : null;
+                                ?>
                                         <a href="https://cloud.digitalocean.com/droplets/<?php echo esc_attr( $droplet_id ); ?>/snapshots" target="_blank" class="ui mini button">
                                             <i class="external icon"></i>
-                                        <?php esc_html_e( 'View on DigitalOcean', 'mainwp' ); ?>
+                                    <?php esc_html_e( 'View on DigitalOcean', 'mainwp' ); ?>
                                         </a>
                                     <?php } ?>
                                 <?php // Render Linode specific action buttons. ?>
@@ -659,7 +639,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                         </div>
                     </div>
                 </div>
-                <div class="ui segment">
+                <div class="ui padded segment">
 
                     <?php // Render action notifications. I get replaced by JS. ?>
                     <div id="mainwp-api-backups-message-zone" class="ui message" style="display: none;">
@@ -934,7 +914,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                                 installation_id="<?php echo intval( $installation_id ); ?>"
                                                 website_id="<?php echo intval( $website['id'] ); ?>"
                                                 backup_name="<?php echo esc_attr( $backup->value->fileName->value ); ?>"
-                                                href="admin.php?page=SiteOpen&websiteid=<?php echo intval( $website['id'] ); ?>&dirdl=<?php echo esc_attr( rawurlencode( $dirdl ) ); ?>&filedl=<?php echo esc_attr( rawurlencode( $backup->value->fileName->value ) ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>"
+                                                href="<?php MainWP_Site_Open::get_open_site_admin_link( $website['id'], true ); //phpcs:ignore -- ok. ?>&dirdl=<?php echo esc_attr( rawurlencode( $dirdl ) ); ?>&filedl=<?php echo esc_attr( rawurlencode( $backup->value->fileName->value ) ); ?>"
                                                 data-tooltip="<?php esc_attr_e( 'Download Backup', 'mainwp' ); ?>"
                                                 data-inverted=""
                                                 data-position="top center"
@@ -1092,7 +1072,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                             <?php
                                                 $file_path = $backup->absolute_dir . '/';
                                             ?>
-                                            <a class="open_newwindow_wpadmin" href="admin.php?page=SiteOpen&websiteid=<?php echo intval( $website['id'] ); ?>&dirdl=<?php echo esc_attr( rawurlencode( $file_path ) ); ?>&filedl=<?php echo esc_attr( rawurlencode( $backup->file_name ) ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank">
+                                            <a class="open_newwindow_wpadmin" href="<?php MainWP_Site_Open::get_open_site_admin_link( $website['id'], true ); //phpcs:ignore -- ok. ?>&dirdl=<?php echo esc_attr( rawurlencode( $file_path ) ); ?>&filedl=<?php echo esc_attr( rawurlencode( $backup->file_name ) ); ?>" target="_blank">
                                                 <button class="ui right labeled icon button">
                                                     <i class="right download icon"></i>
                                                     <?php echo esc_html__( 'Download', 'mainwp' ); ?>
@@ -1242,7 +1222,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                                 <button class="ui mini icon button mainwp_3rd_party_api_<?php echo esc_attr( $backup_api ); ?>_action_download_wptk_backup item"
                                                         website_id="<?php echo intval( $website['id'] ); ?>"
                                                         backup_name="<?php echo esc_attr( $backup->value->fileName->value ); ?>"
-                                                        href="admin.php?page=SiteOpen&websiteid=<?php echo intval( $website['id'] ); ?>&dirdl=<?php echo esc_attr( rawurlencode( $dirdl ) ); ?>&filedl=<?php echo esc_attr( rawurlencode( $backup->value->fileName->value ) ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>"
+                                                        href="<?php MainWP_Site_Open::get_open_site_admin_link( $website['id'], true ); //phpcs:ignore -- ok. ?>&dirdl=<?php echo esc_attr( rawurlencode( $dirdl ) ); ?>&filedl=<?php echo esc_attr( rawurlencode( $backup->value->fileName->value ) ); ?>"
                                                         data-tooltip="<?php esc_attr_e( 'Download Backup', 'mainwp' ); ?>"
                                                         data-inverted=""
                                                         data-position="top center">
@@ -1270,31 +1250,12 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                     </tfoot>
                                 </table>
                         <?php else : // Display message if WP-Toolkit is not enabled. ?>
-                            <div class="ui placeholder segment">
-                                <div class="ui icon header">
-                                    <i class="key icon"></i>
-                                    <?php
-                                    printf(
-                                        esc_html__(
-                                            '%1$sThe WP-Toolkit API has not been enabled.%2$s
-                                        Please double check that you have set the cPanel %3$sAPI Key%4$s
-                                        on the %5$s page%6$s
-                                        and have enabled the %7$sWP Toolkit API%8$s on the %9$s page.',
-                                            'mainwp'
-                                        ),
-                                        '<em>',
-                                        '</em> <br/><br>',
-                                        '<em>',
-                                        '</em>',
-                                        '<a href="admin.php?page=SettingsApiBackups">API Backups Settings</a>',
-                                        '</br>',
-                                        '<em>',
-                                        '</em>',
-                                        '<a href="admin.php?page=managesites&id=' . intval( $website_id ) . '">Child Site -> Edit</a>'
-                                    );
-                                    ?>
-                                </div>
-                            </div>
+                            <?php
+                            $title   = esc_html__( 'The WP-Toolkit API has not been enabled.', 'mainwp' );
+                            $message = esc_html__( 'Please double check that you have set the cPanel API Key on the API Backups Settings page and have enabled the WP Toolkit API on the Child Site -> Edit page.', 'mainwp' );
+                            $icon    = '<em data-emoji=":closed_lock_with_key:" class="big"></em>';
+                            \MainWP\Dashboard\MainWP_UI::render_empty_page_placeholder( $title, $message, $icon );
+                            ?>
                         <?php endif; ?>
                     </div>
                 <?php } ?>
@@ -1675,7 +1636,6 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                                 }, 1000);
                             }
                         } ).on( 'columns-reordered', function () {
-                            console.log('columns-reordered');
                             setTimeout(() => {
                                 jQuery( '.mainwp-api-backup-table .ui.dropdown' ).dropdown();
                                 jQuery( '.mainwp-api-backup-table .ui.checkbox' ).checkbox();
@@ -1686,7 +1646,7 @@ class Api_Backups_3rd_Party { //phpcs:ignore -- NOSONAR - multi methods.
                     } );
                 </script>
             <?php
-            } // END if.
+        } // END if.
     }
 
     /*********************************************************************************

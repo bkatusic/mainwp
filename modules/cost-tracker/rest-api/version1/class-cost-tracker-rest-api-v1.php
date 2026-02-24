@@ -10,6 +10,11 @@ namespace MainWP\Dashboard\Module\CostTracker;
 
 use MainWP\Dashboard\MainWP_DB_Client;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Cost_Tracker_Rest_Api_V1
  */

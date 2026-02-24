@@ -9,6 +9,31 @@ let import_client_count_fails = 0;
 let import_client_stop_by_user = false;
 jQuery(function () {
 
+  // Toggle bulk actions based on checkbox selection
+  jQuery(document).on('change', '#mainwp-manage-sites-body-table .check-column INPUT:checkbox', function () {
+    mainwp_clients_toggle_bulk_actions();
+  });
+
+  // Toggle bulk actions for client fields
+  jQuery(document).on('change', '#mainwp-clients-custom-fields-table .check-column INPUT:checkbox', function () {
+    mainwp_client_fields_toggle_bulk_actions();
+  });
+
+  // Select all client fields
+  jQuery(document).on('change', '#mainwp-client-fields-select-all', function () {
+    jQuery('.mainwp-client-field-checkbox').prop('checked', jQuery(this).prop('checked'));
+    mainwp_client_fields_toggle_bulk_actions();
+  });
+
+  // Handle bulk actions for client fields
+  jQuery(document).on('click', '#mainwp-do-client-fields-bulk-actions', function () {
+    const action = jQuery('#mainwp-client-fields-bulk-actions-menu').dropdown('get value');
+    if (action === 'delete') {
+      mainwp_client_fields_bulk_delete();
+    }
+    return false;
+  });
+
   // Delete single client.
   jQuery(document).on('click', '.client_deleteitem', function () {
     let confirmation = confirm('Are you sure you want to proceed?');
@@ -134,7 +159,6 @@ let bulkManageClientsTotal = 0;
 let bulkManageClientsFinished = 0;
 let bulkManageClientsTaskRunning = false;
 
-
 // Trigger Manage Bulk Actions
 jQuery(document).on('click', '#mainwp-do-clients-bulk-actions', function () {
   let action = jQuery("#mainwp-clients-bulk-actions-menu").dropdown("get value");
@@ -180,7 +204,7 @@ let mainwp_manageclients_bulk_remove_next = function () {
   if ((bulkManageClientsTotal > 0) && (bulkManageClientsFinished == bulkManageClientsTotal)) { // NOSONAR -- modified out side the function.
     setHtml('#mainwp-message-zone-client', __("Process completed. Reloading page..."));
     setTimeout(function () {
-      window.location.reload()
+        mainwp_forceReload();
     }, 3000);
   }
 }
@@ -235,6 +259,79 @@ let manageclients_bulk_init = function () {
       jQuery(this).attr('status', 'queue')
     });
   }
+};
+
+let mainwp_clients_toggle_bulk_actions = function () {
+  const checkedCount = jQuery('#mainwp-manage-sites-body-table .check-column INPUT:checkbox:checked').length;
+  const bulkActionsMenu = jQuery('#mainwp-clients-bulk-actions-menu');
+  const applyButton = jQuery('#mainwp-do-clients-bulk-actions');
+
+  if (checkedCount > 0) {
+    bulkActionsMenu.removeClass('disabled');
+    applyButton.prop('disabled', false);
+  } else {
+    bulkActionsMenu.addClass('disabled');
+    applyButton.prop('disabled', true);
+  }
+};
+
+let mainwp_client_fields_toggle_bulk_actions = function () {
+  const checkedCount = jQuery('#mainwp-clients-custom-fields-table .check-column INPUT:checkbox:checked').length;
+  const bulkActionsMenu = jQuery('#mainwp-client-fields-bulk-actions-menu');
+  const applyButton = jQuery('#mainwp-do-client-fields-bulk-actions');
+
+  if (checkedCount > 0) {
+    bulkActionsMenu.removeClass('disabled');
+    applyButton.prop('disabled', false);
+  } else {
+    bulkActionsMenu.addClass('disabled');
+    applyButton.prop('disabled', true);
+  }
+};
+
+let mainwp_client_fields_bulk_delete = function () {
+  const selectedFields = [];
+  jQuery('.mainwp-client-field-checkbox:checked').each(function () {
+    selectedFields.push(jQuery(this).val());
+  });
+
+  if (selectedFields.length === 0) {
+    return false;
+  }
+
+  const confirmMessage = selectedFields.length === 1
+    ? __('Are you sure you want to delete this field?')
+    : __('Are you sure you want to delete these %s fields?').replace('%s', selectedFields.length);
+
+  if (!confirm(confirmMessage)) {
+    return false;
+  }
+
+  mainwp_set_message_zone('#mainwp-message-zone-client');
+
+  jQuery.post(ajaxurl, mainwp_secure_data({
+    action: 'mainwp_clients_bulk_delete_fields',
+    field_ids: selectedFields,
+  }), function (response) {
+    if (response?.success) {
+      selectedFields.forEach(function (fieldId) {
+        jQuery('.mainwp-field[field-id="' + fieldId + '"]').fadeOut(300, function () {
+          jQuery(this).remove();
+          if (jQuery('#mainwp-clients-custom-fields-table tbody tr').length === 0) {
+            location.reload();
+          }
+        });
+      });
+      mainwp_set_message_zone('#mainwp-message-zone-client', __('Selected fields have been deleted successfully.'), 'green');
+      jQuery('#mainwp-client-fields-select-all').prop('checked', false);
+      mainwp_client_fields_toggle_bulk_actions();
+    } else {
+      const errorMessage = response?.data?.message || __('Fields could not be deleted.');
+      mainwp_set_message_zone('#mainwp-message-zone-client', errorMessage, 'red');
+    }
+  }, 'json');
+
+  return true;
 };
 
 // Handle tab QSW add client
@@ -363,7 +460,7 @@ jQuery(document).on('click', '#bulk_add_multi_create_client', function (e) {
     });
     jQuery.post(ajaxurl, data, function (response) {
       if (response?.success) {
-        window.location.href = 'admin.php?page=mainwp-setup&step=monitoring&message=1';
+        mainwp_forceReload('admin.php?page=mainwp-setup&step=monitoring&message=1');
       } else if (response?.error) {
         mainwp_set_message_zone('#mainwp-message-zone', response.error, 'red');
       } else {
@@ -421,7 +518,7 @@ let mainwp_createclient = function (currPage) {
     selected_sites.push(jQuery(this).val());
   });
 
-  if (jQuery('#select_by').val() == 'site') {
+  if (jQuery('input[name="select_by"]').val() == 'site') {
     selected_sites = [];
     jQuery("input[name='selected_sites[]']:checked").each(function () {
       selected_sites.push(jQuery(this).val());
@@ -442,10 +539,10 @@ let mainwp_createclient = function (currPage) {
   mainwp_set_message_zone('#mainwp-message-zone-client', '<i class="notched circle loading icon"></i> ' + msg);
   jQuery('#bulk_add_createclient').attr('disabled', 'disabled');
 
-  //Add user via ajax!!
+  //Add Client via ajax!!
   let formdata = new FormData(jQuery('#createclient_form')[0]);
   formdata.append("action", 'mainwp_clients_add_client');
-  formdata.append("select_by", jQuery('#select_by').val());
+  formdata.append("select_by", jQuery('input[name="select_by"]').val());
   formdata.append("selected_sites[]", selected_sites);
   formdata.append("is_first_client", is_first_client);
   formdata.append("security", security_nonces['mainwp_clients_add_client']);
@@ -459,11 +556,14 @@ let mainwp_createclient = function (currPage) {
       jQuery('#bulk_add_createclient').prop("disabled", false);
       if (response?.success) {
         if ('add-new' == currPage) {
-          window.location.href = "admin.php?page=ManageClients";
+          mainwp_forceReload("admin.php?page=ManageClients");
         } else if ('qsw-add' == currPage) {
-          window.location.href = 'admin.php?page=mainwp-setup&step=monitoring&message=1';
+            mainwp_set_message_zone('#mainwp-message-zone', '<a href="admin.php?page=mainwp-setup&step=monitoring" class="ui mini basic green right floated button">Continue</a><div class="ui header">Congratulations! You have added your first client.</div> After finishing the Quick Setup Wizard, you can add more clients from the Add New Client page. Proceeding to the next step in 3 seconds...', 'green');
+            setTimeout(function () {
+              mainwp_forceReload('admin.php?page=mainwp-setup&step=monitoring&message=1');
+            }, 3000);
         } else {
-          window.location.href = location.href;
+            mainwp_forceReload();
         }
       } else if (response?.error) {
         feedback('mainwp-message-zone-client', response.error, 'red');
@@ -488,6 +588,7 @@ jQuery(document).on('click', '#mainwp-clients-new-custom-field-button', function
   jQuery(parent).find('input[name="field-name"]').val('');
   jQuery(parent).find('input[name="field-description"]').val('');
   jQuery(parent).find('input[name="field-id"]').val(0);
+  jQuery(parent).find('#mainwp-clients-save-new-custom-field').addClass('disabled').prop('disabled', true);
   jQuery('#mainwp-clients-custom-field-modal').modal({
     closable: false,
   }).modal('show');
@@ -506,6 +607,13 @@ jQuery(document).on('click', '#mainwp-clients-edit-custom-field', function () {
   jQuery('#mainwp-clients-custom-field-modal input[name="field-description"]').val(field_desc);
   jQuery('#mainwp-clients-custom-field-modal input[name="field-id"]').val(field_id);
 
+  let saveButton = jQuery('#mainwp-clients-custom-field-modal').find('#mainwp-clients-save-new-custom-field');
+  if (field_name.trim() !== '' && field_desc.trim() !== '') {
+    saveButton.removeClass('disabled').prop('disabled', false);
+  } else {
+    saveButton.addClass('disabled').prop('disabled', true);
+  }
+
   jQuery('#mainwp-clients-custom-field-modal').modal({
     closable: false,
   }).modal('show');
@@ -516,6 +624,20 @@ jQuery(document).on('click', '#mainwp-clients-edit-custom-field', function () {
 jQuery(document).on('click', '#mainwp-clients-save-new-custom-field', function () {
   mainwp_clients_update_custom_field(this);
   return false;
+});
+
+// Validate required fields for custom field modal
+jQuery(document).on('input', '#mainwp-clients-custom-field-modal input[name="field-name"], #mainwp-clients-custom-field-modal input[name="field-description"]', function () {
+  let parent = jQuery('#mainwp-clients-custom-field-modal');
+  let fieldName = parent.find('input[name="field-name"]').val().trim();
+  let fieldDesc = parent.find('input[name="field-description"]').val().trim();
+  let saveButton = parent.find('#mainwp-clients-save-new-custom-field');
+
+  if (fieldName !== '' && fieldDesc !== '') {
+    saveButton.removeClass('disabled').prop('disabled', false);
+  } else {
+    saveButton.addClass('disabled').prop('disabled', true);
+  }
 });
 
 let mainwp_clients_update_custom_field = function (me) {
@@ -549,7 +671,7 @@ let mainwp_clients_update_custom_field = function (me) {
   jQuery.post(ajaxurl, fields, function (response) {
     if (response) {
       if (response.success) {
-        window.location.href = location.href;
+        mainwp_forceReload();
       } else if (response.error) {
         parent.find('.ui.message').html(response.error).show().removeClass('yellow').addClass('red');
       } else {

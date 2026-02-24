@@ -12,6 +12,11 @@ namespace MainWP\Dashboard\Module\ApiBackups;
 
 use WP_Error;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * MainWP API Backups Handler
  */

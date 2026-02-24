@@ -10,8 +10,15 @@ namespace MainWP\Dashboard\Module\CostTracker;
 
 use MainWP\Dashboard\MainWP_Post_Handler;
 use MainWP\Dashboard\MainWP_DB;
+use MainWP\Dashboard\MainWP_UI;
 use MainWP\Dashboard\MainWP_Utility;
 use MainWP\Dashboard\MainWP_DB_Client;
+use MainWP\Dashboard\MainWP_Cache_Warm_Helper;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 /**
  * Class Cost_Tracker_Dashboard
@@ -187,6 +194,13 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
     }
 
     /**
+     * Method invalidate_warm_cache()
+     */
+    public static function invalidate_warm_cache() {
+        MainWP_Cache_Warm_Helper::invalidate_manage_pages( array( 'ManageCostTracker', 'CostSummary' ) );
+    }
+
+    /**
      * Renders overview.
      *
      * When the page loads render the body content.
@@ -207,15 +221,30 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
                 update_user_option( $current_user->ID, 'mainwp_module_cost_tracker_onetime_filters_saved', $sel_ids );
             }
         }
+        $costs       = Cost_Tracker_DB::get_instance()->get_cost_tracker_by( 'all' );
+        $costs_count = count( $costs );
         Cost_Tracker_Admin::render_header();
         ?>
         <div id="mainwp-module-cost-tracker-dashboard-tab">
-            <?php static::render_manage_tasks_table_top( $sel_ids ); ?>
-            <?php $this->render_actions_bar(); ?>
-                <div class="ui segment">
-                <?php $this->render_dashboard_body(); ?>
+            <?php if ( 1 > $costs_count ) : ?>
+                <div class="ui segment" style="margin-bottom:0px;">
+                <div class="ui icon message mainwp-welcome-message" style="margin-bottom:0px;">
+                    <em data-emoji=":bar_chart:" class="big"></em>
+                    <div class="content">
+                        <div class="ui massive header"><?php esc_html_e( 'No costs tracked yet.', 'mainwp' ); ?></div>
+                        <p><?php esc_html_e( 'Tracking your costs lets you forecast renewals and monitor expenses across all Child Sites.', 'mainwp' ); ?></p>
+                        <a class="ui green button" href="admin.php?page=CostTrackerAdd"><?php esc_html_e( 'Start Tracking Now!', 'mainwp' ); ?></a>
+                    </div>
                 </div>
             </div>
+            <?php else : ?>
+            <?php $this->render_actions_bar(); ?>
+            <?php static::render_manage_tasks_table_top( $sel_ids ); ?>
+            <div class="ui padded segment">
+                <?php $this->render_dashboard_body(); ?>
+            </div>
+            <?php endif; ?>
+        </div>
         <?php
     }
 
@@ -446,59 +475,38 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
             $filtered = true;
         }
         ?>
-        <table class="ui single line table" id="mainwp-module-cost-tracker-sites-table" style="width:100%">
-            <thead>
-                <tr>
-                    <th scope="col" class="no-sort collapsing check-column column-check"><span class="ui checkbox"><input id="cb-select-all-top" type="checkbox"></span></th>
-                    <th id="cost_status" class="collapsing column-status"><?php esc_html_e( 'Status', 'mainwp' ); ?></th>
-                    <th id="icon" class="no-sort column-icon collapsing"></th>
-                    <th id="name" class="column-name"><?php esc_html_e( 'Name', 'mainwp' ); ?></th>
-                    <?php if ( $filtered ) : ?>
-                        <th id="per_site_price" class="no-sort collapsing column-site-price"><?php esc_html_e( 'Per Site Price', 'mainwp' ); ?></th>
-                        <th id="price" class="collapsing column-total-price"><?php esc_html_e( 'Total Price', 'mainwp' ); ?></th>
-                    <?php else : ?>
-                        <th id="price" class="collapsing column-price"><?php esc_html_e( 'Price', 'mainwp' ); ?></th>
-                    <?php endif; ?>
-                    <th id="license_type" class="collapsing column-license-type"><?php esc_html_e( 'License', 'mainwp' ); ?></th>
-                    <th id="product_type" class="collapsing column-product-type"><?php esc_html_e( 'Category', 'mainwp' ); ?></th>
-                    <th id="type" class="collapsing column-type"><?php esc_html_e( 'Type', 'mainwp' ); ?></th>
-                    <th id="last_renewal" class="collapsing column-last-renewal"><?php esc_html_e( 'Purchased', 'mainwp' ); ?></th>
-                    <th id="payment_method" class="collapsing center aligned column-payment-method"><?php esc_html_e( 'Method', 'mainwp' ); ?></th>
-                    <th id="next_renewal" class="collapsing column-next-renewal"><?php esc_html_e( 'Renews', 'mainwp' ); ?></th>
-                    <th id="sites" class="no-sort collapsing center aligned column-sites"><?php esc_html_e( 'Sites', 'mainwp' ); ?></th>
-                    <th id="actions" class="no-sort collapsing right aligned column-actions"></th>
-                </tr>
-            </thead>
-            <tfoot>
-                <tr>
-                    <th scope="col" class="no-sort collapsing check-column column-check"><span class="ui checkbox"><input id="cb-select-all-bottom" type="checkbox"></span></th>
-                    <th id="cost_status-bottom" class="collapsing column-status"><?php esc_html_e( 'Status', 'mainwp' ); ?></th>
-                    <th id="icon-bottom" class="column-icon collapsing"></th>
-                    <th id="name-bottom" class="column-name" ><?php esc_html_e( 'Name', 'mainwp' ); ?></th>
-                    <?php if ( $filtered ) : ?>
-                        <th id="per_site_price-bottom" class="no-sort collapsing column-site-price"><?php esc_html_e( 'Per Site Price', 'mainwp' ); ?></th>
-                        <th id="price-bottom" class="collapsing column-price"><?php esc_html_e( 'Total Price', 'mainwp' ); ?></th>
-                    <?php else :
-                        $el_id_prc_bt_1 = 'price-bottom';
-                        ?>
-                    <th id="<?php echo esc_attr( $el_id_prc_bt_1 ); ?>" class="collapsing column-price"><?php esc_html_e( 'Price', 'mainwp' ); ?></th>
-                    <?php endif; ?>
-                    <th id="license_type-bottom" class="collapsing column-license-type"><?php esc_html_e( 'License', 'mainwp' ); ?></th>
-                    <th id="product_type-bottom" class="collapsing column-product-type"><?php esc_html_e( 'Category', 'mainwp' ); ?></th>
-                    <th id="type-bottom" class="column-type"><?php esc_html_e( 'Type', 'mainwp' ); ?></th>
-                    <th id="last_renewal-bottom" class="collapsing column-last-renewal"><?php esc_html_e( 'Purchased', 'mainwp' ); ?></th>
-                    <th id="payment_method-bottom" class="collapsing center aligned column-payment-method"><?php esc_html_e( 'Method', 'mainwp' ); ?></th>
-                    <th id="next_renewal-bottom" class="collapsing column-next-renewal"><?php esc_html_e( 'Renews', 'mainwp' ); ?></th>
-                    <th id="sites-bottom" class="collapsing column-sites"><?php esc_html_e( 'Sites', 'mainwp' ); ?></th>
-                    <th id="actions-bottom" class="no-sort collapsing right aligned column-actions"></th>
-                </tr>
-            </tfoot>
-        </table>
         <div id="mainwp-loading-sites" style="display: none;">
-            <div class="ui active inverted dimmer">
-                <div class="ui indeterminate large text loader"><?php esc_html_e( 'Loading ...', 'mainwp' ); ?></div>
+            <div class="ui active page dimmer">
+                <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
             </div>
         </div>
+        <div id="mainwp-module-cost-tracker-sites-table-container" style="opacity:0;">
+            <table class="ui single line table" id="mainwp-module-cost-tracker-sites-table" style="width:100%">
+                <thead>
+                    <tr>
+                        <th scope="col" class="no-sort collapsing check-column column-check"><span class="ui checkbox"><input id="cb-select-all-top" type="checkbox"></span></th>
+                        <th id="cost_status" class="collapsing column-status"><?php esc_html_e( 'Status', 'mainwp' ); ?></th>
+                        <th id="icon" class="no-sort column-icon collapsing"></th>
+                        <th id="name" class="column-name"><?php esc_html_e( 'Name', 'mainwp' ); ?></th>
+                        <?php if ( $filtered ) : ?>
+                            <th id="per_site_price" class="no-sort collapsing column-site-price"><?php esc_html_e( 'Per Site Price', 'mainwp' ); ?></th>
+                            <th id="price" class="collapsing column-total-price"><?php esc_html_e( 'Total Price', 'mainwp' ); ?></th>
+                        <?php else : ?>
+                            <th id="price" class="collapsing column-price"><?php esc_html_e( 'Price', 'mainwp' ); ?></th>
+                        <?php endif; ?>
+                        <th id="license_type" class="collapsing column-license-type"><?php esc_html_e( 'License', 'mainwp' ); ?></th>
+                        <th id="product_type" class="collapsing column-product-type"><?php esc_html_e( 'Category', 'mainwp' ); ?></th>
+                        <th id="type" class="collapsing column-type"><?php esc_html_e( 'Type', 'mainwp' ); ?></th>
+                        <th id="last_renewal" class="collapsing column-last-renewal"><?php esc_html_e( 'Purchased', 'mainwp' ); ?></th>
+                        <th id="payment_method" class="collapsing center aligned column-payment-method"><?php esc_html_e( 'Method', 'mainwp' ); ?></th>
+                        <th id="next_renewal" class="collapsing column-next-renewal"><?php esc_html_e( 'Renews', 'mainwp' ); ?></th>
+                        <th id="sites" class="no-sort collapsing center aligned column-sites"><?php esc_html_e( 'Sites', 'mainwp' ); ?></th>
+                        <th id="actions" class="no-sort collapsing right aligned column-actions"></th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
         <?php
         static::render_modal_edit_notes();
         static::render_screen_options();
@@ -530,11 +538,12 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
             'info'          => 'true',
             'colReorder'    => '{columns:":not(.check-column):not(.column-actions)"}',
             'stateSave'     => 'true',
-            'stateDuration' => '0',
+            'stateDuration' => '60 * 60 * 24 * 30',
             'order'         => '[]',
             'scrollX'       => 'true',
             'responsive'    => 'true',
             'fixedColumns'  => '',
+            'searchDelay'   => 350,
         );
 
         ?>
@@ -619,7 +628,8 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
                             },
                             "drawCallback": function( settings ) {
                                 this.api().tables().body().to$().attr( 'id', 'mainwp-module-cost-tracker-body-table' );
-                                mainwp_datatable_fix_menu_overflow();
+                                jQuery( '#mainwp-module-cost-tracker-sites-table-container' ).css( 'opacity', '1' );
+                                mainwp_datatable_fix_menu_overflow('#mainwp-module-cost-tracker-sites-table');
                             },
                             "initComplete": function( settings, json ) {
                             },
@@ -632,22 +642,40 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
                             'select': {
                                 items: 'row',
                                 style: 'multi+shift',
-                                selector: 'tr>td:not(.not-selectable)'
-                            }
+                                selector: 'tr>td.check-column'
+                            },
+                            stateSaveParams: function (settings, data) {
+                                data._mwpv = mainwpParams.mainwpVersion || 'dev';
+                            },
+                            stateLoadParams: function (settings, data) {
+                                if ((mainwpParams.mainwpVersion || 'dev') !== data._mwpv) return false;
+                            },
+                            search: { regex: false, smart: false },
+                            orderMulti: false,
+                            searchDelay: <?php echo intval( $table_features['searchDelay'] ); ?>
                         }).on('select', function (e, dt, type, indexes) {
                             if( 'row' == type ){
                                 dt.rows(indexes)
                                 .nodes()
                                 .to$().find('td.check-column .ui.checkbox' ).checkbox('set checked');
+                                let selectedCount = dt.rows({ selected: true }).count();
+                                if (selectedCount > 0) {
+                                    jQuery('#mwp_cost_tracker_bulk_action').parent('.ui.dropdown').removeClass('disabled');
+                                    jQuery('#mainwp_module_cost_tracker_action_btn').removeClass('disabled');
+                                }
                             }
                         }).on('deselect', function (e, dt, type, indexes) {
                             if( 'row' == type ){
                                 dt.rows(indexes)
                                 .nodes()
                                 .to$().find('td.check-column .ui.checkbox' ).checkbox('set unchecked');
+                                let selectedCount = dt.rows({ selected: true }).count();
+                                if (selectedCount === 0) {
+                                    jQuery('#mwp_cost_tracker_bulk_action').parent('.ui.dropdown').addClass('disabled');
+                                    jQuery('#mainwp_module_cost_tracker_action_btn').addClass('disabled');
+                                }
                             }
                         }).on( 'columns-reordered', function () {
-                            console.log('columns-reordered');
                             setTimeout(() => {
                                 $( '#mainwp-module-cost-tracker-sites-table .ui.dropdown' ).dropdown();
                                 $( '#mainwp-module-cost-tracker-sites-table .ui.checkbox' ).checkbox();
@@ -672,8 +700,6 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
                     ( '' == jQuery( '#mainwp-module-cost-tracker-costs-filter-clients').dropdown('get value') ) &&
                     ( '' == jQuery( '#mainwp-module-cost-tracker-costs-filter-dtsstart').dropdown('get value') ) &&
                     ( '' == jQuery( '#mainwp-module-cost-tracker-costs-filter-dtsstop').dropdown('get value') );
-
-                    console.log('emptyFilter: ' + ( emptyFilter ? 'yes' : 'no' ) );
 
                     if(emptyFilter){
                         jQuery( '#mainwp_module_cost_tracker_manage_costs_reset_filters' ).attr('disabled', 'disabled');
@@ -1110,6 +1136,7 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
         $sub_id = isset( $_POST['sub_id'] ) ? intval( $_POST['sub_id'] ) : 0; //phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
         if ( Cost_Tracker_DB::get_instance()->delete_cost_tracker( 'id', $sub_id ) ) {
+            static::invalidate_warm_cache();
             die( wp_json_encode( array( 'status' => 'success' ) ) );
         } else {
             die( wp_json_encode( array( 'error' => esc_html__( 'Failed.', 'mainwp' ) ) ) );
@@ -1123,20 +1150,20 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
      */
     public function render_actions_bar() {
         ?>
-        <div class="mainwp-actions-bar">
+        <div class="mainwp-sub-header">
             <div class="ui two columns grid">
                 <div class="column ui mini form">
-                    <select class="ui dropdown" id="mwp_cost_tracker_bulk_action">
+                    <select class="ui dropdown disabled" id="mwp_cost_tracker_bulk_action">
                         <option value="-1"><?php esc_html_e( 'Bulk actions', 'mainwp' ); ?></option>
                         <option value="delete-sub"><?php esc_html_e( 'Delete', 'mainwp' ); ?></option>
                     </select>
-                    <input type="button" name="mainwp_module_cost_tracker_action_btn" id="mainwp_module_cost_tracker_action_btn" class="ui basic mini button" value="<?php esc_html_e( 'Apply', 'mainwp' ); ?>"/>
+                    <input type="button" name="mainwp_module_cost_tracker_action_btn" id="mainwp_module_cost_tracker_action_btn" class="ui basic mini button disabled" value="<?php esc_html_e( 'Apply', 'mainwp' ); ?>"/>
                     <?php do_action( 'mainwp_module_cost_tracker_actions_bar_left' ); ?>
                 </div>
                 <div class="right aligned middle aligned column">
                     <div class="ui stackable grid">
                         <div class="eight wide right aligned middle aligned column"><?php do_action( 'mainwp_module_cost_tracker_actions_bar_right' ); ?></div>
-                        <div class="eight wide right aligned middle aligned column"><a href="#" class="ui mini basic button" id="mainwp-manage-costs-filter-toggle-button" aria-label="<?php esc_attr_e( 'Available filters.', 'mainwp' ); ?>"><i class="filter grey icon"></i> <?php esc_html_e( 'Filter Costs', 'mainwp' ); ?></a></div>
+                        <div class="eight wide right aligned middle aligned column"><a href="admin.php?page=CostTrackerAdd" class="ui mini green button" aria-label="<?php esc_attr_e( 'Add Cost', 'mainwp' ); ?>"><i class="plus icon"></i> <?php esc_html_e( 'Add Cost', 'mainwp' ); ?></a> <a href="#" class="ui mini basic button" id="mainwp-manage-costs-filter-toggle-button" aria-label="<?php esc_attr_e( 'Available filters.', 'mainwp' ); ?>"><i class="filter grey icon"></i> <?php esc_html_e( 'Filter Costs', 'mainwp' ); ?></a></div>
                     </div>
                 </div>
             </div>
@@ -1392,12 +1419,12 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
                         </div>
                     </div>
                     <div class="three wide middle aligned right aligned column">
-                        <button onclick="mainwp_module_cost_tracker_manage_costs_filter()"  class="ui mini green button"><?php esc_html_e( 'Filter Costs', 'mainwp' ); ?></button>
-                        <button onclick="mainwp_module_cost_tracker_manage_costs_reset_filters()" id="mainwp_module_cost_tracker_manage_costs_reset_filters" class="ui mini button" <?php echo $empty_filter ? 'disabled' : ''; ?>><?php esc_html_e( 'Reset Filters', 'mainwp' ); ?></button>
+                        <button onclick="mainwp_module_cost_tracker_manage_costs_filter()"  class="ui mini green basic button"><i class="filter icon"></i> <?php esc_html_e( 'Filter', 'mainwp' ); ?></button>
+                        <button onclick="mainwp_module_cost_tracker_manage_costs_reset_filters()" id="mainwp_module_cost_tracker_manage_costs_reset_filters" class="ui mini button" <?php echo $empty_filter ? 'disabled' : ''; ?>><i class="times icon"></i> <?php esc_html_e( 'Reset', 'mainwp' ); ?></button>
                     </div>
                 </div>
                 <div class="three wide top aligned right aligned column">
-                    <div class="ui compact grid">
+                    <div class="ui compact stackable grid">
                         <div class="eight wide column"></div>
                         <div class="eight wide column">
                             <button class="ui mini green fluid button" id="module-cost-tracker-filter-save-segment-button" selected-segment-id="" selected-segment-name=""><?php esc_html_e( 'Save Segment', 'mainwp' ); ?></button>
@@ -1732,7 +1759,7 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
             <div class="header"><?php esc_html_e( 'Page Settings', 'mainwp' ); ?></div>
             <div class="scrolling content ui form">
                 <form method="POST" action="" id="subscription-sites-screen-options-form" name="subscription_sites_screen_options_form">
-                <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                     <input type="hidden" name="wp_nonce" value="<?php echo esc_attr( wp_create_nonce( 'CostTrackerSitesScrOptions' ) ); ?>" />
                         <div class="ui grid field">
                             <label class="six wide column"><?php esc_html_e( 'Show columns', 'mainwp' ); ?></label>
@@ -1792,7 +1819,7 @@ class Cost_Tracker_Dashboard { // phpcs:ignore -- NOSONAR - multi methods.
         <script type="text/javascript">
             jQuery( document ).ready( function () {
                 jQuery('#reset-subscriptionsites-settings').on( 'click', function () {
-                    mainwp_confirm(__( 'Are you sure.' ), function(){
+                    mainwp_confirm(__( 'Are you sure?' ), function(){
                         jQuery('.mainwp_hide_wpmenu_checkboxes input[id^="mainwp_show_column_"]').prop( 'checked', false );
                         //default columns
                         let cols = ['name','type','product_type','price','cost_status','license_type','last_renewal','next_renewal','payment_method','sites','actions'];

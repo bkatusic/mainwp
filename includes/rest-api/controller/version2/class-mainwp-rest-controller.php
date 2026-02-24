@@ -10,6 +10,29 @@
  *
  * NOTE THAT ONLY CODE RELEVANT FOR MOST ENDPOINTS SHOULD BE INCLUDED INTO THIS CLASS.
  *
+ * ## Authentication Pattern
+ *
+ * All MainWP REST API v2 routes MUST be protected using the shared `get_rest_permissions_check()`
+ * method as their `permission_callback`. This method:
+ *
+ * 1. Calls `MainWP_REST_Authentication::is_valid_permissions()` to validate API key authentication
+ * 2. Returns `WP_Error` with 401 status if authentication fails or user is null
+ * 3. Returns `true` if the authenticated user has appropriate API key permissions
+ *
+ * Example route registration:
+ * ```php
+ * register_rest_route( $this->namespace, '/' . $this->rest_base, array(
+ *     array(
+ *         'methods'             => WP_REST_Server::READABLE,
+ *         'callback'            => array( $this, 'get_items' ),
+ *         'permission_callback' => array( $this, 'get_rest_permissions_check' ), // REQUIRED
+ *     ),
+ * ) );
+ * ```
+ *
+ * IMPORTANT: Do NOT use `__return_true` or skip `permission_callback` for protected endpoints.
+ * All endpoints intended for API key access must use `get_rest_permissions_check`.
+ *
  * @class   MainWP_REST_Controller
  * @package MainWP\Dashboard
  * @see     https://developer.wordpress.org/rest-api/extending-the-rest-api/controller-classes/
@@ -22,6 +45,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 use MainWP\Dashboard\MainWP_DB;
 use MainWP\Dashboard\MainWP_DB_Client;
 use MainWP\Dashboard\MainWP_Utility;
+use MainWP\Dashboard\MainWP_System_Utility;
+use MainWP\Dashboard\MainWP_Connect;
+use MainWP\Dashboard\MainWP_Exception;
+use MainWP\Dashboard\MainWP_Error_Helper;
 
 /**
  * Abstract Rest Controller Class
@@ -74,8 +101,6 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
         return $schema;
     }
 
-
-
     /**
      * Get site item by id or domain.
      *
@@ -99,7 +124,6 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
         }
         return $this->get_site_by( $by, $value );
     }
-
 
     /**
      * Get site by.
@@ -175,7 +199,6 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
             (array) $properties
         );
     }
-
 
     /**
      * Get normalized rest base.
@@ -255,7 +278,6 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
 
         return true;
     }
-
 
     /**
      * Method get_validate_args_params().
@@ -385,7 +407,7 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
             $args['type'] = $request['type'];
         }
 
-        if ( ! empty( $request['status'] ) ) {
+        if ( isset( $request['status'] ) ) {
             $args['status'] = $request['status'];
         }
 
@@ -421,7 +443,6 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
         return $args;
     }
 
-
     /**
      * Get site by.
      *
@@ -452,7 +473,6 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
         }
         return $site;
     }
-
 
     /**
      * Bulk create, update and delete items.
@@ -1126,7 +1146,7 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
         $properties = isset( $schema['properties'] ) ? $schema['properties'] : array();
 
         // Exclude fields that specify a different context than the request context.
-        $context = $request['context'];
+        $context = isset( $request['context'] ) ? $request['context'] : 'view';
         if ( $context ) {
             foreach ( $properties as $name => $options ) {
                 if ( ! empty( $options['context'] ) && ! in_array( $context, $options['context'], true ) ) {
@@ -1245,7 +1265,7 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
      * @return array addition_fields Fields to be included in the response.
      */
     public function filter_response_data_by_allowed_fields( $item, $context = 'view', $addition_fields = array() ) { //phpcs:ignore -- NOSONAR - complex.
-        $data   = $this->filter_response_by_context( $item, 'view' );
+        $data   = $this->filter_response_by_context( $item, $context );
         $fields = $this->get_allowed_fields_by_context( $context );
 
         if ( ! empty( $addition_fields ) && is_array( $addition_fields ) ) {
@@ -1412,5 +1432,519 @@ abstract class MainWP_REST_Controller extends WP_REST_Controller { //phpcs:ignor
             $slugs = array_map( 'sanitize_text_field', array_map( 'urldecode', $slugs ) );
         }
         return $slugs;
+    }
+
+    /**
+     * Prepare post or page data.
+     *
+     * @param array $new_post New post data.
+     * @param array $post_custom Post custom data.
+     * @param array $post_featured_image Post featured image data.
+     * @param array $featured_image_data Featured image data.
+     * @param array $post_gallery_images Post gallery images data.
+     * @param array $post_category Post category data.
+     *
+     * @return array
+     */
+    public function prepare_post_page_data( $new_post, $post_custom, $post_featured_image, $featured_image_data, $post_gallery_images = '', $post_category = '' ) {
+        return array(
+            'new_post'            => base64_encode( wp_json_encode( $new_post ) ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
+            'post_custom'         => base64_encode( wp_json_encode( $post_custom ) ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
+            'post_featured_image' => ( null !== $post_featured_image ) ? base64_encode( $post_featured_image ) : null, // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
+            'featured_image_data' => ( null !== $featured_image_data ) ? base64_encode( wp_json_encode( $featured_image_data ) ) : null, // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
+            'mainwp_upload_dir'   => base64_encode( wp_json_encode( wp_upload_dir() ) ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
+            'post_gallery_images' => base64_encode( wp_json_encode( $post_gallery_images ) ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
+            'post_category'       => base64_encode( wp_json_encode( $post_category ) ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
+        );
+    }
+
+    /**
+     * Decode post or page data.
+     *
+     * @param array $data Data.
+     *
+     * @return array
+     */
+    public function decode_post_page_data( $data ) {
+        // Decode base64 json.
+        $decode_base64_json = function ( $value, $default_value = '', $type = 'array' ) {
+            if ( empty( $value ) ) {
+                return $default_value;
+            }
+            $decoded = base64_decode( $value, true ); //phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
+            if ( false === $decoded ) {
+                return $default_value;
+            }
+
+            if ( 'string' === $type ) {
+                return ! empty( $decoded ) ? rawurldecode( $decoded ) : $default_value;
+            }
+
+            $json = json_decode( $decoded, true );
+            return is_array( $json ) ? $json : $default_value;
+        };
+        // Safely decode page data.
+        return array(
+            'new_post'            => $decode_base64_json( $data['new_post'] ?? '' ),
+            'post_custom'         => $decode_base64_json( $data['post_custom'] ?? '' ),
+            'post_featured_image' => $decode_base64_json( $data['post_featured_image'] ?? '', '', 'string' ),
+            'featured_image_data' => $decode_base64_json( $data['featured_image_data'] ?? '' ),
+            'mainwp_upload_dir'   => $decode_base64_json( $data['mainwp_upload_dir'] ?? '' ),
+            'child_upload_dir'    => $decode_base64_json( $data['child_upload_dir'] ?? '' ),
+            'post_gallery_images' => $decode_base64_json( $data['post_gallery_images'] ?? '' ),
+            'post_category'       => $decode_base64_json( $data['post_category'] ?? '', '', 'string' ),
+        );
+    }
+
+    /**
+     * Sanitize field.
+     *
+     * @param mixed $value Value to sanitize.
+     *
+     * @return mixed
+     */
+    public function sanitize_field( $value ) {
+        if ( null === $value || '' === $value ) {
+            return '';
+        }
+        return sanitize_text_field( wp_unslash( trim( $value ) ) );
+    }
+
+    /**
+     * Make enum sanitizer.
+     *
+     * @param array  $allowed Allowed values.
+     * @param string $type    Type to coerce to.
+     *
+     * @return callable
+     */
+    public function make_enum_sanitizer( array $allowed, string $type = 'int' ) { // phpcs:ignore -- NOSONAR - complex.
+        $allowed_norm = array_map( fn( $v ) => $this->coerce_type( $v, $type ), $allowed );
+
+		return function ( $value, $request, $param ) use ( $allowed_norm, $type, $allowed ) {  // phpcs:ignore -- NOSONAR
+            if ( null === $value || '' === $value ) {
+                return $value;
+            }
+
+            if ( 'array' === $type ) {
+                if ( ! is_array( $value ) ) {
+                    $value = $this->sanitize_field( $value );
+                    if ( is_string( $value ) && strpos( $value, ',' ) !== false ) {
+                        $value = array_map( 'trim', explode( ',', $value ) );
+                    } else {
+                        $value = array( $value );
+                    }
+                }
+
+                $sanitized = array();
+                foreach ( $value as $item ) {
+                    $item = $this->sanitize_field( $item );
+                    if ( in_array( $item, $allowed, true ) ) {
+                        $sanitized[] = $item;
+                    } else {
+                        return new WP_Error(
+                            "invalid_{$param}",
+                            sprintf(
+                                __( 'Invalid %1$s. Allowed values: %2$s.', 'mainwp' ), // NOSONAR.
+                                esc_html( $param ),
+                                esc_html( implode( ', ', $allowed ) )
+                            ),
+                        );
+                    }
+                }
+                return $sanitized;
+            }
+
+            // Standard sanitization for non-array types.
+            $value = $this->sanitize_field( $value );
+            $v     = $this->coerce_type( $value, $type );
+
+            if ( in_array( $v, $allowed_norm, true ) ) {
+                return $v;
+            }
+
+            return new WP_Error(
+                "invalid_{$param}",
+                sprintf(
+                    __( 'Invalid %1$s. Allowed values: %2$s.', 'mainwp' ),
+                    esc_html( $param ),
+                    esc_html( implode( ', ', $allowed_norm ) )
+                ),
+            );
+        };
+    }
+
+    /**
+     * Coerce value to type.
+     *
+     * @param mixed  $value Value to coerce.
+     * @param string $type  Type to coerce to.
+     *
+     * @return mixed
+     */
+    public function coerce_type( $value, string $type ) {  // phpcs:ignore -- NOSONAR
+        switch ( $type ) {
+            case 'int':
+                return (int) $value;
+            case 'bool':
+                return (bool) $value;
+            case 'array':
+                return (array) $value;
+            case 'string':
+            default:
+                return (string) $value;
+        }
+    }
+
+    /**
+     * Make enum validator.
+     *
+     * @param array  $allowed Allowed values.
+     * @param string $type    Type to coerce to.
+     *
+     * @return callable
+     */
+    public function make_enum_validator( array $allowed, string $type = 'int' ) { // phpcs:ignore -- NOSONAR
+        $allowed_norm = array_map( fn( $v ) => $this->coerce_type( $v, $type ), $allowed );
+
+		return function ( $value, $request, $param ) use ( $allowed_norm, $type, $allowed ) {  // phpcs:ignore -- NOSONAR
+            if ( null === $value || '' === $value ) {
+                return true;
+            }
+
+            if ( 'array' === $type ) {
+                if ( ! is_array( $value ) ) {
+                    $value = $this->sanitize_field( $value );
+                    if ( is_string( $value ) && strpos( $value, ',' ) !== false ) {
+                        $value = array_map( 'trim', explode( ',', $value ) );
+                    } else {
+                        $value = array( $value );
+                    }
+                }
+
+                // Validate each element in the array.
+                foreach ( $value as $item ) {
+                    $item = $this->sanitize_field( $item );
+                    if ( ! in_array( $item, $allowed, true ) ) {
+                        return new WP_Error(
+                            "invalid_{$param}",
+                            sprintf(
+                                /* translators: 1: field name, 2: allowed list */
+                                __( 'Invalid %1$s. Allowed values: %2$s.', 'mainwp' ),
+                                esc_html( $param ),
+                                esc_html( implode( ', ', $allowed ) )
+                            ),
+                        );
+                    }
+                }
+                return true;
+            }
+
+            // Standard validation for non-array types.
+            $value = $this->sanitize_field( $value );
+            $v     = $this->coerce_type( $value, $type );
+
+            if ( in_array( $v, $allowed_norm, true ) ) {
+                return true;
+            }
+
+            return new WP_Error(
+                "invalid_{$param}",
+                sprintf(
+                    /* translators: 1: field name, 2: allowed list */
+                    __( 'Invalid %1$s. Allowed values: %2$s.', 'mainwp' ),
+                    esc_html( $param ),
+                    esc_html( implode( ', ', $allowed_norm ) )
+                ),
+            );
+        };
+    }
+
+    /**
+     * Pages or Posts search handler for REST API.
+     *
+     * @param mixed  $data Search data from child site.
+     * @param object $website Child site object.
+     * @param mixed  $output Output object to store results.
+     * @param array  $params Request parameters.
+     *
+     * @return void
+     */
+    public static function posts_pages_search_handler( $data, $website, &$output, $params = array() ) {
+        if ( ! isset( $output->errors ) ) {
+            $output->errors = array();
+        }
+
+        if ( preg_match( '/<mainwp>(.*)<\/mainwp>/', $data, $results ) > 0 ) {
+            $result = $results[1];
+            $pages  = MainWP\Dashboard\MainWP_System_Utility::get_child_response( base64_decode( $result ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
+
+            if ( is_array( $pages ) && isset( $pages['error'] ) ) {
+                $output->errors[ $website->id ] = esc_html( $pages['error'] );
+                return;
+            }
+
+            $output->results[ $website->id ] = $pages;
+        }
+    }
+
+    /**
+     * Get post/page id and remote edit data.
+     *
+     * @param object          $website Website.
+     * @param WP_REST_Request $request Full details about the request.
+     * @param string          $type    Post type: 'page' or 'post' (or any CPT if child supports).
+     *
+     * @return array|WP_Error
+     */
+    protected function get_request_post_page_id( $website, $request, $type = 'page' ) {  // phpcs:ignore -- NOSONAR
+        // Param names.
+        $type          = ( 'post' === $type ) ? 'post' : 'page';
+        $type_id_param = ( 'page' === $type ) ? 'id_page' : 'id_post';
+        $id            = $request->get_param( $type_id_param );
+
+        if ( empty( $id ) ) {
+            return new WP_Error(
+                'post_id_not_found',
+                ( 'page' === $type ) ? __( 'Page id not found.', 'mainwp' ) : __( 'Post id not found.', 'mainwp' )
+            );
+        }
+
+        // Fetch remote edit data.
+        try {
+            $information = MainWP_Connect::fetch_url_authed(
+                $website,
+                'post_action',
+                array(
+                    'action'    => 'get_edit',
+                    'id'        => $id,
+                    'post_type' => $type,
+                )
+            );
+        } catch ( MainWP_Exception $e ) {
+            return new WP_Error( 'get_post_error', MainWP_Error_Helper::get_error_message( $e ) );
+        }
+
+        // Validate response.
+        if ( empty( $information['status'] ) || 'SUCCESS' !== $information['status'] || empty( $information['my_post'] ) ) {
+            return new WP_Error(
+                'post_not_exist',
+                ( 'page' === $type ) ? __( 'Page not exist.', 'mainwp' ) : __( 'Post not exist.', 'mainwp' )
+            );
+        }
+
+        return array(
+            'data'      => $information,
+            'post_id'   => $id,
+            'post_type' => $type,
+        );
+    }
+
+    /**
+     * Validate site ids.
+     *
+     * @param string          $value Site id.
+     * @param WP_REST_Request $request Request object.
+     *
+     * @return bool|WP_Error
+     */
+    public function validate_site_ids( $value, $request ) {
+        if ( empty( $value ) ) {
+            return true;
+        }
+        $value    = $this->sanitize_field( $value );
+        $site_ids = explode( ',', $value );
+        foreach ( $site_ids as $site_id ) {
+            $db_site = \MainWP\Dashboard\MainWP_DB::instance()->get_website_by_id( trim( $site_id ) );
+            if ( ! $db_site ) {
+                return new WP_Error(
+                    'invalid_site',
+                    sprintf(
+                        __( 'Invalid site ID: %s.', 'mainwp' ),
+                        esc_html( $site_id )
+                    ),
+                );
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Sanitize text field to array.
+     *
+     * @param string $value Client id.
+     *
+     * @return string|array
+     */
+    public function sanitize_text_field_to_array( $value ) {
+        if ( empty( $value ) ) {
+            return '';
+        }
+        $value = $this->sanitize_field( $value );
+        return array_map( 'trim', explode( ',', $value ) );
+    }
+
+    /**
+     * Validate clients.
+     *
+     * @param string          $value Client id.
+     * @param WP_REST_Request $request Request object.
+     *
+     * @return bool|WP_Error
+     */
+    public function validate_clients( $value, $request ) {
+        if ( empty( $value ) ) {
+            return true;
+        }
+        $value   = $this->sanitize_field( $value );
+        $clients = array_map( 'trim', explode( ',', $value ) );
+
+        foreach ( $clients as $client ) {
+            $db_client = MainWP_DB_Client::instance()->get_wp_client_by( 'client_id', $client );
+            if ( ! $db_client ) {
+                return new WP_Error(
+                    'invalid_client',
+                    sprintf(
+                        __( 'Invalid client ID: %s.', 'mainwp' ),
+                        esc_html( $client )
+                    ),
+                );
+            }
+        }
+        return true;
+    }
+    /**
+     * Sanitize groups text field.
+     *
+     * @param string $value Group name.
+     *
+     * @return string
+     */
+    public function sanitize_groups_text_field( $value ) {
+        if ( empty( $value ) ) {
+            return '';
+        }
+        $value     = $this->sanitize_field( $value );
+        $group_ids = array();
+        $groups    = array_map( 'trim', explode( ',', $value ) );
+        foreach ( $groups as $group ) {
+            $db_group = \MainWP\Dashboard\MainWP_DB_Common::instance()->get_group_by_name( $group );
+            if ( ! $db_group ) {
+                return new WP_Error(
+                    'invalid_group',
+                    sprintf(
+                        __( 'Invalid Group: %s.', 'mainwp' ),
+                        esc_html( $group )
+                    ),
+                );
+            }
+            $group_ids[] = $db_group->id;
+        }
+        return $group_ids;
+    }
+
+    /**
+     *  Get group ids from group names.
+     *
+     * @param string $value Group name.
+     * @param mixed  $request Request object.
+     * @return bool|WP_Error True if valid, WP_Error otherwise.
+     */
+    public function validate_groups( $value, $request ) {
+        if ( empty( $value ) ) {
+            return true;
+        }
+        $value  = $this->sanitize_field( $value );
+        $groups = array_map( 'trim', explode( ',', $value ) );
+        foreach ( $groups as $group ) {
+            $db_group = \MainWP\Dashboard\MainWP_DB_Common::instance()->get_group_by_name( $group );
+            if ( ! $db_group ) {
+                return new WP_Error(
+                    'invalid_group',
+                    sprintf(
+                        __( 'Invalid Group: %s.', 'mainwp' ),
+                        esc_html( $group )
+                    ),
+                );
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Get websites by filter.
+     *
+     * @param array $sites   Sites.
+     * @param array $groups  Groups.
+     * @param array $clients Clients.
+     *
+     * @return array
+     */
+    protected function get_db_websites_by_filter( $sites, $groups, $clients ) {  // phpcs:ignore -- NOSONAR - complex.
+        $utility        = MainWP_Utility::instance();
+        $system_utility = new MainWP_System_Utility();
+        $db             = MainWP_DB::instance();
+        $data_fields    = $system_utility->get_default_map_site_fields();
+        $data_fields[]  = 'users';
+
+        // Default result.
+        $website_url = array();
+        $db_websites = array();
+
+        if ( ! empty( $sites ) && is_array( $sites ) ) {
+            foreach ( $sites as $v ) {
+                if ( $utility->ctype_digit( $v ) ) {
+                    $website = $db->get_website_by_id( $v );
+                    if ( $website && empty( $website->sync_errors ) && ! $system_utility->is_suspended_site( $website ) ) {
+                        $db_websites[ $website->id ] = $utility->map_site(
+                            $website,
+                            $data_fields
+                        );
+                        $website_url[ $website->id ] = $website->url;
+                    }
+                }
+            }
+        }
+        if ( ! empty( $groups ) && is_array( $groups ) ) {
+            foreach ( $groups as $v ) {
+                if ( $utility->ctype_digit( $v ) ) {
+                    $websites = $db->query( $db->get_sql_websites_by_group_id( $v ) );
+                    while ( $websites && ( $website = $db->fetch_object( $websites ) ) ) {
+                        if ( ! empty( $website->sync_errors ) || $system_utility->is_suspended_site( $website ) ) {
+                            continue;
+                        }
+                        $db_websites[ $website->id ] = $utility->map_site(
+                            $website,
+                            $data_fields
+                        );
+                        $website_url[ $website->id ] = $website->url;
+                    }
+                    $db->free_result( $websites );
+                }
+            }
+        }
+
+        if ( ! empty( $clients ) && is_array( $clients ) ) {
+            $websites = MainWP_DB_Client::instance()->get_websites_by_client_ids(
+                $clients,
+                array(
+                    'select_data' => $data_fields,
+                )
+            );
+            if ( $websites ) {
+                foreach ( $websites as $website ) {
+                    if ( ! empty( $website->sync_errors ) || $system_utility->is_suspended_site( $website ) ) {
+                        continue;
+                    }
+                    $db_websites[ $website->id ] = $utility->map_site(
+                        $website,
+                        $data_fields
+                    );
+                    $website_url[ $website->id ] = $website->url;
+                }
+            }
+        }
+
+        return compact( 'db_websites', 'website_url' );
     }
 }

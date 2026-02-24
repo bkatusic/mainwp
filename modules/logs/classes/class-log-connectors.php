@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard\Module\Log;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Log_Connectors
  */
@@ -78,6 +83,7 @@ class Log_Connectors {
                     'installer',
                     'user',
                     'non-mainwp-changes',
+                    'changes-logs',
                 )
             );
         }

@@ -5,6 +5,31 @@ window.mainwpVars = window.mainwpVars || {};
 
 mainwpVars.maxRunThreads = mainwpParams?.maximumUptimeMonitoringRequests ? mainwpParams.maximumUptimeMonitoringRequests : 10;
 
+globalThis.updateMonitorsBulkActionsState = function() {
+    let checkedCount = jQuery('#mainwp-manage-sites-body-table .check-column .cb-uptime-monitor INPUT:checkbox:checked').length;
+    let dropdown = jQuery('#mainwp-uptime-monitoring-bulk-actions-menu');
+    let applyButton = jQuery('#mainwp-do-monitors-bulk-actions');
+
+    if (checkedCount > 0) {
+        dropdown.removeClass('disabled');
+        dropdown.parent('.ui.dropdown').removeClass('disabled');
+        applyButton.removeClass('disabled');
+    } else {
+        dropdown.addClass('disabled');
+        dropdown.parent('.ui.dropdown').addClass('disabled');
+        dropdown.dropdown('set selected', 'none');
+        applyButton.addClass('disabled');
+    }
+};
+
+jQuery(function () {
+    updateMonitorsBulkActionsState();
+
+    jQuery(document).on('change', '#mainwp-manage-sites-body-table .check-column INPUT:checkbox', function() {
+        updateMonitorsBulkActionsState();
+    });
+});
+
 // Trigger Manage Sites Bulk Actions
 jQuery(document).on('click', '#mainwp-do-monitors-bulk-actions', function () {
   let action = jQuery("#mainwp-uptime-monitoring-bulk-actions-menu").dropdown("get value");
@@ -32,7 +57,7 @@ window.mainwp_uptime_monitor_check_now = function (itemsData) {
     callback: function () {
       mainwpVars.bulkTaskRunning = false;
       history.pushState("", document.title, window.location.pathname + window.location.search); // to fix issue for url with hash
-      window.location.href = location.href;
+      mainwp_forceReload();
     }
   });
   uptime_monitoring_prepare_items_rows(itemsData);
@@ -185,7 +210,6 @@ let mainwp_managemonitors_doaction = function (action) { // NOSONAR - complex.
       return;
     }
 
-    console.log(checkItems);
     mainwp_uptime_monitor_check_now(checkItems);
     return false;
   } else if ('sync' === action) {

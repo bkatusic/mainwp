@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Actions_Handler
  */
@@ -111,9 +116,17 @@ class MainWP_Actions_Handler { //phpcs:ignore Generic.Classes.OpeningBraceSameLi
      *
      * @since 4.5.1.1
      */
-    public function hook_mainwp_fetch_url_authed( $website, $information, $action, $params, $others ) {
+    public function hook_mainwp_fetch_url_authed( $website, $information, $action, $params, $others ) { // phpcs:ignore -- NOSONAR -complex method.
         if ( 'plugin_action' === $action ) {
             $plugin_act = isset( $params['action'] ) ? $params['action'] : '';
+
+            if ( 'delete' === $plugin_act && ! empty( $information['other_data']['duration_bulk'] ) ) {
+                $params['duration_bulk'] = $information['other_data']['duration_bulk'];
+            }
+
+            if ( 'delete' === $plugin_act && ! empty( $information['other_data']['plugin_deactivated_data'] ) ) {
+                do_action( 'mainwp_install_plugin_action', $website, 'deactivate', $params, $information['other_data']['plugin_deactivated_data'], $others );
+            }
             if ( in_array( $plugin_act, array( 'activate', 'deactivate', 'delete' ) ) && isset( $information['other_data']['plugin_action_data'] ) ) {
                 do_action( 'mainwp_install_plugin_action', $website, $plugin_act, $params, $information['other_data']['plugin_action_data'], $others );
             }

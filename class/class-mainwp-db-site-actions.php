@@ -11,6 +11,11 @@ namespace MainWP\Dashboard;
 
 use MainWP\Dashboard\Module\Log\Log_Query;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_DB_Site_Actions
  *
@@ -187,7 +192,6 @@ class MainWP_DB_Site_Actions extends MainWP_DB { // phpcs:ignore Generic.Classes
 
         $action_id       = isset( $legacy_params['action_id'] ) ? intval( $legacy_params['action_id'] ) : 0;
         $site_id         = isset( $legacy_params['wpid'] ) ? $legacy_params['wpid'] : 0;
-        $object_id       = isset( $legacy_params['object_id'] ) ? $this->escape( $legacy_params['object_id'] ) : '';
         $where_extra     = isset( $legacy_params['where_extra'] ) ? $legacy_params['where_extra'] : ''; // compatible.
         $dism            = ! empty( $legacy_params['dismiss'] ) ? 1 : 0;
         $check_access    = isset( $legacy_params['check_access'] ) ? $legacy_params['check_access'] : true;
@@ -216,11 +220,18 @@ class MainWP_DB_Site_Actions extends MainWP_DB { // phpcs:ignore Generic.Classes
             'where_extra'      => $where_extra,
             'log_id'           => $action_id,
             'wpid'             => $site_id,
-            'object_id'        => $object_id,
             'dismiss'          => $dism,
             'check_access'     => $check_access,
             'not_count'        => true,
         );
+
+        if ( isset( $legacy_params['optimize_view'] ) && $legacy_params['optimize_view'] ) {
+            $compatible_args['optimize'] = 1;
+        }
+
+        if ( isset( $legacy_params['optimize_with_meta'] ) && $legacy_params['optimize_with_meta'] ) {
+            $compatible_args['optimize_with_meta'] = 1;
+        }
 
         // available source values: wpadmin|dashboard|all, default value `wpadmin`.
         if ( ! empty( $legacy_params['source'] ) ) {
@@ -266,6 +277,7 @@ class MainWP_DB_Site_Actions extends MainWP_DB { // phpcs:ignore Generic.Classes
             foreach ( $results['items'] as $item ) {
                 $item->log_site_name = $site->name;
                 $item->url           = $site->url;
+                $item->created       = (int) ( $item->created / 1000000 ); // compatible secords value.
                 $items[]             = $item;
             }
             return $items;

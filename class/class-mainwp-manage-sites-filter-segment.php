@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Manage_Sites_Filter_Segment
  *
@@ -61,13 +66,11 @@ class MainWP_Manage_Sites_Filter_Segment { // phpcs:ignore Generic.Classes.Openi
     public function render_filters_segment() {
         $saved_segments = static::set_get_manage_sites_filter_segments();
         ?>
-        <div class="right aligned four wide column">
-            <a class="ui mini button" id="mainwp-manage-sites-filter-save-segment-button" selected-segment-id="" selected-segment-name=""><?php esc_html_e( 'Save Segment', 'mainwp' ); ?></a>
-            <?php if ( ! empty( $saved_segments ) ) : ?>
-                <a class="ui mini button mainwp_manage_sites_filter_choose_segment"><?php esc_html_e( 'Load Segment', 'mainwp' ); ?></a>
-            <?php else : ?>
-                <a class="ui mini disabled button"><?php esc_html_e( 'Load Segment', 'mainwp' ); ?></a>
-            <?php endif; ?>
+        <div class="four wide right aligned column">
+        <a class="ui mini button" id="mainwp-manage-sites-filter-save-segment-button" selected-segment-id="" selected-segment-name=""><?php esc_html_e( 'Save Segment', 'mainwp' ); ?></a>
+        <?php if ( ! empty( $saved_segments ) ) : ?>
+            <a class="ui mini button mainwp_manage_sites_filter_choose_segment"><?php esc_html_e( 'Load Segment', 'mainwp' ); ?></a>
+        <?php endif; ?>
         </div>
 
         <script type="text/javascript">
@@ -162,13 +165,11 @@ class MainWP_Manage_Sites_Filter_Segment { // phpcs:ignore Generic.Classes.Openi
                                 for (const [key, value] of Object.entries(seg_values)) {
                                     try {
                                         if(fieldsAllows.includes(key)){
-                                            console.log(key + ' === '+ value);
                                             jQuery( '#mainwp-sites-filters-row .ui.dropdown.' + key ).dropdown('clear');
                                             arrVal = value.split(",");
                                             jQuery( '#mainwp-sites-filters-row .ui.dropdown.' + key ).dropdown('set selected', arrVal);
                                         }
                                     } catch (err) {
-                                        console.log(key + ' === '+ value);
                                         console.log(err);
                                     }
                                 }

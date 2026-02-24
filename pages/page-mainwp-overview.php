@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Overview
  *
@@ -138,7 +143,7 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             add_submenu_page(
                 'mainwp_tab',
                 'MainWP',
-                __( 'Overview', 'mainwp' ),
+                __( 'Operations', 'mainwp' ),
                 'read',
                 'mainwp_tab',
                 array(
@@ -165,7 +170,7 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
     public static function init_left_menu() {
         MainWP_Menu::add_left_menu(
             array(
-                'title'      => esc_html__( 'Overview', 'mainwp' ),
+                'title'      => esc_html__( 'Operations', 'mainwp' ),
                 'parent_key' => 'mainwp_tab',
                 'slug'       => 'mainwp_tab',
                 'href'       => 'admin.php?page=mainwp_tab',
@@ -211,7 +216,7 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
         /**
          * Get getmetaboxes
          *
-         * Adds metaboxes (widgets) to the Overview page.
+         * Adds metaboxes (widgets) to the Operations page.
          *
          * @since Unknown
          */
@@ -242,7 +247,7 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
 
         // Load the Updates Overview widget.
         if ( static::$enable_widgets['overview'] ) {
-            MainWP_UI::add_widget_box( 'overview', array( MainWP_Updates_Overview::get_class_name(), 'render' ), $page, array( 0, 0, 12, 19 ) );
+            MainWP_UI::add_widget_box( 'overview', array( MainWP_Updates_Overview::get_class_name(), 'render' ), $page, array( 0, 0, 12, 20 ) );
         }
 
         // Load the Clients widget.
@@ -293,8 +298,10 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             $id = isset( $metaBox['id'] ) ? $metaBox['id'] : $i++;
             $id = 'advanced-' . $id;
 
+            $wg_layout = isset( $metaBox['layout'] ) && is_array( $metaBox['layout'] ) ? $metaBox['layout'] : array( -1, -1, 6, 30 );
+
             if ( $enabled ) {
-                MainWP_UI::add_widget_box( $id, $metaBox['callback'], $page, array( -1, -1, 6, 30 ) );
+                MainWP_UI::add_widget_box( $id, $metaBox['callback'], $page, $wg_layout );
             }
         }
     }
@@ -321,7 +328,7 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
         global $screen_layout_columns;
 
         $params = array(
-            'title' => esc_html__( 'Overview', 'mainwp' ),
+            'title' => esc_html__( 'Operations', 'mainwp' ),
         );
 
         MainWP_UI::render_top_header( $params );
@@ -354,75 +361,67 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             $website = $websites[0];
         }
         $screen = get_current_screen();
-
-        MainWP_Demo_Handle::get_instance()->init_data_demo();
-        static::render_layout_selection();
         ?>
         <div class="mainwp-primary-content-wrap">
-            <div class="ui segment" style="padding-top:0px;padding-bottom:0px;margin-bottom:0px;">
-            <div id="mainwp-dashboard-info-box"></div>
-            <?php
-            if ( ! empty( $current_wp_id ) && ! empty( $website->sync_errors ) ) {
+            <div class="ui segment">
+                <?php if ( ! empty( $current_wp_id ) && ! empty( $website->sync_errors ) ) : ?>
+                    <div class="ui red message" style="margin: 1em;">
+                        <?php echo '<strong>' . esc_html( stripslashes( $website->name ) ) . '</strong>' . esc_html__( ' is Disconnected. Click the Reconnect button to establish the connection again.', 'mainwp' ); ?>
+                    </div>
+                <?php endif; ?>
+                <div id="mainwp-message-zone" class="ui message" style="display:none;"></div>
+                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'widgets' ) ) : ?>
+                    <div class="ui message" style="margin: 1em;">
+                        <i class="close icon mainwp-notice-dismiss" notice-id="widgets"></i>
+                        <?php printf( esc_html__( '%1$s Tip: You can drag and drop widgets to reorder your dashboard, use Page Settings (%2$s) to show or hide widgets, and use Layout (%3$s) in the header to save and load your widget layouts.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<i class="cog fitted icon"></i>', '<i class="all border fitted icon"></i>' ); ?>
+                    </div>
+                <?php endif; ?>
+                <?php do_action( 'mainwp_module_log_render_db_update_notice' ); ?>
+                <?php do_action( 'mainwp_module_log_render_db_size_notice' ); ?>
+
+                <?php
+                /**
+                 * Action: mainwp_before_overview_widgets
+                 *
+                 * Fires at the top of the Operations page (before first widget).
+                 *
+                 * @since 4.1
+                 */
+                do_action( 'mainwp_before_overview_widgets', 'dashboard' );
                 ?>
-                <div class="ui red message">
-                    <p><?php echo '<strong>' . esc_html( stripslashes( $website->name ) ) . '</strong>' . esc_html__( ' is Disconnected. Click the Reconnect button to establish the connection again.', 'mainwp' ); ?></p>
+                <div id="mainwp-grid-wrapper" class="gridster">
+                    <div id="mainwp-widgets-placeholder" class="ui page dimmer">
+                        <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
+                    </div>
+                    <script>
+                        jQuery( document ).ready( function () {
+                            jQuery('#mainwp-widgets-placeholder').dimmer('show');
+                        });
+                    </script>
+                    <?php MainWP_UI::do_widget_boxes( $screen->id ); ?>
                 </div>
                 <?php
-            }
-            ?>
-            <div id="mainwp-message-zone" class="ui message" style="display:none;"></div>
-            <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'widgets' ) ) : ?>
-                <div class="ui info message">
-                    <i class="close icon mainwp-notice-dismiss" notice-id="widgets"></i>
-                        <?php printf( esc_html__( 'To hide or show a widget, click the Cog (%1$s) icon.', 'mainwp' ), '<i class="cog icon"></i>' ); ?>
-                </div>
-            <?php endif; ?>
+                /**
+                 * Action: 'mainwp_after_overview_widgets'
+                 *
+                 * Fires at the bottom of the Operations page (after the last widget).
+                 *
+                 * @since 4.1
+                 */
+                do_action( 'mainwp_after_overview_widgets', 'dashboard' );
+                ?>
             </div>
-            <?php
-            /**
-             * Action: mainwp_before_overview_widgets
-             *
-             * Fires at the top of the Overview page (before first widget).
-             *
-             * @since 4.1
-             */
-            do_action( 'mainwp_before_overview_widgets', 'dashboard' );
-            ?>
-            <div id="mainwp-grid-wrapper" class="gridster">
-                <?php MainWP_UI::do_widget_boxes( $screen->id ); ?>
-            </div>
-            <?php
-            /**
-             * Action: 'mainwp_after_overview_widgets'
-             *
-             * Fires at the bottom of the Overview page (after the last widget).
-             *
-             * @since 4.1
-             */
-            do_action( 'mainwp_after_overview_widgets', 'dashboard' );
-            ?>
-    <script type="text/javascript">
-        jQuery( document ).ready( function( $ ) {
-            jQuery( '.mainwp-widget .mainwp-dropdown-tab .item' ).tab();
-            mainwp_get_icon_start();
-        } );
-    </script>
-        <?php
-        MainWP_UI::render_modal_upload_icon();
-        MainWP_Updates::render_plugin_details_modal();
-    }
-
-    /**
-     * Render layout selection.
-     */
-    public static function render_layout_selection() { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAfterBrace -- NOSONAR - complexity.
-        $screen = get_current_screen();
-        ?>
-        <div class="mainwp-sub-header ui right aligned segment" id="mainwp-manage-widgets-layout-row">
-            <?php MainWP_Ui_Manage_Widgets_Layout::render_edit_layout( $screen->id ); ?>
-        </div>
+            <script type="text/javascript">
+                jQuery( document ).ready( function( $ ) {
+                    jQuery( '.mainwp-widget .mainwp-dropdown-tab .item' ).tab();
+                    mainwp_get_icon_start();
+                } );
+            </script>
         <?php
         MainWP_Ui_Manage_Widgets_Layout::render_modal_save_layout();
+        MainWP_UI::render_modal_upload_icon();
+        MainWP_Updates::render_plugin_details_modal();
+        MainWP_Updates::render_changes_history_modal();
     }
 
     /**
@@ -435,17 +434,17 @@ class MainWP_Overview { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Con
             ?>
             <p><?php esc_html_e( 'If you need help with your MainWP Dashboard, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/" target="_blank">Understanding MainWP Dashboard UI</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/#navigation" target="_blank">MainWP Navigation</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/#page-settings" target="_blank">Page Settings</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/#widgetized-page-layout" target="_blank">Widgetized Page Layout</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/#tables" target="_blank">MainWP Tables</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/mainwp-user-interface/#individual-site-mode" target="_blank">Individual Child Site Mode</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface" target="_blank">Understanding MainWP Dashboard UI</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface#navigation" target="_blank">MainWP Navigation</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface#page-settings" target="_blank">Page Settings</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface#widgetized-pages" target="_blank">Widgetized Page Layout</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface#tables" target="_blank">MainWP Tables</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/getting-started/mainwp-user-interface#individual-site-mode" target="_blank">Individual Child Site Mode</a></div>
                 <?php
                 /**
                  * Action: mainwp_overview_help_item
                  *
-                 * Fires at the bottom of the help articles list in the Help sidebar on the Overview page.
+                 * Fires at the bottom of the help articles list in the Help sidebar on the Operations page.
                  *
                  * Suggested HTML markup:
                  *

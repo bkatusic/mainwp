@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_User
  *
@@ -154,6 +159,9 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     <?php if ( ! MainWP_Menu::is_disable_menu_item( 3, 'UpdateAdminPasswords' ) ) { ?>
                     <a href="<?php echo esc_url( admin_url( 'admin.php?page=UpdateAdminPasswords' ) ); ?>" class="mainwp-submenu"><?php esc_html_e( 'Admin Passwords', 'mainwp' ); ?></a>
                     <?php } ?>
+                    <?php if ( ! MainWP_Menu::is_disable_menu_item( 3, 'PasswordPolicy' ) ) { ?>
+                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=PasswordPolicy' ) ); ?>" class="mainwp-submenu"><?php esc_html_e( 'Password Policy', 'mainwp' ); ?></a>
+                    <?php } ?>
                     <?php
                     if ( isset( static::$subPages ) && is_array( static::$subPages ) ) {
                         foreach ( static::$subPages as $subPage ) {
@@ -183,12 +191,14 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      */
     public static function get_manage_columns() {
         return array(
-            'name'     => esc_html__( 'Name', 'mainwp' ),
-            'username' => esc_html__( 'Username', 'mainwp' ),
-            'email'    => esc_html__( 'E-mail', 'mainwp' ),
-            'role'     => esc_html__( 'Role', 'mainwp' ),
-            'posts'    => esc_html__( 'Posts', 'mainwp' ),
-            'website'  => esc_html__( 'Website', 'mainwp' ),
+            'name'                 => esc_html__( 'Name', 'mainwp' ),
+            'username'             => esc_html__( 'Username', 'mainwp' ),
+            'email'                => esc_html__( 'E-mail', 'mainwp' ),
+            'last_password_change' => esc_html__( 'Last Password Change', 'mainwp' ),
+            'password_status'      => esc_html__( 'Password Status', 'mainwp' ),
+            'role'                 => esc_html__( 'Role', 'mainwp' ),
+            'posts'                => esc_html__( 'Posts', 'mainwp' ),
+            'website'              => esc_html__( 'Website', 'mainwp' ),
         );
     }
 
@@ -276,6 +286,13 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 'slug'       => 'UpdateAdminPasswords',
                 'right'      => '',
             ),
+            array(
+                'title'      => esc_html__( 'Password Policy', 'mainwp' ),
+                'parent_key' => 'UserBulkManage',
+                'href'       => 'admin.php?page=PasswordPolicy',
+                'slug'       => 'PasswordPolicy',
+                'right'      => '',
+            ),
         );
 
         MainWP_Menu::init_subpages_left_menu( $subPages, $init_sub_subleftmenu, 'UserBulkManage', 'UserBulk' );
@@ -339,6 +356,14 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             );
         }
 
+        if ( ! MainWP_Menu::is_disable_menu_item( 3, 'PasswordPolicy' ) ) {
+            $renderItems[] = array(
+                'title'  => esc_html__( 'Password Policy', 'mainwp' ),
+                'href'   => 'admin.php?page=PasswordPolicy',
+                'active' => ( 'PasswordPolicy' === $shownPage ) ? true : false,
+            );
+        }
+
         if ( isset( static::$subPages ) && is_array( static::$subPages ) ) {
             foreach ( static::$subPages as $subPage ) {
                 if ( MainWP_Menu::is_disable_menu_item( 3, 'UserBulk' . $subPage['slug'] ) ) {
@@ -397,13 +422,13 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
 
         static::render_header( '' );
         ?>
-        <div id="mainwp-manage-users" class="ui alt segment">
+        <div id="mainwp-manage-users">
             <div class="mainwp-main-content">
                 <div class="mainwp-actions-bar ui mini form">
                     <div class="ui grid">
                         <div class="ui two column row">
                             <div class="column">
-                                <select class="ui mini dropdown" id="mainwp-bulk-actions">
+                                <select class="ui mini dropdown disabled" id="mainwp-bulk-actions">
                                     <option value=""><?php esc_html_e( 'Bulk Actions', 'mainwp' ); ?></option>
                                     <option value="edit"><?php esc_html_e( 'Edit', 'mainwp' ); ?></option>
                                     <option value="delete"><?php esc_html_e( 'Delete', 'mainwp' ); ?></option>
@@ -421,7 +446,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                                     do_action( 'mainwp_users_bulk_action' );
                                     ?>
                                 </select>
-                                <button class="ui mini button" id="mainwp-do-users-bulk-actions"><?php esc_html_e( 'Apply', 'mainwp' ); ?></button>
+                                <button class="ui mini button disabled" id="mainwp-do-users-bulk-actions"><?php esc_html_e( 'Apply', 'mainwp' ); ?></button>
                                 <?php
                                 /**
                                  * Users actions bar (left)
@@ -449,17 +474,25 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     </div>
                 </div>
                 <div id="mainwp-loading-users-row" style="display: none;">
-                    <div class="ui active inverted dimmer">
-                        <div class="ui indeterminate large text loader"><?php esc_html_e( 'Loading Users...', 'mainwp' ); ?>
+                    <div class="ui active page dimmer">
+                        <div class="ui double text loader">
+                            <?php esc_html_e( 'Loading...', 'mainwp' ); ?>
                             <span id="mainwp_users_loading_info" class="mainwp-grabbing-info-note"><br /><?php esc_html_e( 'Automatically refreshing to get up to date information.', 'mainwp' ); ?></span>
                         </div>
                     </div>
                 </div>
-                <div class="ui segment" id="mainwp_users_wrap_table">
+                <div class="ui padded segment" id="mainwp_users_wrap_table">
                     <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-manage-users-info-message' ) ) : ?>
                         <div class="ui info message">
                             <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-manage-users-info-message"></i>
-                            <?php printf( esc_html__( 'Manage existing users on your child sites.  Here you can Delete, Edit or Change Role for existing users.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/manage-users/" target="_blank">', '</a>' ); ?>
+                            <?php printf( esc_html__( 'Manage existing users on your child sites.  Here you can Delete, Edit or Change Role for existing users.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/users/manage-users/" target="_blank">', '</a>' ); ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-password-policy-feature-info-message' ) ) : ?>
+                        <div class="ui info message">
+                            <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-password-policy-feature-info-message"></i>
+                            <div><?php esc_html_e( 'MainWP shows the Last password change and Status for each user. WordPress doesn\'t store a reliable password-change date by default, so tracking starts after this version of MainWP Child is installed/updated. Until a user changes their password, the date may appear as Unknown.', 'mainwp' ); ?></div><br/>
+                            <div><?php esc_html_e( 'If your password policy is set to Never, MainWP will still record password changes, but no due/overdue notices are shown and status may remain OK/Disabled. When a policy is enabled, users with an Unknown date can still become Due/Overdue based on no password change recorded since the policy was enabled.', 'mainwp' ); ?></div>
                         </div>
                     <?php endif; ?>
                     <div class="ui message" id="mainwp-message-zone" style="display:none"></div>
@@ -545,7 +578,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     do_action( 'mainwp_manage_users_before_search_options' );
                     ?>
                     <div class="ui mini form">
-                        <div class="field" data-tooltip="<?php esc_attr_e( 'Select specific roles that you want to search for.', 'mainwp' ); ?>" data-inverted="" data-position="top right">
+                        <div class="field">
                             <select multiple="" class="ui fluid mini dropdown" id="mainwp_user_roles">
                                 <option value=""><?php esc_html_e( 'Select wanted role(s)', 'mainwp' ); ?></option>
                                 <?php
@@ -635,7 +668,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         ?>
 
         <div class="ui mini form">
-            <div class="field" data-tooltip="<?php esc_attr_e( 'Enter specific username that you want to search for.', 'mainwp' ); ?>" data-inverted="" data-position="top right">
+            <div class="field">
                 <div class="ui input fluid">
                     <input type="text" placeholder="<?php esc_attr_e( 'Username', 'mainwp' ); ?>" id="mainwp_search_users" class="text" value="<?php echo ( null !== $cachedSearch ) ? esc_attr( $cachedSearch['keyword'] ) : ''; ?>" />
                 </div>
@@ -681,122 +714,112 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         <div id="mainwp-edit-users-modal" class="ui modal">
             <i class="close icon"></i>
             <div class="header"><?php esc_html_e( 'Edit User', 'mainwp' ); ?></div>
-            <div class="ui message"><?php esc_html_e( 'Empty fields will not be passed to child sites.', 'mainwp' ); ?></div>
-            <form id="update_user_profile">
-                <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
-                <div class="ui segment">
-                    <div class="ui form">
-                        <h3><?php esc_html_e( 'Name', 'mainwp' ); ?></h3>
-                        <div class="ui grid field">
-                            <label class="six wide column middle aligned"><?php esc_html_e( 'Role', 'mainwp' ); ?></label>
-                            <div class="ui six wide column">
-                                <div class="ui left labeled input">
-                                    <select name="role" id="role">
-                                    <?php
-                                    foreach ( $editable_roles as $role_id => $role_name ) {
-                                        echo '<option value="' . esc_attr( $role_id ) . '" ' . ( 'donotupdate' === $role_id ? 'selected="selected"' : '' ) . '>' . esc_html( $role_name ) . '</option>';
-                                    }
-                                    ?>
-                                    </select>
-                                </div>
-                            </div>
+            <div class="scrolling content">
+                <div class="ui info message"><?php esc_html_e( 'Empty fields will not be passed to child sites.', 'mainwp' ); ?></div>
+                <form id="update_user_profile" class="ui form">
+                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
+
+                    <h3 class="ui header"><?php esc_html_e( 'Name', 'mainwp' ); ?></h3>
+
+                    <div class="ui grid field">
+                        <label class="six wide column middle aligned"><?php esc_html_e( 'Role', 'mainwp' ); ?></label>
+                        <div class="ui six wide column">
+                            <select name="role" id="role" class="ui selection dropdown">
+                                <?php
+                                foreach ( $editable_roles as $role_id => $role_name ) {
+                                    echo '<option value="' . esc_attr( $role_id ) . '" ' . ( 'donotupdate' === $role_id ? 'selected="selected"' : '' ) . '>' . esc_html( $role_name ) . '</option>';
+                                }
+                                ?>
+                            </select>
                         </div>
+                    </div>
 
-                        <div class="ui grid field">
-                            <label class="six wide column middle aligned"><?php esc_html_e( 'First Name', 'mainwp' ); ?></label>
-                            <div class="ui six wide column">
-                                <div class="ui left labeled input">
-                                    <input type="text" name="first_name" id="first_name" value="" class="regular-text" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="ui grid field">
-                            <label class="six wide column middle aligned"><?php esc_html_e( 'Last Name', 'mainwp' ); ?></label>
-                            <div class="ui six wide column">
-                                <div class="ui left labeled input">
-                                    <input type="text" name="last_name" id="last_name" value="" class="regular-text" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="ui grid field">
-                            <label class="six wide column middle aligned"><?php esc_html_e( 'Nickname', 'mainwp' ); ?></label>
-                            <div class="ui six wide column">
-                                <div class="ui left labeled input">
-                                    <input type="text" name="nickname" id="nickname" value="" class="regular-text" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="ui grid field">
-                            <label class="six wide column middle aligned"><?php esc_html_e( 'Display name publicly as', 'mainwp' ); ?></label>
-                            <div class="ui six wide column">
-                                <div class="ui left labeled input">
-                                    <select name="display_name" id="display_name"></select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h3><?php esc_html_e( 'Contact Info', 'mainwp' ); ?></h3>
-
-                        <div class="ui grid field">
-                            <label class="six wide column middle aligned"><?php esc_html_e( 'Email', 'mainwp' ); ?></label>
-                            <div class="ui six wide column">
-                                <div class="ui left labeled input">
-                                    <input type="email" name="email" id="email" value="" class="regular-text ltr" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="ui grid field">
-                            <label class="six wide column middle aligned"><?php esc_html_e( 'Website', 'mainwp' ); ?></label>
-                            <div class="ui six wide column">
-                                <div class="ui left labeled input">
-                                    <input type="url" name="url" id="url" value="" class="regular-text code" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <h3><?php esc_html_e( 'About the user', 'mainwp' ); ?></h3>
-
-                        <div class="ui grid field">
-                            <label class="six wide column middle aligned"><?php esc_html_e( 'Biographical Info', 'mainwp' ); ?></label>
-                            <div class="ui six wide column">
-                                <div class="ui left labeled input">
-                                    <textarea name="description" id="description" rows="5" cols="30"></textarea>
-                                    <p class="description"><?php esc_html_e( 'Share a little biographical information to fill out your profile. This may be shown publicly.', 'mainwp' ); ?></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h3><?php esc_html_e( 'Account Management', 'mainwp' ); ?></h3>
-
-                        <div class="ui grid field">
-                            <label class="six wide column middle aligned"><?php esc_html_e( 'Password', 'mainwp' ); ?></label>
-                            <div class="ui six wide column">
-                                <div class="ui left labeled action input">
-                                    <input class="hidden" value=" "/>
-                                    <input type="text" id="password" name="password" autocomplete="off" value="">
-                                </div>
+                    <div class="ui grid field">
+                        <label class="six wide column middle aligned"><?php esc_html_e( 'First Name', 'mainwp' ); ?></label>
+                        <div class="ui six wide column">
+                            <div class="ui input">
+                                <input type="text" name="first_name" id="first_name" value="" />
                             </div>
                         </div>
                     </div>
-                </div>
-            </form>
-            <?php
-            $is_demo = MainWP_Demo_Handle::is_demo_mode();
-            ?>
+
+                    <div class="ui grid field">
+                        <label class="six wide column middle aligned"><?php esc_html_e( 'Last Name', 'mainwp' ); ?></label>
+                        <div class="ui six wide column">
+                            <div class="ui input">
+                                <input type="text" name="last_name" id="last_name" value="" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ui grid field">
+                        <label class="six wide column middle aligned"><?php esc_html_e( 'Nickname', 'mainwp' ); ?></label>
+                        <div class="ui six wide column">
+                            <div class="ui input">
+                                <input type="text" name="nickname" id="nickname" value="" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ui grid field">
+                        <label class="six wide column middle aligned"><?php esc_html_e( 'Display name publicly as', 'mainwp' ); ?></label>
+                        <div class="ui six wide column">
+                            <div class="ui input">
+                                <select name="display_name" id="display_name" class="ui selection dropdown"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="ui header"><?php esc_html_e( 'Contact Info', 'mainwp' ); ?></h3>
+
+                    <div class="ui grid field">
+                        <label class="six wide column middle aligned"><?php esc_html_e( 'Email', 'mainwp' ); ?></label>
+                        <div class="ui six wide column">
+                            <div class="ui input">
+                                <input type="email" name="email" id="email" value="" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ui grid field">
+                        <label class="six wide column middle aligned"><?php esc_html_e( 'Website', 'mainwp' ); ?></label>
+                        <div class="ui six wide column">
+                            <div class="ui input">
+                                <input type="url" name="url" id="url" value="" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="ui header"><?php esc_html_e( 'About the user', 'mainwp' ); ?></h3>
+
+                    <div class="ui grid field">
+                        <label class="six wide column middle aligned"><?php esc_html_e( 'Biographical Info', 'mainwp' ); ?></label>
+                        <div class="ui six wide column">
+                            <div class="ui input">
+                                <textarea name="description" id="description" rows="5" cols="30" style="width:100%"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="ui header"><?php esc_html_e( 'Account Management', 'mainwp' ); ?></h3>
+
+                    <div class="ui grid field">
+                        <label class="six wide column middle aligned"><?php esc_html_e( 'Password', 'mainwp' ); ?></label>
+                        <div class="ui six wide column">
+                            <div class="ui action input">
+                                <input class="hidden" value=" "/>
+                                <input type="text" id="password" name="password" autocomplete="off" value="">
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
             <div class="actions">
                 <div id="mainwp_update_password_error" style="display: none"></div>
                 <span id="mainwp_users_updating"><i class="ui active inline loader tiny"></i></span>
-                <?php
-                if ( $is_demo ) {
-                    MainWP_Demo_Handle::get_instance()->render_demo_disable_button( '<input type="button" class="ui green button disabled" disabled="disabled" value="' . esc_attr__( 'Update', 'mainwp' ) . '">' );
-                } else {
-                    ?>
-                    <input type="button" class="ui green button" id="mainwp_btn_update_user" value="<?php esc_attr_e( 'Update', 'mainwp' ); ?>">
-                <?php } ?>
+                <input type="button" class="ui green button" id="mainwp_btn_update_user" value="<?php esc_attr_e( 'Update', 'mainwp' ); ?>">
             </div>
         </div>
         <?php
@@ -816,6 +839,8 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      */
     public static function render_table( $cached = true, $role = '', $groups = '', $sites = '', $search = null, $clients = '' ) {
 
+        $has_cached_results = $cached && isset( $_SESSION['MainWPUsersSearch'] ) && ! empty( $_SESSION['MainWPUsersSearch'] );
+
         /**
          * Action: mainwp_before_users_table
          *
@@ -824,7 +849,9 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
          * @since 4.1
          */
         do_action( 'mainwp_before_users_table' );
-        ?>
+
+        if ( ! $cached || $has_cached_results ) {
+            ?>
         <table id="mainwp-users-table" class="ui unstackable single line table" style="width:100%">
             <thead>
                 <tr>
@@ -833,6 +860,8 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     <th id="name"><?php esc_html_e( 'Name', 'mainwp' ); ?></th>
                     <th id="username"><?php esc_html_e( 'Username', 'mainwp' ); ?></th>
                     <th id="email"><?php esc_html_e( 'E-mail', 'mainwp' ); ?></th>
+                    <th id="last_password_change" class="right aligned"><?php esc_html_e( 'Last Password Change', 'mainwp' ); ?></th>
+                    <th id="password_status" class="center aligned"><?php esc_html_e( 'Password Status', 'mainwp' ); ?></th>
                     <th id="role"><?php esc_html_e( 'Role', 'mainwp' ); ?></th>
                     <th id="posts"><?php esc_html_e( 'Posts', 'mainwp' ); ?></th>
                     <th id="website"><?php esc_html_e( 'Website', 'mainwp' ); ?></th>
@@ -844,12 +873,20 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             if ( $cached ) {
                 MainWP_Cache::echo_body( 'Users' );
             } else {
+                MainWP_Cache::init_cache( 'Users' );
                 static::render_table_body( $role, $groups, $sites, $search, $clients );
             }
             ?>
             </tbody>
         </table>
-        <?php
+            <?php
+        } else {
+            MainWP_UI::render_empty_page_placeholder(
+                esc_html__( 'Find Users', 'mainwp' ),
+                esc_html__( 'Select the Child Sites you want, choose any filters, then click Show Users.', 'mainwp' ),
+                '<em data-emoji=":busts_in_silhouette:" class="big"></em>'
+            );
+        }
         /**
          * Action: mainwp_after_users_table
          *
@@ -900,17 +937,27 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     "scrollX" : <?php echo esc_html( $table_features['scrollX'] ); ?>,
                     "lengthMenu": [ [10, 25, 50, 100, -1], [10, 25, 50, 100, "All"] ],
                     "language" : { "emptyTable": "<?php esc_html_e( 'Please use the search options to find wanted users.', 'mainwp' ); ?>" },
-                    "columnDefs": [ {
-                        "targets": 'no-sort',
-                        "orderable": false
-                    } ],
-                    "preDrawCallback": function() {
-                        console.log('preDrawCallback mainwp-users-table');
+                    "columnDefs": [
+                        {
+                            "targets": 'no-sort',
+                            "orderable": false
+                        },
+                        {
+                            "targets": '#last_password_change',
+                            "type": 'string'
+                        },
+                        {
+                            "targets": '#password_status',
+                            "type": 'string'
+                        }
+                    ],
+                    "drawCallback": function() {
                         setTimeout(() => {
                             jQuery('#mainwp-users-table .ui.dropdown').dropdown();
                             jQuery('#mainwp-users-table .ui.checkbox').checkbox();
-                            mainwp_datatable_fix_menu_overflow();
+                            mainwp_datatable_fix_menu_overflow('#mainwp-users-table');
                             mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
+                            updateUsersBulkActionsState();
                         }, 1000);
                     },
                     select: {
@@ -923,19 +970,20 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         dt.rows(indexes)
                         .nodes()
                         .to$().find('td.check-column .ui.checkbox' ).checkbox('set checked');
+                        updateUsersBulkActionsState();
                     }
                 }).on('deselect', function (e, dt, type, indexes) {
                     if( 'row' == type ){
                         dt.rows(indexes)
                         .nodes()
                         .to$().find('td.check-column .ui.checkbox' ).checkbox('set unchecked');
+                        updateUsersBulkActionsState();
                     }
                 }).on( 'columns-reordered', function () {
-                    console.log('columns-reordered');
                     setTimeout(() => {
                         jQuery( '#mainwp-users-table .ui.dropdown' ).dropdown();
                         jQuery( '#mainwp-users-table .ui.checkbox' ).checkbox();
-                        mainwp_datatable_fix_menu_overflow();
+                        mainwp_datatable_fix_menu_overflow('#mainwp-users-table');
                         mainwp_table_check_columns_init(); // ajax: to fix checkbox all.
                     }, 1000);
                 });
@@ -955,6 +1003,12 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 } );
             };
             _init_manage_sites_screen();
+
+            updateUsersBulkActionsState();
+
+            jQuery(document).on('change', '#mainwp-users-table .check-column INPUT:checkbox', function() {
+                updateUsersBulkActionsState();
+            });
 
         } );
         </script>
@@ -982,8 +1036,6 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      * @uses \MainWP\Dashboard\MainWP_Utility::map_site()
      */
     public static function render_table_body( $role = '', $groups = '', $sites = '', $search = '', $clients = '' ) { // phpcs:ignore -- NOSONAR - current complexity required to achieve desired results. Pull request solutions appreciated.
-        MainWP_Cache::init_cache( 'Users' );
-
         $output         = new \stdClass();
         $output->errors = array();
         $output->users  = 0;
@@ -1153,7 +1205,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             array(
                 'count'   => $output->users,
                 'keyword' => $search,
-                'status'  => ( isset( $_POST['role'] ) ? sanitize_text_field( wp_unslash( $_POST['role'] ) ) : 'administrator' ), // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+                'status'  => $role,
                 'sites'   => '' !== $sites ? $sites : '',
                 'groups'  => '' !== $groups ? $groups : '',
                 'clients' => ( '' !== $clients ) ? $clients : '',
@@ -1214,7 +1266,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      *
      * @uses \MainWP\Dashboard\MainWP_Cache::add_body()
      */
-    protected static function users_search_handler_renderer( $users, $website ) {
+    protected static function users_search_handler_renderer( $users, $website ) { // phpcs:ignore -- NOSONAR -complex.
         $return  = 0;
         $is_demo = MainWP_Demo_Handle::is_demo_mode();
 
@@ -1227,14 +1279,62 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             <tr>
                 <td class="check-column"><span class="ui checkbox"><input type="checkbox" name="user[]" value="1"></span></td>
                 <?php do_action( 'mainwp_users_table_column', $user, $website ); ?>
-                <td class="name column-name">
+                <td class="name column-name not-selectable">
                     <?php echo ! empty( $user['display_name'] ) ? esc_html( $user['display_name'] ) : '&nbsp;'; ?>
                 </td>
-                <td class="username column-username"><strong><abbr title="<?php echo esc_attr( $user['login'] ); ?>"><?php echo esc_html( $user['login'] ); ?></abbr></strong></td>
-                <td class="email column-email"><a href="mailto:<?php echo esc_attr( $user['email'] ); ?>"><?php echo esc_html( $user['email'] ); ?></a></td>
-                <td class="role column-role"><?php echo static::get_role( $user['role'] ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
-                <td class="posts column-posts"><a href="<?php echo esc_url( admin_url( 'admin.php?page=PostBulkManage&siteid=' . intval( $website->id ) ) . '&userid=' . $user['id'] ); ?>"><?php echo esc_html( $user['post_count'] ); ?></a></td>
-                <td class="website column-website"><a href="<?php echo esc_url( $website->url ); ?>" target="_blank"><?php echo esc_html( $website->url ); ?></a></td>
+                <td class="username column-username not-selectable"><strong><abbr title="<?php echo esc_attr( $user['login'] ); ?>"><?php echo esc_html( $user['login'] ); ?></abbr></strong></td>
+                <td class="email column-email not-selectable"><a href="mailto:<?php echo esc_attr( $user['email'] ); ?>"><?php echo esc_html( $user['email'] ); ?></a></td>
+                <td class="last_password_change column-last_password_change not-selectable right aligned" data-order="<?php echo ! empty( $user['last_password_change'] ) ? intval( $user['last_password_change'] ) : 0; ?>">
+                    <?php
+                    if ( ! empty( $user['last_password_change'] ) ) {
+                        $timestamp = date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $user['last_password_change'] );
+                        echo '<span data-tooltip="' . esc_attr( $timestamp ) . '" data-inverted="" data-position="left center">' . esc_html( MainWP_Utility::time_elapsed_string( $user['last_password_change'] ) ) . '</span>';
+                    } else {
+                        echo '<span class="ui grey text" data-tooltip="' . esc_attr__( 'Password change hasn\'t been tracked yet.', 'mainwp' ) . '" data-inverted="" data-position="left center">' . esc_html__( 'Unknown', 'mainwp' ) . '</span>';
+                    }
+                    ?>
+                </td>
+                <?php
+                $status       = isset( $user['password_status'] ) ? $user['password_status'] : '';
+                $status_order = 0;
+                if ( 'OVERDUE' === $status ) {
+                    $status_order = 3;
+                } elseif ( 'DUE' === $status ) {
+                    $status_order = 2;
+                } elseif ( 'OK' === $status ) {
+                    $status_order = 1;
+                }
+                ?>
+                <td class="password_status column-password_status not-selectable center aligned" data-order="<?php echo intval( $status_order ); ?>">
+                    <?php
+                    if ( 'OK' === $status && empty( $user['last_password_change'] ) ) {
+                        echo '<span class="ui grey mini label" data-tooltip="' . esc_attr__( 'Password change hasn\'t been tracked yet.', 'mainwp' ) . '" data-inverted="" data-position="left center">' . esc_html__( 'Unknown', 'mainwp' ) . '</span>';
+                    } elseif ( 'OK' === $status ) {
+                        echo '<span class="ui green mini label">' . esc_html__( 'Fresh', 'mainwp' ) . '</span>';
+                    } elseif ( 'DUE' === $status ) {
+                        if ( ! empty( $user['password_due_time'] ) ) {
+                            $due_date = MainWP_Utility::format_timestamp( $user['password_due_time'] );
+                            echo '<span class="ui yellow mini label" data-tooltip="' . esc_attr__( 'Due: ', 'mainwp' ) . esc_attr( $due_date ) . '" data-inverted="" data-position="left center">' . esc_html__( 'Due Soon', 'mainwp' ) . '</span>';
+                        } else {
+                            echo '<span class="ui yellow mini label">' . esc_html__( 'Due Soon', 'mainwp' ) . '</span>';
+                        }
+                    } elseif ( 'OVERDUE' === $status ) {
+                        if ( ! empty( $user['password_due_time'] ) ) {
+                            $overdue_date = MainWP_Utility::format_timestamp( $user['password_due_time'] );
+                            echo '<span class="ui red mini label" data-tooltip="' . esc_attr__( 'Was due: ', 'mainwp' ) . esc_attr( $overdue_date ) . '" data-inverted="" data-position="left center">' . esc_html__( 'Overdue', 'mainwp' ) . '</span>';
+                        } else {
+                            echo '<span class="ui red mini label">' . esc_html__( 'Overdue', 'mainwp' ) . '</span>';
+                        }
+                    } elseif ( 'DISABLED' === $status || empty( $status ) ) {
+                        echo '<span class="ui grey mini label">' . esc_html__( 'Disabled', 'mainwp' ) . '</span>';
+                    } else {
+                        echo '<span class="ui grey text">' . esc_html( $status ) . '</span>';
+                    }
+                    ?>
+                </td>
+                <td class="role column-role not-selectable"><?php echo static::get_role( $user['role'] ); // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
+                <td class="posts column-posts not-selectable"><a href="<?php echo esc_url( admin_url( 'admin.php?page=PostBulkManage&siteid=' . intval( $website->id ) ) . '&userid=' . $user['id'] ); ?>"><?php echo esc_html( $user['post_count'] ); ?></a></td>
+                <td class="website column-website not-selectable"><a href="<?php echo esc_url( $website->url ); ?>" target="_blank"><?php echo esc_html( $website->url ); ?></a></td>
                 <td class="right aligned not-selectable">
                     <input class="userId" type="hidden" name="id" value="<?php echo esc_attr( $user['id'] ); ?>" />
                     <input class="userName" type="hidden" name="name" value="<?php echo esc_attr( $user['login'] ); ?>" />
@@ -1249,7 +1349,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             <a href="javascript:void(0)" class="item" data-tooltip="This user is used for our secure link, it can not be deleted." data-inverted="" data-position="left center"><?php esc_html_e( 'Delete', 'mainwp' ); ?></a>
                             <?php } ?>
                             <?php if ( ! $is_demo ) : ?>
-                            <a class="item" href="<?php echo 'admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" data-tooltip="<?php esc_attr_e( 'Jump to the site WP Admin', 'mainwp' ); ?>"  data-position="bottom right"  data-inverted="" class="open_newwindow_wpadmin ui green basic icon button" target="_blank"><?php esc_html_e( 'Go to WP Admin', 'mainwp' ); ?></a>
+                            <a class="item" href="<?php MainWP_Site_Open::get_open_site_admin_link( $website->id, true ); ?>" data-tooltip="<?php esc_attr_e( 'Jump to the site WP Admin', 'mainwp' ); ?>"  data-position="bottom right"  data-inverted="" class="open_newwindow_wpadmin ui green basic icon button" target="_blank"><?php esc_html_e( 'Go to WP Admin', 'mainwp' ); ?></a>
                             <?php else : ?>
                                 <a class="item" href="<?php echo esc_url( $website->url ) . 'wp-admin.html'; ?>" data-tooltip="<?php esc_attr_e( 'Jump to the site WP Admin', 'mainwp' ); ?>"  data-position="bottom right"  data-inverted="" class="open_newwindow_wpadmin ui green basic icon button" target="_blank"><?php esc_html_e( 'Go to WP Admin', 'mainwp' ); ?></a>
                             <?php endif; ?>
@@ -1494,7 +1594,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         static::render_header( 'Add' );
         // phpcs:disable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         ?>
-        <div class="ui alt segment" id="mainwp-add-users">
+        <div id="mainwp-add-users">
             <?php
             /**
              * Action: mainwp_before_new_user_form
@@ -1506,15 +1606,21 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             do_action( 'mainwp_before_new_user_form' );
             ?>
             <form action="" method="post" name="createuser" id="createuser" class="add:users: validate">
-                <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
-                <div class="mainwp-main-content">
-                    <div class="ui hidden divider"></div>
+                <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
+                <div class="mainwp-main-content ui padded segment">
                     <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-add-user-info-message' ) ) : ?>
                     <div class="ui info message">
                         <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-add-user-info-message"></i>
-                        <?php printf( esc_html__( 'Use the provided form to create a new user on your child site.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/create-a-new-user/" target="_blank">', '</a>' ); ?>
+                        <div class="header"><?php esc_html_e( 'Create users on all selected Child Sites.', 'mainwp' ); ?></div>
+                        <?php esc_html_e( 'Select one or more sites, tags or clients before submitting.', 'mainwp' ); ?>
                     </div>
                 <?php endif; ?>
+                    <?php if ( isset( $_GET['success'] ) && 1 === (int) $_GET['success'] ) : ?>
+                        <div class="ui green message">
+                            <i class="close icon"></i>
+                            <?php esc_html_e( 'User created successfully. You can now manage this user from the Manage Users page, or create another one here.', 'mainwp' ); ?>
+                        </div>
+                    <?php endif; ?>
                     <div class="ui message" id="mainwp-message-zone" style="display:none;"></div>
                     <div id="mainwp-add-new-user-form" >
                         <?php
@@ -1529,17 +1635,17 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         ?>
                         <div class="ui form">
                             <div class="ui grid field">
-                                <label class="six wide column middle aligned"><?php esc_html_e( 'Username', 'mainwp' ); ?></label>
+                                <label class="six wide column middle aligned"><?php esc_html_e( 'Username', 'mainwp' ); ?> <span class="ui small red text"><?php esc_html_e( '(Required)', 'mainwp' ); ?></span></label>
                                 <div class="ui six wide column">
-                                    <div class="ui left labeled input">
+                                    <div class="ui input">
                                         <input type="text" id="user_login" name="user_login" value="<?php echo ( isset( $_POST['user_login'] ) ) ? esc_html( sanitize_text_field( wp_unslash( $_POST['user_login'] ) ) ) : ''; ?>">
                                     </div>
                                 </div>
                             </div>
                             <div class="ui grid field">
-                                <label class="six wide column middle aligned"><?php esc_html_e( 'E-mail', 'mainwp' ); ?></label>
+                                <label class="six wide column middle aligned"><?php esc_html_e( 'E-mail', 'mainwp' ); ?> <span class="ui small red text"><?php esc_html_e( '(Required)', 'mainwp' ); ?></span></label>
                                 <div class="ui six wide column">
-                                    <div class="ui left labeled input">
+                                    <div class="ui input">
                                         <input type="text" id="email" name="email" value="<?php echo ( isset( $_POST['email'] ) ) ? esc_html( sanitize_text_field( wp_unslash( $_POST['email'] ) ) ) : ''; ?>">
                                     </div>
                                 </div>
@@ -1547,7 +1653,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             <div class="ui grid field">
                                 <label class="six wide column middle aligned"><?php esc_html_e( 'First Name', 'mainwp' ); ?></label>
                                 <div class="ui six wide column">
-                                    <div class="ui left labeled input">
+                                    <div class="ui input">
                                         <input type="text" id="first_name" name="first_name" value="<?php echo ( isset( $_POST['first_name'] ) ) ? esc_html( sanitize_text_field( wp_unslash( $_POST['first_name'] ) ) ) : ''; ?>">
                                     </div>
                                 </div>
@@ -1555,7 +1661,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             <div class="ui grid field">
                                 <label class="six wide column middle aligned"><?php esc_html_e( 'Last Name', 'mainwp' ); ?></label>
                                 <div class="ui six wide column">
-                                    <div class="ui left labeled input">
+                                    <div class="ui input">
                                         <input type="text" id="last_name" name="last_name" value="<?php echo ( isset( $_POST['last_name'] ) ) ? esc_html( sanitize_text_field( wp_unslash( $_POST['last_name'] ) ) ) : ''; ?>">
                                     </div>
                                 </div>
@@ -1563,26 +1669,29 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             <div class="ui grid field">
                                 <label class="six wide column middle aligned"><?php esc_html_e( 'Website', 'mainwp' ); ?></label>
                                 <div class="ui six wide column">
-                                    <div class="ui left labeled input">
+                                    <div class="ui input">
                                         <input type="text" id="url" name="url" value="<?php echo ( isset( $_POST['url'] ) ) ? esc_url_raw( wp_unslash( $_POST['url'] ) ) : ''; ?>">
                                     </div>
                                 </div>
                             </div>
                             <div class="ui grid field">
-                                <label class="six wide column middle aligned"><?php esc_html_e( 'Password', 'mainwp' ); ?></label>
+                                <label class="six wide column middle aligned"><?php esc_html_e( 'Password', 'mainwp' ); ?> <span class="ui small red text"><?php esc_html_e( '(Required)', 'mainwp' ); ?></span></label>
                                 <div class="ui six wide column">
-                                    <div class="ui left labeled action input">
-                                        <input class="hidden" value=" "/>
+                                    <input class="hidden" value=" "/>
+                                    <div class="ui icon input">
                                         <input type="text" id="password" name="password" autocomplete="off" value="<?php echo esc_attr( wp_generate_password( $pass_complexity ) ); ?>">
-                                        <button class="ui green right button wp-generate-pw"><?php esc_html_e( 'Generate Password', 'mainwp' ); ?></button>
+                                        <i class="sync alternate link icon mainwp-generate-password-button"></i>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="ui grid field">
                                 <label class="six wide column middle aligned"><?php esc_html_e( 'Send Password?', 'mainwp' ); ?></label>
-                                <div class="six wide column ui toggle checkbox">
+                                <div class="one wide column ui toggle checkbox">
                                     <input type="checkbox" name="send_password" id="send_password" <?php echo ( isset( $_POST['send_password'] ) ) ? esc_html( 'checked' ) : ''; ?> >
+                                </div>
+                                <div class="nine wide column">
+                                    <span class="ui small text"><?php esc_html_e( 'If enabled, the new user will receive their login credentials via email.', 'mainwp' ); ?></span>
                                 </div>
                             </div>
 
@@ -1682,15 +1791,9 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                          * @since 4.1
                          */
                         do_action( 'mainwp_add_new_user_before_submit_button' );
-
-                        $is_demo = MainWP_Demo_Handle::is_demo_mode();
-                        if ( $is_demo ) {
-                            MainWP_Demo_Handle::get_instance()->render_demo_disable_button( '<input type="button" class="ui green big button disabled" disabled="disabled" value="' . esc_attr__( 'Add New User', 'mainwp' ) . '"/>' );
-                        } else {
-                            ?>
-                            <input type="button" name="createuser" id="bulk_add_createuser" class="ui big green fluid button" value="<?php esc_attr_e( 'Add New User', 'mainwp' ); ?> "/>
-                            <?php
-                        }
+                        ?>
+                        <input type="button" name="createuser" id="bulk_add_createuser" class="ui big green fluid button" value="<?php esc_attr_e( 'Add New User', 'mainwp' ); ?> "/>
+                        <?php
                         /**
                          * Action: mainwp_add_new_user_after_submit_button
                          *
@@ -1714,6 +1817,12 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 </div>
                 <div style="clear:both"></div>
             </form>
+            <script type="text/javascript">
+                jQuery( document ).ready( function () {
+                    // Initialize button state based on site selection
+                    mainwp_init_button_site_selection_dependency( 'bulk_add_createuser' );
+                } );
+            </script>
             <?php
             /**
              * Action: mainwp_after_new_user_form
@@ -1745,7 +1854,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         <?php static::render_header( 'Import' ); ?>
         <div id="MainWP_Bulk_AddUser">
             <form action="" method="post" name="createuser" id="createuser" class="add:users: validate" enctype="multipart/form-data">
-                <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                 <?php static::render_import_users(); ?>
             </form>
         </div>
@@ -1760,11 +1869,11 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
      */
     public static function render_import_users() {
         ?>
-        <div class="ui segment" id="mainwp-import-sites">
+        <div class="ui padded segment" id="mainwp-import-sites">
             <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-import-users-info-message' ) ) : ?>
                 <div class="ui info message">
                     <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-import-users-info-message"></i>
-                    <?php printf( esc_html__( 'Use the form to bulk import users.  You can download the sample CSV file to see how to fomat the import file properly.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/import-users/" target="_blank">', '</a>' ); ?>
+                    <?php printf( esc_html__( 'Use the form to bulk import users.  You can download the sample CSV file to see how to fomat the import file properly.  For additional help, please check this %1$shelp documentation%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/users/manage-users#import-users-via-csv/" target="_blank">', '</a>' ); ?>
                 </div>
             <?php endif; ?>
 
@@ -1783,10 +1892,10 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             <div id="mainwp-message-zone" class="ui message" style="display:none"></div>
             <div class="ui form">
                     <form method="POST" action="" enctype="multipart/form-data" id="mainwp_managesites_bulkadd_form">
-                        <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                        <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                         <div class="ui grid field">
-                            <label class="six wide column middle aligned"><?php esc_html_e( 'Upload the CSV file', 'mainwp' ); ?></label>
-                        <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Click to upload the import file.', 'mainwp' ); ?>" data-inverted="" data-position="left center">
+                            <label class="six wide column middle aligned"><?php esc_html_e( 'Upload the CSV file', 'mainwp' ); ?> (<a href="<?php echo esc_url( MAINWP_PLUGIN_URL . 'assets/csv/sample_users.csv' ); ?>" ><?php esc_html_e( 'Download Sample CSV file', 'mainwp' ); ?></a>)</label>
+                            <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Click to upload the import file.', 'mainwp' ); ?>" data-inverted="" data-position="left center">
                                 <div class="ui file input">
                                 <input type="file" name="import_user_file_bulkupload" id="import_user_file_bulkupload" accept="text/comma-separated-values" />
                                 </div>
@@ -1799,14 +1908,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             </div>
                         </div>
                         <div class="ui divider"></div>
-                        <?php
-                        if ( $is_demo ) {
-                                MainWP_Demo_Handle::get_instance()->render_demo_disable_button( '<input type="button" class="ui big green button disabled" disabled="disabled" value="' . esc_attr__( 'Import Users', 'mainwp' ) . '"/>' );
-                        } else {
-                            ?>
-                                <input type="button" name="createuser" id="bulk_import_createuser" class="ui big green button" value="<?php esc_attr_e( 'Import Users', 'mainwp' ); ?>" />
-                            <?php } ?>
-                            <a href="<?php echo esc_url( MAINWP_PLUGIN_URL . 'assets/csv/sample_users.csv' ); ?>" class="ui big green basic right floated button"><?php esc_html_e( 'Download Sample CSV file', 'mainwp' ); ?></a>
+                        <input type="button" name="createuser" id="bulk_import_createuser" class="ui big green button" value="<?php esc_attr_e( 'Import Users', 'mainwp' ); ?>" />
                     </form>
                 </div>
             <?php
@@ -2004,21 +2106,38 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         // phpcs:disable WordPress.Security.EscapeOutput
         ?>
         <div id="mainwp-creating-new-user-modal" class="ui modal">
-            <i class="close icon"></i>
-                <div class="header"><?php esc_html_e( 'New User', 'mainwp' ); ?></div>
-                <div class="content">
-                    <div class="ui middle aligned divided list">
-                        <?php foreach ( $dbwebsites as $website ) : ?>
-                        <div class="item ui grid">
-                            <span class="content"><a href="<?php echo esc_url( admin_url( 'admin.php?page=managesites&dashboard=' . $website->id ) ); ?>"><?php echo esc_html( stripslashes( $website->name ) ); ?></a></span>
-                            <span class="right floated content"><?php echo isset( $output->ok[ $website->id ] ) && 1 === (int) $output->ok[ $website->id ] ? '<i class="check green icon"></i> ' : '<i class="times red icon"></i> ' . $output->errors[ $website->id ]; ?></span>
-                        </div>
-                        <?php endforeach; ?>
+            <i class="close mainwp-reload icon"></i>
+            <div class="header"><?php esc_html_e( 'New User', 'mainwp' ); ?></div>
+            <div class="content">
+                <div class="ui middle aligned divided list">
+                    <?php foreach ( $dbwebsites as $website ) : ?>
+                    <div class="item ui grid">
+                        <span class="content"><a href="<?php echo esc_url( admin_url( 'admin.php?page=managesites&dashboard=' . $website->id ) ); ?>"><?php echo esc_html( stripslashes( $website->name ) ); ?></a></span>
+                        <span class="right floated content"><?php echo isset( $output->ok[ $website->id ] ) && 1 === (int) $output->ok[ $website->id ] ? '<i class="check green icon"></i> ' : '<span data-tooltip="' . esc_attr( $output->errors[ $website->id ] ) . '" data-position="left center" data-inverted=""><i class="times red icon"></i></span>'; ?></span>
                     </div>
+                    <?php endforeach; ?>
                 </div>
-                <div class="actions">
-                </div>
+                <script type="text/javascript">
+                    setTimeout(() => {
+                        // Check if all items have green check icons (no red times icons)
+                        let allSuccess = true;
+                        jQuery('#mainwp-creating-new-user-modal .ui.list .item').each(function() {
+                            // Check if this item has a red times icon
+                            if (jQuery(this).find('.times.red.icon').length > 0) {
+                                allSuccess = false;
+                                return false; // Break the loop
+                            }
+                        });
+
+                        // If all items are successful, redirect to success page
+                        if (allSuccess) {
+                            jQuery('#createuser')[0].reset();
+                            location.href = 'admin.php?page=UserBulkAdd&success=1';
+                        }
+                    }, 3000);
+                </script>
             </div>
+        </div>
         <?php
         // phpcs:enable
     }
@@ -2137,7 +2256,7 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                                 jQuery( "#mainwp-import-users-modal" ).modal( {
                                     closable: false,
                                     onHide: function() {
-                                        location.href = 'admin.php?page=BulkImportUsers';
+                                        mainwp_forceReload('admin.php?page=BulkImportUsers');
                                     }
                                 } ).modal( 'show' );
                             } );
@@ -2350,11 +2469,11 @@ class MainWP_User { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             ?>
             <p><?php esc_html_e( 'If you need help with managing users, please review following help documents', 'mainwp' ); ?></p>
             <div class="ui list">
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-users/" target="_blank">Manage Users</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-users/#create-a-new-user" target="_blank">Create a New User</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-users/#edit-existing-users" target="_blank">Edit an Existing User</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-users/#bulk-update-admin-passwords" target="_blank">Bulk Update Administrator Passwords</a></div>
-                <div class="item"><i class="external alternate icon"></i> <a href="https://mainwp.com/kb/manage-users/#delete-users" target="_blank">Delete User(s)</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/users/manage-users" target="_blank">Manage Users</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/users/manage-users#create-a-new-user" target="_blank">Create a New User</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/users/manage-users#edit-existing-users" target="_blank">Edit an Existing User</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/users/manage-users#bulk-update-admin-passwords" target="_blank">Bulk Update Administrator Passwords</a></div>
+                <div class="item"><i class="external alternate icon"></i> <a href="https://docs.mainwp.com/sites/users/manage-users#delete-users" target="_blank">Delete User(s)</a></div>
                 <?php
                 /**
                  * Action: mainwp_users_help_item

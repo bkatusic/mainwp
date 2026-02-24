@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Post_Plugin_Theme_Handler
  *
@@ -124,16 +129,17 @@ class MainWP_Post_Plugin_Theme_Handler extends MainWP_Post_Base_Handler { // php
     public function mainwp_themes_search() {
         $this->secure_request( 'mainwp_themes_search' );
         // phpcs:disable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-        $keyword = isset( $_POST['keyword'] ) ? sanitize_text_field( wp_unslash( $_POST['keyword'] ) ) : '';
-        $status  = isset( $_POST['status'] ) ? sanitize_text_field( wp_unslash( $_POST['status'] ) ) : '';
-        $groups  = isset( $_POST['groups'] ) && is_array( $_POST['groups'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['groups'] ) ) : array();
-        $sites   = isset( $_POST['sites'] ) && is_array( $_POST['sites'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['sites'] ) ) : array();
-        $clients = isset( $_POST['clients'] ) && is_array( $_POST['clients'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['clients'] ) ) : array();
+        $keyword       = isset( $_POST['keyword'] ) ? sanitize_text_field( wp_unslash( $_POST['keyword'] ) ) : '';
+        $status        = isset( $_POST['status'] ) ? sanitize_text_field( wp_unslash( $_POST['status'] ) ) : '';
+        $groups        = isset( $_POST['groups'] ) && is_array( $_POST['groups'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['groups'] ) ) : array();
+        $sites         = isset( $_POST['sites'] ) && is_array( $_POST['sites'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['sites'] ) ) : array();
+        $clients       = isset( $_POST['clients'] ) && is_array( $_POST['clients'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['clients'] ) ) : array();
+        $not_criteria  = isset( $_POST['not_criteria'] ) && 'true' === $_POST['not_criteria'] ? true : false;
+        $not_fetchdata = isset( $_POST['not_fetchdata'] ) && ! empty( $_POST['not_fetchdata'] ) ? true : false;
 
-        $not_criteria = isset( $_POST['not_criteria'] ) && 'true' === $_POST['not_criteria'] ? true : false;
         // phpcs:enable
         MainWP_Cache::init_session();
-        $result = MainWP_Themes::render_table( $keyword, $status, $groups, $sites, $not_criteria, $clients );
+        $result = MainWP_Themes::render_table( $keyword, $status, $groups, $sites, $not_criteria, $clients, $not_fetchdata );
         wp_send_json( $result );
     }
 
@@ -227,15 +233,17 @@ class MainWP_Post_Plugin_Theme_Handler extends MainWP_Post_Base_Handler { // php
     public function mainwp_plugins_search() {
         $this->secure_request( 'mainwp_plugins_search' );
         // phpcs:disable WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-        $keyword      = isset( $_POST['keyword'] ) ? sanitize_text_field( wp_unslash( $_POST['keyword'] ) ) : '';
-        $status       = isset( $_POST['status'] ) ? sanitize_text_field( wp_unslash( $_POST['status'] ) ) : '';
-        $groups       = isset( $_POST['groups'] ) && is_array( $_POST['groups'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['groups'] ) ) : '';
-        $sites        = isset( $_POST['sites'] ) && is_array( $_POST['sites'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['sites'] ) ) : '';
-        $clients      = isset( $_POST['clients'] ) && is_array( $_POST['clients'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['clients'] ) ) : '';
-        $not_criteria = isset( $_POST['not_criteria'] ) && 'true' === $_POST['not_criteria'] ? true : false;
+        $keyword       = isset( $_POST['keyword'] ) ? sanitize_text_field( wp_unslash( $_POST['keyword'] ) ) : '';
+        $status        = isset( $_POST['status'] ) ? sanitize_text_field( wp_unslash( $_POST['status'] ) ) : '';
+        $groups        = isset( $_POST['groups'] ) && is_array( $_POST['groups'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['groups'] ) ) : '';
+        $sites         = isset( $_POST['sites'] ) && is_array( $_POST['sites'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['sites'] ) ) : '';
+        $clients       = isset( $_POST['clients'] ) && is_array( $_POST['clients'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['clients'] ) ) : '';
+        $not_criteria  = isset( $_POST['not_criteria'] ) && 'true' === $_POST['not_criteria'] ? true : false;
+        $not_fetchdata = isset( $_POST['not_fetchdata'] ) && ! empty( $_POST['not_fetchdata'] ) ? true : false;
+
         // phpcs:enable
         MainWP_Cache::init_session();
-        $result = MainWP_Plugins::render_table( $keyword, $status, $groups, $sites, $not_criteria, $clients );
+        $result = MainWP_Plugins::render_table( $keyword, $status, $groups, $sites, $not_criteria, $clients, $not_fetchdata );
         wp_send_json( $result );
     }
 
@@ -527,8 +535,9 @@ class MainWP_Post_Plugin_Theme_Handler extends MainWP_Post_Base_Handler { // php
                 wp_json_encode(
                     array(
                         'error' => array(
-                            'message' => $e->getMessage(),
-                            'extra'   => $e->get_message_extra(),
+                            'message'   => $e->getMessage(),
+                            'extra'     => $e->get_message_extra(),
+                            'errorCode' => $e->get_message_error_code(),
                         ),
                     )
                 )

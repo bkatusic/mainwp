@@ -7,6 +7,11 @@
  * @package MainWP\Dashboard
  */
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Rest_Global_Batch_Controller
  *

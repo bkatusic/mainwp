@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Common_Handler
  *
@@ -46,13 +51,27 @@ class MainWP_Common_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
      * @return mixed $response An object that contains the return data and status of the API request.
      */
     public function sites_available_updates_count() {  // phpcs:ignore -- NOSONAR - complex function.
+
+        $cache_group = MainWP_Cache_Helper::CGR_UPDATES;
+
+        $cache_key = MainWP_Cache_Helper::get_cache_key( 'updates_count', $cache_group );
+
+        $cache_values = MainWP_Cache_Helper::instance()->get_cache(
+            $cache_key,
+            $cache_group
+        );
+
+        if ( is_array( $cache_values ) ) {
+            return $cache_values;
+        }
+
         $is_staging = 'no';
 
         $db_updater_count             = false;
         $total_plugin_db_upgrades     = 0;
         $supported_db_updater_plugins = array();
 
-        $get_fields    = array( 'premium_upgrades', 'favi_icon', 'ignored_wp_upgrades' );
+        $get_fields    = array( 'premium_upgrades', 'favi_icon', 'ignored_wp_upgrades', 'ignored_trans_updates' );
         $custom_fields = apply_filters( 'mainwp_available_updates_count_custom_fields_data', array(), 'updates_count' );
 
         if ( is_array( $custom_fields ) && 1 === count( $custom_fields ) && in_array( 'plugin_db_upgrades', $custom_fields ) ) {
@@ -94,6 +113,10 @@ class MainWP_Common_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
             }
 
             $translation_upgrades = json_decode( $website->translation_upgrades, true );
+
+            if ( ! empty( $website->ignored_trans_updates ) ) {
+                $translation_upgrades = array();
+            }
 
             $plugin_upgrades = json_decode( $website->plugin_upgrades, true );
             if ( $website->is_ignorePluginUpdates ) {
@@ -226,6 +249,9 @@ class MainWP_Common_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
             $data['total']           += $total_plugin_db_upgrades;
         }
         MainWP_DB::free_result( $websites );
+
+        // set cache.
+        MainWP_Cache_Helper::add_cache( $cache_key, $cache_group, $data );
 
         return $data;
     }

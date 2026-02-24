@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Updates_Per_Item.
  */
@@ -51,18 +56,18 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
     public static function render_plugins_updates( $websites, $total_plugin_upgrades, $userExtension, $allPlugins, $pluginsInfo, $trustedPlugins ) { // phpcs:ignore -- NOSONAR - complex.
         ?>
         <?php if ( 0 < $total_plugin_upgrades ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox" id="mainwp-plugins-updates-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox mainwp-js-persistent-table" id="mainwp-plugins-updates-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
-                    <th scope="col" class="eight wide indicator-accordion-sorting handle-accordion-sorting">
+                    <th scope="col" class="eight wide indicator-accordion-sorting handle-accordion-sorting" data-key="plugin">
                     <div class="ui main-master checkbox ">
                         <input type="checkbox" name=""><label><?php esc_html_e( 'Plugin', 'mainwp' ); ?></label>
                     </div>
                     <?php MainWP_UI::render_sorting_icons(); ?>
                     </th>
-                    <th scope="col" class="two wide indicator-accordion-sorting handle-accordion-sorting"><?php echo intval( $total_plugin_upgrades ) . ' ' . esc_html( _n( 'Update', 'Updates', $total_plugin_upgrades, 'mainwp' ) ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                    <th scope="col" class="two wide indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Trusted', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="two wide indicator-accordion-sorting handle-accordion-sorting" data-key="update"><?php echo intval( $total_plugin_upgrades ) . ' ' . esc_html( _n( 'Update', 'Updates', $total_plugin_upgrades, 'mainwp' ) ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="two wide indicator-accordion-sorting handle-accordion-sorting" data-key="trusted"><?php esc_html_e( 'Trusted', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                     <th scope="col" class="four wide no-sort right aligned"><?php MainWP_UI::render_show_all_updates_button(); ?></th>
                 </tr>
             </thead>
@@ -79,7 +84,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
                     <tr class="ui title master-checkbox">
                         <td class="accordion-trigger"><i class="icon dropdown"></i></td>
                         <td class="middle aligned">
-                            <div class="ui master checkbox">
+                            <div class="ui middle aligned fitted master checkbox">
                                 <input type="checkbox" name="">
                             </div>
                             &nbsp;&nbsp;<?php echo MainWP_System_Utility::get_plugin_icon( $pluginsInfo[ $slug ]['slug'] ); // phpcs:ignore WordPress.Security.EscapeOutput ?>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -166,8 +171,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
 
                                         $last_version = $plugin_upgrade['update']['new_version'];
                                         $row_columns  = array(
-                                            'title'   => MainWP_Updates::render_site_link_dashboard( $website, false ),
-                                            'login'   => '<a href="admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ) . '&_opennonce=' . wp_create_nonce( 'mainwp-admin-nonce' ) . '" data-tooltip="' . esc_attr__( 'Jump to the site WP Admin', 'mainwp' ) . '"  data-position="bottom right"  data-inverted="" class="open_newwindow_wpadmin" target="_blank"><i class="sign in icon"></i></a>',
+                                            'site'    => true,
                                             'version' => '<strong class="mainwp-768-show">' . esc_html__( 'Version: ', 'mainwp' ) . '</strong>' . esc_html( $plugin_upgrade['Version'] ),
                                             'latest'  => '<strong class="mainwp-768-show">' . esc_html__( 'Latest: ', 'mainwp' ) . '</strong><a href="' . admin_url() . 'plugin-install.php?tab=plugin-information&wpplugin=' . intval( $website->id ) . '&plugin=' . esc_attr( $plugin_upgrade['update']['slug'] ) . '&url=' . ( isset( $plugin_upgrade['PluginURI'] ) ? rawurlencode( $plugin_upgrade['PluginURI'] ) : '' ) . '&name=' . rawurlencode( $plugin_upgrade['Name'] ) . '&section=changelog" target="_blank" class="open-plugin-details-modal">' . esc_html( $last_version ) . '</a>',
                                             'trusted' => ( in_array( $slug, $trustedPlugins ) ? true : false ),
@@ -181,14 +185,20 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
                                             $others['roll_info'] = $msg;
                                         }
 
+                                        $tz_info = MainWP_Updates::get_site_tz_info( $website );
+
+                                        $compatible_php = isset( $plugin_upgrade['wp_compatible'] ) ? $plugin_upgrade['wp_compatible'] : true;
+                                        $compatible_wp  = isset( $plugin_upgrade['php_compatible'] ) ? $plugin_upgrade['php_compatible'] : true;
+
                                         ?>
-                                        <tr site_id="<?php echo esc_attr( $website->id ); ?>" plugin_slug="<?php echo esc_attr( $plugin_name ); ?>" last-version="<?php echo esc_attr( rawurlencode( $last_version ) ); ?>" site_name="<?php echo esc_attr( stripslashes( $website->name ) ); ?>" updated="0" <?php echo $first_wpplugin ? 'open-wpplugin-siteid="' . intval( $website->id ) . '"' : ''; ?>>
+                                        <tr site_id="<?php echo esc_attr( $website->id ); ?>" site_name="<?php echo esc_attr( $website->name ); ?>" site_url="<?php echo esc_attr( $website->url ); ?>" plugin_slug="<?php echo esc_attr( $plugin_name ); ?>" plugin_name="<?php echo esc_attr( $plugin_upgrade['Name'] ); ?>" last-version="<?php echo esc_attr( rawurlencode( $last_version ) ); ?>" site_name="<?php echo esc_attr( stripslashes( $website->name ) ); ?>" updated="0" <?php echo $first_wpplugin ? 'open-wpplugin-siteid="' . intval( $website->id ) . '"' : ''; ?> tz-info="<?php echo esc_attr( $tz_info ); ?>">
                                             <?php
                                             $row_columns     = $updates_table_helper->render_columns( $row_columns, $website, $others );
                                             $action_rendered = isset( $row_columns['action'] ) ? true : false;
                                             if ( ! $action_rendered ) {
                                                 ?>
                                                 <td class="right aligned">
+                                                    <a href="#" history-view="update-plugin-per-item" class="mainwp-show-history ui mini button"><?php esc_html_e( 'History', 'mainwp' ); ?></a>
                                                     <?php if ( MainWP_Updates::user_can_ignore_updates() ) : ?>
                                                         <div class="ui top left pointing dropdown mini button">
                                                             <?php esc_html_e( 'Ignore', 'mainwp' ); ?><i class="dropdown icon"></i>
@@ -199,9 +209,17 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
                                                             </div>
                                                         </div>
                                                     <?php endif; ?>
-                                                    <?php if ( MainWP_Updates::user_can_update_plugins() ) : ?>
-                                                        <a href="javascript:void(0)" class="mainwp-update-now-button ui mini green button" onClick="return updatesoverview_plugins_upgrade( '<?php echo esc_js( $plugin_name ); ?>', <?php echo intval( $website->id ); ?> )"><?php esc_html_e( 'Update', 'mainwp' ); ?></a>
-                                                    <?php endif; ?>
+                                                    <?php
+                                                    if ( MainWP_Updates::user_can_update_plugins() ) :
+                                                        if ( $compatible_php && $compatible_wp ) {
+                                                            ?>
+                                                            <a href="javascript:void(0)" class="mainwp-update-now-button ui mini green button" onClick="return updatesoverview_plugins_upgrade( '<?php echo esc_js( $plugin_name ); ?>', <?php echo intval( $website->id ); ?> )"><?php esc_html_e( 'Update', 'mainwp' ); ?></a>
+                                                            <?php
+                                                        } else {
+                                                            self::render_incompatible_message( $compatible_php, $compatible_wp );
+                                                        }
+                                                        ?>
+                                                <?php endif; ?>
                                                 </td>
                                             <?php } ?>
                                         </tr>
@@ -217,9 +235,52 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
             </tbody>
         </table>
         <?php else : ?>
-            <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No updates available right now.', 'mainwp' ) ); ?>
+            <?php MainWP_UI::render_empty_page_placeholder( __( 'Plugins are up to date', 'mainwp' ), __( 'No plugin updates available right now.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
+    }
+
+    /**
+     * Method render_incompatible_message().
+     *
+     * @param  mixed $compatible_php Compatible php.
+     * @param  mixed $compatible_wp Compatible wp.     *
+     * @param  mixed $echo_content Print content or not.
+     *
+     * @return string Message
+     */
+    public static function render_incompatible_message( $compatible_php, $compatible_wp, $echo_content = true ) {
+        $msg = static::get_incompatible_message( $compatible_php, $compatible_wp );
+        if ( ! empty( $msg ) ) {
+            $html = '<span class="ui yellow message">' . esc_html( $msg ) . '</span>';
+            if ( $echo_content ) {
+                echo $html; //phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            } else {
+                return $html;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Method get_incompatible_message().
+     *
+     * @param  mixed $compatible_php Compatible php.
+     * @param  mixed $compatible_wp Compatible wp.
+     * @return string Message
+     */
+    public static function get_incompatible_message( $compatible_php, $compatible_wp ) {
+            $msg = '';
+        if ( ! $compatible_php || ! $compatible_wp ) {
+            if ( ! $compatible_php && ! $compatible_wp ) {
+                $msg .= __( 'This plugin does not work with your versions of WordPress and PHP.', 'mainwp' );
+            } elseif ( ! $compatible_wp ) {
+                $msg .= __( 'This plugin does not work with your version of WordPress.', 'mainwp' );
+            } elseif ( ! $compatible_php ) {
+                $msg .= __( 'This plugin does not work with your version of PHP.', 'mainwp' );
+            }
+        }
+        return $msg;
     }
 
     /**
@@ -251,18 +312,18 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
         $updates_table_helper = new MainWP_Updates_Table_Helper( $userExtension->site_view, 'theme' );
         ?>
         <?php if ( 0 < $total_theme_upgrades ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox" id="mainwp-themes-updates-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox mainwp-js-persistent-table mainwp-themes-updates-items-table" id="mainwp-themes-updates-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
-                    <th scope="col" class="eight wide handle-accordion-sorting indicator-accordion-sorting">
+                    <th scope="col" class="eight wide handle-accordion-sorting indicator-accordion-sorting" data-key="theme">
                         <div class="ui main-master checkbox ">
                             <input type="checkbox" name=""><label><?php esc_html_e( 'Theme', 'mainwp' ); ?></label>
                         </div>
                         <?php MainWP_UI::render_sorting_icons(); ?>
                     </th>
-                    <th scope="col" class="two wide handle-accordion-sorting indicator-accordion-sorting"><?php echo intval( $total_theme_upgrades ) . ' ' . esc_html( _n( 'Update', 'Updates', $total_theme_upgrades, 'mainwp' ) ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                    <th scope="col" class="two wide handle-accordion-sorting indicator-accordion-sorting"><?php esc_html_e( 'Trusted', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="two wide handle-accordion-sorting indicator-accordion-sorting" data-key="update"><?php echo intval( $total_theme_upgrades ) . ' ' . esc_html( _n( 'Update', 'Updates', $total_theme_upgrades, 'mainwp' ) ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="two wide handle-accordion-sorting indicator-accordion-sorting" data-key="trusted"><?php esc_html_e( 'Trusted', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                     <th scope="col" class="four wide no-sort right aligned"><?php MainWP_UI::render_show_all_updates_button(); ?></th>
                 </tr>
             </thead>
@@ -275,10 +336,11 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
                     ?>
                     <tr class="ui title master-checkbox">
                         <td class="accordion-trigger"><i class="icon dropdown"></i></td>
-                        <td>
-                        <div class="ui master checkbox">
-                            <input type="checkbox" name=""><label><?php echo MainWP_System_Utility::get_theme_icon( $slug ); // phpcs:ignore WordPress.Security.EscapeOutput ?>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo esc_html( $themesInfo[ $slug ]['name'] ); ?></label>
-                        </div>
+                        <td class="middle aligned">
+                            <div class="ui middle aligned fitted master checkbox">
+                                <input type="checkbox" name="">
+                            </div>
+                            &nbsp;&nbsp;<?php echo MainWP_System_Utility::get_theme_icon( $slug ); // phpcs:ignore WordPress.Security.EscapeOutput ?>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo esc_html( $themesInfo[ $slug ]['name'] ); ?>
                         </td>
                         <td sort-value="<?php echo intval( $cnt ); ?>"><?php echo intval( $cnt ); ?> <?php echo esc_html( _n( 'Update', 'Updates', $cnt, 'mainwp' ) ); ?></td>
                         <td sort-value="<?php echo esc_attr( $trusted ); ?>"><?php echo $trusted ? '<span class="ui tiny green label">Trusted</span>' : '<span class="ui tiny grey label">Not Trusted</span>'; ?></td>
@@ -356,8 +418,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
                                         $theme_upgrade = $theme_upgrades[ $slug ];
                                         $last_version  = $theme_upgrade['update']['new_version'];
                                         $row_columns   = array(
-                                            'title'   => MainWP_Updates::render_site_link_dashboard( $website, false ),
-                                            'login'   => '<a href="admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ) . '&_opennonce=' . wp_create_nonce( 'mainwp-admin-nonce' ) . '" data-tooltip="' . esc_attr__( 'Jump to the site WP Admin', 'mainwp' ) . '"  data-position="bottom right"  data-inverted="" class="open_newwindow_wpadmin" target="_blank"><i class="sign in icon"></i></a>',
+                                            'site'    => true,
                                             'version' => '<strong class="mainwp-768-show">' . esc_html__( 'Version: ', 'mainwp' ) . '</strong>' . esc_html( $theme_upgrade['Version'] ),
                                             'latest'  => '<strong class="mainwp-768-show">' . esc_html__( 'Latest: ', 'mainwp' ) . '</strong>' . esc_html( $last_version ),
                                             'trusted' => ( in_array( $slug, $trustedThemes ) ? true : false ),
@@ -371,14 +432,17 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
                                             $others['roll_info'] = $msg;
                                         }
 
+                                        $tz_info = MainWP_Updates::get_site_tz_info( $website );
+
                                         ?>
-                                        <tr site_id="<?php echo esc_attr( $website->id ); ?>" theme_slug="<?php echo esc_attr( $theme_name ); ?>" last-version="<?php echo esc_attr( rawurlencode( $last_version ) ); ?>" site_name="<?php echo esc_attr( rawurlencode( stripslashes( $website->name ) ) ); ?>" updated="0">
+                                        <tr site_id="<?php echo esc_attr( $website->id ); ?>" theme_slug="<?php echo esc_attr( $theme_name ); ?>" theme_name="<?php echo esc_attr( $theme_upgrade['Name'] ); ?>" last-version="<?php echo esc_attr( rawurlencode( $last_version ) ); ?>" site_name="<?php echo esc_attr( rawurlencode( stripslashes( $website->name ) ) ); ?>" site_url="<?php echo esc_attr( $website->url ); ?>" updated="0" tz-info="<?php echo esc_attr( $tz_info ); ?>">
                                             <?php
                                             $row_columns     = $updates_table_helper->render_columns( $row_columns, $website, $others );
                                             $action_rendered = isset( $row_columns['action'] ) ? true : false;
                                             if ( ! $action_rendered ) {
                                                 ?>
                                                 <td class="right aligned">
+                                                    <a href="#" history-view="update-theme-per-item" class="mainwp-show-history ui mini button"><?php esc_html_e( 'History', 'mainwp' ); ?></a>
                                                     <?php if ( MainWP_Updates::user_can_ignore_updates() ) { ?>
                                                     <div class="ui top left pointing dropdown mini button">
                                                         <?php esc_html_e( 'Ignore', 'mainwp' ); ?><i class="dropdown icon"></i>
@@ -406,7 +470,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
             </tbody>
         </table>
         <?php else : ?>
-            <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No updates available right now.', 'mainwp' ) ); ?>
+            <?php MainWP_UI::render_empty_page_placeholder( __( 'Themes are up to date', 'mainwp' ), __( 'No theme updates available right now.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
     }
@@ -445,17 +509,17 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
         ?>
 
         <?php if ( 0 < $total_translation_upgrades ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox" id="mainwp-translations-sites-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table main-master-checkbox mainwp-js-persistent-table" id="mainwp-translations-sites-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
-                    <th scope="col" class="eight wide indicator-accordion-sorting handle-accordion-sorting">
+                    <th scope="col" class="eight wide indicator-accordion-sorting handle-accordion-sorting" data-key="translation">
                         <div class="ui main-master checkbox ">
                             <input type="checkbox" name=""><label><?php esc_html_e( 'Translation', 'mainwp' ); ?></label>
                         </div>
                         <?php MainWP_UI::render_sorting_icons(); ?>
                     </th>
-                    <th scope="col" class="two wide indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="two wide indicator-accordion-sorting handle-accordion-sorting" data-key="trusted"><?php esc_html_e( 'Updates', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                     <th scope="col" class="six wide right aligned"><?php MainWP_UI::render_show_all_updates_button(); ?></th>
                 </tr>
             </thead>
@@ -514,11 +578,13 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
                                         }
                                         ?>
                                         <tr site_id="<?php echo esc_attr( $website->id ); ?>" site_name="<?php echo esc_attr( rawurlencode( stripslashes( $website->name ) ) ); ?>" updated="0">
-                                            <td>
-                                            <div class="ui child checkbox">
-                                                <input type="checkbox" name="">
-                                            </div>
-                                            <?php MainWP_Updates::render_site_link_dashboard( $website ); ?>
+                                            <td class="middle aligned">
+                                                <div class="ui child checkbox middle aligned fitted">
+                                                    <input type="checkbox" name="">
+                                                </div>
+                                                <span class="ui middle aligned fitted" >
+                                                    <?php MainWP_Updates::render_site_link_dashboard( $website ); ?>
+                                                </span>
                                             </td>
                                             <td><strong class="mainwp-768-show"><?php esc_html_e( 'Version:', 'mainwp' ); ?></strong> <?php echo esc_html( $translation_upgrade['version'] ); ?></td>
                                             <?php
@@ -546,7 +612,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
             </tbody>
         </table>
         <?php else : ?>
-            <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No updates available right now.', 'mainwp' ) ); ?>
+            <?php MainWP_UI::render_empty_page_placeholder( __( 'Translations are up to date', 'mainwp' ), __( 'No translation updates available right now.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
     }
@@ -575,13 +641,13 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
         $count_abandoned = count( $allPluginsOutdate );
         ?>
         <?php if ( 0 < $count_abandoned ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table" id="mainwp-abandoned-plugins-items-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table mainwp-js-persistent-table" id="mainwp-abandoned-plugins-items-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
                     <th scope="col" class="no-sort"></th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Plugin', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="plugin"><?php esc_html_e( 'Plugin', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="abandoned"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                     <th scope="col" class="collapsing no-sort"><?php MainWP_UI::render_show_all_updates_button(); ?></th>
                 </tr>
             </thead>
@@ -674,7 +740,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
             </tbody>
         </table>
         <?php else : ?>
-            <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No abandoned plugins detected.', 'mainwp' ) ); ?>
+            <?php MainWP_UI::render_empty_page_placeholder( __( 'No abandoned plugins detected', 'mainwp' ), __( 'None of your plugins are currently marked as abandoned.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
     }
@@ -701,12 +767,12 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
         $count_abandoned = count( $allThemesOutdate );
         ?>
         <?php if ( 0 < $count_abandoned ) : ?>
-        <table class="ui tablet stackable table mainwp-manage-updates-table" id="mainwp-themes-updates-table">
+        <table class="ui tablet stackable table mainwp-manage-updates-table mainwp-js-persistent-table mainwp-themes-updates-items-table" id="mainwp-themes-abandoned-updates-table">
             <thead>
                 <tr>
                     <th scope="col" class="collapsing no-sort trigger-all-accordion"><span class="trigger-handle-arrow"><i class="caret right icon"></i><i class="caret down icon"></i></span></th>
-                    <th scope="col" scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Theme', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
-                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="theme"><?php esc_html_e( 'Theme', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
+                    <th scope="col" class="indicator-accordion-sorting handle-accordion-sorting" data-key="abandoned"><?php esc_html_e( 'Abandoned', 'mainwp' ); ?><?php MainWP_UI::render_sorting_icons(); ?></th>
                     <th scope="col" class="collapsing no-sort">
                         <?php MainWP_UI::render_show_all_updates_button(); ?>
                     </th>
@@ -799,7 +865,7 @@ class MainWP_Updates_Per_Item { // phpcs:ignore Generic.Classes.OpeningBraceSame
             </tbody>
         </table>
         <?php else : ?>
-            <?php MainWP_UI::render_empty_page_placeholder( __( 'You\'re All Set!', 'mainwp' ), __( 'No abandoned themes detected.', 'mainwp' ) ); ?>
+            <?php MainWP_UI::render_empty_page_placeholder( __( 'No abandoned themes detected', 'mainwp' ), __( 'None of your themes are currently marked as abandoned.', 'mainwp' ) ); ?>
         <?php endif; ?>
         <?php
     }

@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Extensions_Groups
  */
@@ -41,6 +46,17 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
         $end_div = '</div>';
 
         $submenu_pages = array(
+            array(
+                'parent_slug' => 'mainwp_tab',
+                'page_title'  => esc_html__( 'Content Operations', 'mainwp' ),
+                'menu_title'  => '<div class="mainwp-hidden" id="mainwp-extensions-content-operations">' . esc_html__( 'Content Operations', 'mainwp' ) . $end_div,
+                'capability'  => 'read',
+                'menu_slug'   => 'Extensions-Mainwp-Content-Operations',
+                'callback'    => array(
+                    static::class,
+                    'render_extensions_groups',
+                ),
+            ),
             array(
                 'parent_slug' => 'mainwp_tab',
                 'page_title'  => esc_html__( 'Backups', 'mainwp' ),
@@ -98,17 +114,6 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
             ),
             array(
                 'parent_slug' => 'mainwp_tab',
-                'page_title'  => esc_html__( 'Development', 'mainwp' ),
-                'menu_title'  => '<div class="mainwp-hidden" id="mainwp-extensions-development">' . esc_html__( 'Development', 'mainwp' ) . $end_div,
-                'capability'  => 'read',
-                'menu_slug'   => 'Extensions-Mainwp-Development',
-                'callback'    => array(
-                    static::class,
-                    'render_extensions_groups',
-                ),
-            ),
-            array(
-                'parent_slug' => 'mainwp_tab',
                 'page_title'  => esc_html__( 'Agency', 'mainwp' ),
                 'menu_title'  => '<div class="mainwp-hidden" id="mainwp-extensions-agency">' . esc_html__( 'Agency', 'mainwp' ) . $end_div,
                 'capability'  => 'read',
@@ -144,14 +149,24 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
         $extensions_and_leftmenus = array(
             array(
-                'title'         => esc_html__( 'Backups', 'mainwp' ),
+                'title'         => esc_html__( 'Content Operations', 'mainwp' ),
                 'parent_key'    => 'managesites',
-                'slug'          => 'Extensions-Mainwp-Backups',
-                'href'          => 'admin.php?page=Extensions-Mainwp-Backups',
-                'leftsub_order' => 8.1,
-                'id'            => 'mainwp-backups-extensions-category',
+                'slug'          => 'Extensions-Mainwp-Content-Operations',
+                'href'          => 'admin.php?page=Extensions-Mainwp-Content-Operations',
+                'leftsub_order' => 8,
+                'id'            => 'mainwp-content-operations-extensions-category',
                 'level'         => 1,
             ),
+        );
+
+        $extensions_and_leftmenus[] = array(
+            'title'         => esc_html__( 'Backups', 'mainwp' ),
+            'parent_key'    => 'managesites',
+            'slug'          => 'Extensions-Mainwp-Backups',
+            'href'          => 'admin.php?page=Extensions-Mainwp-Backups',
+            'leftsub_order' => 8.1,
+            'id'            => 'mainwp-backups-extensions-category',
+            'level'         => 1,
         );
 
         if ( defined( 'MAINWP_MODULE_API_BACKUPS_ENABLED' ) && MAINWP_MODULE_API_BACKUPS_ENABLED ) {
@@ -300,7 +315,7 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
         $extensions_and_leftmenus[] = array(
             'type'                 => 'extension',
-            'title'                => esc_html__( 'iThemes Security', 'mainwp' ),
+            'title'                => esc_html__( 'Solid Security Integration', 'mainwp' ),
             'slug'                 => 'mainwp-ithemes-security-extension/mainwp-ithemes-security-extension.php',
             'parent_key'           => 'Extensions-Mainwp-Security',
             'ext_page'             => 'admin.php?page=Extensions-Mainwp-Ithemes-Security-Extension',
@@ -449,6 +464,17 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
         );
 
         $extensions_and_leftmenus[] = array(
+            'type'                 => 'extension',
+            'title'                => esc_html__( 'WooCommerce Status', 'mainwp' ),
+            'slug'                 => 'mainwp-woocommerce-status-extension/mainwp-woocommerce-status-extension.php',
+            'parent_key'           => 'Extensions-Mainwp-Monitoring',
+            'ext_page'             => 'admin.php?page=Extensions-Mainwp-Woocommerce-Status-Extension',
+            'leftsub_order_level2' => 2,
+            'level'                => 2,
+            'active_path'          => array( 'Extensions-Mainwp-Woocommerce-Status-Extension' => 'managesites' ),
+        );
+
+        $extensions_and_leftmenus[] = array(
             'title'         => esc_html__( 'Agency', 'mainwp' ),
             'parent_key'    => 'managesites',
             'slug'          => 'Extensions-Mainwp-Agency',
@@ -492,41 +518,9 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
         $extensions_and_leftmenus[] = array(
             'type'                 => 'extension',
-            'title'                => esc_html__( 'WooCommerce Shortcuts', 'mainwp' ),
-            'slug'                 => 'mainwp-woocommerce-shortcuts-extension/mainwp-woocommerce-shortcuts-extension.php',
-            'parent_key'           => 'Extensions-Mainwp-Administrative',
-            'ext_page'             => 'admin.php?page=Extensions-Mainwp-Woocommerce-Shortcuts-Extension',
-            'leftsub_order_level2' => 1,
-            'level'                => 2,
-            'active_path'          => array( 'Extensions-Mainwp-Woocommerce-Shortcuts-Extension' => 'managesites' ),
-        );
-
-        $extensions_and_leftmenus[] = array(
-            'type'                 => 'extension',
-            'title'                => esc_html__( 'WooCommerce Status', 'mainwp' ),
-            'slug'                 => 'mainwp-woocommerce-status-extension/mainwp-woocommerce-status-extension.php',
-            'parent_key'           => 'Extensions-Mainwp-Administrative',
-            'ext_page'             => 'admin.php?page=Extensions-Mainwp-Woocommerce-Status-Extension',
-            'leftsub_order_level2' => 2,
-            'level'                => 2,
-            'active_path'          => array( 'Extensions-Mainwp-Woocommerce-Status-Extension' => 'managesites' ),
-        );
-
-        $extensions_and_leftmenus[] = array(
-            'title'         => esc_html__( 'Development', 'mainwp' ),
-            'parent_key'    => 'managesites',
-            'slug'          => 'Extensions-Mainwp-Development',
-            'href'          => 'admin.php?page=Extensions-Mainwp-Development',
-            'leftsub_order' => 8.6,
-            'id'            => 'mainwp-development-extensions-category',
-            'level'         => 1,
-        );
-
-        $extensions_and_leftmenus[] = array(
-            'type'                 => 'extension',
             'title'                => esc_html__( 'Atarim', 'mainwp' ),
             'slug'                 => 'mainwp-atarim-extension/mainwp-atarim-extension.php',
-            'parent_key'           => 'Extensions-Mainwp-Development',
+            'parent_key'           => 'Extensions-Mainwp-Administrative',
             'ext_page'             => 'admin.php?page=Extensions-Mainwp-Atarim-Extension',
             'leftsub_order_level2' => 1,
             'level'                => 2,
@@ -537,7 +531,7 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
             'type'                 => 'extension',
             'title'                => esc_html__( 'Bulk Settings Manager', 'mainwp' ),
             'slug'                 => 'mainwp-bulk-settings-manager/mainwp-bulk-settings-manager.php',
-            'parent_key'           => 'Extensions-Mainwp-Development',
+            'parent_key'           => 'Extensions-Mainwp-Administrative',
             'ext_page'             => 'admin.php?page=Extensions-Mainwp-Bulk-Settings-Manager',
             'leftsub_order_level2' => 2,
             'level'                => 2,
@@ -548,7 +542,7 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
             'type'                 => 'extension',
             'title'                => esc_html__( 'Code Snippets', 'mainwp' ),
             'slug'                 => 'mainwp-code-snippets-extension/mainwp-code-snippets-extension.php',
-            'parent_key'           => 'Extensions-Mainwp-Development',
+            'parent_key'           => 'Extensions-Mainwp-Administrative',
             'ext_page'             => 'admin.php?page=Extensions-Mainwp-Code-Snippets-Extension',
             'leftsub_order_level2' => 3,
             'level'                => 2,
@@ -558,7 +552,7 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
             'type'                 => 'extension',
             'title'                => esc_html__( 'Custom Dashboard', 'mainwp' ),
             'slug'                 => 'mainwp-custom-dashboard-extension/mainwp-custom-dashboard-extension.php',
-            'parent_key'           => 'Extensions-Mainwp-Development',
+            'parent_key'           => 'Extensions-Mainwp-Administrative',
             'ext_page'             => 'admin.php?page=Extensions-Mainwp-Custom-Dashboard-Extension',
             'leftsub_order_level2' => 4,
             'level'                => 2,
@@ -569,7 +563,7 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
             'type'                 => 'extension',
             'title'                => esc_html__( 'Custom Post Type', 'mainwp' ),
             'slug'                 => 'mainwp-custom-post-types/mainwp-custom-post-types.php',
-            'parent_key'           => 'Extensions-Mainwp-Development',
+            'parent_key'           => 'Extensions-Mainwp-Administrative',
             'ext_page'             => 'admin.php?page=Extensions-Mainwp-Custom-Post-Types',
             'leftsub_order_level2' => 5,
             'level'                => 2,
@@ -580,7 +574,7 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
             'type'                 => 'extension',
             'title'                => esc_html__( 'File Uploader', 'mainwp' ),
             'slug'                 => 'mainwp-file-uploader-extension/mainwp-file-uploader-extension.php',
-            'parent_key'           => 'Extensions-Mainwp-Development',
+            'parent_key'           => 'Extensions-Mainwp-Administrative',
             'ext_page'             => 'admin.php?page=Extensions-Mainwp-File-Uploader-Extension',
             'leftsub_order_level2' => 6,
             'level'                => 2,
@@ -591,7 +585,7 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
             'type'                 => 'extension',
             'title'                => esc_html__( 'Pressable', 'mainwp' ),
             'slug'                 => 'mainwp-pressable-extension/mainwp-pressable-extension.php',
-            'parent_key'           => 'Extensions-Mainwp-Development',
+            'parent_key'           => 'Extensions-Mainwp-Administrative',
             'ext_page'             => 'admin.php?page=Extensions-Mainwp-Pressable-Extension',
             'leftsub_order_level2' => 7,
             'level'                => 2,
@@ -602,7 +596,7 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
             'type'                 => 'extension',
             'title'                => esc_html__( 'Staging', 'mainwp' ),
             'slug'                 => 'mainwp-staging-extension/mainwp-staging-extension.php',
-            'parent_key'           => 'Extensions-Mainwp-Development',
+            'parent_key'           => 'Extensions-Mainwp-Administrative',
             'ext_page'             => 'admin.php?page=Extensions-Mainwp-Staging-Extension',
             'leftsub_order_level2' => 8,
             'level'                => 2,
@@ -613,11 +607,22 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
             'type'                 => 'extension',
             'title'                => esc_html__( 'URL Extractor', 'mainwp' ),
             'slug'                 => 'mainwp-url-extractor-extension/mainwp-url-extractor-extension.php',
-            'parent_key'           => 'Extensions-Mainwp-Development',
+            'parent_key'           => 'Extensions-Mainwp-Administrative',
             'ext_page'             => 'admin.php?page=Extensions-Mainwp-Url-Extractor-Extension',
             'leftsub_order_level2' => 9,
             'level'                => 2,
             'active_path'          => array( 'Extensions-Mainwp-Url-Extractor-Extension' => 'managesites' ),
+        );
+
+         $extensions_and_leftmenus[] = array(
+            'type'                 => 'extension',
+            'title'                => esc_html__( 'WooCommerce Shortcuts', 'mainwp' ),
+            'slug'                 => 'mainwp-woocommerce-shortcuts-extension/mainwp-woocommerce-shortcuts-extension.php',
+            'parent_key'           => 'Extensions-Mainwp-Administrative',
+            'ext_page'             => 'admin.php?page=Extensions-Mainwp-Woocommerce-Shortcuts-Extension',
+            'leftsub_order_level2' => 1,
+            'level'                => 2,
+            'active_path'          => array( 'Extensions-Mainwp-Woocommerce-Shortcuts-Extension' => 'managesites' ),
         );
 
         $extensions_and_leftmenus[] = array(
@@ -678,18 +683,7 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
             'type'                 => 'extension',
             'title'                => esc_html__( 'Comments', 'mainwp' ),
             'slug'                 => 'mainwp-comments-extension/mainwp-comments-extension.php',
-            'parent_key'           => 'PostBulkManage',
-            'ext_page'             => 'admin.php?page=Extensions-Mainwp-Comments-Extension',
-            'leftsub_order_level2' => 2.1,
-            'level'                => 2,
-            'active_path'          => array( 'Extensions-Mainwp-Comments-Extension' => 'managesites' ),
-        );
-
-        $extensions_and_leftmenus[] = array(
-            'type'                 => 'extension',
-            'title'                => esc_html__( 'Comments', 'mainwp' ),
-            'slug'                 => 'mainwp-comments-extension/mainwp-comments-extension.php',
-            'parent_key'           => 'PageBulkManage',
+            'parent_key'           => 'Extensions-Mainwp-Content-Operations',
             'ext_page'             => 'admin.php?page=Extensions-Mainwp-Comments-Extension',
             'leftsub_order_level2' => 2.1,
             'level'                => 2,
@@ -711,7 +705,7 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
             'type'                 => 'extension',
             'title'                => esc_html__( 'Article Uploader', 'mainwp' ),
             'slug'                 => 'mainwp-article-uploader-extension/mainwp-article-uploader-extension.php',
-            'parent_key'           => 'PostBulkManage',
+            'parent_key'           => 'Extensions-Mainwp-Content-Operations',
             'ext_page'             => 'admin.php?page=Extensions-Mainwp-Article-Uploader-Extension',
             'leftsub_order_level2' => 3,
             'level'                => 2,
@@ -720,9 +714,20 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
         $extensions_and_leftmenus[] = array(
             'type'                 => 'extension',
+            'title'                => esc_html__( 'Manage Boilerplates', 'mainwp' ),
+            'slug'                 => 'boilerplate-extension/boilerplate-extension.php',
+            'parent_key'           => 'Extensions-Mainwp-Content-Operations',
+            'ext_page'             => 'admin.php?page=Extensions-Boilerplate-Extension',
+            'leftsub_order_level2' => 2,
+            'level'                => 2,
+            'active_path'          => array( 'Extensions-Boilerplate-Extension' => 'managesites' ),
+        );
+
+        $extensions_and_leftmenus[] = array(
+            'type'                 => 'extension',
             'title'                => esc_html__( 'Post Dripper', 'mainwp' ),
             'slug'                 => 'mainwp-post-dripper-extension/mainwp-post-dripper-extension.php',
-            'parent_key'           => 'PostBulkManage',
+            'parent_key'           => 'Extensions-Mainwp-Content-Operations',
             'ext_page'             => 'admin.php?page=Extensions-Mainwp-Post-Dripper-Extension',
             'leftsub_order_level2' => 4,
             'level'                => 2,
@@ -732,27 +737,7 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
             'type'                 => 'extension',
             'title'                => esc_html__( 'Post Plus', 'mainwp' ),
             'slug'                 => 'mainwp-post-plus-extension/mainwp-post-plus-extension.php',
-            'parent_key'           => 'PostBulkManage',
-            'ext_page'             => 'admin.php?page=Extensions-Mainwp-Post-Plus-Extension',
-            'leftsub_order_level2' => 5,
-            'level'                => 2,
-        );
-
-        $extensions_and_leftmenus[] = array(
-            'type'                 => 'extension',
-            'title'                => esc_html__( 'Post Dripper', 'mainwp' ),
-            'slug'                 => 'mainwp-post-dripper-extension/mainwp-post-dripper-extension.php',
-            'parent_key'           => 'PageBulkManage',
-            'ext_page'             => 'admin.php?page=Extensions-Mainwp-Post-Dripper-Extension',
-            'leftsub_order_level2' => 4,
-            'level'                => 2,
-        );
-
-        $extensions_and_leftmenus[] = array(
-            'type'                 => 'extension',
-            'title'                => esc_html__( 'Post Plus', 'mainwp' ),
-            'slug'                 => 'mainwp-post-plus-extension/mainwp-post-plus-extension.php',
-            'parent_key'           => 'PageBulkManage',
+            'parent_key'           => 'Extensions-Mainwp-Content-Operations',
             'ext_page'             => 'admin.php?page=Extensions-Mainwp-Post-Plus-Extension',
             'leftsub_order_level2' => 5,
             'level'                => 2,
@@ -785,28 +770,8 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
             'type'                 => 'extension',
             'title'                => esc_html__( 'WordPress SEO', 'mainwp' ),
             'slug'                 => 'wordpress-seo-extension/wordpress-seo-extension.php',
-            'parent_key'           => 'PostBulkManage',
+            'parent_key'           => 'Extensions-Mainwp-Content-Operations',
             'ext_page'             => 'admin.php?page=Extensions-Wordpress-Seo-Extension',
-            'leftsub_order_level2' => 6,
-            'level'                => 2,
-        );
-
-        $extensions_and_leftmenus[] = array(
-            'type'                 => 'extension',
-            'title'                => esc_html__( 'WordPress SEO', 'mainwp' ),
-            'slug'                 => 'wordpress-seo-extension/wordpress-seo-extension.php',
-            'parent_key'           => 'PageBulkManage',
-            'ext_page'             => 'admin.php?page=Extensions-Wordpress-Seo-Extension',
-            'leftsub_order_level2' => 6,
-            'level'                => 2,
-        );
-
-        $extensions_and_leftmenus[] = array(
-            'type'                 => 'extension',
-            'title'                => esc_html__( 'SEOPress', 'mainwp' ),
-            'slug'                 => 'seopress-for-mainwp/wp-seopress-mainwp.php',
-            'parent_key'           => 'PostBulkManage',
-            'ext_page'             => 'admin.php?page=Extensions-Seopress-For-Mainwp',
             'leftsub_order_level2' => 6,
             'level'                => 2,
         );
@@ -815,7 +780,7 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
             'type'                 => 'extension',
             'title'                => esc_html__( 'SEOPress', 'mainwp' ),
             'slug'                 => 'seopress-for-mainwp/seopress-for-mainwp.php',
-            'parent_key'           => 'PageBulkManage',
+            'parent_key'           => 'Extensions-Mainwp-Content-Operations',
             'ext_page'             => 'admin.php?page=Extensions-Seopress-For-Mainwp',
             'leftsub_order_level2' => 6,
             'level'                => 2,
@@ -835,14 +800,14 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
         global $_mainwp_menu_active_slugs;
 
         $active_slugs = array(
-            'Extensions-Mainwp-Backups'        => 'Extensions-Mainwp-Backups',
-            'Extensions-Mainwp-Security'       => 'Extensions-Mainwp-Security',
-            'Extensions-Mainwp-Analytics'      => 'Extensions-Mainwp-Analytics',
-            'Extensions-Mainwp-Monitoring'     => 'Extensions-Mainwp-Monitoring',
-            'Extensions-Mainwp-Agency'         => 'Extensions-Mainwp-Agency',
-            'Extensions-Mainwp-Administrative' => 'Extensions-Mainwp-Administrative',
-            'Extensions-Mainwp-Development'    => 'Extensions-Mainwp-Development',
-            'Extensions-Mainwp-Performance'    => 'Extensions-Mainwp-Performance',
+            'Extensions-Mainwp-Content-Operations' => 'Extensions-Mainwp-Content-Operations',
+            'Extensions-Mainwp-Backups'            => 'Extensions-Mainwp-Backups',
+            'Extensions-Mainwp-Security'           => 'Extensions-Mainwp-Security',
+            'Extensions-Mainwp-Analytics'          => 'Extensions-Mainwp-Analytics',
+            'Extensions-Mainwp-Monitoring'         => 'Extensions-Mainwp-Monitoring',
+            'Extensions-Mainwp-Agency'             => 'Extensions-Mainwp-Agency',
+            'Extensions-Mainwp-Administrative'     => 'Extensions-Mainwp-Administrative',
+            'Extensions-Mainwp-Performance'        => 'Extensions-Mainwp-Performance',
         );
         // to fix activate menus state.
         foreach ( $active_slugs as $item => $act_slug ) {
@@ -941,10 +906,10 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
                 $get_ext_group[] = 'agency';
             } elseif ( 'Extensions-Mainwp-Administrative' === $_GET['page'] ) {
                 $get_ext_group[] = 'admin';
-            } elseif ( 'Extensions-Mainwp-Development' === $_GET['page'] ) {
-                $get_ext_group[] = 'development';
             } elseif ( 'Extensions-Mainwp-Performance' === $_GET['page'] ) {
                 $get_ext_group[] = 'performance';
+            } elseif ( 'Extensions-Mainwp-Content-Operations' === $_GET['page'] ) {
+                $get_ext_group[] = 'content';
             }
         }
         //phpcs:enable
@@ -989,41 +954,41 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
                         </div>
                     </div>
                 <?php endif; ?>
-        <?php if ( isset( $extensions ) && is_array( $extensions ) ) { ?>
 
-            <?php foreach ( $extensions as $extension ) { ?>
-                    <?php
-                    if ( ! \mainwp_current_user_can( 'extension', dirname( $extension['slug'] ) ) ) {
-                        continue;
-                    }
+                <?php if ( isset( $extensions ) && is_array( $extensions ) ) { ?>
+                    <?php foreach ( $extensions as $extension ) { ?>
+                            <?php
+                            if ( ! \mainwp_current_user_can( 'extension', dirname( $extension['slug'] ) ) ) {
+                                continue;
+                            }
 
-                    if ( ! isset( $group_available_extensions[ dirname( $extension['slug'] ) ] ) ) {
-                        continue;
-                    }
+                            if ( ! isset( $group_available_extensions[ dirname( $extension['slug'] ) ] ) ) {
+                                continue;
+                            }
 
-                    if ( in_array( dirname( $extension['slug'] ), $excluded_extensions ) ) {
-                        continue;
-                    }
+                            if ( in_array( dirname( $extension['slug'] ), $excluded_extensions ) ) {
+                                continue;
+                            }
 
-                    $extensions_data = isset( $group_available_extensions[ dirname( $extension['slug'] ) ] ) ? $group_available_extensions[ dirname( $extension['slug'] ) ] : array();
+                            $extensions_data = isset( $group_available_extensions[ dirname( $extension['slug'] ) ] ) ? $group_available_extensions[ dirname( $extension['slug'] ) ] : array();
 
-                    if ( isset( $extensions_data['img'] ) && ! empty( $extensions_data['img'] ) ) {
-                        $img_url = $extensions_data['img'];
-                    } elseif ( isset( $extension['icon'] ) && ! empty( $extension['icon'] ) ) {
-                        $img_url = $extension['icon'];
-                    } elseif ( isset( $extension['iconURI'] ) && '' !== $extension['iconURI'] ) {
-                        $img_url = MainWP_Utility::remove_http_prefix( $extension['iconURI'] );
-                    } else {
-                        $img_url = MAINWP_PLUGIN_URL . 'assets/images/extensions/placeholder.png';
-                    }
+                            if ( isset( $extensions_data['img'] ) && ! empty( $extensions_data['img'] ) ) {
+                                $img_url = $extensions_data['img'];
+                            } elseif ( isset( $extension['icon'] ) && ! empty( $extension['icon'] ) ) {
+                                $img_url = $extension['icon'];
+                            } elseif ( isset( $extension['iconURI'] ) && '' !== $extension['iconURI'] ) {
+                                $img_url = MainWP_Utility::remove_http_prefix( $extension['iconURI'] );
+                            } else {
+                                $img_url = MAINWP_PLUGIN_URL . 'assets/images/extensions/placeholder.png';
+                            }
 
-                    MainWP_Extensions_View::render_extension_card( $extension, $extension_update, $img_url, false, true );
-                    ?>
+                            MainWP_Extensions_View::render_extension_card( $extension, $extension_update, $img_url, false, true );
+                            ?>
 
-            <?php } ?>
-        <?php } ?>
+                    <?php } ?>
+                <?php } ?>
 
-            <?php if ( is_array( $extensions_disabled ) ) { ?>
+                <?php if ( is_array( $extensions_disabled ) ) { ?>
                     <?php foreach ( $extensions_disabled as $extension ) { ?>
                         <?php
                         $slug = dirname( $extension['slug'] );
@@ -1051,11 +1016,10 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
                         MainWP_Extensions_View::render_inactive_extension_card( $extension, $img_url, true );
                         ?>
 
-            <?php } ?>
+                    <?php } ?>
+                <?php } ?>
 
-        <?php } ?>
-
-        <?php if ( is_array( $extensions_not_installed ) ) { ?>
+                <?php if ( is_array( $extensions_not_installed ) ) { ?>
                     <?php foreach ( $extensions_not_installed as $slug => $extension ) { ?>
                         <?php
 
@@ -1075,14 +1039,11 @@ class MainWP_Extensions_Groups { // phpcs:ignore Generic.Classes.OpeningBraceSam
 
                         MainWP_Extensions_View::render_inactive_extension_card( $extension, $img_url );
                         ?>
-
-            <?php } ?>
-
-        <?php } ?>
-
-            </div>
+                    <?php } ?>
+                <?php } ?>
+        </div>
     </div>
-        <?php
-        do_action( 'mainwp_pagefooter_extensions' );
+    <?php
+    do_action( 'mainwp_pagefooter_extensions' );
     }
 }

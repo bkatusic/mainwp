@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Security_Issues_Widget
  *
@@ -42,12 +47,18 @@ class MainWP_Security_Issues_Widget { // phpcs:ignore Generic.Classes.OpeningBra
         $current_wpid = MainWP_System_Utility::get_current_wpid();
 
         if ( $current_wpid ) {
-            $sql = MainWP_DB::instance()->get_sql_website_by_id( $current_wpid );
+            $sql      = MainWP_DB::instance()->get_sql_website_by_id( $current_wpid );
+            $websites = MainWP_DB::instance()->query( $sql );
         } else {
-            $sql = MainWP_DB::instance()->get_sql_websites_for_current_user();
+            $wpsite_fields = array( 'id', 'name', 'url', 'securityIssues' );
+            $websites      = MainWP_DB::instance()->query(
+                MainWP_DB::instance()->get_sql_websites_for_current_user_by_params(
+                    array(
+                        'select_wp_fields' => $wpsite_fields,
+                    )
+                )
+            );
         }
-
-        $websites = MainWP_DB::instance()->query( $sql );
 
         $total_securityIssues = 0;
 
@@ -97,7 +108,7 @@ class MainWP_Security_Issues_Widget { // phpcs:ignore Generic.Classes.OpeningBra
                          */
                         echo esc_html( apply_filters( 'mainwp_security_issues_widget_title', esc_html__( 'Site Hardening', 'mainwp' ) ) );
                         ?>
-                        <div class="sub header"><?php esc_html_e( 'Identify and strengthen weak spots to boost site hardening', 'mainwp' ); ?></div>
+                        <div class="sub header"><?php esc_html_e( 'Identify weak spots to boost site hardening.', 'mainwp' ); ?></div>
                     </h2>
                 </div>
 
@@ -118,11 +129,6 @@ class MainWP_Security_Issues_Widget { // phpcs:ignore Generic.Classes.OpeningBra
                         <div class="header">
                             <span class="ui large text"><i class="shield alternate icon"></i> <?php echo intval( $total_securityIssues ); ?></span>
                         </div>
-                        <div class="meta">
-                            <div class="ui tiny progress mainwp-site-hardening-progress"  data-total="<?php echo esc_attr( $max_issues ); ?>" data-value="<?php echo esc_attr( $resolved_issues ); ?>">
-                                <div class="green bar"></div>
-                            </div>
-                        </div>
                         <div class="description">
                             <strong><?php echo esc_html( _n( 'Recommendation', 'Recommendations', $total_securityIssues, 'mainwp' ) ); ?></strong>
                         </div>
@@ -130,7 +136,6 @@ class MainWP_Security_Issues_Widget { // phpcs:ignore Generic.Classes.OpeningBra
                 </div>
             </div>
             <script type="text/javascript">
-                jQuery('.mainwp-site-hardening-progress').progress();
 
                 jQuery( document ).ready( function () {
                     let curTab = mainwp_ui_state_load('security-widget-issues');
@@ -204,14 +209,14 @@ class MainWP_Security_Issues_Widget { // phpcs:ignore Generic.Classes.OpeningBra
                             <div class="ui right pointing dropdown">
                                 <i class="ellipsis vertical icon"></i>
                                 <div class="menu">
-                                    <a href="admin.php?page=managesites&scanid=<?php echo esc_attr( $website->id ); ?>" class="item"><?php esc_html_e( 'See Details', 'mainwp' ); ?></a>
+                                    <a href="admin.php?page=managesites&scanid=<?php echo esc_attr( $website->id ); ?>" class="item"><?php esc_html_e( 'Details', 'mainwp' ); ?></a>
                                 </div>
                             </div>
                         </div>
                         <?php if ( $is_demo ) : ?>
                             <a href="<?php echo esc_html( $website->url ) . 'wp-admin.html'; ?>" target="_blank"><i class="sign in alternate icon"></i></a>
                         <?php else : ?>
-                            <a href="<?php echo 'admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website->id ); ?>&_opennonce=<?php echo esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank"><i class="sign in alternate icon"></i></a>
+                            <a href="<?php MainWP_Site_Open::get_open_site_admin_link( $website->id, true ); ?>" target="_blank"><i class="sign in alternate icon"></i></a>
                         <?php endif; ?>
                         <a href="
                         <?php
@@ -284,7 +289,9 @@ class MainWP_Security_Issues_Widget { // phpcs:ignore Generic.Classes.OpeningBra
 
             </div>
         </div>
-        <div class="ui active inverted dimmer" style="display:none" id="mainwp-secuirty-issues-loader"><div class="ui text loader"><?php esc_html_e( 'Please wait...', 'mainwp' ); ?></div></div>
+        <div class="ui active dimmer" style="display:none" id="mainwp-secuirty-issues-loader">
+            <div class="ui double text loader"></div>
+        </div>
         <?php
     }
 }

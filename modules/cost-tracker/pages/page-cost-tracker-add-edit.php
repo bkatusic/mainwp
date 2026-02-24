@@ -9,9 +9,15 @@
 namespace MainWP\Dashboard\Module\CostTracker;
 
 use MainWP\Dashboard\MainWP_Post_Handler;
+use MainWP\Dashboard\MainWP_Utility;
 use MainWP\Dashboard\MainWP_UI;
 use MainWP\Dashboard\MainWP_System_Utility;
 use MainWP\Dashboard\MainWP_Settings_Indicator;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 /**
  * Class Cost_Tracker_Add_Edit
@@ -26,9 +32,6 @@ class Cost_Tracker_Add_Edit {
      * @var mixed Default null
      */
     private static $instance = null;
-
-
-
 
     /**
      * Get Instance
@@ -160,7 +163,7 @@ class Cost_Tracker_Add_Edit {
 
         ?>
         <div class="mainwp-main-content">
-            <div>
+            <div class="ui segment">
                 <?php
                 if ( isset( $_GET['message'] ) && ! empty( $_GET['message'] ) ) { //phpcs:ignore WordPress.Security.NonceVerification.Recommended
                     $msg     = (int) $_GET['message']; //phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -184,18 +187,27 @@ class Cost_Tracker_Add_Edit {
                     }
                 }
                 ?>
-                <div class="ui red message" id="mainwp-module-cost-tracker-error-zone" style="display:none">
+                <?php if ( ! $edit_cost ) : ?>
+                    <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'add-cost-info-message' ) ) : ?>
+                        <div class="ui blue message" style="margin-top:1em;">
+                            <i class="close icon mainwp-notice-dismiss" notice-id="add-cost-info-message"></i>
+                            <?php esc_html_e( 'You\'re creating a new cost entry for your Cost Tracker.', 'mainwp' ); ?>
+                        </div>
+                    <?php endif; ?>
+                <?php endif; ?>
+
+                <div class="ui yellow message" id="mainwp-module-cost-tracker-error-zone" style="display:none">
                     <div class="error-message"></div>
                     <i class="ui close icon"></i>
                 </div>
                 <?php if ( $edit_cost ) : ?>
                     <h2 class="ui dividing header">
-                        <?php echo esc_html__( 'Edit ', 'mainwp' ) . esc_html( $edit_cost->name ); ?>
+                        <?php echo esc_html__( 'Edit ', 'mainwp' ) . esc_html( $edit_cost->name ) . esc_html__( 'Product Details', 'mainwp' ); ?>
                         <div class="sub header"><?php esc_html_e( 'Update your expense details to keep your cost tracking accurate and up to date.', 'mainwp' ); ?></div>
                     </h2>
                 <?php else : ?>
                     <h2 class="ui dividing header">
-                        <?php esc_html_e( 'Add New Cost', 'mainwp' ); ?>
+                        <?php esc_html_e( 'Product Details', 'mainwp' ); ?>
                         <div class="sub header"><?php esc_html_e( 'Track your expenses with ease. Add hosting fees, plugin licenses, or any other costs to keep your agency finances organized.', 'mainwp' ); ?></div>
                     </h2>
                 <?php endif; ?>
@@ -204,9 +216,9 @@ class Cost_Tracker_Add_Edit {
                     <?php
                     MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $edit_cost ? $edit_cost->name : '' );
                     esc_html_e( 'Name', 'mainwp' );
-                    ?>
+                    ?> <span class="ui small red text">(<?php esc_html_e( 'Required', 'mainwp' ); ?>)</span>
                     </label>
-                    <div class="five wide column" data-tooltip="<?php esc_attr_e( 'Enter the Company (Product) name.', 'mainwp' ); ?>" data-inverted="" data-position="left center">
+                    <div class="five wide column">
                         <input type="text" class="settings-field-value-change-handler" aria-label="<?php esc_attr_e( 'Enter the Company (Product) name.', 'mainwp' ); ?>" name="mainwp_module_cost_tracker_edit_name" id="mainwp_module_cost_tracker_edit_name" value="<?php echo $edit_cost ? esc_html( $edit_cost->name ) : ''; ?>">
                     </div>
                 </div>
@@ -217,7 +229,7 @@ class Cost_Tracker_Add_Edit {
                     esc_html_e( 'Product URL', 'mainwp' );
                     ?>
                     </label>
-                    <div class="five wide column" data-tooltip="<?php esc_attr_e( 'Enter the URL of the product (optional).', 'mainwp' ); ?>" data-inverted="" data-position="left center">
+                    <div class="five wide column">
                         <input type="text" class="settings-field-value-change-handler" aria-label="<?php esc_attr_e( 'Enter the URL of the product (optional).', 'mainwp' ); ?>" name="mainwp_module_cost_tracker_edit_url" id="mainwp_module_cost_tracker_edit_url" value="<?php echo $edit_cost ? esc_html( $edit_cost->url ) : ''; ?>">
                     </div>
                 </div>
@@ -255,7 +267,7 @@ class Cost_Tracker_Add_Edit {
                     ?>
                     </label>
                     <input type="hidden"  class="settings-field-value-change-handler" id="mainwp_module_cost_tracker_edit_select_icon_hidden" value="<?php echo esc_attr( $selected_prod_icon ); ?>">
-                    <div class="five wide column" data-tooltip="<?php esc_attr_e( 'Select an icon if not using original product icon.', 'mainwp' ); ?>" data-inverted="" data-position="left center">
+                    <div class="five wide column">
                         <div class="ui left action input">
                             <div class="ui five column selection search dropdown not-auto-init" style="min-width:21em" id="mainwp_module_cost_tracker_edit_icon_select">
                                 <div class="text">
@@ -273,6 +285,7 @@ class Cost_Tracker_Add_Edit {
                     </div>
                     <div class="one wide column"></div>
                 </div>
+
                 <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-cost-add-edit" default-indi-value="subscription">
                     <label class="six wide column middle aligned">
                     <?php
@@ -280,7 +293,7 @@ class Cost_Tracker_Add_Edit {
                     esc_html_e( 'Type', 'mainwp' );
                     ?>
                     </label>
-                    <div class="five wide column" data-tooltip="<?php esc_attr_e( 'Select the type of this cost.', 'mainwp' ); ?>" data-inverted="" data-position="left center">
+                    <div class="five wide column">
                         <select id="mainwp_module_cost_tracker_edit_payment_type" name="mainwp_module_cost_tracker_edit_payment_type" class="ui dropdown not-auto-init settings-field-value-change-handler">
                             <?php foreach ( $payment_types as $key => $val ) : ?>
                                 <?php
@@ -295,75 +308,13 @@ class Cost_Tracker_Add_Edit {
                     </div>
                 </div>
 
-                <?php $lifetime_selected = ( 'lifetime' === $selected_payment_type ) ? true : false; ?>
-
-                <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-cost-add-edit hide-if-lifetime-subscription-selected" default-indi-value="weekly" <?php echo $lifetime_selected ? 'style="display:none;"' : ''; ?>>
-                    <label class="six wide column middle aligned">
-                    <?php
-                    MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $edit_cost ? ( 'weekly' !== $selected_renewal ) : '' );
-                    esc_html_e( 'Renewal frequency', 'mainwp' );
-                    ?>
-                    </label>
-                    <div class="five wide column" data-tooltip="<?php esc_attr_e( 'Enter renewal frequency.', 'mainwp' ); ?>" data-inverted="" data-position="left center">
-                        <select id="mainwp_module_cost_tracker_edit_renewal_type" name="mainwp_module_cost_tracker_edit_renewal_type" class="ui dropdown settings-field-value-change-handler">
-                            <?php foreach ( $renewal_frequency as $key => $val ) : ?>
-                                <?php
-                                $_select = '';
-                                if ( $key === $selected_renewal ) {
-                                    $_select = ' selected ';
-                                }
-                                echo '<option value="' . esc_attr( $key ) . '" ' . esc_attr( $_select ) . '>' . esc_html( $val ) . '</option>';
-                                ?>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-                <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-cost-add-edit hide-if-lifetime-subscription-selected" default-indi-value="active" <?php echo $lifetime_selected ? 'style="display:none;"' : ''; ?>>
-                    <label class="six wide column middle aligned">
-                    <?php
-                    MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $edit_cost ? ( 'active' !== $selected_cost_tracker_status ) : '' );
-                    esc_html_e( 'Subscription status', 'mainwp' );
-                    ?>
-                    </label>
-                    <div class="five wide column" data-tooltip="<?php esc_attr_e( 'Enter subscription status.', 'mainwp' ); ?>" data-inverted="" data-position="left center">
-                        <select id="mainwp_module_cost_tracker_edit_cost_tracker_status" name="mainwp_module_cost_tracker_edit_cost_tracker_status" class="ui dropdown settings-field-value-change-handler">
-                            <?php foreach ( $cost_status as $key => $val ) : ?>
-                                <?php
-                                $_select = '';
-                                if ( $key === $selected_cost_tracker_status ) {
-                                    $_select = ' selected ';
-                                }
-                                echo '<option value="' . esc_attr( $key ) . '" ' . esc_attr( $_select ) . '>' . esc_html( $val ) . '</option>';
-                                ?>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-
-                <?php if ( $edit_id ) : ?>
-                <div class="ui grid field hide-if-lifetime-subscription-selected" <?php echo $lifetime_selected ? 'style="display:none;"' : ''; ?>>
-                    <label class="six wide column middle aligned">
-                    <?php
-                    $next_rl = Cost_Tracker_Admin::get_next_renewal( $edit_cost->last_renewal, $edit_cost->renewal_type );
-                    esc_html_e( 'Next renewal', 'mainwp' );
-                    ?>
-                    </label>
-                        <div class="five wide column" data-inverted="" data-position="left center">
-                        <?php
-
-                        Cost_Tracker_Admin::generate_next_renewal( $edit_cost, $next_rl );
-                        ?>
-                    </div>
-                </div>
-                <?php endif; ?>
                 <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-cost-add-edit" default-indi-value="plugin">
                     <label class="six wide column middle aligned">
                     <?php
                     MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $edit_cost ? ( 'plugin' !== $selected_product_type ) : '' );
                     ?>
                     <?php esc_html_e( 'Category', 'mainwp' ); ?></label>
-                    <div class="five wide column" data-tooltip="<?php esc_attr_e( 'Select the category for this cost.', 'mainwp' ); ?>
-                    " data-inverted="" data-position="left center">
+                    <div class="five wide column">
                         <select id="mainwp_module_cost_tracker_edit_product_type" name="mainwp_module_cost_tracker_edit_product_type" class="ui dropdown not-auto-init settings-field-value-change-handler">
                             <?php foreach ( $product_types as $key => $val ) : ?>
                                 <?php
@@ -377,6 +328,7 @@ class Cost_Tracker_Add_Edit {
                         </select>
                     </div>
                 </div>
+
                 <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-cost-add-edit hide-if-product-type-isnot-plugintheme" <?php echo $is_plugintheme ? '' : 'style="display:none;"'; ?>>
                     <label class="six wide column middle aligned">
                     <?php
@@ -384,10 +336,16 @@ class Cost_Tracker_Add_Edit {
                     esc_html_e( 'Slug', 'mainwp' );
                     ?>
                     </label>
-                    <div class="five wide column" data-tooltip="<?php esc_attr_e( 'Enter the product slug.', 'mainwp' ); ?>" data-inverted="" data-position="left center">
+                    <div class="five wide column">
                         <input type="text" class="settings-field-value-change-handler" aria-label="<?php esc_attr_e( 'Enter the product slug.', 'mainwp' ); ?>" name="mainwp_module_cost_tracker_edit_product_slug" id="mainwp_module_cost_tracker_edit_product_slug" value="<?php echo esc_attr( $slug ); ?>">
                     </div>
                 </div>
+
+                <h2 class="ui dividing header">
+                    <?php esc_html_e( 'License & Payment', 'mainwp' ); ?>
+                    <div class="sub header"><?php esc_html_e( 'Enter license information and purchase details.', 'mainwp' ); ?></div>
+                </h2>
+
                 <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-cost-add-edit" default-indi-value="single_site">
                     <label class="six wide column middle aligned">
                     <?php
@@ -395,7 +353,7 @@ class Cost_Tracker_Add_Edit {
                     esc_html_e( 'License type', 'mainwp' );
                     ?>
                     </label>
-                    <div class="five wide column" data-tooltip="<?php esc_attr_e( 'Select the license type of this cost.', 'mainwp' ); ?>" data-inverted="" data-position="left center">
+                    <div class="five wide column">
                         <select id="mainwp_module_cost_tracker_edit_license_type" name="mainwp_module_cost_tracker_edit_license_type" class="ui dropdown settings-field-value-change-handler">
                             <?php foreach ( $license_types as $key => $val ) : ?>
                                 <?php
@@ -430,7 +388,7 @@ class Cost_Tracker_Add_Edit {
                     esc_html_e( 'Purchase date', 'mainwp' );
                     ?>
                     </label>
-                    <div class="five wide column" data-tooltip="<?php esc_attr_e( 'Enter the purchase date.', 'mainwp' ); ?>" data-inverted="" data-position="left center">
+                    <div class="five wide column">
                         <div class="ui calendar mainwp_datepicker">
                             <div class="ui input left icon">
                                 <i class="calendar icon"></i>
@@ -447,7 +405,7 @@ class Cost_Tracker_Add_Edit {
                     esc_html_e( 'Payment method', 'mainwp' );
                     ?>
                     </label>
-                    <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Enter the payment method.', 'mainwp' ); ?>" data-inverted="" data-position="left center">
+                    <div class="ten wide column">
                         <select id="mainwp_module_cost_tracker_edit_payment_method" name="mainwp_module_cost_tracker_edit_payment_method" class="ui dropdown settings-field-value-change-handler">
                             <?php foreach ( $payment_methods as $key => $val ) : ?>
                                 <?php
@@ -462,6 +420,73 @@ class Cost_Tracker_Add_Edit {
                     </div>
                 </div>
 
+                <h2 class="ui dividing header">
+                    <?php esc_html_e( 'Renewal Details', 'mainwp' ); ?>
+                    <div class="sub header"><?php esc_html_e( 'Define how and when this cost renews.', 'mainwp' ); ?></div>
+                </h2>
+
+                <?php $lifetime_selected = ( 'lifetime' === $selected_payment_type ) ? true : false; ?>
+
+                <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-cost-add-edit hide-if-lifetime-subscription-selected" default-indi-value="weekly" <?php echo $lifetime_selected ? 'style="display:none;"' : ''; ?>>
+                    <label class="six wide column middle aligned">
+                    <?php
+                    MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $edit_cost ? ( 'weekly' !== $selected_renewal ) : '' );
+                    esc_html_e( 'Renewal frequency', 'mainwp' );
+                    ?>
+                    </label>
+                    <div class="five wide column">
+                        <select id="mainwp_module_cost_tracker_edit_renewal_type" name="mainwp_module_cost_tracker_edit_renewal_type" class="ui dropdown settings-field-value-change-handler">
+                            <?php foreach ( $renewal_frequency as $key => $val ) : ?>
+                                <?php
+                                $_select = '';
+                                if ( $key === $selected_renewal ) {
+                                    $_select = ' selected ';
+                                }
+                                echo '<option value="' . esc_attr( $key ) . '" ' . esc_attr( $_select ) . '>' . esc_html( $val ) . '</option>';
+                                ?>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-cost-add-edit hide-if-lifetime-subscription-selected" default-indi-value="active" <?php echo $lifetime_selected ? 'style="display:none;"' : ''; ?>>
+                    <label class="six wide column middle aligned">
+                    <?php
+                    MainWP_Settings_Indicator::render_not_default_indicator( 'none_preset_value', $edit_cost ? ( 'active' !== $selected_cost_tracker_status ) : '' );
+                    esc_html_e( 'Billing status', 'mainwp' );
+                    ?>
+                    </label>
+                    <div class="five wide column">
+                        <select id="mainwp_module_cost_tracker_edit_cost_tracker_status" name="mainwp_module_cost_tracker_edit_cost_tracker_status" class="ui dropdown settings-field-value-change-handler">
+                            <?php foreach ( $cost_status as $key => $val ) : ?>
+                                <?php
+                                $_select = '';
+                                if ( $key === $selected_cost_tracker_status ) {
+                                    $_select = ' selected ';
+                                }
+                                echo '<option value="' . esc_attr( $key ) . '" ' . esc_attr( $_select ) . '>' . esc_html( $val ) . '</option>';
+                                ?>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <?php if ( $edit_id ) : ?>
+                <div class="ui grid field hide-if-lifetime-subscription-selected" <?php echo $lifetime_selected ? 'style="display:none;"' : ''; ?>>
+                    <label class="six wide column middle aligned">
+                    <?php
+                    $next_rl = Cost_Tracker_Admin::get_next_renewal( $edit_cost->last_renewal, $edit_cost->renewal_type );
+                    esc_html_e( 'Next renewal', 'mainwp' );
+                    ?>
+                    </label>
+                        <div class="five wide column" data-inverted="" data-position="left center">
+                        <?php
+
+                        Cost_Tracker_Admin::generate_next_renewal( $edit_cost, $next_rl );
+                        ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <div class="ui grid field settings-field-indicator-wrapper settings-field-indicator-cost-add-edit">
                     <label class="six wide column middle aligned">
                     <?php
@@ -469,7 +494,7 @@ class Cost_Tracker_Add_Edit {
                     esc_html_e( 'Notes', 'mainwp' );
                     ?>
                     </label>
-                    <div class="ten wide column" data-tooltip="<?php esc_attr_e( 'Enter the description for this cost tracking item.', 'mainwp' ); ?>" data-inverted="" data-position="left center">
+                    <div class="ten wide column">
                         <textarea id="mainwp_module_cost_tracker_edit_note" class="settings-field-value-change-handler" name="mainwp_module_cost_tracker_edit_note"><?php echo $edit_cost ? esc_html( $edit_cost->note ) : ''; ?></textarea>
                     </div>
                 </div>
@@ -591,13 +616,14 @@ class Cost_Tracker_Add_Edit {
                                     }
                                 }
                                 setTimeout(function () {
-                                    //window.location.href = location.href;
                                     jQuery('#mainwp-upload-custom-icon-modal').modal('hide')
                                 }, 1000);
                             });
                             return false;
                     });
                 });
+
+                mainwp_init_button_site_selection_dependency( 'mainwp-module-cost-tracker-save-tracker-button' );
             });
         </script>
         <?php

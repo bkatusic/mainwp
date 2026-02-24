@@ -10,8 +10,14 @@
 
 namespace MainWP\Dashboard\Module\ApiBackups;
 
+use MainWP\Dashboard\MainWP_UI;
 use MainWP\Dashboard\MainWP_Settings_Indicator;
+use MainWP\Dashboard\MainWP_Settings;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 /**
  * MainWP API Backups Admin
@@ -130,12 +136,12 @@ class Api_Backups_Settings {
         $_nonce_slug = $individual ? 'cloudways_api_form_individual' : 'cloudways_api_form_general';
         ?>
         <div id="3rd-party-api-manager">
-            <div class="ui segment">
+            <div class="ui padded segment">
 
-                <div class="ui grid">
-                    <div class="three wide column">
-                        <div class="ui vertical fluid pointing menu">
-                            <h3 class="item ui header"><?php esc_html_e( 'Backup API Providers', 'mainwp' ); ?></h3>
+                <div class="ui stackable grid">
+                    <div class="sixteen wide column">
+                        <div class="ui secondary pointing fluid menu">
+
                             <a class="item active" data-tab="cloudways">
                                 <?php esc_html_e( 'Cloudways', 'mainwp' ); ?>
                             </a>
@@ -162,7 +168,7 @@ class Api_Backups_Settings {
                             </a>
                         </div>
                     </div>
-                    <div class="thirteen wide column">
+                    <div class="sixteen wide column">
                         <?php if ( Api_Backups_Utility::show_mainwp_message( 'mainwp-module-api-backups-manager-info-message' ) ) : ?>
                             <div class="ui blue message">
                                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-module-api-backups-manager-info-message"></i>
@@ -172,14 +178,23 @@ class Api_Backups_Settings {
                                         'This feature allows you to trigger and restore backups only for sites hosted on supported providers via their API. Backups cannot be created for sites hosted elsewhere or stored on these services if your site is not hosted with them. Check this %1$shelp document%2$s to see all available services & the endpoints that MainWP currently supports.',
                                         'mainwp'
                                     ),
-                                    '<a href="https://mainwp.com/kb/api-backups-extension/" target="_blank">', // NOSONAR - noopener - open safe.
+                                    '<a href="https://docs.mainwp.com/sites/backups/manage-backups#api-backups" target="_blank">', // NOSONAR - noopener - open safe.
                                     '</a> <i class="external alternate icon"></i>'
                                 );
                                 ?>
+                                <div class="ui hidden divider"></div>
+                                <strong><?php esc_html_e( 'Note: VHM (Virtual Host Manager) is not supported.', 'mainwp' ); ?></strong> <?php esc_html_e( 'The purpose of having these global cPanel settings is to save you time when setting up per-site cPanel settings, which is particularly useful if you manage multiple child sites on the same cPanel account.', 'mainwp' ); ?>
                             </div>
                         <?php endif; ?>
 
                         <?php
+
+                        $saved_settings = false;
+
+                        if ( isset( $_POST['submit'] ) ) {
+                            $old_settings = MainWP_Settings::get_all_settings_values();
+                        }
+
                         // Save CloudWays Data.
                         //phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
                         ?>
@@ -188,7 +203,10 @@ class Api_Backups_Settings {
                             <?php Api_Backups_Utility::update_option( 'mainwp_cloudways_api_account_email', ( isset( $_POST['mainwp_cloudways_api_account_email'] ) ? wp_unslash( $_POST['mainwp_cloudways_api_account_email'] ) : '' ) ); ?>
                             <?php Api_Backups_Utility::get_instance()->update_api_key( 'cloudways', ( isset( $_POST['mainwp_cloudways_api_key'] ) ? wp_unslash( $_POST['mainwp_cloudways_api_key'] ) : '' ) ); ?>
                             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'API credentials have been successfully saved.', 'mainwp' ); ?></div>
-                            <?php Api_Backups_3rd_Party::cloudways_action_update_ids(); ?>
+                            <?php
+                            Api_Backups_3rd_Party::cloudways_action_update_ids();
+                            $saved_settings = true;
+                            ?>
                         <?php endif; ?>
                         <?php // END Save CloudWays Data. ?>
                         <?php // Save GridPane Data. ?>
@@ -196,27 +214,39 @@ class Api_Backups_Settings {
                             <?php Api_Backups_Utility::update_option( 'mainwp_enable_gridpane_api', ( ! isset( $_POST['mainwp_enable_gridpane_api'] ) ? 0 : 1 ) ); ?>
                             <?php Api_Backups_Utility::get_instance()->update_api_key( 'gridpane', ( isset( $_POST['mainwp_gridpane_api_key'] ) ? wp_unslash( $_POST['mainwp_gridpane_api_key'] ) : '' ) ); ?>
                             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'API credentials have been successfully saved.', 'mainwp' ); ?></div>
-                            <?php Api_Backups_3rd_Party::gridpane_action_update_ids(); ?>
+                            <?php
+                            Api_Backups_3rd_Party::gridpane_action_update_ids();
+                            $saved_settings = true;
+                            ?>
                         <?php endif; ?>
                         <?php // END Save GridPane Data. ?>
                         <?php // Save Vultr Data. ?>
                         <?php if ( isset( $_POST['submit'] ) && isset( $_POST['wp_nonce_vultr'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_nonce_vultr'] ), 'cloudways_api_form_general' ) ) : ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_enable_vultr_api', ( ! isset( $_POST['mainwp_enable_vultr_api'] ) ? 0 : 1 ) ); ?>
-                            <?php Api_Backups_Utility::get_instance()->update_api_key( 'vultr', ( isset( $_POST['mainwp_vultr_api_key'] ) ? wp_unslash( $_POST['mainwp_vultr_api_key'] ) : '' ) ); ?>
+                            <?php
+                            Api_Backups_Utility::get_instance()->update_api_key( 'vultr', ( isset( $_POST['mainwp_vultr_api_key'] ) ? wp_unslash( $_POST['mainwp_vultr_api_key'] ) : '' ) );
+                            $saved_settings = true;
+                            ?>
                             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'API credentials have been successfully saved.', 'mainwp' ); ?></div>
                         <?php endif; ?>
                         <?php // END Save Vultr Data. ?>
                         <?php // Save Linode Data. ?>
                         <?php if ( isset( $_POST['submit'] ) && isset( $_POST['wp_nonce_linode'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_nonce_linode'] ), 'cloudways_api_form_general' ) ) : ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_enable_linode_api', ( ! isset( $_POST['mainwp_enable_linode_api'] ) ? 0 : 1 ) ); ?>
-                            <?php Api_Backups_Utility::get_instance()->update_api_key( 'linode', ( isset( $_POST['mainwp_linode_api_key'] ) ? wp_unslash( $_POST['mainwp_linode_api_key'] ) : '' ) ); ?>
+                            <?php
+                            Api_Backups_Utility::get_instance()->update_api_key( 'linode', ( isset( $_POST['mainwp_linode_api_key'] ) ? wp_unslash( $_POST['mainwp_linode_api_key'] ) : '' ) );
+                            $saved_settings = true;
+                            ?>
                             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'API credentials have been successfully saved.', 'mainwp' ); ?></div>
                         <?php endif; ?>
                         <?php // END Save Linode Data. ?>
                         <?php // Save DigitalOcean Data. ?>
                         <?php if ( isset( $_POST['submit'] ) && isset( $_POST['wp_nonce_digitalocean'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_nonce_digitalocean'] ), 'cloudways_api_form_general' ) ) : ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_enable_digitalocean_api', ( ! isset( $_POST['mainwp_enable_digitalocean_api'] ) ? 0 : 1 ) ); ?>
-                            <?php Api_Backups_Utility::get_instance()->update_api_key( 'digitalocean', ( isset( $_POST['mainwp_digitalocean_api_key'] ) ? wp_unslash( $_POST['mainwp_digitalocean_api_key'] ) : '' ) ); ?>
+                            <?php
+                            Api_Backups_Utility::get_instance()->update_api_key( 'digitalocean', ( isset( $_POST['mainwp_digitalocean_api_key'] ) ? wp_unslash( $_POST['mainwp_digitalocean_api_key'] ) : '' ) );
+                            $saved_settings = true;
+                            ?>
                             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'API credentials have been successfully saved.', 'mainwp' ); ?></div>
                         <?php endif; ?>
                         <?php // END Save Linode Data. ?>
@@ -226,7 +256,10 @@ class Api_Backups_Settings {
                             <?php Api_Backups_Utility::update_option( 'mainwp_cpanel_url', ( isset( $_POST['mainwp_cpanel_url'] ) ? wp_unslash( $_POST['mainwp_cpanel_url'] ) : '' ) ); ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_cpanel_site_path', ( isset( $_POST['mainwp_cpanel_site_path'] ) ? wp_unslash( $_POST['mainwp_cpanel_site_path'] ) : '' ) ); ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_cpanel_account_username', ( isset( $_POST['mainwp_cpanel_account_username'] ) ? wp_unslash( $_POST['mainwp_cpanel_account_username'] ) : '' ) ); ?>
-                            <?php Api_Backups_Utility::get_instance()->update_api_key( 'cpanel', ( isset( $_POST['mainwp_cpanel_account_password'] ) ? wp_unslash( $_POST['mainwp_cpanel_account_password'] ) : '' ) ); ?>
+                            <?php
+                            Api_Backups_Utility::get_instance()->update_api_key( 'cpanel', ( isset( $_POST['mainwp_cpanel_account_password'] ) ? wp_unslash( $_POST['mainwp_cpanel_account_password'] ) : '' ) );
+                            $saved_settings = true;
+                            ?>
                             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'API credentials have been successfully saved.', 'mainwp' ); ?></div>
                         <?php endif; ?>
                         <?php // END Save cPanel Data. ?>
@@ -234,7 +267,10 @@ class Api_Backups_Settings {
                         <?php if ( isset( $_POST['submit'] ) && isset( $_POST['wp_nonce_plesk'] ) && wp_verify_nonce( sanitize_key( $_POST['wp_nonce_plesk'] ), 'cloudways_api_form_general' ) ) : ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_enable_plesk_api', ( ! isset( $_POST['mainwp_enable_plesk_api'] ) ? 0 : 1 ) ); ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_plesk_api_url', ( isset( $_POST['mainwp_plesk_api_url'] ) ? wp_unslash( $_POST['mainwp_plesk_api_url'] ) : '' ) ); ?>
-                            <?php Api_Backups_Utility::get_instance()->update_api_key( 'plesk', ( isset( $_POST['mainwp_plesk_api_key'] ) ? wp_unslash( $_POST['mainwp_plesk_api_key'] ) : '' ) ); ?>
+                            <?php
+                            Api_Backups_Utility::get_instance()->update_api_key( 'plesk', ( isset( $_POST['mainwp_plesk_api_key'] ) ? wp_unslash( $_POST['mainwp_plesk_api_key'] ) : '' ) );
+                            $saved_settings = true;
+                            ?>
                             <?php
                             if ( isset( $_POST['mainwp_plesk_installation_id'] ) ) {
                                 Api_Backups_Utility::update_option( 'mainwp_plesk_installation_id', sanitize_text_field( wp_unslash( $_POST['mainwp_plesk_installation_id'] ) ) );
@@ -248,10 +284,32 @@ class Api_Backups_Settings {
                             <?php Api_Backups_Utility::update_option( 'mainwp_enable_kinsta_api', ( ! isset( $_POST['mainwp_enable_kinsta_api'] ) ? 0 : 1 ) ); ?>
                             <?php Api_Backups_Utility::get_instance()->update_api_key( 'kinsta', ! empty( $_POST['mainwp_kinsta_api_key'] ) ? wp_unslash( $_POST['mainwp_kinsta_api_key'] ) : '' ); ?>
                             <?php Api_Backups_Utility::update_option( 'mainwp_kinsta_api_account_email', ( isset( $_POST['mainwp_kinsta_api_account_email'] ) ? wp_unslash( $_POST['mainwp_kinsta_api_account_email'] ) : '' ) ); ?>
-                            <?php Api_Backups_Utility::update_option( 'mainwp_kinsta_company_id', ( isset( $_POST['mainwp_kinsta_company_id'] ) ? wp_unslash( $_POST['mainwp_kinsta_company_id'] ) : '' ) ); ?>
+                            <?php
+                            Api_Backups_Utility::update_option( 'mainwp_kinsta_company_id', ( isset( $_POST['mainwp_kinsta_company_id'] ) ? wp_unslash( $_POST['mainwp_kinsta_company_id'] ) : '' ) );
+                            $saved_settings = true;
+                            ?>
                             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'API credentials have been successfully saved.', 'mainwp' ); ?></div>
                         <?php endif; ?>
                         <?php // END Save Kinsta Data. ?>
+
+                        <?php
+
+                        if ( $saved_settings ) {
+                            $new_settings = MainWP_Settings::get_all_settings_values();
+                            /**
+                            * Action: mainwp_after_save_settings
+                            *
+                            * Fires after save settings.
+                            *
+                            * @since 6.0
+                            *
+                            * @param array $new_settings The new settings.
+                            * @param array $old_settings The old settings.
+                            */
+                            do_action( 'mainwp_after_save_settings', $new_settings, $old_settings );
+                        }
+
+                        ?>
 
                         <?php // Build Cloudways API Form. ?>
                         <div class="ui tab segment active" data-tab="cloudways">
@@ -267,7 +325,7 @@ class Api_Backups_Settings {
                             <div class="ui form">
                                 <form method="POST" action="">
                                     <?php
-                                    wp_nonce_field( 'mainwp-admin-nonce' );
+                                    MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' );
                                     ?>
                                     <input type="hidden" name="wp_nonce_cloudways" value="<?php echo esc_attr( wp_create_nonce( $_nonce_slug ) ); ?>" />
                                     <?php
@@ -345,7 +403,7 @@ class Api_Backups_Settings {
                             <div class="ui hidden divider settings-field-indicator-wrapper settings-field-indicator-gridpane-settings"></div>
                             <div class="ui form">
                                 <form method="POST" action="">
-                                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                                     <input type="hidden" name="wp_nonce_gridpane" value="<?php echo esc_attr( wp_create_nonce( $_nonce_slug ) ); ?>" />
                                     <?php
                                     /**
@@ -413,7 +471,7 @@ class Api_Backups_Settings {
                             <div class="ui hidden divider"></div>
                             <div class="ui form">
                                 <form method="POST" action="">
-                                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                                     <input type="hidden" name="wp_nonce_vultr" value="<?php echo esc_attr( wp_create_nonce( $_nonce_slug ) ); ?>" />
                                     <?php
                                         /**
@@ -480,7 +538,7 @@ class Api_Backups_Settings {
                             <div class="ui hidden divider"></div>
                             <div class="ui form">
                                 <form method="POST" action="">
-                                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                                     <input type="hidden" name="wp_nonce_linode" value="<?php echo esc_attr( wp_create_nonce( $_nonce_slug ) ); ?>" />
                                     <?php
                                         /**
@@ -542,14 +600,14 @@ class Api_Backups_Settings {
                             </h3>
                             <ul>
                                 <li><?php printf( esc_html__( "1. If you don't already have one, get a %s", 'mainwp' ), '<a target="_blank" href="https://mainwp.com/go/digital-ocean/">DigitalOcean account</a>' ); // NOSONAR - noopener - open safe. ?></li>
-                                <li><?php printf( esc_html__( '2. You can generate an %1$sOAuth token%2$s by visiting the %3$s section of the DigitalOcean control panel for your account.', 'mainwp' ), '<b>', '</b>', '<a target="_blank" href="https://cloud.digitalocean.com/account/api/tokens">Apps & API</a>' ); ?></b></li>
+				<li><?php printf( esc_html__( '2. You can generate a %1$sPersonal Access Token%2$s by visiting the %3$s section of the DigitalOcean control panel for your account.', 'mainwp' ), '<b>', '</b>', '<a target="_blank" href="https://cloud.digitalocean.com/account/api/tokens">Apps & API</a>' ); ?></b></li>
                                 <li><?php printf( esc_html__( '3. Paste in your %1$sPersonal Access Token%2$s below and click the Save Settings button.', 'mainwp' ), '<b>', '</b>' ); ?></li>
                                 <li><?php esc_html_e( '4. Once the API is connected, go to the Site Edit page (for all sites on this host) and set the correct Provider and Instance ID.', 'mainwp' ); ?></li>
                             </ul>
                             <div class="ui hidden divider"></div>
                             <div class="ui form">
                                 <form method="POST" action="">
-                                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                                     <input type="hidden" name="wp_nonce_digitalocean" value="<?php echo esc_attr( wp_create_nonce( $_nonce_slug ) ); ?>" />
                                     <?php
                                         /**
@@ -617,7 +675,7 @@ class Api_Backups_Settings {
                             <div class="ui hidden divider"></div>
                             <div class="ui form">
                                 <form method="POST" action="">
-                                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                                     <input type="hidden" name="wp_nonce_cpanel" value="<?php echo esc_attr( wp_create_nonce( $_nonce_slug ) ); ?>" />
                                     <?php
                                     /**
@@ -718,7 +776,7 @@ class Api_Backups_Settings {
                             <div class="ui hidden divider"></div>
                             <div class="ui form">
                                 <form method="POST" action="">
-                                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                                     <input type="hidden" name="wp_nonce_plesk" value="<?php echo esc_attr( wp_create_nonce( $_nonce_slug ) ); ?>" />
                                     <?php
                                     /**
@@ -796,7 +854,7 @@ class Api_Backups_Settings {
                             <div class="ui hidden divider"></div>
                             <div class="ui form">
                                 <form method="POST" action="">
-                                    <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
+                                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
                                     <input type="hidden" name="wp_nonce" value="<?php echo esc_attr( wp_create_nonce( 'kinsta_api_form' ) ); ?>" />
                                     <?php
                                         /**
@@ -1007,6 +1065,8 @@ class Api_Backups_Settings {
         $mainwp_cpanel_account_username       = '';
         $mainwp_plesk_api_url                 = '';
 
+        $cpanel_account_password = '';
+
         if ( is_object( $website ) && property_exists( $website, 'id' ) ) {
             $opts = Api_Backups_Helper::get_website_options(
                 $website,
@@ -1048,15 +1108,36 @@ class Api_Backups_Settings {
                 $mainwp_kinsta_account_email          = isset( $opts['mainwp_kinsta_account_email'] ) ? $opts['mainwp_kinsta_account_email'] : '';
                 $mainwp_kinsta_company_id             = isset( $opts['mainwp_kinsta_company_id'] ) ? $opts['mainwp_kinsta_company_id'] : '';
             }
+
+            if ( empty( $mainwp_cpanel_api_url ) && ! empty( get_option( 'mainwp_cpanel_url' ) ) ) {
+                $mainwp_cpanel_api_url = get_option( 'mainwp_cpanel_url' );
+            }
+
+            if ( empty( $mainwp_cpanel_account_username ) && ! empty( get_option( 'mainwp_cpanel_account_username' ) ) ) {
+                $mainwp_cpanel_account_username = get_option( 'mainwp_cpanel_account_username' );
+            }
+
+            $cpanel_account_password = Api_Backups_Utility::get_instance()->get_child_api_key( $website, 'cpanel' );
+            $_api_key                = Api_Backups_3rd_Party::get_cpanel_account_password();
+            if ( empty( $cpanel_account_password ) && ! empty( $_api_key ) ) {
+                $cpanel_account_password = $_api_key;
+            }
+
+            if ( empty( $mainwp_cpanel_site_path ) && ! empty( get_option( 'mainwp_cpanel_site_path' ) ) ) {
+                $mainwp_cpanel_site_path = get_option( 'mainwp_cpanel_site_path' );
+            }
         }
 
         ?>
-        <h3 class="ui dividing header">
-            <?php esc_html_e( 'Backup API Provider Settings', 'mainwp' ); ?>
-            <div class="sub header"><?php esc_html_e( 'Use the provided settings to set your Backup API provider. Sites hosted on Cloudways and Gridpane do not require these settings.', 'mainwp' ); ?></div>
-            <div class="sub header"><?php esc_html_e( 'Use these settings to select Provider and instance ID only if the site is hosted on DigitalOcean, Akamai (Linode), or Vultr hosting.', 'mainwp' ); ?></div>
-            <div class="sub header"><?php esc_html_e( 'Sites hosted on Cloudways and GridPane do not require these settings to be added manually. All the necessary info for the feature will be obtained automatically so you can leave these settings blank.', 'mainwp' ); ?></div>
-        </h3>
+        <div class="ui basic accordion mainwp-blank-accordion mainwp-sidebar-accordion" id="mainwp-edit-site-backup-api-provider-settings-accordion">
+            <h2 class="ui dividing header title">
+                <i class="right dropdown icon"></i>
+                <?php esc_html_e( 'Backup API Provider Settings', 'mainwp' ); ?>
+                <div class="sub header"><?php esc_html_e( 'Use the provided settings to set your Backup API provider. Sites hosted on Cloudways and Gridpane do not require these settings.', 'mainwp' ); ?></div>
+                <div class="sub header"><?php esc_html_e( 'Use these settings to select Provider and instance ID only if the site is hosted on DigitalOcean, Akamai (Linode), or Vultr hosting.', 'mainwp' ); ?></div>
+                <div class="sub header"><?php esc_html_e( 'Sites hosted on Cloudways and GridPane do not require these settings to be added manually. All the necessary info for the feature will be obtained automatically so you can leave these settings blank.', 'mainwp' ); ?></div>
+            </h2>
+            <div class="content">
         <?php if ( '' === $mainwp_3rd_party_api || 'cPanel' === $mainwp_3rd_party_api || 'Plesk' === $mainwp_3rd_party_api || 'Kinsta' === $mainwp_3rd_party_api ) : ?>
             <div class="ui grid field settings-field-indicator-wrapper">
                 <label class="six wide column middle aligned">
@@ -1111,9 +1192,6 @@ class Api_Backups_Settings {
                         <label class="six wide column middle aligned"><?php esc_html_e( 'Password', 'mainwp' ); ?></label>
                         <div class="ui six wide column" data-tooltip="<?php esc_attr_e( 'Enter the cPanel Account Password.', 'mainwp' ); ?>" data-inverted="" data-position="top left">
                             <div class="ui left labeled input">
-                                <?php
-                                    $cpanel_account_password = Api_Backups_Utility::get_instance()->get_child_api_key( $website, 'cpanel' );
-                                ?>
                                 <input type="password" name="mainwp_cpanel_account_password" id="mainwp_cpanel_account_password" value="<?php echo esc_attr( $cpanel_account_password ); ?>"  />
                             </div>
                         </div>
@@ -1175,8 +1253,8 @@ class Api_Backups_Settings {
                         </div>
                     </div>
                 </div>
+                <?php $el_id_ind_set_chk_2 = 'kinsta_individual_settings_check'; ?>
                 <div class="ui grid field">
-                    <?php echo esc_attr( $el_id_ind_set_chk_2 ); ?>
                     <label class="six wide column middle aligned"><?php esc_html_e( 'Overwrite Global Settings', 'mainwp' ); ?></label>
                     <div id="<?php echo esc_attr( $el_id_ind_set_chk_2 ); ?>" class="ten wide column ui toggle checkbox" data-tooltip="<?php esc_attr_e( 'If enabled, the Kinsta Individual Settings will be used.', 'mainwp' ); ?>" data-inverted="" data-position="bottom left">
                         <input type="checkbox" name="mainwp_enable_kinsta_individual" id="mainwp_enable_kinsta_individual" <?php echo ( 'on' === $mainwp_enable_kinsta_individual ) ? 'checked="true"' : 'off'; ?> />
@@ -1378,6 +1456,8 @@ class Api_Backups_Settings {
 
             } );
         </script>
+            </div>
+        </div>
         <?php
     } // [ END: hook_render_mainwp_manage_sites_edit ]
 } // [ END: class Api_Backups_Settings ]

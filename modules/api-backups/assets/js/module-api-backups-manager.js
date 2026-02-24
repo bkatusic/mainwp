@@ -209,9 +209,8 @@ jQuery(function(){
     // Trigger action_restore_database_backup.
     jQuery(document).on('click', '.mainwp_3rd_party_api_cpanel_action_restore_database_backup', function () {
         let confirmMsg = __('Are you sure you want to Restore this backup?');
-        let btObj = this;
-        mainwp_confirm(confirmMsg, function () {
-            cpanel_action_restore_database_backup(btObj);
+        mainwp_confirm(confirmMsg, () => {
+            cpanel_action_restore_database_backup(this);
         });
     });
 
@@ -454,7 +453,7 @@ let cloudways_action_backup = function (pObj) {
             ;
 
             setTimeout(function () {
-                location.reload();
+                mainwp_forceReload();
             }, 5000);
 
         } else {
@@ -466,7 +465,7 @@ let cloudways_action_backup = function (pObj) {
             ;
 
             setTimeout(function () {
-                location.reload();
+                mainwp_forceReload();
             }, 5000);
 
         }
@@ -719,7 +718,7 @@ let vultr_action_create_snapshot = function (pObj) {
             jQuery('#mainwp-api-backups-message-zone .content .message')
                 .html('A backup has been requested.');
             setTimeout(function () {
-                location.reload();
+                mainwp_forceReload();
             }, 5000);
 
         } else {
@@ -730,7 +729,7 @@ let vultr_action_create_snapshot = function (pObj) {
             jQuery('#mainwp-api-backups-message-zone .content .message')
                 .html( err_message );
             setTimeout(function () {
-                location.reload();
+                mainwp_forceReload();
             }, 5000);
 
         }
@@ -932,7 +931,7 @@ let gridpane_action_create_backup = function (pObj) {
             ;
 
             setTimeout(function () {
-                location.reload();
+                mainwp_forceReload();
             }, 5000);
 
         } else {
@@ -944,7 +943,7 @@ let gridpane_action_create_backup = function (pObj) {
             ;
 
             setTimeout(function () {
-                location.reload();
+                mainwp_forceReload();
             }, 5000);
 
         }
@@ -1149,7 +1148,7 @@ let linode_action_create_backup = function (pObj) {
             ;
 
             setTimeout(function () {
-                location.reload();
+                mainwp_forceReload();
             }, 5000);
 
         } else {
@@ -1161,7 +1160,7 @@ let linode_action_create_backup = function (pObj) {
             ;
 
             setTimeout(function () {
-                location.reload();
+                mainwp_forceReload();
             }, 5000);
         }
     });
@@ -1360,7 +1359,7 @@ let digitalocean_action_create_backup = function (pObj) {
             ;
 
             setTimeout(function () {
-                location.reload();
+                mainwp_forceReload();
             }, 5000);
         } else {
 
@@ -1371,7 +1370,7 @@ let digitalocean_action_create_backup = function (pObj) {
             ;
 
             setTimeout(function () {
-                location.reload();
+                mainwp_forceReload();
             }, 5000);
         }
     });
@@ -2270,7 +2269,6 @@ let kinsta_action_create_backup = function (pObj) {
 // Delete Manual Backup.
 let kinsta_action_delete_backup = function (pObj, backupId) {
 	let websiteId = jQuery('.mainwp_3rd_party_api_kinsta_action_delete_backup ').attr('website_id');
-	console.log(websiteId);
 	let data = mainwp_secure_data({
 		action: 'kinsta_action_delete_backup',
 		backup_id: backupId,
@@ -2283,7 +2281,6 @@ let kinsta_action_delete_backup = function (pObj, backupId) {
 
 	jQuery.post(ajaxurl, data, function (response) {
 		response = jQuery.trim(response);
-		console.log(response);
 		if (response === 'true') {
 
 			// Show message.

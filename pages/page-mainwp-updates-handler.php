@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Updates_Handler
  *
@@ -45,12 +50,15 @@ class MainWP_Updates_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameL
             $website = MainWP_DB::instance()->get_website_by_id( $id );
 
             if ( MainWP_System_Utility::is_suspended_site( $website ) ) {
-                throw new MainWP_Exception( 'ERROR', '<i class="pause circular yellow inverted icon"></i> ' . esc_html__( 'Suspended site.', 'mainwp' ) ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+                throw new MainWP_Exception( 'ERROR', '<i class="pause circular yellow inverted icon"></i> ' . esc_html__( 'Suspended site.', 'mainwp' ), 'SUSPENDED_SITE' ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
             }
 
             $information = static::upgrade_website( $website );
 
             if ( is_array( $information ) ) {
+                $thrw_error = '';
+                $thrw_extra = '';
+                $success    = false;
                 if ( isset( $information['upgrade'] ) && 'SUCCESS' === $information['upgrade'] ) {
                     MainWP_DB::instance()->update_website_option( $website, 'wp_upgrades', wp_json_encode( array() ) );
                     do_action( 'mainwp_after_upgrade_wp_success', $website, $information );
@@ -59,19 +67,36 @@ class MainWP_Updates_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     if ( $website->id === $html_regression_icon ) {
                         $html_regression_icon = '';
                     }
-                    return '<span data-inverted="" data-position="left center" data-tooltip="' . esc_html__( 'Update successful', 'mainwp' ) . '"><i class="green check icon"></i></span>' . $html_regression_icon;
+                    $raw_msg     = esc_html__( 'Update successful', 'mainwp' );
+                    $msg_success = '<span data-inverted="" data-position="left center" data-tooltip="' . esc_html__( 'Update successful', 'mainwp' ) . '"><i class="green check icon"></i></span>' . $html_regression_icon;
+                    $success     = true;
                 } elseif ( isset( $information['upgrade'] ) ) {
                     $errorMsg = '';
                     if ( 'LOCALIZATION' === $information['upgrade'] ) {
+                        $raw_msg  = esc_html__( 'No update found for the set locale.', 'mainwp' );
                         $errorMsg = '<i class="red times icon"></i> ' . esc_html__( 'No update found for the set locale.', 'mainwp' );
                     } elseif ( 'NORESPONSE' === $information['upgrade'] ) {
+                        $raw_msg  = esc_html__( 'No response from the child site server.', 'mainwp' );
                         $errorMsg = '<i class="red times icon"></i> ' . esc_html__( 'No response from the child site server.', 'mainwp' );
                     }
-                    throw new MainWP_Exception( 'WPERROR', $errorMsg ); //phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+                    $thrw_error = 'WPERROR';
+                    $thrw_extra = $errorMsg;
                 } elseif ( isset( $information['error'] ) ) {
-                    throw new MainWP_Exception( 'WPERROR', esc_html( $information['error'] ) );
+                    $thrw_error = 'WPERROR';
+                    $thrw_extra = esc_html( $information['error'] );
+                    $raw_msg    = esc_html( $information['error'] );
                 } else {
-                    throw new MainWP_Exception( 'ERROR', '<i class="red times icon"></i> ' . esc_html__( 'Invalid response from child site.', 'mainwp' ) );
+                    $thrw_error = 'ERROR';
+                    $thrw_extra = '<i class="red times icon"></i> ' . esc_html__( 'Invalid response from child site.', 'mainwp' );
+                    $raw_msg    = esc_html__( 'Invalid response from child site.', 'mainwp' );
+                }
+
+                do_action( 'mainwp_after_upgrade_wp_core', $website, $information, $success, $raw_msg );
+
+                if ( ! empty( $thrw_error ) ) {
+                    throw new MainWP_Exception( $thrw_error, $thrw_extra ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- NOSONAR -escaped.
+                } elseif ( ! empty( $msg_success ) ) {
+                    return $msg_success;
                 }
             }
         }

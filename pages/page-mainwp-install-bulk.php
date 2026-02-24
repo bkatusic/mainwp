@@ -8,6 +8,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Install_Bulk
  *
@@ -157,7 +162,7 @@ class MainWP_Install_Bulk { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                                     <div class="middle aligned column ">
                                         <div class="dz-error-message"><span data-dz-errormessage=""></span></div>
                                         <span class="qq-upload-processing">
-                                            <i class="notched circle loading icon"></i> Uploading...
+                                            <span data-tooltip="<?php esc_attr_e( 'Uploading. Please wait...'); ?>" data-inverted="" data-position="left center"><i class="notched circle loading icon"></i></span>
                                         </span>
                                     </div>
                                     <div class="right aligned middle aligned column">
@@ -214,7 +219,7 @@ class MainWP_Install_Bulk { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                                         formData.append("qq_nonce", "<?php echo esc_js( wp_create_nonce( 'qq_nonce' ) ); ?>");
                                     });
                                     this.on("uploadprogress", function( file, progress, bytesSent ) {
-                                        progress = parseInt(progress);
+                                        progress =  Number.parseInt(progress);
                                         jQuery(file.previewElement).find('.qq-upload-percent').html( progress + '% from ');
                                     });
                                     this.on("success", function( file, result ) {
@@ -238,7 +243,7 @@ class MainWP_Install_Bulk { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
                                         if( obj ){
                                             if(obj.success){
                                                 file.previewElement.classList.add('qq-upload-success');
-                                                jQuery(file.previewElement).find('.qq-upload-processing').html('Upload completed.');
+                                                jQuery(file.previewElement).find('.qq-upload-processing').html('<span data-tooltip="Upload completed successfully." data-inverted="" data-position="left center"><i class="green check icon"></i></span>');
                                                 unerror = false;
                                             } else if(obj.error){
                                                 jQuery(file.previewElement).find('.qq-upload-processing').html('<span data-tooltip="' + obj.error + '" data-inverted="" data-position="top left"><i class="red times icon"></i></span>' );

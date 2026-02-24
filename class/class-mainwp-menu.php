@@ -9,6 +9,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Menu
  *
@@ -256,11 +261,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             $menus_items[] = array(
                 'slug'               => 'RESTAPI',
                 'menu_level'         => 2,
-                'menu_rights'        => array(
-                    'dashboard' => array(
-                        'manage_dashboard_restapi',
-                    ),
-                ),
+                'menu_rights'        => true,
                 'init_menu_callback' => array( MainWP_Rest_Api_Page::class, 'init_menu' ),
                 'leftbar_order'      => 4,
             );
@@ -284,6 +285,18 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     ),
                 ),
                 'init_menu_callback' => array( MainWP_Bulk_Update_Admin_Passwords::class, 'init_menu' ),
+            );
+
+            // Password Policy Settings.
+            $menus_items[] = array(
+                'slug'               => 'PasswordPolicy',
+                'menu_level'         => 2,
+                'menu_rights'        => array(
+                    'dashboard' => array(
+                        'manage_users',
+                    ),
+                ),
+                'init_menu_callback' => array( MainWP_Password_Policy_Settings::class, 'init_menu' ),
             );
 
             // Monitoring Sites.
@@ -380,80 +393,6 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     call_user_func( $item['init_menu_callback'] );
                 }
             }
-        }
-    }
-
-    /**
-     * Method init_sub_pages()
-     *
-     * Init subpages MainWP menus.
-     *
-     * @uses \MainWP\Dashboard\MainWP_Extensions::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Manage_Backups::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Manage_Sites::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Page::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Post::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Settings::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Themes::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Themes::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Plugins::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_User::init_subpages_menu()
-     * @uses \MainWP\Dashboard\MainWP_Settings::init_subpages_menu()
-     */
-    public static function init_sub_pages() {
-
-        if ( ! static::is_disable_menu_item( 2, 'PostBulkManage' ) ) {
-            MainWP_Post::init_subpages_menu();
-        }
-        if ( ! static::is_disable_menu_item( 2, 'managesites' ) ) {
-            MainWP_Manage_Sites::init_subpages_menu();
-        }
-
-        if ( ! static::is_disable_menu_item( 2, 'RESTAPI' ) ) {
-            MainWP_Rest_Api_Page::init_subpages_menu();
-        }
-
-        if ( ! static::is_disable_menu_item( 2, 'Settings' ) ) {
-            MainWP_Settings::init_subpages_menu();
-        }
-
-        if ( ! static::is_disable_menu_item( 2, 'Extensions' ) ) {
-            MainWP_Extensions::init_subpages_menu();
-        }
-        if ( ! static::is_disable_menu_item( 2, 'PageBulkManage' ) ) {
-            MainWP_Page::init_subpages_menu();
-        }
-        if ( ! static::is_disable_menu_item( 2, 'ThemesManage' ) ) {
-            MainWP_Themes::init_subpages_menu();
-        }
-        if ( ! static::is_disable_menu_item( 2, 'PluginsManage' ) ) {
-            MainWP_Plugins::init_subpages_menu();
-        }
-        if ( ! static::is_disable_menu_item( 2, 'UserBulkManage' ) ) {
-            MainWP_User::init_subpages_menu();
-        }
-        if ( ! static::is_disable_menu_item( 2, 'ManageClients' ) ) {
-            MainWP_Client::init_subpages_menu();
-        }
-        if ( get_option( 'mainwp_enableLegacyBackupFeature' ) && ! static::is_disable_menu_item( 2, 'ManageBackups' ) ) {
-            MainWP_Manage_Backups::init_subpages_menu();
-        }
-
-        if ( ! static::is_disable_menu_item( 2, 'Settings' ) ) {
-            MainWP_Settings::init_subpages_menu();
-        }
-
-        /**
-         * Action: mainwp_admin_menu_sub
-         *
-         * Hooks main navigation sub-menu items.
-         *
-         * @since 4.0
-         */
-        do_action( 'mainwp_admin_menu_sub' );
-
-        if ( ! static::is_disable_menu_item( 2, 'ServerInformation' ) ) {
-            MainWP_Server_Information::init_subpages_menu();
         }
     }
 
@@ -586,14 +525,42 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         $id        = isset( $params['id'] ) ? $params['id'] : '';
         $level_cls = 'left-menu-item-level-' . $level;
 
+        if ( ! MainWP_Cache_Warm_Helper::is_excluded_warm_cache_pages() ) {
+            $level_cls .= ' mainwp-js-prefetch ';
+        }
+
         $icon                 = isset( $params['icon'] ) ? $params['icon'] : '';
         $leftsub_order        = isset( $params['leftsub_order'] ) ? $params['leftsub_order'] : '';
         $leftsub_order_level2 = isset( $params['leftsub_order_level2'] ) ? $params['leftsub_order_level2'] : '';
         $ext_state            = isset( $params['ext_status'] ) && ( 'activated' === $params['ext_status'] || 'inactive' === $params['ext_status'] ) ? $params['ext_status'] : '';
         $parent_key           = isset( $params['parent_key'] ) ? $params['parent_key'] : '';
         $others               = array( 'level_class' => $level_cls );
+
+        $others['classes_item'] = '';
+        if ( ! empty( $params['classes_item'] ) ) {
+            if ( is_array( $params['classes_item'] ) ) {
+                $others['classes_item'] = implode( ' ', $params['classes_item'] );
+            } elseif ( is_string( $params['classes_item'] ) ) {
+                $others['classes_item'] = $params['classes_item'];
+            }
+        }
+
+        $excluded_warm_cached_page = MainWP_Cache_Warm_Helper::is_excluded_warm_cache_pages();
+
+        /**
+         * Menu excluded warm cache item.
+         *
+         * @since 5.5.
+         */
+        if ( ! apply_filters( 'mainwp_menu_excluded_warm_cache_item', $excluded_warm_cached_page, $params ) ) {
+            $others['classes_item'] .= ' mainwp-js-prefetch ';
+        }
+
         if ( isset( $params['active_params'] ) ) {
             $others['active_params'] = $params['active_params'];
+        }
+        if ( ! empty( $params['item_class'] ) ) {
+            $others['item_class'] = $params['item_class'];
         }
 
         /**
@@ -700,6 +667,23 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
         $mainwp_sub_leftmenu = apply_filters( 'mainwp_main_menu_submenu', $mainwp_sub_leftmenu );
         $sub_bar_leftmenu    = isset( $mainwp_sub_leftmenu['leftbar'] ) ? $mainwp_sub_leftmenu['leftbar'] : array();
 
+        if ( is_array( $mainwp_sub_leftmenu ) && ! empty( $mainwp_sub_leftmenu['Extensions'] ) ) {
+            $add_on_items = $mainwp_sub_leftmenu['Extensions'];
+
+            $head = array_shift( $add_on_items );
+            // sort the rest by first element.
+            usort(
+                $add_on_items,
+                function ( $a, $b ) {
+                    return strcmp( (string) $a[0], (string) $b[0] );
+                }
+            );
+            // put the head back.
+            array_unshift( $add_on_items, $head );
+
+            $mainwp_sub_leftmenu['Extensions'] = $add_on_items;
+        }
+
         $version = get_option( 'mainwp_plugin_version' );
 
         ?>
@@ -782,46 +766,66 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     }
                 }
                 ?>
-
-                <a id="mainwp-help-menu-item" title="<?php esc_attr_e( 'Help', 'mainwp' ); ?>" class="item" href="#" style="opacity:0.3;">
-                    <i class="question circle outline icon"></i>
-                    <span class="ui small text"><?php esc_html_e( 'Quick Help', 'mainwp' ); ?></span>
-                </a>
                 </div>
                 <?php
-                    $all_updates         = wp_get_update_data();
-                    $go_back_wpadmin_url = admin_url( 'index.php' );
+                $all_updates         = wp_get_update_data();
+                $go_back_wpadmin_url = admin_url( 'index.php' );
 
-                    $link = array(
-                        'url'  => $go_back_wpadmin_url,
-                        'text' => esc_html__( 'WP Admin', 'mainwp' ),
-                        'tip'  => esc_html__( 'Click to go back to the site WP Admin area.', 'mainwp' ),
-                    );
-                    /**
-                     * Filter: mainwp_go_back_wpadmin_link
-                     *
-                     * Filters URL for the Go to WP Admin button in Main navigation.
-                     *
-                     * @since 4.0
-                     */
-                    $go_back_link = apply_filters( 'mainwp_go_back_wpadmin_link', $link );
+                $link = array(
+                    'url'  => $go_back_wpadmin_url,
+                    'text' => esc_html__( 'WP Admin', 'mainwp' ),
+                    'tip'  => esc_html__( 'Click to go back to the site WP Admin area.', 'mainwp' ),
+                );
+                /**
+                 * Filter: mainwp_go_back_wpadmin_link
+                 *
+                 * Filters URL for the Go to WP Admin button in Main navigation.
+                 *
+                 * @since 4.0
+                 */
+                $go_back_link = apply_filters( 'mainwp_go_back_wpadmin_link', $link );
 
-                    if ( false !== $go_back_link && is_array( $go_back_link ) ) {
-                        if ( isset( $go_back_link['url'] ) ) {
-                            $link['url'] = $go_back_link['url'];
-                        }
-                        if ( isset( $go_back_link['text'] ) ) {
-                            $link['text'] = $go_back_link['text'];
-                        }
-                        if ( isset( $go_back_link['tip'] ) ) {
-                            $link['tip'] = $go_back_link['tip'];
-                        }
+                if ( false !== $go_back_link && is_array( $go_back_link ) ) {
+                    if ( isset( $go_back_link['url'] ) ) {
+                        $link['url'] = $go_back_link['url'];
                     }
-                    ?>
-                <div id="mainwp-first-level-wpitems-menu" class="ui vertical labeled inverted icon mini menu">
-                    <a class="item" href="#" id="mainwp-collapse-second-level-navigation" aria-label="<?php esc_attr_e( 'Collapse menu.', 'mainwp' ); ?>">
-                        <i class="double angle left icon"></i>
+                    if ( isset( $go_back_link['text'] ) ) {
+                        $link['text'] = $go_back_link['text'];
+                    }
+                    if ( isset( $go_back_link['tip'] ) ) {
+                        $link['tip'] = $go_back_link['tip'];
+                    }
+                }
+                ?>
+                <div id="mainwp-support-menu">
+                    <a class="mainwp-help-menu-item-open" id="mainwp-help-menu-item" title="<?php esc_attr_e( 'Support', 'mainwp' ); ?>" href="#">
+                        <i class="question circle outline icon"></i><br/>
+                        <span class="ui small text"><?php esc_html_e( 'Support', 'mainwp' ); ?></span>
                     </a>
+                    <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp_support_popup' ) ) : ?>
+                    <span class="ui mainwp-help-popup popup" style="width: 200px !important;">
+                        <em data-emoji=":ring_buoy:" class="large"></em>
+                        <h4 class="ui large header"><?php esc_html_e( 'Feeling stuck?', 'mainwp' ); ?></h4>
+                        <p><?php esc_html_e( 'Help is just a click away.', 'mainwp' ); ?></p>
+                        <a class="ui mini green button mainwp-notice-dismiss" notice-id="mainwp_support_popup" href="#"><?php esc_html_e( 'Thanks!', 'mainwp' ); ?></a>
+                    </span>
+                    <script>
+                    jQuery(document).ready(function() {
+                        jQuery('.mainwp-help-menu-item-open').popup({
+                            popup : jQuery('.mainwp-help-popup'),
+                            delay : { show: 2000 },
+                            distanceAway : 10,
+                            closable: false,
+                            position : 'top left',
+                        }).popup('show');
+
+                        jQuery('.mainwp-help-popup .mainwp-notice-dismiss').on('click', function (e) {
+                            jQuery('.mainwp-help-popup').removeClass('visible').addClass('hidden').hide();
+
+                        });
+                    });
+                    </script>
+                    <?php endif; ?>
                 </div>
                 <div id="mainwp-first-level-navigation-version-label">
                     <?php if ( is_array( $all_updates ) && isset( $all_updates['counts']['total'] ) && 0 < $all_updates['counts']['total'] ) : ?>
@@ -832,8 +836,13 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     <div id="mainwp-version-label" class="ui tiny green fluid centered label"><?php echo esc_html( $version ); ?></div>
                 </div>
             </div>
+            <div id="mainwp-divider-handle">
+                <div id="mainwp-collapse-second-level-navigation" aria-label="<?php esc_attr_e( 'Collapse menu.', 'mainwp' ); ?>">
+                    <i class="double angle left small icon"></i>
+                </div>
+            </div>
             <div id="mainwp-second-level-navigation">
-                <div id="mainwp-main-menu" class="ui inverted vertical accordion menu">
+                <div id="mainwp-main-menu" class="mainwp-main-navigation-menu ui inverted vertical accordion menu">
                     <?php
                     $bar_active_item_key = '';
 
@@ -843,7 +852,6 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         $item      = $bar_item_active;
                         $title     = wptexturize( $item[0] );
                         $item_key  = $item[1];
-                        $href      = $item[2];
                         $item_id   = isset( $item[3] ) ? $item[3] : '';
                         $level_cls = isset( $item[5] ) ? $item[5] : '';
 
@@ -871,14 +879,14 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         // phpcs:disable WordPress.Security.EscapeOutput
                         if ( $has_sub ) {
                             echo '<div ' . $id_attr . " class=\"item $active_item " . esc_attr( $level_cls ) . ' ">';
-                            echo "<a class=\"title with-sub $active_item\" href=\"$href\">$title <i class=\"dropdown icon\"></i></a>";
+                            echo "<a class=\"title with-sub $active_item\" href=\"javascript:void(0)\">$title <i class=\"dropdown icon\"></i></a>";
                             echo "<div class=\"content menu $active_item\">";
                             static::render_sub_item( $item_key );
                             echo '</div>';
                             echo '</div>';
                         } else {
                             echo '<div ' . $id_attr . ' class="item ' . esc_attr( $level_cls ) . '">';
-                            echo "<a class='title $active_item' href=\"$href\">$title</a>";
+                            echo "<a class='title $active_item' href=\"javascript:void(0)\">$title</a>";
                             echo '</div>';
                         }
                         // phpcs:enable
@@ -935,14 +943,14 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                                 // phpcs:disable WordPress.Security.EscapeOutput
                                 if ( $has_sub ) {
                                     echo '<div ' . $id_attr . " class=\"item $active_item $item_classes\">";
-                                    echo "<a class=\"title with-sub $active_item\" href=\"$href\">$title <i class=\"dropdown icon\"></i></a>";
+                                    echo "<a class=\"title with-sub $active_item\" href=\"javascript:void(0)\">$title <i class=\"dropdown icon\"></i></a>";
                                     echo "<div class=\"content menu $active_item\">";
                                     static::render_sub_item( $item_key );
                                     echo '</div>';
                                     echo '</div>';
                                 } else {
                                     echo '<div ' . $id_attr . $hide_item . " class=\"item $active_item $item_classes\">";
-                                    echo "<a class='title $active_item' href=\"$href\">$title</a>";
+                                    echo "<a class='title $active_item' href=\"javascript:void(0)\">$title</a>";
                                     echo '</div>';
                                 }
                                 // phpcs:enable
@@ -951,19 +959,19 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     }
                     ?>
                     </div>
-                    </div>
                 </div>
+            </div>
 
-                <?php
-                /**
-                 * Action: after_mainwp_menu
-                 *
-                 * Fires after the main navigation element.
-                 *
-                 * @since 4.0
-                 */
-                do_action( 'after_mainwp_menu' );
-                ?>
+            <?php
+            /**
+             * Action: after_mainwp_menu
+             *
+             * Fires after the main navigation element.
+             *
+             * @since 4.0
+             */
+            do_action( 'after_mainwp_menu' );
+            ?>
             <script type="text/javascript">
 
                 jQuery( document ).ready( function () {
@@ -991,7 +999,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             jQuery( '#mainwp-main-navigation-container' ).css( "width", "272px" );
                             jQuery( lbar ).find( '.icon' ).removeClass( 'right' );
                             jQuery( lbar ).find( '.icon' ).addClass( 'left' );
-                            jQuery( lbar ).css( "left", "272px" );
+                            jQuery( lbar ).parent('#mainwp-divider-handle').css( "left", "200px" );
                             jQuery( lbar ).removeClass( 'collapsed' );
                             if( ( typeof mainwp_ui_state_save !== 'undefined' ) ) {
                                 mainwp_ui_state_save( 'showmenu', 1 );
@@ -1003,7 +1011,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             jQuery( '#mainwp-main-navigation-container' ).css( "width", "72px" );
                             jQuery( lbar ).find( '.icon' ).removeClass( 'left' );
                             jQuery( lbar ).find( '.icon' ).addClass( 'right' );
-                            jQuery( lbar ).css( "left", "72px" );
+                            jQuery( lbar ).parent('#mainwp-divider-handle').css( "left", "0px" );
                             jQuery( lbar ).addClass( 'collapsed' );
                             jQuery( '#mainwp-top-header' ).css( "width", "100%" );
                             if( ( typeof mainwp_ui_state_save !== 'undefined' ) ) {
@@ -1020,7 +1028,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                     mainwp_left_bar_showhide_init();
 
                     // click on menu with-sub icon.
-                    jQuery( '#mainwp-main-navigation-container #mainwp-main-menu a.title.with-sub .icon' ).on( "click", function ( event ) {
+                    jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu a.title.with-sub .icon' ).on( "click", function ( event ) {
                         let pr = jQuery( this ).closest( '.item' );
                         let title = jQuery( this ).closest( '.title' );
                         let active = jQuery( title ).hasClass( 'active' );
@@ -1037,7 +1045,7 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         return false;
                     } );
 
-                    jQuery( '#mainwp-main-navigation-container #mainwp-main-menu a.title.with-sub' ).on( "click", function ( event ) {
+                    jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu a.title.with-sub' ).on( "click", function ( event ) {
                         let pr = jQuery( this ).closest( '.item' );
                         let active = jQuery( this ).hasClass( 'active' );
 
@@ -1054,12 +1062,12 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
 
                     mainwp_menu_collapse = function() {
                         // remove current active.
-                        jQuery( '#mainwp-main-navigation-container #mainwp-main-menu a.title.active').removeClass('active');
-                        jQuery( '#mainwp-main-navigation-container #mainwp-main-menu .item').removeClass('active');
-                        jQuery( '#mainwp-main-navigation-container #mainwp-main-menu .content.menu.active').removeClass('active');
+                        jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu a.title.active').removeClass('active');
+                        jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu .item').removeClass('active');
+                        jQuery( '#mainwp-main-navigation-container .mainwp-main-navigation-menu .content.menu.active').removeClass('active');
                     };
 
-                    jQuery('.mainwp-main-mobile-navigation-container #mainwp-main-menu').accordion();
+                    jQuery( '#mainwp-main-mobile-navigation-container .accordion.menu' ).accordion();
 
                 } );
             </script>
@@ -1074,8 +1082,8 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
     public static function render_mobile_menu() { // phpcs:ignore -- NOSONAR -Current complexity is the only way to achieve desired results, pull request solutions appreciated.
         $mainwp_show_language_updates = get_option( 'mainwp_show_language_updates', 1 );
         ?>
-        <div class="mainwp-main-mobile-navigation-container">
-            <div class="mainwp-nav-menu">
+        <div class="mainwp-main-mobile-navigation-container ui top fullscreen flyout">
+            <div class="mainwp-nav-menu scrolling content">
                 <?php
                 /**
                  * Action: before_mainwp_menu
@@ -1087,97 +1095,93 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 do_action( 'before_mainwp_menu' );
                 ?>
 
-                <div id="mainwp-main-menu"  class="test-menu ui inverted vertical accordion menu">
-                    <div class="hamburger">
-                        <span class="hamburger-bun"></span>
-                        <span class="hamburger-patty"></span>
-                        <span class="hamburger-bun"></span>
-                    </div>
+                <div id="mainwp-main-menu-mobile"  class="mainwp-main-navigation-menu test-menu ui inverted vertical accordion menu">
+                    <div class="item"><i class="th left floated icon"></i><a href="admin.php?page=mainwp_tab"><?php esc_html_e( 'Overview', 'mainwp' ); ?></a></div>
 
-                    <div class="item"><a href="admin.php?page=mainwp_tab"><?php esc_html_e( 'Overview', 'mainwp' ); ?></a></div>
-                    <div class="item">
+                    <div class="item"><i class="globe left floated icon"></i>
                         <div class="title"><a href="admin.php?page=managesites" class=" with-sub"><?php esc_html_e( 'Sites', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
                         <div class="content menu" id="mainwp-sites-mobile-menu-item">
-                                <div class="accordion item">
-                                    <div class="title"><a href="admin.php?page=managesites"><?php esc_html_e( 'Sites', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=managesites"><?php esc_html_e( 'Manage Sites', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=managesites&do=new"><?php esc_html_e( 'Add New Site', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=managesites&do=bulknew"><?php esc_html_e( 'Import Sites', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=MonitoringSites"><?php esc_html_e( 'Monitoring', 'mainwp' ); ?></a>
-                                    </div>
-                                </div>
-                                <div class="item accordion">
-                                    <div class="title"><a class="" href="admin.php?page=ManageGroups"><?php esc_html_e( 'Tags', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=managesites"><?php esc_html_e( 'Sites', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
                                 <div class="content menu">
-                                    <a class="item" href="admin.php?page=ManageGroups"><?php esc_html_e( 'Manage Tags', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=managesites"><?php esc_html_e( 'Manage Sites', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=managesites&do=new"><?php esc_html_e( 'Add New Site', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=managesites&do=bulknew"><?php esc_html_e( 'Import Sites', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=MonitoringSites"><?php esc_html_e( 'Monitoring', 'mainwp' ); ?></a>
                                 </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a class="" href="admin.php?page=ManageGroups"><?php esc_html_e( 'Tags', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                            <div class="content menu">
+                                <a class="item" href="admin.php?page=ManageGroups"><?php esc_html_e( 'Manage Tags', 'mainwp' ); ?></a>
+                            </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=UpdatesManage"><?php esc_html_e( 'Updates', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                                <div class="content menu">
+                                    <a class="item" href="admin.php?page=UpdatesManage&tab=plugins-updates"><?php esc_html_e( 'Plugin Updates', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=UpdatesManage&tab=themes-updates"><?php esc_html_e( 'Theme Updates', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=UpdatesManage&tab=wordpress-updates"><?php esc_html_e( 'WordPress Updates', 'mainwp' ); ?></a>
+                                <?php if ( $mainwp_show_language_updates ) : ?>
+                                    <a class="item" href="admin.php?page=UpdatesManage&tab=translations-updates"><?php esc_html_e( 'Translation Plugins', 'mainwp' ); ?></a>
+                                <?php endif; ?>
+                                    <a class="item" href="admin.php?page=PluginsAbandoned"><?php esc_html_e( 'Abandoned Plugins', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=ThemesAbandoned"><?php esc_html_e( 'Abandoned Themes', 'mainwp' ); ?></a>
                                 </div>
-                                <div class="item accordion">
-                                    <div class="title"><a href="admin.php?page=UpdatesManage"><?php esc_html_e( 'Updates', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=UpdatesManage&tab=plugins-updates"><?php esc_html_e( 'Plugin Updates', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=UpdatesManage&tab=themes-updates"><?php esc_html_e( 'Theme Updates', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=UpdatesManage&tab=wordpress-updates"><?php esc_html_e( 'WordPress Updates', 'mainwp' ); ?></a>
-                                    <?php if ( $mainwp_show_language_updates ) : ?>
-                                        <a class="item" href="admin.php?page=UpdatesManage&tab=translations-updates"><?php esc_html_e( 'Translation Plugins', 'mainwp' ); ?></a>
-                                    <?php endif; ?>
-                                        <a class="item" href="admin.php?page=PluginsAbandoned"><?php esc_html_e( 'Abandoned Plugins', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=ThemesAbandoned"><?php esc_html_e( 'Abandoned Themes', 'mainwp' ); ?></a>
-                                    </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=PluginsManage"><?php esc_html_e( 'Plugins', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                                <div class="content menu">
+                                    <a class="item" href="admin.php?page=PluginsManage"><?php esc_html_e( 'Manage Plugins', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=PluginsInstall"><?php esc_html_e( 'Install', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=PluginsAutoUpdate"><?php esc_html_e( 'Advanced Auto Updates', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=PluginsIgnore"><?php esc_html_e( 'Ignored Updates', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=PluginsIgnoredAbandoned"><?php esc_html_e( 'Ignored Abandoned', 'mainwp' ); ?></a>
                                 </div>
-                                <div class="item accordion">
-                                    <div class="title"><a href="admin.php?page=PluginsManage"><?php esc_html_e( 'Plugins', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=PluginsManage"><?php esc_html_e( 'Manage Plugins', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=PluginsInstall"><?php esc_html_e( 'Install', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=PluginsAutoUpdate"><?php esc_html_e( 'Advanced Auto Updates', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=PluginsIgnore"><?php esc_html_e( 'Ignored Updates', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=PluginsIgnoredAbandoned"><?php esc_html_e( 'Ignored Abandoned', 'mainwp' ); ?></a>
-                                    </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=ThemesManage"><?php esc_html_e( 'Themes', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                                <div class="content menu">
+                                    <a class="item" href="admin.php?page=ThemesManage"><?php esc_html_e( 'Manage Themes', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=ThemesInstall"><?php esc_html_e( 'Install', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=ThemesAutoUpdate"><?php esc_html_e( 'Advanced Auto Updates', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=ThemesIgnore"><?php esc_html_e( 'Ignored Updates', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=ThemesIgnoredAbandoned"><?php esc_html_e( 'Ignored Abandoned', 'mainwp' ); ?></a>
                                 </div>
-                                <div class="item accordion">
-                                    <div class="title"><a href="admin.php?page=ThemesManage"><?php esc_html_e( 'Themes', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=ThemesManage"><?php esc_html_e( 'Manage Themes', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=ThemesInstall"><?php esc_html_e( 'Install', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=ThemesAutoUpdate"><?php esc_html_e( 'Advanced Auto Updates', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=ThemesIgnore"><?php esc_html_e( 'Ignored Updates', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=ThemesIgnoredAbandoned"><?php esc_html_e( 'Ignored Abandoned', 'mainwp' ); ?></a>
-                                    </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=UserBulkManage"><?php esc_html_e( 'Users', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                                <div class="content menu">
+                                    <a class="item" href="admin.php?page=UserBulkManage"><?php esc_html_e( 'Manage Users', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=UserBulkAdd"><?php esc_html_e( 'Add New User', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=BulkImportUsers"><?php esc_html_e( 'Import Users', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=UpdateAdminPasswords"><?php esc_html_e( 'Admin Passwords', 'mainwp' ); ?></a>
                                 </div>
-                                <div class="item accordion">
-                                    <div class="title"><a href="admin.php?page=UserBulkManage"><?php esc_html_e( 'Users', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=UserBulkManage"><?php esc_html_e( 'Manage Users', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=UserBulkAdd"><?php esc_html_e( 'Add New User', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=BulkImportUsers"><?php esc_html_e( 'Import Users', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=UpdateAdminPasswords"><?php esc_html_e( 'Admin Passwords', 'mainwp' ); ?></a>
-                                    </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=PostBulkManage"><?php esc_html_e( 'Posts', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                                <div class="content menu">
+                                    <a class="item" href="admin.php?page=PostBulkManage"><?php esc_html_e( 'Manage Posts', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=PostBulkAdd"><?php esc_html_e( 'Add New Post', 'mainwp' ); ?></a>
                                 </div>
-                                <div class="item accordion">
-                                    <div class="title"><a href="admin.php?page=PostBulkManage"><?php esc_html_e( 'Posts', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=PostBulkManage"><?php esc_html_e( 'Manage Pages', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=PostBulkAdd"><?php esc_html_e( 'Add New Post', 'mainwp' ); ?></a>
-                                    </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=PageBulkManage"><?php esc_html_e( 'Pages', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                                <div class="content menu">
+                                    <a class="item" href="admin.php?page=PageBulkManage"><?php esc_html_e( 'Manage Pages', 'mainwp' ); ?></a>
+                                    <a class="item" href="admin.php?page=PageBulkAdd"><?php esc_html_e( 'Add New Page', 'mainwp' ); ?></a>
                                 </div>
-                                <div class="item accordion">
-                                    <div class="title"><a href="admin.php?page=PageBulkManage"><?php esc_html_e( 'Pages', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=PageBulkManage"><?php esc_html_e( 'Manage Pages', 'mainwp' ); ?></a>
-                                        <a class="item" href="admin.php?page=PageBulkAdd"><?php esc_html_e( 'Add New Page', 'mainwp' ); ?></a>
-                                    </div>
+                            </div>
+                            <div class="item">
+                                <div class="title"><a href="admin.php?page=ManageApiBackups"><?php esc_html_e( 'Backups', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                                <div class="content menu">
+                                    <a class="item" href="admin.php?page=ManageApiBackups"><?php esc_html_e( 'Backups', 'mainwp' ); ?></a>
                                 </div>
-                                <div class="item accordion">
-                                    <div class="title"><a href="admin.php?page=ManageApiBackups"><?php esc_html_e( 'Backups', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                                    <div class="content menu">
-                                        <a class="item" href="admin.php?page=ManageApiBackups"><?php esc_html_e( 'Backups', 'mainwp' ); ?></a>
-                                    </div>
-                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="item">
+
+                    <div class="item"><i class="users left floated icon"></i>
                         <div class="title"><a href="admin.php?page=ManageClients" class="with-sub"><?php esc_html_e( 'Clients', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
                         <div class="content menu">
                             <a class="item" href="admin.php?page=ManageClients"><?php esc_html_e( 'Clients', 'mainwp' ); ?></a>
@@ -1186,45 +1190,50 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         </div>
                     </div>
 
-                    <div class="item">
+                    <div class="item"><i class="dollar sign left floated icon"></i>
                         <div class="title"><a href="admin.php?page=ManageCostTracker" class="with-sub"><?php esc_html_e( 'Cost Tracker', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
                         <div class="content menu">
-                            <a class="item" href="admin.php?page=ManageCostTracker"><?php esc_html_e( 'Cost Tracker', 'mainwp' ); ?></a>
+                            <a class="item" href="admin.php?page=CostSummary"><?php esc_html_e( 'Cost Summary', 'mainwp' ); ?></a>
+                            <a class="item" href="admin.php?page=ManageCostTracker"><?php esc_html_e( 'Manage Costs', 'mainwp' ); ?></a>
                             <a class="item" href="admin.php?page=CostTrackerAdd"><?php esc_html_e( 'Add Cost', 'mainwp' ); ?></a>
-                            <a class="item" href="admin.php?page=CostTrackerSettings"><?php esc_html_e( 'Cost Tracker Settings', 'mainwp' ); ?></a>
                         </div>
                     </div>
 
-                    <div class="item">
+                    <div class="item"><i class="chart pie left floated icon"></i>
                         <div class="title"><a href="admin.php?page=InsightsOverview" class="with-sub"><?php esc_html_e( 'Insights', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
                         <div class="content menu">
                             <a class="item" href="admin.php?page=InsightsOverview"><?php esc_html_e( 'Insights', 'mainwp' ); ?></a>
                         </div>
                     </div>
 
-                    <div class="item">
+                    <div class="item"><i class="box left floated icon"></i>
+                        <div class="title"><a href="admin.php?page=Extensions" class=""><?php esc_html_e( 'Add-ons', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
+                        <div class="content menu">
+                            <a class="item" href="admin.php?page=Extensions"><?php esc_html_e( 'Manage Add-ons', 'mainwp' ); ?></a>
+                        </div>
+                    </div>
+
+                    <div class="item"><i class="key left floated icon"></i>
                         <div class="title"><a href="admin.php?page=RESTAPI" class="with-sub"><?php esc_html_e( 'REST API', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
                         <div class="content menu">
                             <a class="item" href="admin.php?page=RESTAPI"><?php esc_html_e( 'Manage API Keys', 'mainwp' ); ?></a>
                             <a class="item" href="admin.php?page=AddApiKeys"><?php esc_html_e( 'Add API Keys', 'mainwp' ); ?></a>
+                            <a class="item" href="admin.php?page=ApplicationPasswords"><?php esc_html_e( 'Application Passwords', 'mainwp' ); ?></a>
                         </div>
                     </div>
-                    <div class="item">
-                        <div class="title"><a href="admin.php?page=Extensions" class=""><?php esc_html_e( 'Extensions', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
-                        <div class="content menu">
-                            <a class="item" href="admin.php?page=Extensions"><?php esc_html_e( 'Manage Extensions', 'mainwp' ); ?></a>
-                        </div>
-                    </div>
-                    <div class="item">
+
+                    <div class="item"><i class="cog left floated icon"></i>
                         <div class="title"><a href="admin.php?page=Settings" class="with-sub"><?php esc_html_e( 'Settings', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
                         <div class="content menu">
                             <a class="item" href="admin.php?page=Settings"><?php esc_html_e( 'General Settings', 'mainwp' ); ?></a>
                             <a class="item" href="admin.php?page=SettingsAdvanced"><?php esc_html_e( 'Advanced Settings', 'mainwp' ); ?></a>
+                            <a class="item" href="admin.php?page=MonitoringSettings"><?php esc_html_e( 'Monitoring Settings', 'mainwp' ); ?></a>
                             <a class="item" href="admin.php?page=SettingsEmail"><?php esc_html_e( 'Email Settings', 'mainwp' ); ?></a>
                             <a class="item" href="admin.php?page=MainWPTools"><?php esc_html_e( 'Tools', 'mainwp' ); ?></a>
                         </div>
                     </div>
-                    <div class="item">
+
+                    <div class="item"><i class="info circle left floated icon"></i>
                         <div class="title"><a href="admin.php?page=ServerInformation" class="with-sub"><?php esc_html_e( 'Info', 'mainwp' ); ?></a><i class="dropdown icon"></i></div>
                         <div class="content menu">
                             <a class="item" href="admin.php?page=ServerInformation"><?php esc_html_e( 'Server', 'mainwp' ); ?></a>
@@ -1234,10 +1243,20 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                             <a class="item" href="admin.php?page=PluginPrivacy"><?php esc_html_e( 'Plugin Privacy', 'mainwp' ); ?></a>
                         </div>
                     </div>
-                    <div class="item">
-                        <a id="mainwp-help-menu-item2" title="<?php esc_attr_e( 'Help', 'mainwp' ); ?>" class="item" href="#" style="opacity:0.3;"><?php esc_html_e( 'Quick Help', 'mainwp' ); ?></a>
-                    </div>
-                    <?php
+                </div>
+                <?php
+                /**
+                 * Action: after_mainwp_menu
+                 *
+                 * Fires after the main navigation element.
+                 *
+                 * @since 4.0
+                 */
+                do_action( 'after_mainwp_menu' );
+                ?>
+            </div>
+            <div class="actions">
+            <?php
                     $go_back_wpadmin_url = admin_url( 'index.php' );
 
                     $link = array(
@@ -1267,23 +1286,19 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                                 $link['tip'] = $go_back_link['tip'];
                             }
                         }
-                        ?>
-                    <div class="item item-wp-admin">
-                        <a href="<?php echo esc_html( $link['url'] ); ?>" class="title" style="display:inline" data-position="top left" data-tooltip="<?php echo esc_html( $link['tip'] ); ?>"><b><i class="icon wordpress"></i> <?php echo esc_html( $link['text'] ); ?></b></a> <a class="ui small label" data-position="top right" data-tooltip="<?php esc_html_e( 'Logout', 'mainwp' ); ?>" href="<?php echo wp_logout_url(); ?>"><i class="sign out icon" style="margin:0"></i></a> <?php //phpcs:ignore -- to avoid auto fix icon wordpress ?>
+                    }
+                    ?>
+                <div class="ui three column grid">
+                    <div class="column">
+                        <a href="<?php echo esc_url( $link['url'] ); ?>" class="ui mini basic fluid button small text"><i class="icon wordpress"></i> <?php echo esc_html( $link['text'] ); ?></a><?php //phpcs:ignore -- to avoid auto fix icon wordpress. ?>
                     </div>
-                    <?php } ?>
-
+                    <div class="column">
+                        <a id="mainwp-help-menu-item-mobile" class="ui mini basic fluid button" href="#"><i class="question circle icon"></i> <?php esc_html_e( 'Help', 'mainwp' ); ?></a><?php //NOSONAR -- ignore double ID, elements not rendered at the same time. ?>
+                    </div>
+                    <div class="column item-wp-admin">
+                        <a class="ui mini basic fluid button" href="<?php echo esc_url_raw( wp_logout_url() ); ?>"><i class="sign out icon"></i> <?php esc_html_e( 'Log Out', 'mainwp' ); ?></a>
+                    </div>
                 </div>
-                <?php
-                /**
-                 * Action: after_mainwp_menu
-                 *
-                 * Fires after the main navigation element.
-                 *
-                 * @since 4.0
-                 */
-                do_action( 'after_mainwp_menu' );
-                ?>
             </div>
         </div>
         <?php
@@ -1320,6 +1335,9 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
 
         MainWP_Utility::array_sort_existed_keys( $submenu_items, 5 ); //phpcs:ignore Squiz.PHP.CommentedOutCode.Found -- 5 => 'leftsub_order_level2'.
 
+        $idx                = 0;
+        $fix_douplicate_ids = array();
+
         foreach ( $submenu_items as $sub_item ) {
             $title        = $sub_item[0];
             $href         = $sub_item[1];
@@ -1337,6 +1355,10 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
 
             $item_classes = 'inactive' === $ext_state ? 'extension-inactive' : '';
 
+            if ( ! empty( $others['item_class'] ) ) {
+                $item_classes .= ' ' . $others['item_class'];
+            }
+
             $_blank = false;
             if ( '_blank' === $id ) {
                 $_blank = true;
@@ -1347,10 +1369,11 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
             if ( ! $set_actived ) {
                 $level2_active = static::is_level2_menu_item_active( $href ) ? true : false;
                 if ( is_array( $active_path ) && ! empty( $active_path ) ) {
-                    reset( $active_path );
-                    $item = key( $active_path );
-                    if ( $item === $plugin_page ) {
-                        $level2_active = true;
+                    foreach ( $active_path as $item => $value ) {
+                        if ( $item === $plugin_page ) {
+                            $level2_active = true;
+                            break;
+                        }
                     }
                 }
                 // hard fix managesite menu items active status.
@@ -1363,11 +1386,11 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                         $level2_active = true;
                     }
 
-                    if ( ! $level2_active && isset( $_GET['do'] ) && 'bulknew' === $_GET['do'] && false !== strpos( $href, 'admin.php?page=managesites&do=bulknew' ) ) {
+                    if ( ! $level2_active && isset( $_GET['do'] ) && 'bulknew' === $_GET['do'] && ( false !== strpos( $href, 'admin.php?page=managesites&do=bulknew' ) || 'managesites-addnew' === $id ) ) {
                         $level2_active = true;
                     }
 
-                    if ( ! $level2_active && ! isset( $_GET['do'] ) && 'InsightsManage' !== $page_name && 'Extensions-Mainwp-Clone-Extension' !== $page_name && 'admin.php?page=managesites' === $href ) {
+                    if ( ! $level2_active && ! isset( $_GET['do'] ) && 'InsightsManage' !== $page_name && 'Extensions-Mainwp-Clone-Extension' !== $page_name && 'managesites-root' === $id ) {
                         $level2_active = true;
                     }
                 }
@@ -1397,15 +1420,33 @@ class MainWP_Menu { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Content
                 $item_classes = $item_classes . ' ' . $others['level_class'];
             }
 
+            if ( ! empty( $others['classes_item'] ) ) {
+                $item_classes = $item_classes . ' ' . $others['classes_item'];
+            }
+
             if ( empty( $right ) || ( ! empty( $right ) && \mainwp_current_user_can( $right_group, $right ) ) ) {
                 $menu_itemid = $slug; // compatible.
                 $menu_itemid = 'managesites' === $slug && ! empty( $id ) ? $id : $menu_itemid;
+
+                // Fix duplicate ID issue caused by empty id="" (kept for backward compatibility).
+                if ( empty( $menu_itemid ) ) {
+                    $menu_itemid = ! empty( $title ) ? sanitize_title( $title ) : 'left-menu-item';
+                    $menu_itemid = 'left-menu-item-' . hash( 'crc32b', $menu_itemid . '-' . $idx );
+                }
+
+                // Fix duplicate ID issue caused by same id in multiple extensions.
+                if ( ! empty( $fix_douplicate_ids ) && in_array( $menu_itemid, $fix_douplicate_ids ) ) {
+                    $menu_itemid = $menu_itemid . '-' . $idx;
+                }
+                $fix_douplicate_ids[] = $menu_itemid;
+
                 ?>
                 <a class="item <?php echo $level2_active ? 'active level-two-active' : ''; ?> <?php echo esc_attr( $item_classes ); ?>" href="<?php echo esc_url( $href ); ?>" id="<?php echo esc_attr( $menu_itemid ); ?>" <?php echo $_blank ? 'target="_blank"' : ''; ?>>
                     <?php echo $before_title . $title; //phpcs:ignore -- requires escaped. ?>
                 </a>
                 <?php
             }
+            ++$idx;
         }
     }
 

@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard\Module\Log;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class - Log_Record
  */
@@ -119,6 +124,12 @@ class Log_Record {
      */
     public $object_id;
 
+    /**
+     *  Log type id.
+     *
+     * @var string
+     */
+    public $log_type_id;
 
     /**
      * Record meta data
@@ -141,7 +152,7 @@ class Log_Record {
      */
     public function __construct( $log ) { //phpcs:ignore -- NOSONAR - complex method.
         $this->log_id        = isset( $log->log_id ) ? $log->log_id : null;
-        $this->created       = isset( $log->created ) ? $log->created : null;
+        $this->created       = isset( $log->created ) ? intval( $log->created / 1000000 ) : null;
         $this->site_id       = isset( $log->site_id ) ? $log->site_id : null;
         $this->log_site_name = isset( $log->log_site_name ) ? $log->log_site_name : null;
         $this->url           = isset( $log->url ) ? $log->url : null;
@@ -149,11 +160,13 @@ class Log_Record {
         $this->item          = isset( $log->item ) ? $log->item : null;
         $this->connector     = isset( $log->connector ) ? $log->connector : null;
         $this->context       = isset( $log->context ) ? $log->context : null;
+        $this->log_type_id   = isset( $log->log_type_id ) ? $log->log_type_id : null;
         $this->action        = isset( $log->action ) ? $log->action : null;
         $this->state         = isset( $log->state ) ? $log->state : null;
         $this->duration      = isset( $log->duration ) ? $log->duration : null;
-        $this->object_id     = isset( $log->object_id ) ? $log->object_id : null;
+        $this->object_id     = null; // compatible.
         $this->extra_meta    = isset( $log->extra_info ) ? $log->extra_info : null;
+        $this->meta          = isset( $log->meta ) ? $log->meta : null;
 
         $user_meta = ! empty( $log->user_meta_json ) ? json_decode( $log->user_meta_json, true ) : array();
         if ( empty( $user_meta ) && ! empty( $log->usermeta ) ) {

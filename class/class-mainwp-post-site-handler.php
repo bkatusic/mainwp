@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Post_Site_Handler
  *
@@ -135,7 +140,7 @@ class MainWP_Post_Site_Handler extends MainWP_Post_Base_Handler { // phpcs:ignor
         if ( ! $success ) {
             wp_die( wp_json_encode( array( 'error' => esc_html__( 'Unexpected error occurred. Please try again.', 'mainwp' ) ) ) );
         } else {
-            wp_die( wp_json_encode( array( 'success' => 1 ) ) );
+            wp_die( wp_json_encode( array( 'success' => $success ) ) );
         }
     }
 
@@ -352,7 +357,17 @@ class MainWP_Post_Site_Handler extends MainWP_Post_Base_Handler { // phpcs:ignor
 
         $this->secure_request( 'mainwp_removesite' );
 
+        static::invalidate_warm_cache();
+
         MainWP_Manage_Sites_Handler::remove_site();
+    }
+
+
+    /**
+     * Method invalidate_warm_cache()
+     */
+    public static function invalidate_warm_cache() {
+        MainWP_Cache_Warm_Helper::invalidate_manage_pages( array( 'managesites', 'mainwp_tab' ) );
     }
 
     /**

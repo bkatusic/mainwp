@@ -2,12 +2,18 @@
 /**
  * MainWP Connection Status
  *
- * Build the MainWP Overview page Connection Status Widget.
+ * Build the MainWP Operations page Connection Status Widget.
  *
  * @package     MainWP/Dashboard
  */
 
 namespace MainWP\Dashboard;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 
 /**
  * Class MainWP_Uptime_Monitoring_Status
@@ -78,7 +84,7 @@ class MainWP_Uptime_Monitoring_Status { // phpcs:ignore Generic.Classes.OpeningB
         <div class="ui stackable grid mainwp-widget-footer">
             <div class="eight wide left aligned middle aligned column"></div>
             <div class="eight wide right aligned middle aligned column">
-                <a href="<?php echo esc_url( admin_url( 'admin.php?page=MonitoringSites' ) ); ?>"><?php esc_html_e( 'See Monitors', 'mainwp' ); ?></a>
+                <a href="<?php echo esc_url( admin_url( 'admin.php?page=MonitoringSites' ) ); ?>" class="ui mini basic button"><?php esc_html_e( 'View Monitors', 'mainwp' ); ?></a>
             </div>
         </div>
         <?php

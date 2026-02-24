@@ -7,6 +7,11 @@
 
 // phpcs:disable -- legacy functions for backwards compatibility. Required.
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 if ( ! class_exists( 'MainWP_DB' ) ) {
 
     /**

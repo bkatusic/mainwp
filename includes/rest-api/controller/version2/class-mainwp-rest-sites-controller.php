@@ -21,6 +21,13 @@ use MainWP\Dashboard\MainWP_DB_Common;
 use MainWP\Dashboard\MainWP_Utility;
 use MainWP\Dashboard\MainWP_DB_Site_Actions;
 use MainWP\Dashboard\MainWP_Logger;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+
 /**
  * Class MainWP_Rest_Sites_Controller
  *
@@ -532,7 +539,7 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
      *
      * @return array|mixed Response data, ready for insertion into collection data.
      */
-    public function get_item( $request ) {
+    public function get_item( $request ) { // phpcs:ignore -- NOSONAR - complex method.
 
         $value = isset( $request['id_domain'] ) ? $request['id_domain'] : '';
         $by    = 'domain';
@@ -543,8 +550,57 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             $value = urldecode( $value );
         }
 
-        $with_tags = isset( $request['with_tags'] ) ? mainwp_string_to_bool( $request['with_tags'] ) : false;
+        // Extract with_tags flag early so both paths use the same value.
+        // Default to true for consistency with get_items() endpoint.
+        $with_tags = isset( $request['with_tags'] ) ? mainwp_string_to_bool( $request['with_tags'] ) : true;
 
+        // Try abilities-first approach (with fallback to legacy logic).
+        $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/get-site-v1' ) : null;
+
+        if ( null !== $ability ) {
+            // Build ability input: site_id_or_domain accepts either ID or domain.
+            $ability_input = array(
+                'site_id_or_domain' => $value,
+                'include_stats'     => false, // REST doesn't request stats by default.
+            );
+
+            $result = $ability->execute( $ability_input );
+
+            if ( is_wp_error( $result ) ) {
+                $error_data = $result->get_error_data();
+                $status     = isset( $error_data['status'] ) ? $error_data['status'] : 500;
+                return new WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => $status ) );
+            }
+
+            // DESIGN NOTE: The ability is used for ID discovery and access verification only.
+            // The ability returns a simplified schema optimized for AI/automation consumers,
+            // but REST API backward compatibility requires the full response format from
+            // prepare_item_for_response() + filter_response_data_by_allowed_fields().
+            // We re-fetch from DB to apply REST-specific options (with_tags, fields) that
+            // the ability schema does not support. This ensures consistent response format
+            // between ability and legacy paths.
+            // See: .mwpdev/plans/abilities-api/phase-3-rest-integration-notes.md
+            $site_data = isset( $result['site'] ) ? $result['site'] : array();
+            $site_id   = isset( $site_data['id'] ) ? (int) $site_data['id'] : 0;
+
+            if ( $site_id > 0 ) {
+                $params   = array(
+                    'full_data'    => true,
+                    'selectgroups' => $with_tags,
+                    'include'      => array( $site_id ),
+                    'fields'       => $this->get_fields_for_response( $request ),
+                );
+                $websites = MainWP_DB::instance()->get_websites_for_current_user( $params );
+                $data     = $websites ? current( $websites ) : array();
+                if ( ! empty( $data ) ) {
+                    $site_data = $this->filter_response_data_by_allowed_fields( $this->prepare_item_for_response( $data, $request ), 'view' );
+                }
+            }
+
+            return rest_ensure_response( array( 'data' => $site_data ) );
+        }
+
+        // Fallback: Legacy logic when Abilities API is not available.
         $prepared_args = array(
             'with_tags' => $with_tags,
         );
@@ -557,7 +613,7 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
 
         $params   = array(
             'full_data'    => true,
-            'selectgroups' => true,
+            'selectgroups' => $with_tags,
             'include'      => array( $item->id ),
             'fields'       => $this->get_fields_for_response( $request ),
         );
@@ -577,7 +633,7 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
      * @param WP_REST_Request $request Full details about the request.
      * @return WP_Error|WP_REST_Response
      */
-    public function get_items( $request ) {
+    public function get_items( $request ) { // phpcs:ignore -- NOSONAR - complex method.
 
         $args = $this->prepare_objects_query( $request );
         $args = $this->validate_rest_args( $args, $this->get_validate_args_params( 'get_sites' ) );
@@ -585,6 +641,86 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             return $args;
         }
 
+        // Check REST-specific flags that affect response format.
+        // These are processed in the legacy path but not in the ability schema.
+        $with_tags = isset( $request['with_tags'] ) ? mainwp_string_to_bool( $request['with_tags'] ) : true;
+        $full_data = isset( $request['full_data'] ) ? mainwp_string_to_bool( $request['full_data'] ) : true;
+
+        // Try abilities-first approach (with fallback to legacy logic).
+        // Skip abilities when with_tags=false, full_data=false, or include/exclude
+        // are set (ability returns paginated results that would corrupt metadata).
+        $ability = null;
+        if ( empty( $args['include'] ) && empty( $args['exclude'] ) && $with_tags && $full_data ) {
+            $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/list-sites-v1' ) : null;
+        }
+
+        if ( null !== $ability ) {
+            // Build ability input from REST parameters.
+            $ability_input = array(
+                'page'      => isset( $args['paged'] ) ? (int) $args['paged'] : 1,
+                'per_page'  => isset( $args['items_per_page'] ) ? (int) $args['items_per_page'] : 20,
+                'status'    => isset( $args['status'] ) ? $args['status'] : 'any',
+                'search'    => isset( $args['s'] ) ? $args['s'] : '',
+                'tag_id'    => isset( $args['group_id'] ) ? (int) $args['group_id'] : null,
+                'client_id' => isset( $args['client_id'] ) ? (int) $args['client_id'] : null,
+            );
+
+            // Remove null values to avoid passing unneeded parameters.
+            $ability_input = array_filter( $ability_input, fn( $v ) => null !== $v );
+
+            // Remove empty string values as well to avoid passing empty search params.
+            $ability_input = array_filter( $ability_input, fn( $v ) => '' !== $v );
+
+            $result = $ability->execute( $ability_input );
+
+            if ( is_wp_error( $result ) ) {
+                $error_data = $result->get_error_data();
+                $status     = isset( $error_data['status'] ) ? $error_data['status'] : 500;
+                return new WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => $status ) );
+            }
+
+            // DESIGN NOTE: The ability is used for filtering, pagination, and access verification.
+            // The ability returns a simplified schema optimized for AI/automation consumers,
+            // but REST API backward compatibility requires the full response format from
+            // prepare_item_for_response() + filter_response_data_by_allowed_fields().
+            // We re-fetch from DB using the IDs returned by the ability to apply REST-specific
+            // options (with_tags, fields) that the ability schema does not support.
+            // This ensures consistent response format between ability and legacy paths.
+            // See: .mwpdev/plans/abilities-api/phase-3-rest-integration-notes.md
+            $normalized_items = array();
+            if ( ! empty( $result['items'] ) ) {
+                // Get site IDs from ability results.
+                $site_ids = array_map( fn( $item ) => isset( $item['id'] ) ? (int) $item['id'] : 0, $result['items'] );
+                $site_ids = array_filter( $site_ids );
+
+                if ( ! empty( $site_ids ) ) {
+                    // Fetch full site data to normalize through REST filters.
+                    $params   = array(
+                        'full_data'    => true,
+                        'selectgroups' => true,
+                        'include'      => $site_ids,
+                        'fields'       => $this->get_fields_for_response( $request ),
+                    );
+                    $websites = MainWP_DB::instance()->get_websites_for_current_user( $params );
+
+                    if ( $websites ) {
+                        foreach ( $websites as $site ) {
+                            $normalized_items[] = $this->filter_response_data_by_allowed_fields( $this->prepare_item_for_response( $site, $request ), 'view' );
+                        }
+                    }
+                }
+            }
+
+            return rest_ensure_response(
+                array(
+                    'success' => 1,
+                    'total'   => isset( $result['total'] ) ? (int) $result['total'] : count( $normalized_items ),
+                    'data'    => $normalized_items,
+                )
+            );
+        }
+
+        // Fallback: Legacy logic when Abilities API is not available.
         $args['selectgroups'] = isset( $request['with_tags'] ) ? mainwp_string_to_bool( $request['with_tags'] ) : true;
         $args['full_data']    = isset( $request['full_data'] ) ? mainwp_string_to_bool( $request['full_data'] ) : true;
 
@@ -692,7 +828,7 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
      *
      * @return WP_Error|WP_REST_Response
      */
-    public function sync_item( $request ) {
+    public function sync_item( $request ) { // phpcs:ignore -- NOSONAR - complex.
 
         $website = $this->get_request_item( $request );
 
@@ -700,6 +836,55 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             return $website;
         }
 
+        // Try abilities-first approach (with fallback to legacy logic).
+        $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/sync-sites-v1' ) : null;
+
+        if ( null !== $ability ) {
+            // Build ability input: single site as array.
+            $ability_input = array(
+                'site_ids' => array( (int) $website->id ),
+            );
+
+            $result = $ability->execute( $ability_input );
+
+            if ( is_wp_error( $result ) ) {
+                $error_data = $result->get_error_data();
+                $status     = isset( $error_data['status'] ) ? $error_data['status'] : 500;
+                return new WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => $status ) );
+            }
+
+            // Transform ability output to REST response format.
+            // The sync-sites-v1 ability returns 'synced' and 'errors' arrays.
+            // A single-site sync is successful if the site appears in 'synced' and not in 'errors'.
+            $synced    = isset( $result['synced'] ) && is_array( $result['synced'] ) ? $result['synced'] : array();
+            $errors    = isset( $result['errors'] ) && is_array( $result['errors'] ) ? $result['errors'] : array();
+            $success   = ! empty( $synced ) && empty( $errors );
+            $site_data = array();
+
+            // Normalize site data to REST format for backward compatibility.
+            if ( $success ) {
+                $params   = array(
+                    'full_data'    => true,
+                    'selectgroups' => true,
+                    'include'      => array( $website->id ),
+                    'fields'       => $this->get_fields_for_response( $request ),
+                );
+                $websites = MainWP_DB::instance()->get_websites_for_current_user( $params );
+                $data     = $websites ? current( $websites ) : array();
+                if ( ! empty( $data ) ) {
+                    $site_data = $this->filter_response_data_by_allowed_fields( $this->prepare_item_for_response( $data, $request ), 'view' );
+                }
+            }
+
+            return rest_ensure_response(
+                array(
+                    'success' => $success ? 1 : 0,
+                    'data'    => $site_data,
+                )
+            );
+        }
+
+        // Fallback: Legacy logic when Abilities API is not available.
         try {
             $success = MainWP_Sync::sync_site( $website );
         } catch ( \Exception $e ) {
@@ -780,6 +965,58 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             return $args;
         }
 
+        // Try abilities-first approach (with fallback to legacy logic).
+        // Skip abilities if unsupported parameters are present.
+        // The ability schema doesn't support search, must_use, or pagination.
+        // Note: Pagination only applies when BOTH paged AND items_per_page are set (matches legacy).
+        $ability                = null;
+        $has_unsupported_params = ! empty( $args['s'] ) || ! empty( $args['must_use'] )
+            || ( ! empty( $args['paged'] ) && ! empty( $args['items_per_page'] ) );
+
+        if ( ! $has_unsupported_params ) {
+            $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/get-site-plugins-v1' ) : null;
+        }
+
+        if ( null !== $ability ) {
+            // Build ability input matching the ability's JSON Schema.
+            $ability_input = array(
+                'site_id_or_domain' => (int) $website->id,
+            );
+
+            // Status must be a string matching the ability schema enum ['all', 'active', 'inactive'].
+            if ( isset( $args['status'] ) && in_array( $args['status'], array( 'all', 'active', 'inactive' ), true ) ) {
+                $ability_input['status'] = $args['status'];
+            } else {
+                $ability_input['status'] = 'all';
+            }
+
+            // Pass has_update filter if provided.
+            if ( isset( $args['has_update'] ) ) {
+                $ability_input['has_update'] = (bool) $args['has_update'];
+            }
+
+            $result = $ability->execute( $ability_input );
+
+            if ( is_wp_error( $result ) ) {
+                $error_data = $result->get_error_data();
+                $status     = isset( $error_data['status'] ) ? $error_data['status'] : 500;
+                return new WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => $status ) );
+            }
+
+            // Transform ability output to REST response format.
+            // Ability returns 'plugins' array and 'total', REST includes site info.
+            $plugins = isset( $result['plugins'] ) && is_array( $result['plugins'] ) ? $result['plugins'] : array();
+            return rest_ensure_response(
+                array(
+                    'success' => 1,
+                    'total'   => isset( $result['total'] ) ? $result['total'] : count( $plugins ),
+                    'data'    => $plugins,
+                    'site'    => $this->filter_response_data_by_allowed_fields( $website, 'simple_view' ),
+                )
+            );
+        }
+
+        // Fallback: Legacy logic when Abilities API is not available.
         $data = json_decode( $website->plugins, 1 );
 
         if ( is_array( $data ) ) {
@@ -1030,6 +1267,58 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             $args['status'] = array_unique( wp_parse_list( $args['status'] ) );
         }
 
+        // Try abilities-first approach (with fallback to legacy logic).
+        // Skip abilities if unsupported parameters are present.
+        // The ability schema doesn't support search or pagination.
+        // Note: Pagination only applies when BOTH paged AND items_per_page are set (matches legacy).
+        $ability                = null;
+        $has_unsupported_params = ! empty( $args['s'] )
+            || ( ! empty( $args['paged'] ) && ! empty( $args['items_per_page'] ) );
+
+        if ( ! $has_unsupported_params ) {
+            $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/get-site-themes-v1' ) : null;
+        }
+
+        if ( null !== $ability ) {
+            // Build ability input matching the ability's JSON Schema.
+            $ability_input = array(
+                'site_id_or_domain' => (int) $website->id,
+            );
+
+            // Status must be a string matching the ability schema enum ['all', 'active', 'inactive'].
+            if ( isset( $args['status'] ) && in_array( $args['status'], array( 'all', 'active', 'inactive' ), true ) ) {
+                $ability_input['status'] = $args['status'];
+            } else {
+                $ability_input['status'] = 'all';
+            }
+
+            // Pass has_update filter if provided.
+            if ( isset( $args['has_update'] ) ) {
+                $ability_input['has_update'] = (bool) $args['has_update'];
+            }
+
+            $result = $ability->execute( $ability_input );
+
+            if ( is_wp_error( $result ) ) {
+                $error_data = $result->get_error_data();
+                $status     = isset( $error_data['status'] ) ? $error_data['status'] : 500;
+                return new WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => $status ) );
+            }
+
+            // Transform ability output to REST response format.
+            // Ability returns 'themes' array and 'total', REST includes site info.
+            $themes = isset( $result['themes'] ) && is_array( $result['themes'] ) ? $result['themes'] : array();
+            return rest_ensure_response(
+                array(
+                    'success' => 1,
+                    'total'   => isset( $result['total'] ) ? $result['total'] : count( $themes ),
+                    'data'    => $themes,
+                    'site'    => $this->filter_response_data_by_allowed_fields( $website, 'simple_view' ),
+                )
+            );
+        }
+
+        // Fallback: Legacy logic when Abilities API is not available.
         $data = json_decode( $website->themes, 1 );
         if ( is_array( $data ) ) {
             if ( ! empty( $args['s'] ) ) {
@@ -1111,7 +1400,7 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             $data    = array();
 
             if ( 'delete' === $action && is_array( $information ) && ! empty( $information['error']['is_activated_theme'] ) ) {
-                $data['error'] = sprintf( esc_html__( 'The theme %s is active.', 'mainwp' ), $information['error']['is_activated_theme'] );
+                $data['error'] = sprintf( esc_html__( 'The theme %s is active.', 'mainwp' ), esc_html( $information['error']['is_activated_theme'] ) );
             }
 
             if ( 'activate' === $action && isset( $information['other_data']['theme_deactivate_data'] ) ) {
@@ -1294,9 +1583,11 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             $params['offset']   = 0;
         }
 
-        $params['actions']     = ! empty( $request['actions'] ) ? sanitize_text_field( wp_unslash( $request['actions'] ) ) : '';
-        $params['contexts']    = ! empty( $request['contexts'] ) ? sanitize_text_field( wp_unslash( $request['contexts'] ) ) : '';
-        $params['total_count'] = ! empty( $request['total_count'] ) ? mainwp_string_to_bool( $request['total_count'] ) : false;
+        $params['actions']            = ! empty( $request['actions'] ) ? sanitize_text_field( wp_unslash( $request['actions'] ) ) : '';
+        $params['contexts']           = ! empty( $request['contexts'] ) ? sanitize_text_field( wp_unslash( $request['contexts'] ) ) : '';
+        $params['total_count']        = ! empty( $request['total_count'] ) ? mainwp_string_to_bool( $request['total_count'] ) : false;
+        $params['optimize_view']      = ! empty( $request['optimize_view'] ) ? mainwp_string_to_bool( $request['optimize_view'] ) : false;
+        $params['optimize_with_meta'] = ! empty( $request['optimize_with_meta'] ) ? mainwp_string_to_bool( $request['optimize_with_meta'] ) : false;
 
         $data = MainWP_DB_Site_Actions::instance()->get_wp_actions( $params, $website );
 
@@ -1323,7 +1614,7 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
      *
      * @return WP_Error|WP_REST_Response
      */
-    public function sync_items( $request ) {
+    public function sync_items( $request ) { //phpcs:ignore -- NOSONAR - complex.
 
         $args   = $this->prepare_objects_query( $request );
         $params = array(
@@ -1331,6 +1622,87 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             'include' => isset( $args['include'] ) && ! empty( $args['include'] ) ? $args['include'] : array(),
         );
 
+        // Try abilities-first approach (with fallback to legacy logic).
+        $ability = function_exists( 'wp_get_ability' ) ? wp_get_ability( 'mainwp/sync-sites-v1' ) : null;
+
+        if ( null !== $ability ) {
+            // Build ability input.
+            $ability_input = array();
+            if ( ! empty( $params['include'] ) ) {
+                $ability_input['site_ids'] = $params['include'];
+            }
+            if ( ! empty( $params['exclude'] ) ) {
+                $ability_input['exclude_ids'] = $params['exclude'];
+            }
+
+            $result = $ability->execute( $ability_input );
+
+            if ( is_wp_error( $result ) ) {
+                $error_data = $result->get_error_data();
+                $status     = isset( $error_data['status'] ) ? $error_data['status'] : 500;
+                return new WP_Error( $result->get_error_code(), $result->get_error_message(), array( 'status' => $status ) );
+            }
+
+            // Check if sync was queued for background processing.
+            if ( isset( $result['job_id'] ) ) {
+                return rest_ensure_response(
+                    array(
+                        'success' => 1,
+                        'message' => esc_html__( 'Sync queued for background processing.', 'mainwp' ),
+                        'job_id'  => $result['job_id'],
+                        'total'   => isset( $result['sites_queued'] ) ? $result['sites_queued'] : 0,
+                    )
+                );
+            }
+
+            // Transform ability output: map synced/errors arrays to REST format.
+            // The sync-sites-v1 ability returns 'synced' and 'errors' arrays.
+            // REST expects site ID as key with 'result' field indicating success/failure.
+            $transformed_data = array();
+            $synced           = isset( $result['synced'] ) && is_array( $result['synced'] ) ? $result['synced'] : array();
+            $errors           = isset( $result['errors'] ) && is_array( $result['errors'] ) ? $result['errors'] : array();
+
+            // Process successfully synced sites.
+            foreach ( $synced as $site_info ) {
+                $site_id = isset( $site_info['id'] ) ? (int) $site_info['id'] : 0;
+                if ( $site_id > 0 ) {
+                    // Re-fetch full site data for REST response format.
+                    $site_params = array(
+                        'full_data'    => true,
+                        'selectgroups' => true,
+                        'include'      => array( $site_id ),
+                        'fields'       => $this->get_fields_for_response( $request ),
+                    );
+                    $websites    = MainWP_DB::instance()->get_websites_for_current_user( $site_params );
+                    $site_data   = $websites ? current( $websites ) : array();
+                    if ( ! empty( $site_data ) ) {
+                        $site_data = $this->filter_response_data_by_allowed_fields(
+                            $this->prepare_item_for_response( $site_data, $request ),
+                            'view'
+                        );
+                    }
+                    $transformed_data[ $site_id ] = array_merge( array( 'result' => 'success' ), $site_data );
+                }
+            }
+
+            // Process failed sites.
+            foreach ( $errors as $error_info ) {
+                $site_id = isset( $error_info['identifier'] ) ? (int) $error_info['identifier'] : 0;
+                if ( $site_id > 0 ) {
+                    $transformed_data[ $site_id ] = array( 'result' => 'failed' );
+                }
+            }
+
+            update_option( 'mainwp_last_synced_all_sites', time() );
+            return rest_ensure_response(
+                array(
+                    'total' => count( $transformed_data ),
+                    'data'  => $transformed_data,
+                )
+            );
+        }
+
+        // Fallback: Legacy logic when Abilities API is not available.
         $data     = array();
         $websites = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_websites_for_current_user( false, null, 'wp.url', false, false, null, false, array( 'favi_icon' ), 'no', $params ) );
         while ( $websites && ( $website  = MainWP_DB::fetch_object( $websites ) ) ) {

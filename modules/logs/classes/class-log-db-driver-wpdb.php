@@ -11,6 +11,11 @@ namespace MainWP\Dashboard\Module\Log;
 
 use MainWP\Dashboard\MainWP_DB;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class Log_DB_Driver_WPDB
  */
@@ -66,7 +71,7 @@ class Log_DB_Driver_WPDB implements Log_DB_Driver {
      *
      * @return int
      */
-    public function insert_record( $data ) {
+    public function insert_record( $data ) { // phpcs:ignore -- NOSONAR - complex method.a
         global $wpdb;
 
         if ( defined( 'WP_IMPORTING' ) && WP_IMPORTING ) {
@@ -79,6 +84,10 @@ class Log_DB_Driver_WPDB implements Log_DB_Driver {
             unset( $data['meta'] );
         }
 
+        if ( ! empty( $data['created'] ) ) {
+            $data['created'] = Log_Manager::normalize_to_microseconds( $data['created'] ); // Store timestamps (including microseconds) as a BIGINT.
+        }
+
         $result = $wpdb->insert( $this->table, $data ); //phpcs:ignore -- ok.
         if ( ! $result ) {
             return false;
@@ -88,13 +97,16 @@ class Log_DB_Driver_WPDB implements Log_DB_Driver {
 
         // Insert record meta.
         foreach ( (array) $meta as $key => $vals ) {
-            foreach ( (array) $vals as $val ) {
-                if ( is_scalar( $val ) && '' !== $val ) {
-                    $this->insert_meta( $record_id, $key, $val );
+            if ( is_scalar( $vals ) && '' !== $vals ) {
+                $this->insert_meta( $record_id, $key, $vals );
+            } else {
+                foreach ( (array) $vals as $key_val => $val ) {
+                    if ( is_scalar( $val ) && '' !== $val ) {
+                        $this->insert_meta( $record_id, $key_val, $val );
+                    }
                 }
             }
         }
-
         return $record_id;
     }
 
@@ -110,7 +122,7 @@ class Log_DB_Driver_WPDB implements Log_DB_Driver {
     public function insert_meta( $record_id, $key, $val ) {
         global $wpdb;
 
-        return $wpdb->insert( //phpcs:ignore -- ok.
+        return $wpdb->replace( //phpcs:ignore -- ok.
             $this->table_meta,
             array(
                 'meta_log_id' => $record_id,

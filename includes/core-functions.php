@@ -8,6 +8,11 @@
  * @author Woocommerce Authors.
  */
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * API - Hash.
  *

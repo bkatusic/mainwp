@@ -8,6 +8,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Execution_Helper
  *
@@ -63,9 +68,6 @@ class MainWP_Execution_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSame
      * Init execution time start value.
      */
     public function init_exec_time() {
-        if ( null === static::$exec_start ) {
-            static::$exec_start = microtime( true );
-        }
         MainWP_Logger::instance()->init_execution_time(); // compatible.
         return static::$exec_start;
     }
@@ -73,15 +75,50 @@ class MainWP_Execution_Helper { // phpcs:ignore Generic.Classes.OpeningBraceSame
     /**
      * Method get_exec_time().
      *
+     * @deprecated Compatible.
+     *
      * Get execution time start value.
+     *
+     * @param bool $log_exec To log execution time or not.
+     *
+     * @return int $sec Execution time.
      */
-    public function get_exec_time() {
+    public function get_exec_time( $log_exec = true ) {
         if ( null === static::$exec_start ) {
             static::$exec_start = microtime( true );
         }
 
         $sec = microtime( true ) - static::$exec_start; // seconds.
-        MainWP_Logger::instance()->log_action( 'execution time :: [value=' . round( $sec, 4 ) . '](seconds)', MainWP_Logger::EXECUTION_TIME_LOG_PRIORITY );
+
+        if ( $log_exec ) {
+            MainWP_Logger::instance()->log_action( 'execution time :: [value=' . round( $sec, 4 ) . '](seconds)', MainWP_Logger::EXECUTION_TIME_LOG_PRIORITY );
+        }
+
         return $sec;
+    }
+
+
+    /**
+     * Method get_run_time().
+     *
+     * Get the execution time value.
+     *
+     * @param  bool $ret_microseconds
+     *
+     * @since 5.5.
+     *
+     * @updated 6.0
+     *
+     * @return int|float execution time.
+     */
+    public static function get_run_time( $ret_microseconds = false ) {
+        if ( empty( static::$exec_start ) ) {
+            return 0;
+        }
+        $rtime = microtime( true ) - static::$exec_start; // seconds.
+        if ( $ret_microseconds ) {
+            return round( $rtime * 1000000, 4 );
+        }
+        return round( $rtime, 4 );
     }
 }

@@ -8,6 +8,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Themes_Handler
  *
@@ -62,6 +67,7 @@ class MainWP_Themes_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                 $theme['websiteid']   = $website->id;
                 $theme['websiteurl']  = $website->url;
                 $theme['websitename'] = $website->name;
+                $theme['site_info']   = $website->site_info;
 
                 $output->themes[] = $theme;
                 $not_found        = false;
@@ -76,6 +82,7 @@ class MainWP_Themes_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                     $theme['websiteid']         = $website->id;
                     $theme['websiteurl']        = $website->url;
                     $theme['websitename']       = $website->name;
+                    $theme['site_info']         = $website->site_info;
                     $output->themes_installed[] = $theme;
                 }
             }

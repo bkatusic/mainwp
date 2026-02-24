@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  *  Class MainWP MainWP_Plugins_Handler
  *
@@ -62,6 +67,7 @@ class MainWP_Plugins_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                 $plugin['websiteid']   = $website->id;
                 $plugin['websiteurl']  = $website->url;
                 $plugin['websitename'] = $website->name;
+                $plugin['site_info']   = $website->site_info;
 
                 $output->plugins[] = $plugin;
                 $not_found         = false;
@@ -76,6 +82,7 @@ class MainWP_Plugins_Handler { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                     $plugin['websiteid']         = $website->id;
                     $plugin['websiteurl']        = $website->url;
                     $plugin['websitename']       = $website->name;
+                    $plugin['site_info']         = $website->site_info;
                     $output->plugins_installed[] = $plugin;
                 }
             }

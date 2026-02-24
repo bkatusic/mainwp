@@ -11,6 +11,12 @@ namespace MainWP\Dashboard\Module\CostTracker;
 use MainWP\Dashboard\MainWP_UI;
 use MainWP\Dashboard\MainWP_Utility;
 use MainWP\Dashboard\MainWP_Overview;
+use MainWP\Dashboard\MainWP_Ui_Manage_Widgets_Layout;
+
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 /**
  * Class class Cost_Tracker_Summary {
@@ -195,7 +201,7 @@ class Cost_Tracker_Summary {
     /**
      * Method add_meta_boxes()
      *
-     * Add MainWP Overview Page Widgets.
+     * Add MainWP Operations Page Widgets.
      *
      * @param array $page Current page.
      *
@@ -212,7 +218,7 @@ class Cost_Tracker_Summary {
         /**
          * Get getmetaboxes
          *
-         * Adds metaboxes (widgets) to the Overview page.
+         * Adds metaboxes (widgets) to the Operations page.
          *
          * @since 4.6
          */
@@ -234,7 +240,7 @@ class Cost_Tracker_Summary {
          * Contains the list of enabled widgets and allows user to unset unwanted widgets.
          *
          * @param array $enable_widgets           Array containing enabled widgets.
-         * @param int   $dashboard_siteid Child site (Overview) ID.
+         * @param int   $dashboard_siteid Child site (Operations) ID.
          *
          * @since 4.6
          */
@@ -339,7 +345,7 @@ class Cost_Tracker_Summary {
      */
     public static function render_header() {
         $params = array(
-            'title'      => esc_html__( 'Cost Summary', 'mainwp' ),
+            'title'      => esc_html__( 'Operational Costs Summary', 'mainwp' ),
             'which'      => 'page_cost_summary',
             'wrap_class' => 'mainwp-module-cost-summary-wrapper',
         );
@@ -353,47 +359,71 @@ class Cost_Tracker_Summary {
      * Render the summary costs content.
      */
     public static function render_summary_body() {
-        $screen     = get_current_screen();
-        $costs_data = Cost_Tracker_DB::get_instance()->get_summary_data( array( 'sum_data' => 'all' ) );
+        $screen      = get_current_screen();
+        $costs_data  = Cost_Tracker_DB::get_instance()->get_summary_data( array( 'sum_data' => 'all' ) );
+        $costs       = Cost_Tracker_DB::get_instance()->get_cost_tracker_by( 'all' );
+        $costs_count = count( $costs );
         ?>
-        <div class="mainwp-primary-content-wrap">
-        <div class="ui segment" style="padding-top:0;padding-bottom:0;">
-
-        <?php MainWP_Overview::render_layout_selection(); ?>
-
-        <div id="mainwp-message-zone" class="ui message" style="display:none;"></div>
-        <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'cost-summany-widgets' ) ) : ?>
-                <div class="ui info message">
-                    <i class="close icon mainwp-notice-dismiss" notice-id="cost-summany-widgets"></i>
-                    <?php printf( esc_html__( 'To hide or show a widget, click the Cog (%1$s) icon.', 'mainwp' ), '<i class="cog icon"></i>' ); ?>
+        <div class="ui segment mainwp-primary-content-wrap">
+            <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-cost-summany-welcome-message' ) && 0 == $costs_count ) : ?>
+            <div class="ui segment" style="margin-bottom:0px;">
+                <div class="ui icon message mainwp-welcome-message" style="margin-bottom:0px;">
+                    <em data-emoji=":wave:" class="big"></em>
+                    <div class="content">
+                        <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-cost-summany-welcome-message" style="float:right;cursor:pointer;"></i>
+                        <div class="ui massive header"><?php esc_html_e( 'Welcome to Cost Tracker', 'mainwp' ); ?></div>
+                        <p><?php esc_html_e( 'Track and forecast your agency\'s expenses across all sites and subscriptions.', 'mainwp' ); ?></p>
+                        <p><?php printf( esc_html__( 'Start by %1$sadding your first cost%2$s or %3$screating custom cost categories%4$s.', 'mainwp' ), '<a href="admin.php?page=CostTrackerAdd">', '</a>', '<a href="admin.php?page=CostTrackerSettings">', '</a>' ); ?></p>
+                    </div>
                 </div>
+            </div>
             <?php endif; ?>
-        </div>
+            <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'cost-summany-widgets' ) ) : ?>
+            <div class="ui segment" style="margin-bottom:0px;">
+                <div class="ui message" style="margin-bottom:0px;">
+                    <i class="close icon mainwp-notice-dismiss" notice-id="cost-summany-widgets"></i>
+                    <?php printf( esc_html__( '%1$s Tip: You can drag and drop widgets to reorder your dashboard, use Page Settings (%2$s) to show or hide widgets, and use Layout (%3$s) in the header to save and load your widget layouts.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<i class="cog fitted icon"></i>', '<i class="all border fitted icon"></i>' ); ?>
+                </div>
+            </div>
+            <?php endif; ?>
+            <?php if ( 0 < $costs_count && 3 >= $costs_count ) : ?>
+                <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'cost-summany-low-data-info' ) ) : ?>
+                <div class="ui segment" style="margin-bottom:0px;">
+                    <div class="ui info message" style="margin-bottom:0px;">
+                        <i class="close icon mainwp-notice-dismiss" notice-id="cost-summany-low-data-info"></i>
+                        <?php esc_html_e( 'Keep building your cost history. Add more expenses to unlock trend insights.', 'mainwp' ); ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+            <?php endif; ?>
+            <div id="mainwp-message-zone" class="ui message" style="display:none;"></div>
+
             <?php
             /**
              * Action: mainwp_before_overview_widgets
              *
-             * Fires at the top of the Overview page (before first widget).
+             * Fires at the top of the Operations page (before first widget).
              *
              * @since 4.6
              */
             do_action( 'mainwp_before_overview_widgets', 'costsummary' );
             ?>
             <div id="mainwp-grid-wrapper" class="gridster">
-                <?php
-                MainWP_UI::do_widget_boxes(
-                    $screen->id,
-                    array(
-                        'costs_data' => $costs_data,
-                    )
-                );
-                ?>
+                <div id="mainwp-widgets-placeholder" class="ui page dimmer">
+                    <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
+                </div>
+                <script>
+                jQuery( document ).ready( function () {
+                    jQuery('#mainwp-widgets-placeholder').dimmer('show');
+                });
+                </script>
+                <?php MainWP_UI::do_widget_boxes( $screen->id, array( 'costs_data' => $costs_data, ) ); ?>
             </div>
             <?php
             /**
              * Action: 'mainwp_after_overview_widgets'
              *
-             * Fires at the bottom of the Overview page (after the last widget).
+             * Fires at the bottom of the Operations page (after the last widget).
              *
              * @since 4.6
              */
@@ -411,7 +441,7 @@ class Cost_Tracker_Summary {
                         return false;
                     };
                     jQuery('#reset-costs-summary-widgets-settings').on('click', function () {
-                        mainwp_confirm(__('Are you sure.'), function(){
+                        mainwp_confirm(__('Are you sure?'), function(){
                             jQuery('.mainwp_hide_wpmenu_checkboxes input[name="mainwp_show_widgets[]"]').prop('checked', true);
                             jQuery('input[name=reset_module_cost_tracker_summary_widgets_settings]').attr('value', 1);
                             jQuery('#submit-cost-summary-widgets-settings').click();
@@ -429,45 +459,47 @@ class Cost_Tracker_Summary {
                     jQuery( '#mainwp-upcoming-renewals-table-next_year' ).DataTable();
                 } );
             </script>
+        </div>
+        <?php MainWP_Ui_Manage_Widgets_Layout::render_modal_save_layout(); ?>
         <div class="ui modal" id="mainwp-module-log-overview-screen-options-modal">
-        <i class="close icon"></i>
-                <div class="header"><?php esc_html_e( 'Page Settings', 'mainwp' ); ?></div>
-                <div class="content ui form">
+            <i class="close icon"></i>
+            <div class="header"><?php esc_html_e( 'Page Settings', 'mainwp' ); ?></div>
+            <div class="content ui form">
+                <?php
+                /**
+                 * Action: mainwp_module_cost_tracker_summary_screen_options_top
+                 *
+                 * Fires at the top of the Sceen Options modal on the Operations page.
+                 *
+                 * @since 4.6
+                 */
+                do_action( 'mainwp_module_cost_tracker_summary_screen_options_top' );
+                ?>
+                <form method="POST" action="" name="mainwp_module_cost_tracker_summary_screen_options_form" id="mainwp-module-log-overview-screen-options-form">
+                    <?php MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' ); ?>
+                    <input type="hidden" name="module_cost_tracker_summay_options_nonce" value="<?php echo esc_attr( wp_create_nonce( 'module_cost_tracker_summay_options_nonce' ) ); ?>" />
+                    <?php static::render_screen_options(); ?>
                     <?php
                     /**
-                     * Action: mainwp_module_cost_tracker_summary_screen_options_top
+                     * Action: mainwp_module_cost_tracker_summary_screen_options_bottom
                      *
-                     * Fires at the top of the Sceen Options modal on the Overview page.
+                     * Fires at the bottom of the Sceen Options modal on the Operations page.
                      *
                      * @since 4.6
                      */
-                    do_action( 'mainwp_module_cost_tracker_summary_screen_options_top' );
+                    do_action( 'mainwp_module_cost_tracker_summary_screen_options_bottom' );
                     ?>
-                    <form method="POST" action="" name="mainwp_module_cost_tracker_summary_screen_options_form" id="mainwp-module-log-overview-screen-options-form">
-                        <?php wp_nonce_field( 'mainwp-admin-nonce' ); ?>
-                        <input type="hidden" name="module_cost_tracker_summay_options_nonce" value="<?php echo esc_attr( wp_create_nonce( 'module_cost_tracker_summay_options_nonce' ) ); ?>" />
-                        <?php static::render_screen_options( false ); ?>
-                        <?php
-                        /**
-                         * Action: mainwp_module_cost_tracker_summary_screen_options_bottom
-                         *
-                         * Fires at the bottom of the Sceen Options modal on the Overview page.
-                         *
-                         * @since 4.6
-                         */
-                        do_action( 'mainwp_module_cost_tracker_summary_screen_options_bottom' );
-                        ?>
-                </div>
-                <div class="actions">
-                    <div class="ui two columns grid">
-                        <div class="left aligned column">
-                            <span data-tooltip="<?php esc_attr_e( 'Resets the page to its original layout and reinstates relocated widgets.', 'mainwp' ); ?>" data-inverted="" data-position="top left"><input type="button" class="ui button" name="reset" id="reset-costs-summary-widgets-settings" value="<?php esc_attr_e( 'Reset Page', 'mainwp' ); ?>" /></span>
-                        </div>
-                        <div class="ui right aligned column">
-                            <input type="submit" class="ui green button" id="submit-cost-summary-widgets-settings" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>" />
-                        </div>
+            </div>
+            <div class="actions">
+                <div class="ui two columns grid">
+                    <div class="left aligned column">
+                        <span data-tooltip="<?php esc_attr_e( 'Resets the page to its original layout and reinstates relocated widgets.', 'mainwp' ); ?>" data-inverted="" data-position="top left"><input type="button" class="ui button" name="reset" id="reset-costs-summary-widgets-settings" value="<?php esc_attr_e( 'Reset Page', 'mainwp' ); ?>" /></span>
+                    </div>
+                    <div class="ui right aligned column">
+                        <input type="submit" class="ui green button" id="submit-cost-summary-widgets-settings" value="<?php esc_attr_e( 'Save Settings', 'mainwp' ); ?>" />
                     </div>
                 </div>
+            </div>
 
                 <input type="hidden" name="reset_module_cost_tracker_summary_widgets_settings" value="" />
                 </form>
@@ -497,7 +529,7 @@ class Cost_Tracker_Summary {
         /**
          * Filter: mainwp_module_cost_tracker_summary_widgets_screen_options
          *
-         * Filters available widgets on the Overview page allowing users to unsent unwanted widgets.
+         * Filters available widgets on the Operations page allowing users to unset unwanted widgets.
          *
          * @since 4.6
          */
@@ -524,7 +556,7 @@ class Cost_Tracker_Summary {
         <?php if ( isset( $_GET['page'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized ?>
         <div class="ui grid field">
             <label class="six wide column"><?php esc_html_e( 'Show widgets', 'mainwp' ); ?></label>
-            <div class="ten wide column" <?php echo 'data-tooltip="' . esc_attr__( 'Select widgets that you want to hide in the MainWP Overview page.', 'mainwp' ); ?> data-inverted="" data-position="top left">
+            <div class="ten wide column" <?php echo 'data-tooltip="' . esc_attr__( 'Select widgets that you want to hide in the MainWP Operations page.', 'mainwp' ); ?> data-inverted="" data-position="top left">
                 <ul class="mainwp_hide_wpmenu_checkboxes">
                 <?php
                 foreach ( $default_widgets as $name => $title ) {

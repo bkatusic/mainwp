@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Notification_Settings
  *
@@ -154,12 +159,12 @@ class MainWP_Notification_Settings { // phpcs:ignore Generic.Classes.OpeningBrac
         }
 
         ?>
-        <div id="mainwp-all-emails-settings" class="ui segment">
+        <div id="mainwp-all-emails-settings" class="ui padded segment">
         <?php if ( $updated ) : ?>
             <div class="ui green message"><i class="close icon"></i><?php esc_html_e( 'Settings have been saved successfully!', 'mainwp' ); ?></div>
             <?php endif; ?>
             <div class="ui info message">
-                <?php printf( esc_html__( 'Email notifications sent from MainWP Dashboard are listed below.  Click on an email to configure it.  For additional help, please see %1$sthis help document%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/email-settings/">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
+                <?php printf( esc_html__( 'Email notifications sent from MainWP Dashboard are listed below.  Click on an email to configure it. For additional help, please see %1$sthis help document%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/sites/management/mainwp-dashboard-settings#manage-email-settings">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
             </div>
             <table class="ui unstackable table" id="mainwp-emails-settings-table">
                 <thead>

@@ -1,34 +1,44 @@
 <?php
 /**
- * Manage MainWP Ui Layout Segment.
+ * Manage MainWP UI Widget Layouts.
+ *
+ * Handles saving, loading, and deleting custom widget layout configurations
+ * for dashboard pages. Allows users to save their preferred widget arrangements.
  *
  * @package     MainWP/Dashboard
  */
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Ui_Manage_Widgets_Layout
+ *
+ * Manages custom widget layout configurations with save/load/delete functionality.
  *
  * @package MainWP\Dashboard
  */
 class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAfterBrace -- NOSONAR.
 
     /**
-     * Private static variable to hold the single instance of the class.
+     * Singleton instance of the class.
      *
      * @static
      *
-     * @var mixed Default null
+     * @var MainWP_Ui_Manage_Widgets_Layout|null
      */
     private static $instance = null;
 
     /**
-     * Create public static instance.
+     * Get the singleton instance of the class.
      *
      * @static
      *
-     * @return instance.
+     * @return MainWP_Ui_Manage_Widgets_Layout Singleton instance.
      */
     public static function get_instance() {
         if ( null === static::$instance ) {
@@ -38,16 +48,19 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
     }
 
     /**
-     * MainWP_Ui_Manage_Widgets_Layout constructor.
+     * Constructor.
      *
-     * Run each time the class is called.
-     * Add action to generate tabletop.
+     * Public constructor to enforce singleton pattern.
      */
     public function __construct() {
     }
 
     /**
-     * Method admin_init().
+     * Initialize admin hooks.
+     *
+     * Registers AJAX handlers for save, load, and delete layout operations.
+     *
+     * @return void
      */
     public function admin_init() {
         MainWP_Post_Handler::instance()->add_action( 'mainwp_ui_save_widgets_layout', array( $this, 'ajax_save_widgets_layout' ) );
@@ -56,150 +69,49 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
     }
 
     /**
-     * Method render_edit_layout().
+     * Render layout management UI controls.
      *
-     * @param string $screen_id Current screen id.
+     * Outputs the layout dropdown button and JavaScript handlers for managing
+     * widget layout configurations on the current screen.
+     *
+     * @param string $screen_id Current screen identifier.
+     *
+     * @return void
      */
     public static function render_edit_layout( $screen_id ) {
         $screen_slug    = strtolower( $screen_id );
         $saved_segments = static::set_get_widgets_layout( false, array(), $screen_slug );
         ?>
 
-        <a class="ui mini button" id="mainwp-manage-widgets-load-saved-layout-button" selected-layout-id="" settings-slug="<?php echo esc_attr( $screen_slug ); ?>"><?php esc_html_e( 'Save Layout', 'mainwp' ); ?></a>
-        <?php if ( ! empty( $saved_segments ) ) : ?>
-            <a class="ui mini button mainwp_manage_widgets_ui_choose_layout"><?php esc_html_e( 'Load Layout', 'mainwp' ); ?></a>
-        <?php else : ?>
-            <a class="ui mini disabled button"><?php esc_html_e( 'Load Layout', 'mainwp' ); ?></a>
-        <?php endif; ?>
+        <div class="ui mini basic top left pointing dropdown button mainwp-768-hide">
+            <div><i class="border all icon"></i><span class="mainwp-768-hide"><?php esc_html_e( 'Layout', 'mainwp' ); ?></span></div>
+            <div class="menu">
+                <a class="item" id="mainwp-manage-widgets-load-saved-layout-button" selected-layout-id="" settings-slug="<?php echo esc_attr( $screen_slug ); ?>"><?php esc_html_e( 'Save Layout', 'mainwp' ); ?></a>
+                <?php if ( ! empty( $saved_segments ) ) : ?>
+                <a class="item" id="mainwp-manage-widgets-ui-choose-layout"><?php esc_html_e( 'Load Layout', 'mainwp' ); ?></a>
+                <?php endif; ?>
+            </div>
+        </div>
 
         <script type="text/javascript">
-            jQuery( document ).ready( function( $ ) {
-                mainwp_load_manage_widgets_layout = function () {
-                    jQuery('#mainwp-common-layout-widgets-select-fields').hide();
-                    let data = mainwp_secure_data({
-                        action: 'mainwp_ui_load_widgets_layout',
-                        settings_slug: jQuery('#mainwp-manage-widgets-load-saved-layout-button').attr('settings-slug')
-                    });
-                    mainwpUIHandleWidgetsLayout.showWorkingStatus('<i class="notched circle loading icon"></i> ' + __('Loading layouts. Please wait...'), 'green');
-                    jQuery.post(ajaxurl, data, function (response) {
-                        if (response.error != undefined) {
-                            mainwpUIHandleWidgetsLayout.showWorkingStatus(response.error, 'red');
-                        } else if (response.result) {
-                            mainwpUIHandleWidgetsLayout.showResults(response.result);
-                        } else {
-                            mainwpUIHandleWidgetsLayout.showWorkingStatus(__('No saved layouts.'), 'red');
-                        }
-                    }, 'json');
-                };
-
-                jQuery('#mainwp-manage-widgets-load-saved-layout-button').on( 'click', function () {
-                    mainwpUIHandleWidgetsLayout.showLayout(this);
-                } );
-                jQuery('.mainwp_manage_widgets_ui_choose_layout').on( 'click', function () {
-                    let field_name = '';
-                    mainwpUIHandleWidgetsLayout.loadSegment(mainwp_load_manage_widgets_layout);
-                } );
-
-                jQuery('#mainwp-common-edit-widgets-layout-save-button').on( 'click', function () {
-
-                    mainwpUIHandleWidgetsLayout.hideWorkingStatus();
-
-                    let seg_name = jQuery('#mainwp-common-edit-widgets-layout-name').val().trim();
-
-                    if('' == seg_name){
-                        mainwpUIHandleWidgetsLayout.showWorkingStatus(__('Please enter layout name.'), 'red' );
-                        return false;
-                    }
-
-                    let data = {
-                        name: seg_name,
-                        seg_id:$('#mainwp-manage-widgets-load-saved-layout-button').attr('selected-layout-id'),
-                        settings_slug: $('#mainwp-manage-widgets-load-saved-layout-button').attr('settings-slug')
-                    };
-
-                    mainwpUIHandleWidgetsLayout.showWorkingStatus( '<i class="notched circle loading icon"></i> ' + __('Saving layout. Please wait...'), 'green' );
-
-                    mainwp_common_ui_widgets_save_layout( '.grid-stack-item', data, function(response){
-                        if (response.error != undefined) {
-                            mainwpUIHandleWidgetsLayout.showWorkingStatus(response.error, 'red');
-                        } else if (response.result == 'SUCCESS') {
-                            mainwpUIHandleWidgetsLayout.showWorkingStatus(__('Segment saved successfully.'), 'green');
-                            setTimeout(function () {
-                                jQuery('#mainwp-common-edit-widgets-layout-status').fadeOut(300);
-                                jQuery( '#mainwp-common-edit-widgets-layout-modal' ).modal('hide');
-                                window.location.href = location.href;
-                            }, 2000);
-                        } else {
-                            mainwpUIHandleWidgetsLayout.showWorkingStatus(__('Undefined error occured while saving your layout!'), 'red');
-                        }
-                    });
-                    return false;
-                });
-
-                jQuery('#mainwp-common-edit-widgets-select-layout-button').on( 'click', function () {
-                    mainwpUIHandleWidgetsLayout.hideWorkingStatus();
-                    let seg_id = jQuery( '#mainwp-common-layout-widgets-select-fields .ui.dropdown').dropdown('get value');
-                    let screen_slug = $('#mainwp-manage-widgets-load-saved-layout-button').attr('settings-slug');
-                    let loc_url = removeUrlParams(location.href, [ 'screen_slug', 'updated', '_opennonce'] );
-                    if('' == loc_url){
-                        loc_url = location.href;
-                    }
-                    window.location.href = loc_url + '&select_layout=1&screen_slug=' + encodeURIComponent( screen_slug ) + '&updated=' + encodeURIComponent( seg_id ) + '&_opennonce=<?php echo esc_js( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>';
-                });
-
-
-                jQuery('#mainwp-common-edit-widgets-layout-delete-button').on( 'click', function () {
-                    mainwpUIHandleWidgetsLayout.hideWorkingStatus();
-                    let delBtn = this;
-                    let seg_id = jQuery( '#mainwp-common-layout-widgets-select-fields .ui.dropdown').dropdown('get value');
-                    if('' == seg_id){
-                        return false;
-                    }
-
-                    if('yes' === jQuery(delBtn).attr('running')){
-                        return false;
-                    }
-
-                    jQuery(seg_id).attr('running', 'yes');
-                    let data = mainwp_secure_data({
-                        action: 'mainwp_ui_delete_widgets_layout',
-                        seg_id: seg_id,
-                        settings_slug: $('#mainwp-manage-widgets-load-saved-layout-button').attr('settings-slug')
-                    });
-                    mainwpUIHandleWidgetsLayout.showWorkingStatus('<i class="notched circle loading icon"></i> ' + __('Deleting layout. Please wait...'), 'green' );
-                    jQuery.post(ajaxurl, data, function (response) {
-
-                        jQuery(delBtn).removeAttr('running');
-
-                        if (response.error != undefined) {
-                            mainwpUIHandleWidgetsLayout.showWorkingStatus(response.error, 'red');
-                        } else if (response.result == 'SUCCESS') {
-                            mainwpUIHandleWidgetsLayout.showWorkingStatus(__('Segment deleted successfully.'), 'green');
-                            setTimeout(function () {
-                                jQuery('#mainwp-common-edit-widgets-layout-status').fadeOut(300);
-                                jQuery( '#mainwp-common-edit-widgets-layout-modal' ).modal('hide');
-                            }, 2000);
-                        } else {
-                            mainwpUIHandleWidgetsLayout.showWorkingStatus(__('Undefined error occured while deleting your layout!'), 'red');
-                        }
-                    }, 'json');
-
-                    return false;
-                });
-
+            jQuery( document ).ready( function() {
+                mainwp_init_widget_layout_handlers();
             } );
-            </script>
+        </script>
         <?php
     }
 
     /**
-     * Method set_get_widgets_layout()
+     * Get or set widget layout configurations for a screen.
      *
-     * @param bool   $set_val Get or set value.
-     * @param array  $saved_segments segments data.
-     * @param string $save_field segments data.
+     * Retrieves or saves widget layout configurations stored in user meta.
+     * Each screen can have multiple saved layouts identified by unique IDs.
      *
-     * @return array values
+     * @param bool   $set_val        Whether to set (true) or get (false) the value.
+     * @param array  $saved_segments Array of layout configurations to save (when $set_val is true).
+     * @param string $save_field     Screen identifier for the layout (e.g., 'overview', 'sites').
+     *
+     * @return array Array of saved layout configurations, empty array if none exist.
      */
     public static function set_get_widgets_layout( $set_val = false, $saved_segments = array(), $save_field = 'overview' ) {
         global $current_user;
@@ -222,9 +134,14 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
 
 
     /**
-     * Method ajax_save_widgets_layout()
+     * AJAX handler to save widget layout configuration.
      *
-     * Post handler for save layout.
+     * Processes POST request to save the current widget layout arrangement.
+     * Validates nonce, sanitizes input, and stores layout in user meta.
+     *
+     * @since 5.0.0
+     *
+     * @return void Outputs JSON response with 'result' => 'SUCCESS' or error.
      */
     public function ajax_save_widgets_layout() { //phpcs:ignore -- NOSONAR - complex.
         MainWP_Post_Handler::instance()->check_security( 'mainwp_ui_save_widgets_layout' );
@@ -271,9 +188,14 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
 
 
     /**
-     * Method ajax_load_widgets_layout()
+     * AJAX handler to load saved widget layouts.
      *
-     * Post handler for save segment.
+     * Retrieves all saved widget layout configurations for the current screen
+     * and returns them as a dropdown select element HTML.
+     *
+     * @since 5.0.0
+     *
+     * @return void Outputs JSON response with 'result' containing HTML dropdown or empty string.
      */
     public function ajax_load_widgets_layout() {
         MainWP_Post_Handler::instance()->check_security( 'mainwp_ui_load_widgets_layout' );
@@ -298,9 +220,14 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
     }
 
     /**
-     * Method ajax_delete_widgets_layout()
+     * AJAX handler to delete a saved widget layout.
      *
-     * Post handler for save segment.
+     * Removes a specific layout configuration from user meta by layout ID.
+     * Validates nonce and layout existence before deletion.
+     *
+     * @since 5.0.0
+     *
+     * @return void Outputs JSON response with 'result' => 'SUCCESS' or 'error' message.
      */
     public function ajax_delete_widgets_layout() {
         MainWP_Post_Handler::instance()->check_security( 'mainwp_ui_delete_widgets_layout' );
@@ -317,9 +244,12 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
     }
 
     /**
-     * Method render_modal_save_layout()
+     * Render the layout management modal dialog.
      *
-     * Render modal window.
+     * Outputs HTML for the modal window used to save, load, and delete
+     * widget layout configurations. Includes form fields and action buttons.
+     *
+     * @since 5.0.0
      *
      * @return void
      */
@@ -347,11 +277,12 @@ class MainWP_Ui_Manage_Widgets_Layout { // phpcs:ignore Generic.Classes.OpeningB
             <div class="actions">
                 <div class="ui grid">
                     <div class="eight wide left aligned middle aligned column">
-                        <input type="button" class="ui green button" id="mainwp-common-edit-widgets-layout-save-button" value="<?php esc_attr_e( 'Save', 'mainwp' ); ?>"/>
-                        <input type="button" class="ui green button" id="mainwp-common-edit-widgets-select-layout-button" value="<?php esc_attr_e( 'Choose', 'mainwp' ); ?>" style="display:none;"/>
+
                     </div>
                     <div class="eight wide column">
-                        <input type="button" class="ui basic button" id="mainwp-common-edit-widgets-layout-delete-button" value="<?php esc_attr_e( 'Delete', 'mainwp' ); ?>" style="display:none;"/>
+                        <input type="button" class="ui green mini button disabled" id="mainwp-common-edit-widgets-layout-save-button" value="<?php esc_attr_e( 'Save Layout', 'mainwp' ); ?>"/>
+                        <input type="button" class="ui green mini button disabled" id="mainwp-common-edit-widgets-select-layout-button" value="<?php esc_attr_e( 'Choose Layout', 'mainwp' ); ?>" style="display:none;"/>
+                        <input type="button" class="ui basic mini button disabled" id="mainwp-common-edit-widgets-layout-delete-button" value="<?php esc_attr_e( 'Delete', 'mainwp' ); ?>" style="display:none;"/>
                     </div>
                 </div>
             </div>

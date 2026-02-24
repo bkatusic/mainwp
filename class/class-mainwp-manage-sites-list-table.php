@@ -7,6 +7,11 @@
 
 namespace MainWP\Dashboard;
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 /**
  * Class MainWP_Manage_Sites_List_Table
  *
@@ -117,6 +122,10 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             return $backupnow_lnk;
         }
 
+        if ( ! \mainwp_current_user_can( 'dashboard', 'execute_backups' ) ) {
+            return '';
+        }
+
         $dir        = MainWP_System_Utility::get_mainwp_specific_dir( $item['id'] );
         $lastbackup = 0;
 
@@ -208,6 +217,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             case 'plugin_update':
             case 'theme_update':
             case 'backup':
+            case 'wpcore_version':
             case 'security':
             case 'uptime':
             case 'last_sync':
@@ -243,7 +253,9 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             'site_health'    => array( 'site_health', false ),
             'status_code'    => array( 'status_code', false ),
             'notes'          => array( 'notes', false ),
+            'ip'             => array( 'ip', false ),
             'phpversion'     => array( 'phpversion', false ),
+            'wpcore_version' => array( 'wpcore_version', false ),
             'update'         => array( 'update', false ),
             'added_datetime' => array( 'added_datetime', false ),
             'backup'         => array( 'backup', false ),
@@ -276,14 +288,16 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             'login'          => '<i class="sign in alternate icon"></i>',
             'url'            => esc_html__( 'URL', 'mainwp' ),
             'tags'           => esc_html__( 'Tags', 'mainwp' ),
+            'client_name'    => esc_html__( 'Client', 'mainwp' ),
             'update'         => esc_html__( 'Updates', 'mainwp' ),
             'wpcore_update'  => '<i class="icon wordpress"></i>', // phpcs:ignore -- Prevent modify WP icon.
             'plugin_update'  => '<i class="plug icon"></i>',
             'theme_update'   => '<i class="tint icon"></i>',
-            'client_name'    => esc_html__( 'Client', 'mainwp' ),
+            'wpcore_version' => esc_html__( 'Core', 'mainwp' ),
             'security'       => esc_html__( 'Security', 'mainwp' ),
             'language'       => esc_html__( 'Language', 'mainwp' ),
-            'index'          => esc_html__( 'Indexable', 'mainwp' ),
+            'ip'             => esc_html__( 'Server IP', 'mainwp' ),
+            'index'          => esc_html__( 'Index', 'mainwp' ),
             'uptime'         => esc_html__( 'Uptime', 'mainwp' ),
             'last_sync'      => esc_html__( 'Last Sync', 'mainwp' ),
             'backup'         => esc_html__( 'Backups', 'mainwp' ),
@@ -461,8 +475,16 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             'className' => 'center aligned collapsing',
         );
         $defines[] = array(
+            'targets'   => array( 'manage-ip-column' ),
+            'className' => 'center aligned collapsing',
+        );
+        $defines[] = array(
             'targets'   => array( 'manage-index-column' ),
             'className' => 'center aligned collapsing',
+        );
+        $defines[] = array(
+            'targets'   => array( 'manage-wpcore_version-column' ),
+            'className' => 'right aligned collapsing',
         );
         $defines[] = array(
             'targets'   => array( 'manage-site_actions-column' ),
@@ -502,7 +524,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             'update_translations'    => esc_html__( 'Update Translations', 'mainwp' ),
             'update_everything'      => esc_html__( 'Update Everything', 'mainwp' ),
             'check_abandoned_plugin' => esc_html__( 'Check Abandoned Plugins', 'mainwp' ),
-            'check_abandoned_theme'  => esc_html__( 'Check Abandoned Phemes', 'mainwp' ),
+            'check_abandoned_theme'  => esc_html__( 'Check Abandoned Themes', 'mainwp' ),
         );
 
         /**
@@ -619,11 +641,14 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                         <div class="item" data-value="all" ><?php esc_html_e( 'All statuses', 'mainwp' ); ?></div>
                         <div class="item" data-value="connected"><?php esc_html_e( 'Connected', 'mainwp' ); ?></div>
                         <div class="item" data-value="disconnected"><?php esc_html_e( 'Disconnected', 'mainwp' ); ?></div>
+                        <div class="item" data-value="suspended"><?php esc_html_e( 'Suspended', 'mainwp' ); ?></div>
                         <div class="item" data-value="update"><?php esc_html_e( 'Available update', 'mainwp' ); ?></div>
                         <div class="item" data-value="sitehealthnotgood"><?php esc_html_e( 'Site Health needs improvement', 'mainwp' ); ?></div>
-                        <div class="item" data-value="phpver7"><?php esc_html_e( 'PHP Ver < 7.0', 'mainwp' ); ?></div>
-                        <div class="item" data-value="phpver8"><?php esc_html_e( 'PHP Ver < 8.0', 'mainwp' ); ?></div>
-                        <div class="item" data-value="suspended"><?php esc_html_e( 'Suspended', 'mainwp' ); ?></div>
+                        <div class="item" data-value="phpver8"><?php esc_html_e( 'PHP < 8.0', 'mainwp' ); ?></div>
+                        <div class="item" data-value="phpver81"><?php esc_html_e( 'PHP < 8.1', 'mainwp' ); ?></div>
+                        <div class="item" data-value="phpver82"><?php esc_html_e( 'PHP < 8.2', 'mainwp' ); ?></div>
+                        <div class="item" data-value="phpver83"><?php esc_html_e( 'PHP < 8.3', 'mainwp' ); ?></div>
+                        <div class="item" data-value="phpver84"><?php esc_html_e( 'PHP < 8.4', 'mainwp' ); ?></div>
                     </div>
                 </div>
                 <?php if ( \mainwp_current_user_can( 'dashboard', 'manage_clients' ) ) { ?>
@@ -644,9 +669,10 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                     </div>
                 </div>
                 <?php } ?>
-                <button onclick="mainwp_manage_sites_filter()" class="ui mini green button"><?php esc_html_e( 'Filter Sites', 'mainwp' ); ?></button>
-                <button onclick="mainwp_manage_sites_reset_filters(this)" id="mainwp_manage_sites_reset_filters" class="ui mini button" <?php echo $default_filter ? 'disabled="disabled"' : ''; ?>><?php esc_html_e( 'Reset Filters', 'mainwp' ); ?></button>
+                <button onclick="mainwp_manage_sites_filter()" class="ui mini green basic button"><i class="filter icon"></i><?php esc_html_e( 'Filter', 'mainwp' ); ?></button>
+                <button onclick="mainwp_manage_sites_reset_filters(this)" id="mainwp_manage_sites_reset_filters" class="ui mini button" <?php echo $default_filter ? 'disabled="disabled"' : ''; ?>><i class="times icon"></i><?php esc_html_e( 'Reset', 'mainwp' ); ?></button>
             </div>
+
             <?php MainWP_Manage_Sites_Filter_Segment::get_instance()->render_filters_segment(); ?>
 
         </div>
@@ -666,19 +692,17 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
         ?>
         <span data-tooltip="<?php esc_html_e( 'Switch between Table or Grid view.', 'mainwp' ); ?>" data-position="bottom right" data-inverted="">
             <div class="ui mini buttons view-mode-manage-site">
-                <a class="ui button basic <?php echo 'table' === $siteViewMode ? 'disabled' : ''; ?> icon" href="admin.php?page=managesites&viewmode=table&modenonce=<?php echo esc_html( $nonce ); ?>">
+                <a class="ui button basic <?php echo 'table' === $siteViewMode ? 'green' : ''; ?> icon" <?php echo 'table' === $siteViewMode ? 'style="pointer-events:none"' : ''; ?> href="admin.php?page=managesites&viewmode=table&modenonce=<?php echo esc_html( $nonce ); ?>">
                     <i class="bars icon"></i>
                 </a>
-                <a class="ui button basic <?php echo 'grid' === $siteViewMode ? 'disabled' : ''; ?> icon" href="admin.php?page=managesites&viewmode=grid&modenonce=<?php echo esc_html( $nonce ); ?>">
+                <a class="ui button basic <?php echo 'grid' === $siteViewMode ? 'green' : ''; ?> icon" <?php echo 'grid' === $siteViewMode ? 'style="pointer-events:none"' : ''; ?> href="admin.php?page=managesites&viewmode=grid&modenonce=<?php echo esc_html( $nonce ); ?>">
                     <i class="grid layout icon"></i>
                 </a>
             </div>
         </span>
-        <span data-tooltip="<?php esc_html_e( 'Click to filter sites.', 'mainwp' ); ?>" data-position="bottom right" data-inverted="">
-            <a href="#" class="ui mini icon basic button" id="mainwp-manage-sites-filter-toggle-button">
-                <i class="filter icon"></i> <?php esc_html_e( 'Filter Sites', 'mainwp' ); ?>
-            </a>
-        </span>
+        <a href="#" class="ui mini basic button" id="mainwp-manage-sites-filter-toggle-button">
+            <i class="filter icon"></i> <?php esc_html_e( 'Show Filters', 'mainwp' ); ?>
+        </a>
         <?php
     }
 
@@ -696,7 +720,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             </div>
             <a href="<?php echo esc_url( admin_url( 'admin.php?page=managesites&do=new' ) ); ?>" class="ui big green button"><?php esc_html_e( 'Connect Your WordPress Sites', 'mainwp' ); ?></a>
             <div class="ui sub header">
-                <?php printf( esc_html__( 'If all your child sites are missing from your MainWP Dashboard, please check this %1$shelp document%2$s.', 'mainwp' ), '<a href="https://mainwp.com/kb/all-child-sites-disappeared-from-my-mainwp-dashboard/" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
+                <?php printf( esc_html__( 'If all your child sites are missing from your MainWP Dashboard, please check this %1$shelp document%2$s.', 'mainwp' ), '<a href="https://docs.mainwp.com/troubleshooting/potential-issues" target="_blank">', '</a> <i class="external alternate icon"></i>' ); // NOSONAR - noopener - open safe. ?>
             </div>
         </div>
         <?php
@@ -769,6 +793,11 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                                             END ' . ( 'asc' === $req_order ? 'asc' : 'desc' );
                 } elseif ( 'phpversion' === $req_orderby ) {
                     $orderby = ' INET_ATON( SUBSTRING_INDEX( CONCAT( SUBSTRING_INDEX(wp_optionview.phpversion, "-", 1), ".0.0.0.0" ), ".", 4) ) ' . ( 'asc' === $req_order ? 'asc' : 'desc' );
+                } elseif ( 'wpcore_version' === $req_orderby ) {
+                    $orderby = ' wp_optionview.wpversion_order_num ' . ( 'asc' === $req_order ? 'asc' : 'desc' );
+                } elseif ( 'ip' === $req_orderby ) {
+                    // Sort by Server IP (string sort covers both IPv4 and IPv6).
+                    $orderby = ' wp.ip ' . ( 'asc' === $req_order ? 'asc' : 'desc' );
                 } elseif ( 'status' === $req_orderby ) {
                     $orderby = 'CASE true
                                             WHEN (offline_check_result = -1)
@@ -817,12 +846,12 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
 
         $reset_filter = isset( $_REQUEST['reset'] ) && ( 'yes' === $_REQUEST['reset'] ) ? true : false;
 
-        $search               = isset( $_REQUEST['search']['value'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['search']['value'] ) ) : '';
-        $request_group_logic  = isset( $_REQUEST['group_logic'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['group_logic'] ) ) : '';
-        $request_group_logic  = in_array( $request_group_logic, array('and', 'or') ) ? $request_group_logic : '';
-        $get_saved_state      = empty( $search ) && ! isset( $_REQUEST['g'] ) && ! isset( $_REQUEST['status'] ) && ! isset( $_REQUEST['client'] ) && 'and' !== $request_group_logic;
-        $get_all              = ( '' === $search ) && ( isset( $_REQUEST['status'] ) && 'all' === $_REQUEST['status'] ) && empty( $_REQUEST['g'] ) && empty( $_REQUEST['client'] ) && 'and' !== $request_group_logic ? true : false;
-        $is_not               = ( isset( $_REQUEST['isnot'] ) && 'yes' === $_REQUEST['isnot'] ) ? true : false;
+        $search              = isset( $_REQUEST['search']['value'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['search']['value'] ) ) : '';
+        $request_group_logic = isset( $_REQUEST['group_logic'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['group_logic'] ) ) : '';
+        $request_group_logic = in_array( $request_group_logic, array( 'and', 'or' ) ) ? $request_group_logic : '';
+        $get_saved_state     = empty( $search ) && ! isset( $_REQUEST['g'] ) && ! isset( $_REQUEST['status'] ) && ! isset( $_REQUEST['client'] ) && 'and' !== $request_group_logic;
+        $get_all             = ( '' === $search ) && ( isset( $_REQUEST['status'] ) && 'all' === $_REQUEST['status'] ) && empty( $_REQUEST['g'] ) && empty( $_REQUEST['client'] ) && 'and' !== $request_group_logic ? true : false;
+        $is_not              = ( isset( $_REQUEST['isnot'] ) && 'yes' === $_REQUEST['isnot'] ) ? true : false;
 
         if ( $reset_filter ) {
             $get_all         = false;
@@ -907,10 +936,10 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             if ( 'connected' === $site_status ) {
                 $where = 'wp_sync.sync_errors = ""';
                 if ( $is_not ) {
-                    $where = 'wp_sync.sync_errors != ""';
+                    $where = 'wp_sync.sync_errors <> ""';
                 }
             } elseif ( 'disconnected' === $site_status ) {
-                $where = 'wp_sync.sync_errors != ""';
+                $where = 'wp_sync.sync_errors <> ""';
                 if ( $is_not ) {
                     $where = 'wp_sync.sync_errors = ""';
                 }
@@ -932,15 +961,30 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                 if ( $is_not ) {
                     $where = 'wp_sync.health_status = 0';
                 }
-            } elseif ( 'phpver7' === $site_status ) {
-                $where = MainWP_DB_Common::instance()->get_sql_version_compare( 'wp_optionview.phpversion', '<', '7.0.0.0' ); // NOSONAR - no IP.
-                if ( $is_not ) {
-                    $where = MainWP_DB_Common::instance()->get_sql_version_compare( 'wp_optionview.phpversion', '>=', '7.0.0.0' ); // NOSONAR - no IP.
-                }
             } elseif ( 'phpver8' === $site_status ) {
                 $where = MainWP_DB_Common::instance()->get_sql_version_compare( 'wp_optionview.phpversion', '<', '8.0.0.0' ); // NOSONAR - no IP.
                 if ( $is_not ) {
                     $where = MainWP_DB_Common::instance()->get_sql_version_compare( 'wp_optionview.phpversion', '>=', '8.0.0.0' ); // NOSONAR - no IP.
+                }
+            } elseif ( 'phpver81' === $site_status ) {
+                $where = MainWP_DB_Common::instance()->get_sql_version_compare( 'wp_optionview.phpversion', '<', '8.1.0.0' ); // NOSONAR - no IP.
+                if ( $is_not ) {
+                    $where = MainWP_DB_Common::instance()->get_sql_version_compare( 'wp_optionview.phpversion', '>=', '8.1.0.0' ); // NOSONAR - no IP.
+                }
+            } elseif ( 'phpver82' === $site_status ) {
+                $where = MainWP_DB_Common::instance()->get_sql_version_compare( 'wp_optionview.phpversion', '<', '8.2.0.0' ); // NOSONAR - no IP.
+                if ( $is_not ) {
+                    $where = MainWP_DB_Common::instance()->get_sql_version_compare( 'wp_optionview.phpversion', '>=', '8.2.0.0' ); // NOSONAR - no IP.
+                }
+            } elseif ( 'phpver83' === $site_status ) {
+                $where = MainWP_DB_Common::instance()->get_sql_version_compare( 'wp_optionview.phpversion', '<', '8.3.0.0' ); // NOSONAR - no IP.
+                if ( $is_not ) {
+                    $where = MainWP_DB_Common::instance()->get_sql_version_compare( 'wp_optionview.phpversion', '>=', '8.3.0.0' ); // NOSONAR - no IP.
+                }
+            } elseif ( 'phpver84' === $site_status ) {
+                $where = MainWP_DB_Common::instance()->get_sql_version_compare( 'wp_optionview.phpversion', '<', '8.4.0.0' ); // NOSONAR - no IP.
+                if ( $is_not ) {
+                    $where = MainWP_DB_Common::instance()->get_sql_version_compare( 'wp_optionview.phpversion', '>=', '8.4.0.0' ); // NOSONAR - no IP.
                 }
             } elseif ( 'suspended' === $site_status ) {
                 $where = 'wp.suspended = 1'; // query for suspended sites.
@@ -953,11 +997,13 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
         $total_params = array( 'count_only' => true );
 
         if ( $get_all ) {
+            $total_params['search'] = $search;
             $params = array(
                 'selectgroups' => true,
                 'orderby'      => $orderby,
                 'offset'       => $start,
                 'rowcount'     => $perPage,
+                'search'       => $search,
             );
         } else {
 
@@ -1037,15 +1083,38 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             }
         }
 
-        $total_websites = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_search_websites_for_current_user( $total_params ) );
-        $totalRecords   = ( $total_websites ? MainWP_DB::num_rows( $total_websites ) : 0 );
-        if ( $total_websites ) {
-            MainWP_DB::free_result( $total_websites );
+        $totalRecords = $this->get_total_sites_by_pramas( $total_params );
+
+        if ( 'wpcore_version' === $req_orderby ) {
+            $extra_view[] = 'wpversion_order_num';
         }
 
         $params['extra_view']    = $extra_view;
         $params['view']          = 'manage_site';
         $params['dev_log_query'] = 0;
+
+        $cache_group = MainWP_Cache_Helper::CGR_SITES;
+
+        $cache_key = MainWP_Cache_Helper::get_cache_key( 'sites_ids', $cache_group, $params );
+
+        // IMPORTANT: Skip cache when searching to prevent cached site IDs from restricting results.
+        // When $_included_cache_ids is set, the SQL query adds "WHERE wp.id IN (cached_ids)" which
+        // limits results to previously cached sites. This breaks search functionality because we need
+        // to search across ALL sites, not just the subset that was cached during the last non-search query.
+        if ( empty( $search ) ) {
+            $cache_ids = MainWP_Cache_Helper::instance()->get_cache(
+                $cache_key,
+                $cache_group
+            );
+
+            if ( '_get_cache_false' !== $cache_ids ) {
+                if ( empty( $cache_ids ) ) {
+                    $params['_included_cache_ids'] = array( -1 ); // not found if get cached success but empty.
+                } else {
+                    $params['_included_cache_ids'] = $cache_ids;
+                }
+            }
+        }
 
         $websites = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_search_websites_for_current_user( $params ) );
 
@@ -1053,6 +1122,9 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
         while ( $websites && ( $site = MainWP_DB::fetch_object( $websites ) ) ) {
             $site_ids[] = $site->id;
         }
+
+        // Set manage sites ids cache.
+        MainWP_Cache_Helper::add_cache( $cache_key, $cache_group, $site_ids );
 
         /**
          * Action is being replaced with mainwp_sitestable_prepared_items
@@ -1073,10 +1145,50 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
          */
         do_action( 'mainwp_sitestable_prepared_items', $websites, $site_ids );
 
-        MainWP_DB::data_seek( $websites, 0 );
-
         $this->items       = $websites;
         $this->total_items = $totalRecords;
+    }
+
+
+    /**
+     * Get total sites by params.
+     *
+     * @param array $params Params.
+     *
+     * @return int Total
+     */
+    public function get_total_sites_by_pramas( $params ) {
+        $cache_group = MainWP_Cache_Helper::CGR_SITES;
+        $cache_key   = MainWP_Cache_Helper::get_cache_key( 'total_sites', $cache_group, $params );
+
+        return MainWP_Cache_Helper::instance()->get_cache(
+            $cache_key,
+            $cache_group,
+            function ( $filters ) {
+                $total_websites = MainWP_DB::instance()->query( MainWP_DB::instance()->get_sql_search_websites_for_current_user( $filters ) );
+                $totalRecords   = $total_websites ? MainWP_DB::num_rows( $total_websites ) : 0;
+
+                if ( MainWP_DB::is_result( $total_websites ) ) {
+                    MainWP_DB::free_result( $total_websites );
+                }
+                return $totalRecords;
+            },
+            array( $params )
+        );
+    }
+
+    /**
+     * Handle invalidate manage sites cache group.
+     */
+    public static function invalidate_manage_sites_cache() {
+        $invalidates = array(
+            MainWP_Cache_Helper::CGR_SITES,
+            MainWP_Cache_Helper::CGR_UPDATES,
+            MainWP_Cache_Helper::CGR_SYNC_DATA,
+        );
+        foreach ( $invalidates as $value ) {
+            MainWP_Cache_Helper::invalidate_cache_group( $value );
+        }
     }
 
     /**
@@ -1085,6 +1197,38 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
      * @param bool $optimize true|false Whether or not to optimize.
      */
     public function display( $optimize = true ) { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAfterBrace -- NOSONAR - complexity.
+
+        $count = MainWP_DB::instance()->get_websites_count( null, false );
+
+        if ( empty( $count ) ) {
+            /**
+             * Action: mainwp_before_empty_manage_sites_placeholder
+             *
+             * Fires before the placeholder on the empty Manage Sites page.
+             *
+             * @since 6.0
+             */
+            do_action( 'mainwp_before_empty_manage_sites_placeholder' );
+            ?>
+            <div id="mainwp-manage-sites-empty" class="ui padded center aligned segment">
+                <?php MainWP_UI::render_empty_page_placeholder( __( 'No sites connected yet.', 'mainwp' ), __( 'Connect your first WordPress site and start managing updates, security, and backups from one command center.', 'mainwp' ), '<em data-emoji=":globe_with_meridians:" class="big"></em>' ); ?>
+                <div class="ui hidden divider"></div>
+                <a href="<?php echo esc_url( admin_url( 'admin.php?page=managesites&do=new' ) ); ?>" class="ui big green button"><i class="plus icon"></i> <?php esc_html_e( 'Connect Your First Site', 'mainwp' ); ?></a>
+                <div class="ui hidden divider"></div>
+                <a class="ui grey text" href="https://docs.mainwp.com/getting-started/get-started-with-mainwp#add-a-site-to-your-dashboard"><?php esc_html_e( 'or learn how it works →', 'mainwp' ); ?></a>
+            </div>
+            <?php
+            /**
+             * Action: mainwp_after_empty_manage_sites_placeholder
+             *
+             * Fires after the placeholder on the empty Manage Sites page.
+             *
+             * @since 6.0
+             */
+            do_action( 'mainwp_after_empty_manage_sites_placeholder' );
+
+            return;
+        }
 
         $sites_per_page = get_option( 'mainwp_default_sites_per_page', 25 );
 
@@ -1118,28 +1262,23 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
         do_action( 'mainwp_before_manage_sites_table' );
         ?>
         <?php if ( MainWP_Utility::show_mainwp_message( 'notice', 'mainwp-columns-notice' ) ) : ?>
-            <div class="ui info message">
+            <div class="ui message">
                 <i class="close icon mainwp-notice-dismiss" notice-id="mainwp-columns-notice"></i>
-                <?php printf( esc_html__( 'To hide or show a column, click the Cog (%s) icon and select options from "Show columns"', 'mainwp' ), '<i class="cog icon"></i>' ); ?>
+                <?php printf( esc_html__( '%s Tip: To hide or show a column, click the Page Settings (%s) button and select options from "Show columns". You can also rearrange columns by dragging them, and the new order will be saved automatically.', 'mainwp' ), '<em data-emoji=":bulb:" class="small"></em>', '<i class="cog fitted icon"></i>' ); ?>
             </div>
         <?php endif; ?>
-
-        <table id="mainwp-manage-sites-table" style="width:100%" class="ui selectable unstackable table mainwp-with-preview-table mainwp-manage-wpsites-table">
-            <thead>
-                <tr><?php $this->print_column_headers( $optimize, true ); ?></tr>
-            </thead>
-            <?php if ( ! $optimize ) : ?>
-                <tbody id="mainwp-manage-sites-body-table">
-                    <?php $this->display_rows_or_placeholder(); ?>
-                </tbody>
-            <?php endif; ?>
-        </table>
-        <?php $count = MainWP_DB::instance()->get_websites_count( null, true ); ?>
-        <?php if ( empty( $count ) ) : ?>
-            <div id="sites-table-count-empty" style="display: none;">
-                <?php $this->no_items(); ?>
+        <div id="mainwp-loading-sites">
+            <div class="ui active page dimmer">
+                <div class="ui double text loader"><?php esc_html_e( 'Loading...', 'mainwp' ); ?></div>
             </div>
-        <?php endif; ?>
+        </div>
+        <div id="mainwp-manage-sites-table-container" style="opacity:0;">
+            <table id="mainwp-manage-sites-table" style="width:100%;" class="ui selectable unstackable table mainwp-with-preview-table mainwp-manage-wpsites-table">
+                <thead>
+                    <tr><?php $this->print_column_headers( $optimize, true ); ?></tr>
+                </thead>
+            </table>
+        </div>
         <?php
         /**
          * Action: mainwp_after_manage_sites_table
@@ -1150,11 +1289,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
          */
         do_action( 'mainwp_after_manage_sites_table' );
         ?>
-        <div id="mainwp-loading-sites" style="display: none;">
-            <div class="ui active inverted dimmer">
-                <div class="ui indeterminate large text loader"><?php esc_html_e( 'Loading ...', 'mainwp' ); ?></div>
-            </div>
-        </div>
+
 
         <?php
         $table_features = array(
@@ -1164,11 +1299,12 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             'info'          => 'true',
             'colReorder'    => ' {columns:":not(.check-column):not(.manage-site_actions-column)"} ',
             'stateSave'     => 'true',
-            'stateDuration' => '0',
+            'stateDuration' => '60 * 60 * 24 * 30',
             'order'         => '[]',
             'scrollX'       => 'true',
             'responsive'    => 'true',
             'fixedColumns'  => '',
+            'searchDelay'   => 500,
         );
 
         /**
@@ -1248,10 +1384,17 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                                     "emptyTable": "<?php esc_html_e( 'No websites found.', 'mainwp' ); ?>"
                                 },
                                 "drawCallback": function( settings ) {
-                                    if ( jQuery('#mainwp-manage-sites-body-table td.dt-empty').length > 0 && jQuery('#sites-table-count-empty').length ){
-                                        jQuery('#mainwp-manage-sites-body-table td.dt-empty').html(jQuery('#sites-table-count-empty').html());
-                                    }
-                                }
+                                },
+                                deferRender: true,
+                                stateSaveParams: function (settings, data) {
+                                    data._mwpv = mainwpParams.mainwpVersion || 'dev';
+                                },
+                                stateLoadParams: function (settings, data) {
+                                    if ((mainwpParams.mainwpVersion || 'dev') !== data._mwpv) return false;
+                                },
+                                search: { regex: false, smart: false },
+                                orderMulti: false,
+                                searchDelay: <?php echo intval( $table_features['searchDelay'] ); ?>
                             } );
 
                         } catch(err) {
@@ -1328,10 +1471,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                                 if ( typeof mainwp_preview_init_event !== "undefined" ) {
                                     mainwp_preview_init_event();
                                 }
-                                //jQuery( '#mainwp-sites-table-loader' ).hide();
-                                if ( jQuery('#mainwp-manage-sites-body-table td.dt-empty').length > 0 && jQuery('#sites-table-count-empty').length ){
-                                    jQuery('#mainwp-manage-sites-body-table td.dt-empty').html(jQuery('#sites-table-count-empty').html());
-                                }
+                                jQuery( '#mainwp-manage-sites-table-container' ).css( 'opacity', '1' );
                                 setTimeout(() => {
                                     mainwp_datatable_fix_menu_overflow('#mainwp-manage-sites-table');
                                 }, 1000);
@@ -1352,6 +1492,16 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                                 style: 'multi+shift',
                                 selector: 'tr>td.check-column'
                             },
+                            // Version the saved state so UI changes don’t brick users.
+                            stateSaveParams: function (settings, data) {
+                                data._mwpv = mainwpParams.mainwpVersion || 'dev';
+                            },
+                            stateLoadParams: function (settings, data) {
+                                if ((mainwpParams.mainwpVersion || 'dev') !== data._mwpv) return false; // drop stale state
+                            },
+                            search: { regex: false, smart: false }, // Make search cheaper on the server.
+                            orderMulti: false,
+                            searchDelay: <?php echo intval( $table_features['searchDelay'] ); ?>
                         }).on('select', function (e, dt, type, indexes) {
                             if( 'row' == type ){
                                 dt.rows(indexes)
@@ -1365,7 +1515,6 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                                 .to$().find('td.check-column .ui.checkbox' ).checkbox('set unchecked');
                             }
                         }).on( 'columns-reordered', function ( e, settings, details ) {
-                            console.log('columns-reordered');
                             setTimeout(() => {
                                 jQuery( '#mainwp-manage-sites-table .ui.dropdown' ).dropdown();
                                 jQuery( '#mainwp-manage-sites-table .ui.checkbox' ).checkbox();
@@ -1730,9 +1879,9 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                 $critical = $hstatus['critical'];
 
                 if ( 80 <= $hval && empty( $critical ) ) {
-                    $site_health = '<a href="admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website['id'] ) . '&location=' . esc_attr( base64_encode( 'site-health.php' ) ) . '&_opennonce=' . esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ) . '" target="_blank" class="open_newwindow_wpadmin ui mini grey icon basic button" data-tooltip="' . esc_attr__( 'Health Score: ', 'mainwp' ) . $hval . '" data-position="left center" data-inverted=""><i class="heartbeat green icon"></i></a>'; // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
+                    $site_health = '<a href="' . MainWP_Site_Open::get_open_site_admin_link( $website['id'] ) . '&location=' . esc_attr( base64_encode( 'site-health.php' ) ) . '" target="_blank" class="open_newwindow_wpadmin ui mini grey icon basic button" data-tooltip="' . esc_attr__( 'Health Score: ', 'mainwp' ) . $hval . '" data-position="left center" data-inverted=""><i class="heartbeat green icon"></i></a>'; // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
                 } else {
-                    $site_health = '<a href="admin.php?page=SiteOpen&newWindow=yes&websiteid=' . intval( $website['id'] ) . '&location=' . esc_attr( base64_encode( 'site-health.php' ) ) . '&_opennonce=' . esc_html( wp_create_nonce( 'mainwp-admin-nonce' ) ) . '" target="_blank" class="open_newwindow_wpadmin ui mini grey icon basic button" data-tooltip="' . esc_attr__( 'Health Score: ', 'mainwp' ) . $hval . esc_attr__( ' | Critical Issues: ', 'mainwp' ) . $critical . '" data-position="left center" data-inverted=""><i class="heartbeat yellow icon"></i></a>'; // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
+                    $site_health = '<a href="' . MainWP_Site_Open::get_open_site_admin_link( $website['id'] ) . '&location=' . esc_attr( base64_encode( 'site-health.php' ) ) . '" target="_blank" class="open_newwindow_wpadmin ui mini grey icon basic button" data-tooltip="' . esc_attr__( 'Health Score: ', 'mainwp' ) . $hval . esc_attr__( ' | Critical Issues: ', 'mainwp' ) . $critical . '" data-position="left center" data-inverted=""><i class="heartbeat yellow icon"></i></a>'; // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible.
                 }
 
                 $note       = html_entity_decode( $website['note'] );
@@ -1788,7 +1937,8 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                         <?php endif; ?>
                     <?php } elseif ( 'favicon' === $column_name ) { ?>
                         <?php echo $site_icon; // phpcs:ignore WordPress.Security.EscapeOutput ?>
-                    <?php } elseif ( 'site_combo' === $column_name ) {
+                        <?php
+                    } elseif ( 'site_combo' === $column_name ) {
                         $scb_id = $website['id'];
                         ?>
                         <i class="ui active inline loader tiny" style="display:none"></i>
@@ -1806,7 +1956,8 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                                 </a>
                             </span>
                         </div>
-                    <?php } elseif ( 'site' === $column_name ) {
+                        <?php
+                    } elseif ( 'site' === $column_name ) {
                         $s_id = $website['id'];
                         ?>
                         <a href="<?php echo 'admin.php?page=managesites&dashboard=' . intval( $website['id'] ); ?>"><?php echo esc_attr( stripslashes( $website['name'] ) ); ?></a><i class="ui active inline loader tiny" style="display:none"></i>
@@ -1822,31 +1973,41 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                     <?php } elseif ( 'tags' === $column_name ) { ?>
                         <?php echo MainWP_System_Utility::get_site_tags_belong( $website ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
                         <?php
-                    } elseif ( 'update' === $column_name ) {
-                        $ignored_info = ! empty( $total_ignored_updates ) ? ' (' . (int) $total_ignored_updates . ' updates ignored)' : '';
+                    } elseif ( 'client_name' === $column_name ) {
                         ?>
-                        <a data-tooltip="<?php echo ! empty( $website['dtsSync'] ) ? esc_attr__( 'Last sync: ', 'mainwp' ) . MainWP_Utility::format_timestamp( MainWP_Utility::get_timestamp( $website['dtsSync'] ) ) : ''; echo $ignored_info; //phpcs:ignore -- ok. ?> " data-position="left center" data-inverted="" class="ui mini grey button" href="admin.php?page=managesites&updateid=<?php echo intval( $website['id'] ); ?>">
-                            <i class="sync alternate icon"></i> <?php echo intval( $total_updates ); ?>
-                        </a>
-                    <?php } elseif ( 'wpcore_update' === $column_name ) { ?>
-                        <a class="ui mini basic grey button" href="admin.php?page=managesites&updateid=<?php echo intval( $website['id'] ); ?>&tab=wordpress-updates">
-                            <i class="sync alternate icon"></i> <?php echo intval( $total_wp_upgrades ); ?>
-                        </a>
-                    <?php } elseif ( 'plugin_update' === $column_name ) { ?>
-                        <a class="ui mini basic grey button" href="admin.php?page=managesites&updateid=<?php echo intval( $website['id'] ); ?>">
-                            <i class="sync alternate icon"></i> <?php echo intval( $total_plugin_upgrades ); ?>
-                        </a>
-                    <?php } elseif ( 'theme_update' === $column_name ) { ?>
-                        <a class="ui mini basic grey button" href="admin.php?page=managesites&updateid=<?php echo intval( $website['id'] ); ?>&tab=themes-updates">
-                            <i class="sync alternate icon"></i> <?php echo intval( $total_theme_upgrades ); ?>
-                        </a>
-                    <?php } elseif ( 'client_name' === $column_name ) { ?>
                         <?php if ( ! empty( $website['client_name'] ) ) : ?>
                             <a href="<?php echo 'admin.php?page=ManageClients&client_id=' . intval( $website['client_id'] ); ?>">
                                 <?php echo $client_image; //phpcs:ignore -- NOSONAR - ok.?> <?php echo esc_html( $website['client_name'] ); ?>
                             </a>
                         <?php else : ?>
                             <?php echo $client_image; //phpcs:ignore -- NOSONAR - ok.?> <span><?php echo esc_html( 'Unassigned' ); ?></span>
+                        <?php endif; ?>
+                        <?php
+                    } elseif ( 'update' === $column_name ) {
+                        $ignored_info = ! empty( $total_ignored_updates ) ? ' (' . (int) $total_ignored_updates . ' updates ignored)' : '';
+                        ?>
+                        <a data-tooltip="<?php echo ! empty( $website['dtsSync'] ) ? esc_attr__( 'Last sync: ', 'mainwp' ) . MainWP_Utility::format_timestamp( MainWP_Utility::get_timestamp( $website['dtsSync'] ) ) : ''; echo $ignored_info; //phpcs:ignore -- ok. ?> " data-position="left center" data-inverted="" class="ui mini <?php echo esc_attr( MainWP_Utility::mainwp_get_update_count_class( $total_updates ) ); ?> button" href="admin.php?page=managesites&updateid=<?php echo intval( $website['id'] ); ?>">
+                            <i class="sync alternate icon"></i> <?php echo intval( $total_updates ); ?>
+                        </a>
+                    <?php } elseif ( 'wpcore_update' === $column_name ) { ?>
+                        <a class="ui mini <?php echo esc_attr( MainWP_Utility::mainwp_get_update_count_class( $total_wp_upgrades ) ); ?> button" href="admin.php?page=managesites&updateid=<?php echo intval( $website['id'] ); ?>&tab=wordpress-updates">
+                            <i class="sync alternate icon"></i> <?php echo intval( $total_wp_upgrades ); ?>
+                        </a>
+                    <?php } elseif ( 'plugin_update' === $column_name ) { ?>
+                        <a class="ui mini <?php echo esc_attr( MainWP_Utility::mainwp_get_update_count_class( $total_plugin_upgrades ) ); ?> button" href="admin.php?page=managesites&updateid=<?php echo intval( $website['id'] ); ?>">
+                            <i class="sync alternate icon"></i> <?php echo intval( $total_plugin_upgrades ); ?>
+                        </a>
+                    <?php } elseif ( 'theme_update' === $column_name ) { ?>
+                        <a class="ui mini <?php echo esc_attr( MainWP_Utility::mainwp_get_update_count_class( $total_theme_upgrades ) ); ?> button" href="admin.php?page=managesites&updateid=<?php echo intval( $website['id'] ); ?>&tab=themes-updates">
+                            <i class="sync alternate icon"></i> <?php echo intval( $total_theme_upgrades ); ?>
+                        </a>
+                    <?php } elseif ( 'wpcore_version' === $column_name ) { ?>
+                        <?php if ( ! empty( $website_info['wpversion'] ) ) : ?>
+                            <?php if ( $total_wp_upgrades > 0 && is_array( $wp_upgrades ) && ! empty( $wp_upgrades['new'] ) ) : ?>
+                                <a class="ui grey text" href="admin.php?page=managesites&updateid=<?php echo intval( $website['id'] ); ?>&tab=wordpress-updates"><i class="small red sync alternate icon"></i> <?php echo esc_html( $website_info['wpversion'] ); ?> <i class="tiny grey chevron right icon"></i> <?php echo esc_html( $wp_upgrades['new'] ); ?></a>
+                            <?php else : ?>
+                                <span class="ui grey text"><?php echo esc_html( $website_info['wpversion'] ); ?></span>
+                            <?php endif; ?>
                         <?php endif; ?>
                     <?php } elseif ( 'security' === $column_name ) { ?>
                         <?php if ( ! empty( $website['securityIssues'] ) && '[]' !== $website['securityIssues'] ) : ?>
@@ -1890,18 +2051,26 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                             <?php
                         }
                         ?>
-                    <?php } elseif ( 'notes' === $column_name ) {
-                        $st_id1 = $website['id']; ?>
+                        <?php
+                    } elseif ( 'notes' === $column_name ) {
+                        $st_id1 = $website['id'];
+                        ?>
                         <?php if ( empty( $website['note'] ) ) : ?>
                             <a href="javascript:void(0)" class="mainwp-edit-site-note ui mini grey icon basic button" id="mainwp-notes-<?php echo intval( $st_id1 ); ?>"><i class="sticky note outline grey icon"></i></a>
-                        <?php else :
-                            $st_id2 = $website['id']; ?>
+                            <?php
+                        else :
+                            $st_id2 = $website['id'];
+                            ?>
                             <a href="javascript:void(0)" class="mainwp-edit-site-note ui mini icon basic button" id="mainwp-notes-<?php echo intval( $st_id2 ); ?>" data-tooltip="<?php echo substr( wp_unslash( $strip_note ), 0, 100 ); // phpcs:ignore WordPress.Security.EscapeOutput ?>" data-position="left center" data-inverted=""><i class="sticky green note icon"></i></a>
-                        <?php endif;
-                            $nst_id1 = $website['id']; ?>
+                            <?php
+                        endif;
+                            $nst_id1 = $website['id'];
+                        ?>
                             <span style="display: none" id="mainwp-notes-<?php echo intval( $nst_id1 ); ?>-note"><?php echo wp_unslash( $esc_note ); // phpcs:ignore WordPress.Security.EscapeOutput ?></span>
                     <?php } elseif ( 'phpversion' === $column_name ) { ?>
                         <?php echo ! empty( $website['phpversion'] ) ? '<i class="php icon"></i> ' . esc_html( substr( $website['phpversion'], 0, 6 ) ) : ''; ?>
+                    <?php } elseif ( 'ip' === $column_name ) { ?>
+                        <?php echo ! empty( $website['ip'] ) ? esc_html( $website['ip'] ) : ''; ?>
                     <?php } elseif ( 'language' === $column_name ) { ?>
                         <?php MainWP_Utility::get_language_code_as_flag( ! empty( $website_info['site_lang'] ) ? $website_info['site_lang'] : '' ); ?>
                     <?php } elseif ( 'index' === $column_name ) { ?>
@@ -2296,7 +2465,7 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
             <?php } elseif ( 'last_post' === $column_name ) { ?>
                 <td class="collapsing mainwp-last-post-cell"><?php echo ! empty( $website['last_post_gmt'] ) ? MainWP_Utility::format_timestamp( MainWP_Utility::get_timestamp( $website['last_post_gmt'] ) ) : ''; // phpcs:ignore WordPress.Security.EscapeOutput ?></td>
             <?php } elseif ( 'site_health' === $column_name ) { ?>
-                <td class="collapsing mainwp-site-health-cell"><a class="open_newwindow_wpadmin" href="admin.php?page=SiteOpen&newWindow=yes&websiteid=<?php echo intval( $website['id'] ); ?>&location=<?php echo esc_attr( base64_encode( 'site-health.php' ) ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- base64_encode used for http encoding compatible. ?>&_opennonce=<?php echo esc_attr( wp_create_nonce( 'mainwp-admin-nonce' ) ); ?>" target="_blank"><span class="ui <?php echo esc_attr( $h_color ); ?> empty circular label"></span></a> <?php echo esc_html( $h_text ); ?></td>
+                <td class="collapsing mainwp-site-health-cell"><a class="open_newwindow_wpadmin" href="<?php MainWP_Site_Open::get_open_site_admin_link( $website['id'], true ); ?>&location=<?php echo esc_attr( base64_encode( 'site-health.php' ) ); // phpcs:ignore -- base64_encode used for http encoding compatible. ?>" target="_blank"><span class="ui <?php echo esc_attr( $h_color ); ?> empty circular label"></span></a> <?php echo esc_html( $h_text ); ?></td>
             <?php } elseif ( 'status_code' === $column_name ) { ?>
                 <td class="collapsing mainwp-status-code-cell" data-order="<?php echo esc_html( $website['http_response_code'] ); ?>">
                     <?php
@@ -2311,18 +2480,25 @@ class MainWP_Manage_Sites_List_Table { // phpcs:ignore Generic.Classes.OpeningBr
                 </td>
             <?php } elseif ( 'notes' === $column_name ) { ?>
                 <td class="collapsing center aligned mainwp-notes-cell">
-                    <?php if ( '' === $website['note'] ) :
+                    <?php
+                    if ( '' === $website['note'] ) :
                         $not_id1 = $website['id'];
                         ?>
                         <a href="javascript:void(0)" class="mainwp-edit-site-note" id="mainwp-notes-<?php echo intval( $not_id1 ); ?>"><i class="sticky note outline icon"></i></a>
-                    <?php else :
-                        $not_id2 = $website['id']; ?>
+                        <?php
+                    else :
+                        $not_id2 = $website['id'];
+                        ?>
                         <a href="javascript:void(0)" class="mainwp-edit-site-note" id="mainwp-notes-<?php echo intval( $not_id2 ); ?>" data-tooltip="<?php echo substr( wp_unslash( $strip_note ), 0, 100 ); // phpcs:ignore WordPress.Security.EscapeOutput ?>" data-position="left center" data-inverted=""><i class="sticky green note icon"></i></a>
                     <?php endif; ?>
                         <span style="display: none" id="mainwp-notes-<?php echo intval( $website['id'] ); ?>-note"><?php echo wp_unslash( $esc_note ); // phpcs:ignore WordPress.Security.EscapeOutput ?></span>
                 </td>
         <?php } elseif ( 'phpversion' === $column_name ) { ?>
                 <td class="collapsing center aligned mainwp-php-cell"><?php echo esc_html( substr( $website['phpversion'], 0, 6 ) ); ?></td>
+                <?php
+        } elseif ( 'ip' === $column_name ) {
+            ?>
+                <td class="collapsing center aligned mainwp-ip-cell"><?php echo ! empty( $website['ip'] ) ? esc_html( $website['ip'] ) : ''; ?></td>
                 <?php
         } elseif ( 'added_datetime' === $column_name ) {
             ?>
