@@ -342,6 +342,6 @@ Yes, we have a quick FAQ with many more questions and answers [here](https://mai
 * Dev: Added the `mainwp_open_site_addition_url` hook to allow customization of the target WordPress admin URL when opening a site.
 * Dev: Updated ApexCharts, DataTables, File Saver, Fomantic UI, Gridstack, PHPSecLib, and Sorting packages to their latest versions to maintain security and compatibility standards.
 
-[See Video Changelog](https://www.youtube.com/watch?v=36KRNYo6BMY)
+[See Video Changelog](https://www.youtube.com/watch?v=5b50tjskwSg)
 
 [See changelog for all versions.](https://mainwp.com/changelog.txt)
