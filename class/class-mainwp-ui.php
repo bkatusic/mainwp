@@ -598,7 +598,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
 
         $tour_id = '';
         if ( 'mainwp_tab' === $page ) {
-            $tour_id = '13112';
+            $tour_id = '30496';
         } elseif ( 'managesites' === $page ) {
             if ( isset( $_GET['do'] ) && 'new' === $_GET['do'] ) {
                 $tour_id = '13210';
@@ -672,6 +672,8 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
             $tour_id = '28574';
         } elseif ( 'UserBulkAdd' === $page ) {
             $tour_id = '28575';
+        } elseif ( 'PasswordPolicy' === $page ) {
+            $tour_id = '80725';
         } elseif ( 'BulkImportUsers' === $page ) {
             $tour_id = '28736';
         } elseif ( 'UpdateAdminPasswords' === $page ) {
@@ -692,10 +694,14 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
             $tour_id = '28886';
         } elseif ( 'SettingsEmail' === $page ) {
             $tour_id = '29054';
+        } elseif ( 'MonitoringSettings' === $page ) {
+            $tour_id = '80726';
         } elseif ( 'MainWPTools' === $page ) {
             $tour_id = '29272';
         } elseif ( 'RESTAPI' === $page ) {
             $tour_id = '29273';
+        } elseif ( 'ApplicationPasswords' === $page ) {
+            $tour_id = '80727';
         } elseif ( 'ServerInformation' === $page ) {
             $tour_id = '28873';
         } elseif ( 'ServerInformationCron' === $page ) {
