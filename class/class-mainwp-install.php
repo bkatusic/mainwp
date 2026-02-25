@@ -612,13 +612,13 @@ class MainWP_Install extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Op
         $suppress = $this->wpdb->suppress_errors();
 
         if ( version_compare( $currentVersion, '8.98', '<=' ) ) {
-            $wp_table = esc_sql( $this->table_name( 'wp' ) );
-            // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name escaped via esc_sql.
-            $this->wpdb->query( "ALTER TABLE {$wp_table} DROP COLUMN backups" );
-            // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name escaped via esc_sql.
-            $this->wpdb->query( "ALTER TABLE {$wp_table} DROP COLUMN note_lastupdate" );
-            // phpcs:ignore PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name escaped via esc_sql.
-            $this->wpdb->query( "ALTER TABLE {$wp_table} DROP COLUMN pages" );
+            $wp_table         = esc_sql( $this->table_name( 'wp' ) );
+            $existing_columns = $this->wpdb->get_col( "SHOW COLUMNS FROM {$wp_table}", 0 ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- DDL introspection; table name is a hardcoded internal identifier escaped via esc_sql(), no user input involved.
+            foreach ( array( 'backups', 'note_lastupdate', 'pages' ) as $column ) {
+                if ( in_array( $column, $existing_columns, true ) ) {
+                    $this->wpdb->query( 'ALTER TABLE ' . $wp_table . ' DROP COLUMN ' . esc_sql( $column ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- DDL statement; table and column names are hardcoded internal identifiers escaped via esc_sql(), no user input involved.
+                }
+            }
         }
 
         $this->wpdb->suppress_errors( $suppress );

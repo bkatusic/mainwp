@@ -217,11 +217,14 @@ KEY idx_wpid_issub (wpid, issub)";
             delete_option( 'mainwp_disableSitesChecking' );
             delete_option( 'mainwp_ignore_HTTP_response_status' );
 
-            $delColumns = array( 'status_check_interval' );
-            $table_wp   = esc_sql( $this->table_name( 'wp' ) );
+            $delColumns       = array( 'status_check_interval' );
+            $table_wp         = esc_sql( $this->table_name( 'wp' ) );
+            $existing_columns = $this->wpdb->get_col( "SHOW COLUMNS FROM {$table_wp}", 0 ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- DDL introspection; table name is a hardcoded internal identifier escaped via esc_sql(), no user input involved.
 
             foreach ( $delColumns as $column ) {
-                $this->wpdb->query( 'ALTER TABLE ' . $table_wp . ' DROP COLUMN ' . esc_sql( $column ) );
+                if ( in_array( $column, $existing_columns, true ) ) {
+                    $this->wpdb->query( 'ALTER TABLE ' . $table_wp . ' DROP COLUMN ' . esc_sql( $column ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- DDL statement; table and column names are hardcoded internal identifiers escaped via esc_sql(), no user input involved.
+                }
             }
         }
     }
