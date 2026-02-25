@@ -80,7 +80,9 @@ class Log_Install extends MainWP_Install {
             return;
         }
 
+        $suppress = $this->wpdb->suppress_errors();
         $this->update_log_db_60_before_dbDelta( $currentVersion );
+        $this->wpdb->suppress_errors( $suppress );
 
         $charset_collate = $wpdb->get_charset_collate();
 
