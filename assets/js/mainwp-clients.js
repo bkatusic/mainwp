@@ -56,42 +56,53 @@ jQuery(function () {
   });
 
   jQuery(document).on('click', '.client-suspend-unsuspend-sites', function () {
-    let new_status = jQuery(this).attr('suspend-status') == '0' ? 1 : 0;
-    let clientid = jQuery(this).closest('.mainwp-widget-footer').attr('client-id');
-    let bt = this;
+    const $button = jQuery(this);
 
-    let data = mainwp_secure_data({
-      action: 'mainwp_clients_suspend_client',
-      clientid: clientid,
-      suspend_status: new_status
+    const new_status = $button.attr('suspend-status') === '0' ? 1 : 0;
+    const clientid = $button.closest('.mainwp-widget-footer').attr('client-id');
+
+    const data = mainwp_secure_data({
+        action: 'mainwp_clients_suspend_client',
+        clientid: clientid,
+        suspend_status: new_status
     });
-    jQuery(bt).attr('disabled', true);
+
+    $button.prop('disabled', true);
+
     jQuery.post(ajaxurl, data, function (response) {
-      jQuery(bt).attr('disabled', false);
-      if (response == 'success') {
-        jQuery(bt).text(new_status == 0 ? __('Suspend Sites') : __('Unsuspend Sites'));
-        jQuery(bt).attr('suspend-status', new_status);
-      }
+        $button.prop('disabled', false);
+
+        if (response === 'success') {
+            $button.text(new_status === 0 ? __('Suspend Sites') : __('Unsuspend Sites'));
+            $button.attr('suspend-status', new_status);
+        }
     });
-  });
+});
 
   jQuery('#mainwp_edit_clients_icon_select').dropdown({
     onChange: function (val) {
-      jQuery('#client_fields\\[default_field\\]\\[selected_icon\\]').val(val);
-      jQuery('#client_fields\\[default_field\\]\\[selected_icon\\]').trigger('change');
+        const $field = jQuery('[id="client_fields[default_field][selected_icon]"]');
+        $field.val(val);
+        $field.trigger('change');
     }
-  });
+});
+
 
   jQuery('.mainwp-edit-clients-select-contact-icon').dropdown({
     onChange: function (val) {
-      let parent = jQuery(this).closest('.mainwp_edit_clients_contact_icon_wrapper');
-      let inname = parent.attr('input-name');
-      if (undefined !== inname) {
-        jQuery(parent).find('#client_fields\\[' + inname + '\\]\\[selected_icon\\]\\[\\]').val(val);
-        jQuery(parent).find('#client_fields\\[' + inname + '\\]\\[selected_icon\\]\\[\\]').trigger('change');
-      }
+        const $parent = jQuery(this).closest('.mainwp_edit_clients_contact_icon_wrapper');
+        const inname = $parent.attr('input-name');
+
+        if (inname !== undefined) {
+            const selector = `[id="client_fields[${inname}][selected_icon][]"]`;
+            const $field = $parent.find(selector);
+
+            $field.val(val);
+            $field.trigger('change');
+        }
     }
-  });
+});
+
 
   jQuery(document).on('click', '.mainwp-client-add-contact', function () {
     let templ = jQuery(this).attr('add-contact-temp');
@@ -102,8 +113,10 @@ jQuery(function () {
         let parent = jQuery(this).closest('.mainwp_edit_clients_contact_icon_wrapper');
         let inname = parent.attr('input-name');
         if (undefined !== inname) {
-          jQuery(parent).find('#client_fields\\[' + inname + '\\]\\[selected_icon\\]\\[\\]').val(val);
-          jQuery(parent).find('#client_fields\\[' + inname + '\\]\\[selected_icon\\]\\[\\]').trigger('change');
+            const selector = `[id="client_fields[${inname}][selected_icon][]"]`;
+            const $field = $parent.find(selector);
+            $field.val(val);
+            $field.trigger('change');
         }
       }
     });
