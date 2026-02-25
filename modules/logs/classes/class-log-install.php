@@ -230,7 +230,16 @@ class Log_Install extends MainWP_Install {
 
             $meta_table = $this->table_name( 'wp_logs_meta' );
 
-            $wpdb->query("ALTER TABLE {$meta_table} DROP INDEX meta_log_id_key, DROP INDEX meta_key"); // phpcs:ignore -- ok.
+            $existing_indexes = $wpdb->get_col( "SHOW INDEX FROM {$meta_table}", 2 ); // phpcs:ignore -- ok. Column 2 is Key_name.
+            $drop_clauses     = array();
+            foreach ( array( 'meta_log_id_key', 'meta_key' ) as $index_name ) {
+                if ( in_array( $index_name, $existing_indexes, true ) ) {
+                    $drop_clauses[] = 'DROP INDEX ' . esc_sql( $index_name );
+                }
+            }
+            if ( ! empty( $drop_clauses ) ) {
+                $wpdb->query( 'ALTER TABLE ' . $meta_table . ' ' . implode( ', ', $drop_clauses ) ); // phpcs:ignore -- ok.
+            }
 
             // Check if duplicates exist.
             //phpcs:ignore -- ok.
