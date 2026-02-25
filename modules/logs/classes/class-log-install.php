@@ -228,7 +228,7 @@ class Log_Install extends MainWP_Install {
         if ( ! empty( $currentVersion ) && version_compare( $currentVersion, '1.0.1.48', '<' ) ) { // NOSONAR - non-ip.
             global $wpdb;
 
-            $meta_table = $this->table_name( 'wp_logs_meta' );
+            $meta_table = esc_sql( $this->table_name( 'wp_logs_meta' ) );
 
             $existing_indexes = $wpdb->get_col( "SHOW INDEX FROM {$meta_table}", 2 ); // phpcs:ignore -- ok. Column 2 is Key_name.
             $drop_clauses     = array();
