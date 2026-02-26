@@ -413,6 +413,69 @@ class MainWP_Plugins_Install_List_Table extends \WP_List_Table { // phpcs:ignore
     }
 
     /**
+     * Check if a search term matches mainwp or mainwp child (case-insensitive).
+     *
+     * @param string $term Search term.
+     * @return bool True if matches.
+     */
+    private function is_mainwp_search( $term ) {
+        $normalized = strtolower( trim( $term ) );
+        return (bool) preg_match( '/^mainwp(\s*-?\s*child)?$/i', $normalized );
+    }
+
+    /**
+     * Render hardcoded MainWP Child plugin card.
+     *
+     * @return void
+     */
+    private function render_mainwp_child_card() {
+        $details_link = self_admin_url( 'plugin-install.php?tab=plugin-information&plugin=mainwp-child&name=' . rawurlencode( 'MainWP Child' ) );
+        $icon_url     = MAINWP_PLUGIN_URL . 'assets/images/mainwp-icon.svg';
+        $plugin_name  = esc_attr__( 'MainWP Child &#8211; Securely Connects to the MainWP Dashboard to Manage Multiple Sites', 'mainwp' );
+        ?>
+        <div class="card plugin-card-mainwp-child" plugin-slug="mainwp-child" plugin-name="MainWP Child">
+            <?php do_action( 'mainwp_install_plugin_card_top' ); ?>
+            <div class="content">
+                <a class="right floated mini ui image open-plugin-details-modal" href="<?php echo esc_url( $details_link ); ?>"><img src="<?php echo esc_url( $icon_url ); ?>" alt="<?php esc_attr_e( 'MainWP Child', 'mainwp' ); ?>" /></a>
+                <div class="header">
+                    <a class="open-plugin-details-modal" href="<?php echo esc_url( $details_link ); ?>"><?php esc_html_e( 'MainWP Child', 'mainwp' ); ?></a>
+                </div>
+                <div class="meta"><cite><?php printf( esc_html__( 'By %s', 'mainwp' ), '<a href="' . esc_url( 'https://profiles.wordpress.org/mainwp/' ) . '">mainwp</a>' ); ?></cite></div>
+                <div class="description">
+                    <p><?php esc_html_e( 'MainWP Child connects your WordPress sites to this Dashboard.', 'mainwp' ); ?></p>
+                    <p><?php esc_html_e( 'Already managing a site here? Select Install Plugin, choose your sites in the right panel, and click Complete Installation.', 'mainwp' ); ?></p>
+                    <p><?php esc_html_e( 'Setting up a new site? Download the plugin, then:', 'mainwp' ); ?></p>
+                    <div class="ui list">
+                        <div class="item"><p>1. <?php esc_html_e( 'Log in to your WordPress site', 'mainwp' ); ?></p></div>
+                        <div class="item"><p>2. <?php esc_html_e( 'Go to Plugins → Add New → Upload Plugin', 'mainwp' ); ?></p></div>
+                        <div class="item"><p>3. <?php esc_html_e( 'Upload and activate the downloaded file', 'mainwp' ); ?></p></div>
+                        <div class="item"><p>4. <?php esc_html_e( 'Return here to add the site to your Dashboard', 'mainwp' ); ?></p></div>
+                    </div>
+                </div>
+            </div>
+            <div class="extra content">
+                <div class="left aligned middle aligned column">
+                    <a href="<?php echo esc_url( 'https://downloads.wordpress.org/plugin/mainwp-child.latest-stable.zip' ); ?>" class="ui mini green basic fluid button"><i class="download icon"></i><?php esc_html_e( 'Download', 'mainwp' ); ?></a>
+                </div>
+            </div>
+            <div class="extra content">
+                <div class="ui two column grid">
+                    <div class="left aligned middle aligned column">
+                        <a href="<?php echo esc_url( $details_link ); ?>" class="ui mini button open-plugin-details-modal"><?php esc_html_e( 'Plugin Details', 'mainwp' ); ?></a>
+                    </div>
+                    <div class="right aligned middle aligned column">
+                        <div class="ui radio checkbox">
+                            <input name="install-plugin" type="radio" id="install-plugin-mainwp-child" plugin-name="<?php echo esc_attr( $plugin_name ); ?>" plugin-version="">
+                            <label><?php esc_html_e( 'Install Plugin', 'mainwp' ); ?></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
      * Method display_rows()
      *
      * Build Plugin Cards.
@@ -420,6 +483,19 @@ class MainWP_Plugins_Install_List_Table extends \WP_List_Table { // phpcs:ignore
      * @return mixed Plugin cards.
      */
     public function display_rows() { //phpcs:ignore -- NOSONAR - complex.
+        $search_term = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+
+        if ( ! empty( $search_term ) && $this->is_mainwp_search( $search_term ) ) {
+            $this->render_mainwp_child_card();
+            $this->items = array_filter(
+                $this->items,
+                function ( $plugin ) {
+                    $slug = is_array( $plugin ) ? ( $plugin['slug'] ?? '' ) : ( $plugin->slug ?? '' );
+                    return 'mainwp-child' !== $slug;
+                }
+            );
+        }
+
         $plugins_allowedtags = array(
             'a'       => array(
                 'href'   => array(),
