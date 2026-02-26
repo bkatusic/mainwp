@@ -3649,8 +3649,8 @@ let mainwp_master_checkbox_init = function ($) {
     // Move label text outside the checkbox div so clicking the text bubbles to th for column sort,
     // while clicking the checkbox icon (empty label) still handles check/uncheck all behavior.
     $('.main-master-checkbox .main-master.checkbox').each(function () {
-        var $label = $(this).find('label');
-        var labelText = $label.text().trim();
+        let $label = $(this).find('label');
+        let labelText = $label.text().trim();
         if (labelText) {
             $label.empty();
             $(this).after('<span class="mainwp-th-sort-label">' + labelText + '</span>');
