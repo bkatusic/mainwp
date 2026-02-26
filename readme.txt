@@ -7,7 +7,7 @@ Plugin URI: https://mainwp.com
 Requires at least: 6.2
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 6.0
+Stable tag: 6.0.1
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -147,6 +147,15 @@ Yes, we have a quick FAQ with many more questions and answers [here](https://mai
 11. Dashboard Insights
 
 == Changelog ==
+
+= 6.0.1 - 2-26-2026 =
+
+* Fixed: Database update routines now check for and remove only schema elements that actually exist (columns and indexes), preventing errors during upgrades.
+* Added: Plugin search now includes a dedicated MainWP Child plugin card.
+* Updated: Improved update/install error handling to avoid noisy failures and reduce risk of incomplete updates.
+* Updated: Lower dimmer z-index, raise top header z-index to prevent UI elements overlapping.
+* Updated: Refine modal responsive rules to fix layering and sizing for the "Install Add-ons" modal.
+* Dev: A new public hook handler to "Log_Manager" that exposes log record retrieval via the `mainwp_module_logs_get_log_records` filter.
 
 = 6.0 - 2-24-2026 =
 
