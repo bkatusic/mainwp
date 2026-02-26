@@ -76,13 +76,19 @@
 
 }
 
-@media screen and (min-width: 1200px) {
+@media only screen and (min-width: 1140px) and (max-width: 1700px) {
 	#mainwp-get-purchased-extensions-modal {
-		width: 1210px;
+		margin-left: 220px;
 	}
 }
 
-@media screen and (max-width: 1200px) {
+@media screen and (min-width: 1700px) {
+	#mainwp-get-purchased-extensions-modal {
+		width: 1150px;
+	}
+}
+
+@media screen and (max-width: 1700px) {
 	#mainwp-get-purchased-extensions-modal #mainwp-install-extensions-menu {
 		overflow-x: auto;
 		overflow-y: hidden;

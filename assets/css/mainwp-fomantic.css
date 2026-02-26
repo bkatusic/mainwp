@@ -244,7 +244,7 @@
 
 .mainwp-ui .ui.dimmer.active,
 .mainwp-ui .ui.dimmer.modals.active {
-    z-index: 1001;
+    z-index: 1000;
 }
 
 .mainwp-ui .mainwp-widget .ui.dimmer.active,

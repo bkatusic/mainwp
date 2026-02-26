@@ -834,10 +834,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
             <p><?php esc_html_e( 'Click the Start Page Tour button to start the guided tour for the current page.', 'mainwp' ); ?></p>
             <div class="ui hidden divider"></div>
             <button id="mainwp-start-page-tour-button" class="ui big green fluid basic button" tour-id="<?php echo esc_attr( $tour_id ); ?>"><?php esc_html_e( 'Start Page Tour', 'mainwp' ); ?></button>
-                <?php if ( 'mainwp_tab' === $page ) : ?>
-                <div class="ui hidden divider"></div>
-                <button id="mainwp-interface-tour-button" class="ui big green fluid basic button"><?php esc_html_e( 'MainWP Interface Basics Tour', 'mainwp' ); ?></button>
-            <?php endif; ?>
+                
             <?php endif; ?>
             <div class="ui header"><?php esc_html_e( 'MainWP Knowledge Base', 'mainwp' ); ?></div>
             <div class="ui hidden divider"></div>
