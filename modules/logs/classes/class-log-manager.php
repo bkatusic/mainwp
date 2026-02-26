@@ -153,6 +153,7 @@ class Log_Manager {
         add_filter( 'mainwp_module_log_enable_insert_log_type', array( $this, 'hook_enable_insert_log_type' ), 10, 2 );
         add_filter( 'mainwp_get_cron_jobs_init', array( $this, 'hook_get_cron_jobs_init' ), 10, 2 ); // on/off by change status of use wp cron option.
         add_filter( 'mainwp_module_logs_changes_logs_sync_params', array( $this, 'hook_changes_logs_sync_params' ), 10, 2 ); // on/off by change status of use wp cron option.
+        add_filter( 'mainwp_module_logs_get_log_records', array( $this, 'hook_get_log_records' ), 10, 2 ); // Retrieves MainWP log records based on provided query parameters.
 
         if ( $this->is_enabled_auto_archive_logs() && ! empty( $this->settings->options['records_logs_ttl'] ) ) {
             add_action( 'mainwp_module_log_cron_job_auto_archive', array( $this, 'cron_module_log_auto_archive' ) );
@@ -523,6 +524,100 @@ class Log_Manager {
             'ignore_sync_nonmainwp_actions' => ! empty( $disabled_nonmainwp_actions ) ? $disabled_nonmainwp_actions : -1,
         );
     }
+
+    /**
+     * Method hook_get_log_records()
+     *
+     * Retrieves MainWP log records based on provided query parameters.
+     *
+     * Available $params arguments (all optional):
+     *
+     * Default values:
+     * <code>
+     * array(
+     *     // LOG TARGETING
+     *     'log_id' => 0,                 // Specific log ID.
+     *     'wpid' => 0,                   // Site ID or array of site IDs.
+     *
+     *     // ACCESS / VIEW
+     *     'check_access' => true,        // Apply access restrictions.
+     *     'view' => '',                  // View mode: '', 'events_list', 'api-view'.
+     *
+     *     // OPTIMIZATION
+     *     'optimize' => false,           // Enable optimized query.
+     *     'optimize_with_meta' => false, // Fetch meta separately when optimized.
+     *     'with_all_logs_meta' => false, // Load full logs meta.
+     *
+     *     // RESULT MODE
+     *     'count_only' => false,         // Return count only.
+     *     'not_count' => false,          // Skip count query.
+     *
+     *     // SEARCH / FILTERS
+     *     'search' => '',                // Search keyword.
+     *     'dismiss' => null,             // true|false|null.
+     *
+     *     // GROUP / CLIENT FILTERS
+     *     'groups_ids' => array(),       // Filter by group IDs.
+     *     'client_ids' => array(),       // Filter by client IDs.
+     *
+     *     // USER FILTERS
+     *     'usersfilter_sites_ids' => array(), // Format: userId-siteId-isDashboardUser.
+     *     'user_ids' => array(),              // Legacy user filter.
+     *
+     *     // TIME RANGE
+     *     'timestart' => 0,              // Start timestamp (seconds).
+     *     'timestop' => 0,               // End timestamp (seconds).
+     *
+     *     // SOURCE FILTER
+     *     'sources_conds' => '',         // 'wp-admin-only'|'dashboard-only'.
+     *
+     *     // CONTEXT / EVENTS
+     *     'contexts' => '',              // CSV contexts list.
+     *     'sites_ids' => array(),        // Explicit site IDs.
+     *     'events' => array(),           // Actions/events filter.
+     *
+     *     // PAGINATION
+     *     'start' => 0,                  // Offset.
+     *     'records_per_page' => 0,       // LIMIT size (0 = unlimited).
+     *
+     *     // SORTING
+     *     'order' => 'DESC',             // ASC|DESC.
+     *     'orderby' => 'created',        // Sort column.
+     *
+     *     // RECENT EVENTS
+     *     'recent_number' => 0,          // Limit to recent logs.
+     * )
+     * </code>
+     *
+     * @param mixed $input_val Default value.
+     * @param array $params {
+     *     Optional. Log query parameters.
+     * }
+     *
+     * @return array Results.
+     *
+     * @since 6.0.1
+     */
+    public function hook_get_log_records( $input_val, $params = array() ) {
+
+        unset( $input_val ); // not used, just for hook compatibility.
+
+        $defaults = array(
+            // Search param.
+            'search'           => null,
+            'search_field'     => 'item',
+            'records_per_page' => get_option( 'posts_per_page', 20 ),
+            'paged'            => 1,
+            // Order.
+            'order'            => 'desc',
+            'orderby'          => 'date',
+        );
+
+        $args = wp_parse_args( $params, $defaults );
+
+        return (array) $this->db->get_records( $args );
+    }
+
 
     /**
      * Method normalize_to_microseconds()
