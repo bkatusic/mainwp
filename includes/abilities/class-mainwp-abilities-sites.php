@@ -271,7 +271,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                 'status'    => array(
                     'type'        => 'string',
                     'description' => __( 'Filter by connection status.', 'mainwp' ),
-                    'enum'        => array( 'any', 'connected', 'disconnected', 'suspended' ),
+                    'enum'        => array( 'any', 'connected', 'disconnected', 'suspended', 'available_update' ),
                     'default'     => 'any',
                 ),
                 'search'    => array(
