@@ -1184,7 +1184,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
             $after_header_content = ob_get_clean();
             if ( ! empty( trim( $after_header_content ) ) ) {
                 ?>
-                <div class="ui padded segment">
+                <div class="ui padded segment" id="mainwp-admin-notices-segment">
                     <?php echo $after_header_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 </div>
                 <?php
