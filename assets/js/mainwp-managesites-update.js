@@ -28,7 +28,7 @@ let managesites_update_all_next_step = function () {
 
 let mainwp_update_get_selected_sitesids = function (selectedSitesIds, allSitesIds) {
     let selectedIds = [], excludeIds = [];
-    if (selectedSitesIds instanceof Array) {
+    if (Array.isArray(selectedSitesIds)) {
         jQuery.grep(allSitesIds, function (el) {
             if (jQuery.inArray(el, selectedSitesIds) !== -1) {
                 selectedIds.push(el);

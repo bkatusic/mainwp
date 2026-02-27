@@ -284,34 +284,53 @@ jQuery(function () { // NOSONAR - levels deep ok.
             jQuery(this).attr('disabled', true);
             jQuery.post(ajaxurl, data, function (response) { // eslint-disable-line unicorn/no-nested-ternary
                 jQuery(this).attr('disabled', false);
-                let success = false;
-                if (response) {
-                    if (response.result == 'SUCCESS') {
-                        msg = __('Add-on disabled');
-                        if (whatAct == 'active') {
-                            msg = __('Add-on enabled');
-                        } else if (whatAct == 'remove') {
-                            msg = __('Add-on removed');
-                        }
-                        loadingEl.find('.ui.text.loader').html(msg);
-                        success = true;
-                    } else if (response.error) {
-                        loadingEl.find('.ui.text.loader').html(response.error);
-                        run_after_delay(() => loadingEl.hide()); // eslint-disable-line unicorn/no-nested-ternary
-                    } else {
-                        loadingEl.find('.ui.text.loader').html(__('Undefined error'));
-                        run_after_delay(() => loadingEl.hide());
+                function handleAddonResponse(response) {
+                    jQuery(this).attr('disabled', false);
+
+                    if (!response) {
+                        showError(__('Undefined error'));
+                        return;
                     }
-                } else {
-                    loadingEl.find('.ui.text.loader').html(__('Undefined error'));
-                    run_after_delay(() => loadingEl.hide()); // eslint-disable-line unicorn/no-nested-ternary
+
+                    if (response.result === 'SUCCESS') {
+                        handleSuccess();
+                        return;
+                    }
+
+                    if (response.error) {
+                        showError(response.error);
+                        return;
+                    }
+
+                    showError(__('Undefined error'));
                 }
 
-                if (success) {
-                    run_after_delay(() => {
-                        mainwp_forceReload('admin.php?page=Extensions')
+                function handleSuccess() {
+                    let msg = __('Add-on disabled');
+
+                    if (whatAct === 'active') {
+                        msg = __('Add-on enabled');
+                    } else if (whatAct === 'remove') {
+                        msg = __('Add-on removed');
+                    }
+
+                    loadingEl.find('.ui.text.loader').html(msg);
+
+                    run_after_delay(function () {
+                        mainwp_forceReload('admin.php?page=Extensions');
                     }, 2000);
                 }
+
+                function showError(message) {
+                    loadingEl.find('.ui.text.loader').html(message);
+
+                    run_after_delay(function () {
+                        loadingEl.hide();
+                    });
+                }
+
+                jQuery.post(ajaxurl, data, handleAddonResponse, 'json');
+
             }, 'json');
         };
 
