@@ -888,8 +888,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
      * @param string|false $mainwp_api_key The MainWP API key or false if not set.
      * @return void
      */
-    public static function render_licensing_actions_bar( $mainwp_api_key ) {
-        // NOSONAR - complexity function.
+    public static function render_licensing_actions_bar( $mainwp_api_key ) { //phpcs:ignore -- NOSONAR -Current complexity is the only way to achieve desired results, pull request solutions appreciated.
         $extensions = MainWP_Extensions_Handler::get_extensions();
 
         $count_enabled = is_array( $extensions ) ? count( $extensions ) : 0;
