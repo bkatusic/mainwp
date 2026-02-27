@@ -1630,18 +1630,29 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             // Build ability input.
             $ability_input = array();
             if ( ! empty( $params['include'] ) ) {
-                $include_ids = is_array( $params['include'] ) ? $params['include'] : wp_parse_list( $params['include'] );
-                $include_ids = array_values( array_filter( array_map( 'absint', $include_ids ) ) );
-                if ( ! empty( $include_ids ) ) {
-                    $ability_input['site_ids'] = $include_ids;
+                $raw_include = is_array( $params['include'] ) ? $params['include'] : wp_parse_list( $params['include'] );
+                $include_ids = array_values( array_unique( array_filter( array_map( 'absint', $raw_include ) ) ) );
+
+                if ( empty( $include_ids ) ) {
+                    return new WP_Error(
+                        'mainwp_invalid_input',
+                        __( 'Invalid include parameter. Expected one or more positive site IDs.', 'mainwp' ),
+                        array( 'status' => 400 )
+                    );
                 }
+                $ability_input['site_ids'] = $include_ids;
             }
             if ( ! empty( $params['exclude'] ) ) {
-                $exclude_ids = is_array( $params['exclude'] ) ? $params['exclude'] : wp_parse_list( $params['exclude'] );
-                $exclude_ids = array_values( array_filter( array_map( 'absint', $exclude_ids ) ) );
-                if ( ! empty( $exclude_ids ) ) {
-                    $ability_input['exclude_ids'] = $exclude_ids;
+                $raw_exclude = is_array( $params['exclude'] ) ? $params['exclude'] : wp_parse_list( $params['exclude'] );
+                $exclude_ids = array_values( array_unique( array_filter( array_map( 'absint', $raw_exclude ) ) ) );
+                if ( empty( $exclude_ids ) ) {
+                    return new WP_Error(
+                        'mainwp_invalid_input',
+                        __( 'Invalid exclude parameter. Expected one or more positive site IDs.', 'mainwp' ),
+                        array( 'status' => 400 )
+                    );
                 }
+                $ability_input['exclude_ids'] = $exclude_ids;
             }
 
             $result = $ability->execute( $ability_input );
