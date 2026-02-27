@@ -356,7 +356,7 @@ let mainwp_managesites_bulk_refresh_favico = function (siteIds) {
   });
 
   let selectedIds = [], excludeIds = [];
-  if (siteIds instanceof Array) {
+  if (Array.isArray(siteIds)) {
     jQuery.grep(allWebsiteIds, function (el) {
       if (jQuery.inArray(el, siteIds) !== -1) {
         selectedIds.push(el);
@@ -463,7 +463,7 @@ let mainwp_managesites_bulk_suspend_status = function (siteIds, status) {
     return jQuery(el).val();
   });
   let selectedIds = [], excludeIds = [];
-  if (siteIds instanceof Array) {
+  if (Array.isArray(siteIds)) {
     jQuery.grep(allWebsiteIds, function (el) {
       if (jQuery.inArray(el, siteIds) !== -1) {
         selectedIds.push(el);
