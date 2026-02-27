@@ -338,6 +338,22 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                     ),
                     'default'     => array(),
                 ),
+                'site_ids'            => array(
+                    'type'        => 'array',
+                    'description' => __( 'Site IDs to sync. Empty array means all sites.', 'mainwp' ),
+                    'items'       => array(
+                        'type' => 'integer',
+                    ),
+                    'default'     => array(),
+                ),
+                'exclude_ids'         => array(
+                    'type'        => 'array',
+                    'description' => __( 'Site IDs to exclude from sync.', 'mainwp' ),
+                    'items'       => array(
+                        'type' => 'integer',
+                    ),
+                    'default'     => array(),
+                ),
             ),
             'additionalProperties' => false,
         );
@@ -844,7 +860,20 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
      */
     public static function execute_sync_sites( $input ) { // phpcs:ignore -- NOSONAR - complexity method.
         $input               = is_array( $input ) ? $input : array();
-        $site_ids_or_domains = $input['site_ids_or_domains'] ?? array();
+        $site_ids            = isset( $input['site_ids'] ) && is_array( $input['site_ids'] )
+            ? array_values( array_filter( array_map( 'absint', $input['site_ids'] ) ) )
+            : array();
+        $site_ids_or_domains = isset( $input['site_ids_or_domains'] ) && is_array( $input['site_ids_or_domains'] )
+            ? $input['site_ids_or_domains']
+            : array();
+        if ( empty( $site_ids_or_domains ) && ! empty( $site_ids ) ) {
+            $site_ids_or_domains = $site_ids;
+        }
+
+        $exclude_ids = ! empty( $input['exclude_ids'] ) && is_array( $input['exclude_ids'] )
+            ? array_map( 'absint', $input['exclude_ids'] )
+            : array();
+        $exclude_set = $exclude_ids ? array_fill_keys( $exclude_ids, true ) : array();
 
         // If empty, get all sites for current user.
         if ( empty( $site_ids_or_domains ) ) {
@@ -855,12 +884,30 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                 return $all_sites;
             }
 
-            $site_ids_or_domains = array_map(
-                function ( $s ) {
-                    return (int) $s->id;
-                },
-                $all_sites ? $all_sites : array()
-            );
+            $site_ids_or_domains = array();
+            if ( ! empty( $all_sites ) ) {
+                foreach ( $all_sites as $s ) {
+                    $id = (int) $s->id;
+                    if ( empty( $exclude_set ) || ! isset( $exclude_set[ $id ] ) ) {
+                        $site_ids_or_domains[] = $id;
+                    }
+                }
+            }
+        } elseif ( ! empty( $exclude_set ) ) {
+            // Filter numeric IDs early; domains/URLs are left as-is.
+            $filtered = array();
+            foreach ( $site_ids_or_domains as $identifier ) {
+                if ( is_numeric( $identifier ) ) {
+                    $id = (int) $identifier;
+                    if ( isset( $exclude_set[ $id ] ) ) {
+                        continue;
+                    }
+                    $filtered[] = $id;
+                } else {
+                    $filtered[] = $identifier;
+                }
+            }
+            $site_ids_or_domains = $filtered;
         }
 
         // Check per-site ACLs and filter to allowed sites.

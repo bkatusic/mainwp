@@ -1629,10 +1629,18 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             // Build ability input.
             $ability_input = array();
             if ( ! empty( $params['include'] ) ) {
-                $ability_input['site_ids'] = $params['include'];
+                $include_ids = is_array( $params['include'] ) ? $params['include'] : wp_parse_list( $params['include'] );
+                $include_ids = array_values( array_filter( array_map( 'absint', $include_ids ) ) );
+                if ( ! empty( $include_ids ) ) {
+                    $ability_input['site_ids'] = $include_ids;
+                }
             }
             if ( ! empty( $params['exclude'] ) ) {
-                $ability_input['exclude_ids'] = $params['exclude'];
+                $exclude_ids = is_array( $params['exclude'] ) ? $params['exclude'] : wp_parse_list( $params['exclude'] );
+                $exclude_ids = array_values( array_filter( array_map( 'absint', $exclude_ids ) ) );
+                if ( ! empty( $exclude_ids ) ) {
+                    $ability_input['exclude_ids'] = $exclude_ids;
+                }
             }
 
             $result = $ability->execute( $ability_input );
