@@ -9,6 +9,8 @@
  * Plugin URI: https://mainwp.com/
  * Text Domain: mainwp
  * Version:  6.0.1
+ * License: GPLv3 or later
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  *
  * @package MainWP/Dashboard
  *

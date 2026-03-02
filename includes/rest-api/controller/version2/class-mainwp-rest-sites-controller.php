@@ -1401,6 +1401,7 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             $data    = array();
 
             if ( 'delete' === $action && is_array( $information ) && ! empty( $information['error']['is_activated_theme'] ) ) {
+                /* translators: %s: Theme name */
                 $data['error'] = sprintf( esc_html__( 'The theme %s is active.', 'mainwp' ), esc_html( $information['error']['is_activated_theme'] ) );
             }
 
@@ -1743,6 +1744,7 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             $resp_data['success'] = $ret ? 1 : 0;
         } catch ( \Exception $e ) {
             // failed.
+            /* translators: %d: Site ID */
             return new \WP_Error( 'mainwp_rest_reconnect_site_error', sprintf( esc_html__( 'Reconnect Site "%d" error:', 'mainwp' ), $website->id ) . ': ' . $e->getMessage() );
         }
         $website           = $this->get_site_by( 'id', $website->id );
@@ -1809,6 +1811,7 @@ class MainWP_Rest_Sites_Controller extends MainWP_REST_Controller{ //phpcs:ignor
             $success = is_array( $info ) && isset( $info['result'] ) && 'success' === $info['result'] ? 1 : 0;
             $error   = is_array( $info ) && ! empty( $info['error'] ) ? $info['error'] : '';
         } catch ( \Exception $e ) {
+            /* translators: %d: Site ID */
             return new \WP_Error( 'mainwp_rest_disconnect_site_error', sprintf( esc_html__( 'Disconnect Site "%d" error:', 'mainwp' ), $website->id ) . ': ' . $e->getMessage() );
         }
         $resp_data = array(
