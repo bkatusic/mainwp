@@ -720,7 +720,7 @@ class MainWP_Abilities_Util { //phpcs:ignore -- NOSONAR - multi methods.
         $output = array(
             'id'        => (int) $site->id,
             'url'       => (string) $site->url,
-            'name'      => (string) $site->name,
+            'name'      => MainWP_Utility::remove_http_prefix( (string) $site->name, true ),
             'status'    => self::get_site_status( $site ),
             'client_id' => isset( $site->client_id ) && $site->client_id > 0
                 ? (int) $site->client_id

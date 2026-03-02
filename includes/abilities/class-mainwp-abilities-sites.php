@@ -807,8 +807,8 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
 
         return array(
             'items'    => $items,
-            'page'     => $input['page'] ?? 1,
-            'per_page' => $input['per_page'] ?? 20,
+            'page'     => (int) ( $input['page'] ?? 1 ),
+            'per_page' => (int) ( $input['per_page'] ?? 20 ),
             'total'    => (int) $total,
         );
     }
@@ -933,7 +933,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                     $synced[] = array(
                         'id'   => (int) $site->id,
                         'url'  => $site->url,
-                        'name' => $site->name,
+                        'name' => MainWP_Utility::remove_http_prefix( (string) $site->name, true ),
                     );
                 }
             } catch ( \Exception $e ) {
@@ -1683,7 +1683,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                 'would_affect' => array(
                     'id'   => (int) $site->id,
                     'url'  => $site->url,
-                    'name' => $site->name,
+                    'name' => MainWP_Utility::remove_http_prefix( (string) $site->name, true ),
                 ),
                 'warnings'     => $warnings,
             );
@@ -1700,7 +1700,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
         $site_info = array(
             'id'   => (int) $site->id,
             'url'  => $site->url,
-            'name' => $site->name,
+            'name' => MainWP_Utility::remove_http_prefix( (string) $site->name, true ),
         );
 
         $result = MainWP_DB::instance()->remove_website( $site->id );
@@ -2164,7 +2164,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
         }
 
         $start_time = microtime( true );
-        $result     = MainWP_Monitoring_Handler::handle_check_website( $site->id );
+        $result     = MainWP_Monitoring_Handler::handle_check_website( $site );
         $end_time   = microtime( true );
 
         if ( is_wp_error( $result ) ) {
@@ -2175,8 +2175,25 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
             );
         }
 
-        $online        = ! empty( $result['online'] );
-        $http_code     = isset( $result['http_code'] ) ? (int) $result['http_code'] : 0;
+        if ( ! is_array( $result ) ) {
+            return new \WP_Error(
+                'mainwp_check_failed',
+                __( 'Unable to check site status.', 'mainwp' ),
+                array( 'status' => 503 )
+            );
+        }
+
+        $http_code = isset( $result['httpCode'] ) ? (int) $result['httpCode'] : 0;
+
+        // Determine online status from uptime monitoring or legacy path.
+        // Uptime monitoring: 0=DOWN, 1=UP, 2=PENDING.
+        if ( isset( $result['new_uptime_status'] ) ) {
+            $online = ( 1 === (int) $result['new_uptime_status'] );
+        } else {
+            // Legacy try_visit path — check HTTP code against ignored-codes list.
+            $online = MainWP_Connect::check_ignored_http_code( $http_code, $site );
+        }
+
         $response_time = round( $end_time - $start_time, 2 );
 
         return array(
@@ -2186,10 +2203,10 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
             'site'          => array(
                 'id'   => (int) $site->id,
                 'url'  => $site->url,
-                'name' => $site->name,
+                'name' => MainWP_Utility::remove_http_prefix( (string) $site->name, true ),
             ),
             'status'        => array(
-                'online'        => $online,
+                'online'        => (bool) $online,
                 'http_code'     => $http_code,
                 'response_time' => $response_time,
             ),
@@ -2844,7 +2861,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false,
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -3200,7 +3217,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false,
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -3315,7 +3332,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => 'Returns security data from last sync. Does NOT perform real-time scanning. Requires Security module on child site for full data.',
-                        'readonly'     => false,
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -3400,7 +3417,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => 'Detects changes made outside MainWP (direct edits, other plugins). Requires Logs module enabled. Results paginated (default 20, max 100).',
-                        'readonly'     => false,
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -3571,7 +3588,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false,
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -3671,7 +3688,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false,
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -3766,7 +3783,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false,
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -3869,7 +3886,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                     'show_in_rest' => true,
                     'annotations'  => array(
                         'instructions' => '',
-                        'readonly'     => false,
+                        'readonly'     => true,
                         'destructive'  => false,
                         'idempotent'   => true,
                     ),
@@ -3960,7 +3977,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
 
         $filters = array(
             'offset'       => ( $page - 1 ) * $per_page,
-            'number'       => $per_page,
+            'rowcount'     => $per_page,
             'selectgroups' => false,
         );
 
@@ -3993,7 +4010,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
             $items[] = array(
                 'id'   => (int) $site->id,
                 'url'  => $site->url,
-                'name' => $site->name,
+                'name' => MainWP_Utility::remove_http_prefix( (string) $site->name, true ),
             );
         }
 
@@ -4182,7 +4199,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                 $reconnected[] = array(
                     'id'   => (int) $site->id,
                     'url'  => $site->url,
-                    'name' => $site->name,
+                    'name' => MainWP_Utility::remove_http_prefix( (string) $site->name, true ),
                 );
             }
         }
@@ -4288,7 +4305,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
             $disconnected[] = array(
                 'id'   => (int) $site->id,
                 'url'  => $site->url,
-                'name' => $site->name,
+                'name' => MainWP_Utility::remove_http_prefix( (string) $site->name, true ),
             );
         }
 
@@ -4388,7 +4405,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
         $checked = array();
 
         foreach ( $sites as $site ) {
-            $result = MainWP_Monitoring_Handler::handle_check_website( $site->id );
+            $result = MainWP_Monitoring_Handler::handle_check_website( $site );
 
             if ( is_wp_error( $result ) ) {
                 $errors[] = array(
@@ -4396,14 +4413,28 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                     'code'       => 'mainwp_check_failed',
                     'message'    => $result->get_error_message(),
                 );
+            } elseif ( ! is_array( $result ) ) {
+                $errors[] = array(
+                    'identifier' => $site->url,
+                    'code'       => 'mainwp_check_failed',
+                    'message'    => __( 'Unable to check site status.', 'mainwp' ),
+                );
             } else {
+                $http_code = isset( $result['httpCode'] ) ? (int) $result['httpCode'] : 0;
+
+                if ( isset( $result['new_uptime_status'] ) ) {
+                    $online = ( 1 === (int) $result['new_uptime_status'] );
+                } else {
+                    $online = MainWP_Connect::check_ignored_http_code( $http_code, $site );
+                }
+
                 $checked[] = array(
                     'id'     => (int) $site->id,
                     'url'    => $site->url,
-                    'name'   => $site->name,
+                    'name'   => MainWP_Utility::remove_http_prefix( (string) $site->name, true ),
                     'status' => array(
-                        'online'    => ! empty( $result['online'] ),
-                        'http_code' => isset( $result['http_code'] ) ? (int) $result['http_code'] : 0,
+                        'online'    => (bool) $online,
+                        'http_code' => $http_code,
                     ),
                 );
             }
@@ -4511,7 +4542,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
             $suspended[] = array(
                 'id'        => (int) $site->id,
                 'url'       => $site->url,
-                'name'      => $site->name,
+                'name'      => MainWP_Utility::remove_http_prefix( (string) $site->name, true ),
                 'suspended' => 1,
             );
         }
