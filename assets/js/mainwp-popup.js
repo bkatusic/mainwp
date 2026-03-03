@@ -107,12 +107,11 @@
                         typeof this.actionsCloseCallback === 'function' && this.actionsCloseCallback();
                     }
                 },
-                bindEvents: () =>{
-                    let closebuttonEl = this.$overlayElementId.find('.mainwp-modal-close');
-                    if (closebuttonEl.length > 0) {
-                        $(closebuttonEl).on('click', () => {
-                            this.close(true);
-                        });
+                bindEvents: function () {
+                    const closebuttonEl = this.$overlayElementId.find('.mainwp-modal-close');
+
+                    if (closebuttonEl.length) {
+                        closebuttonEl.on('click', () => this.close(true));
                     }
                 },
                 setTitle: function (title) {
