@@ -1075,7 +1075,7 @@ class MainWP_DB_Common extends MainWP_DB { // phpcs:ignore Generic.Classes.Openi
         if ( ! empty( $sql_set ) ) {
             $sql_set = rtrim( $sql_set, ',' );
             $table_wp = esc_sql( $this->table_name( 'wp' ) );
-            $this->wpdb->query( $this->wpdb->prepare( "UPDATE `{$table_wp}` SET " . esc_sql( $sql_set ) . " WHERE id=%d", $websiteid ) );
+            $this->wpdb->query( $this->wpdb->prepare( "UPDATE `{$table_wp}` SET " . $sql_set . " WHERE id=%d", $websiteid ) );
             $success = true;
         }
 
