@@ -1,5 +1,5 @@
 
-window.mainwpVars = window.mainwpVars || {};
+globalThis.mainwpVars = globalThis.mainwpVars || {};
 
 // Trigger Manage Sites Bulk Actions
 jQuery(document).on('click', '#mainwp-do-sites-bulk-actions', function () {
@@ -112,7 +112,7 @@ let mainwp_managesites_doaction_open = function (action) {
   });
 }
 
-window.managesites_reset_bulk_actions_params = function () {
+globalThis.managesites_reset_bulk_actions_params = function () {
   mainwpVars.bulkManageSitesTaskRunning = false;
   mainwpVars.bulkManageSitesCurrentThreads = 0;
   mainwpVars.bulkManageSitesFinished = 0;
@@ -190,7 +190,7 @@ jQuery(document).on('click', '.managesites_checknow', function () {
 
 jQuery(document).on('change', '#mainwp-add-new-button', function () {
   let url = jQuery('#mainwp-add-new-button :selected').attr('item-url');
-  if (typeof url !== 'undefined' && url != '')
+  if ( url !== undefined && url != '')
     mainwp_forceReload(url);
   return false;
 });
@@ -358,7 +358,7 @@ let mainwp_managesites_bulk_refresh_favico = function (siteIds) {
   let selectedIds = [], excludeIds = [];
   if (Array.isArray(siteIds)) {
     jQuery.grep(allWebsiteIds, function (el) {
-      if (jQuery.inArray(el, siteIds) !== -1) {
+      if (jQuery.inArray(el, siteIds) > -1) {
         selectedIds.push(el);
       } else {
         excludeIds.push(el);
@@ -465,7 +465,7 @@ let mainwp_managesites_bulk_suspend_status = function (siteIds, status) {
   let selectedIds = [], excludeIds = [];
   if (Array.isArray(siteIds)) {
     jQuery.grep(allWebsiteIds, function (el) {
-      if (jQuery.inArray(el, siteIds) !== -1) {
+      if (jQuery.inArray(el, siteIds) > -1) {
         selectedIds.push(el);
       } else {
         excludeIds.push(el);

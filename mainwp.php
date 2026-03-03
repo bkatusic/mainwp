@@ -25,10 +25,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  * This file must execute before WordPress loads to locate wp-load.php,
  * so the standard ABSPATH check would break functionality.
  */
-add_filter( 'wp_plugin_check_ignore_files', function( $ignored_files ) {
-    $ignored_files[] = 'cron/bootstrap.php';
-    return $ignored_files;
-} );
+add_filter(
+    'wp_plugin_check_ignore_files',
+    function ( $ignored_files ) {
+        $ignored_files[] = 'cron/bootstrap.php';
+        return $ignored_files;
+    }
+);
 
 if ( ! defined( 'MAINWP_PLUGIN_FILE' ) ) {
 

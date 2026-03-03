@@ -191,7 +191,6 @@ table.mainwp-manage-updates-table tbody tr td .mainwp-update-selected-button,
 /* Header */
 
 #mainwp-top-header {
-    z-index: 1001;
     padding: 10px;
     height: 58px;
     background: #1c1d1b;
