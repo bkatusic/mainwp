@@ -73,6 +73,7 @@ class Log_Events_Filter_Segment {
     public function render_filters_segment( $filter_name = 'module_log' ) {
         $saved_segments = MainWP_Manage_Sites_Filter_Segment::set_get_manage_sites_filter_segments( false, array(), $filter_name );
         ?>
+        <input type="hidden" id="mainwp-common-filter-option-name" value="<?php echo esc_attr( $filter_name ); ?>"/>
         <button class="ui mini green button" id="mainwp-module-log-filter-save-segment-button" selected-segment-id="" selected-segment-name=""><?php esc_html_e( 'Save Segment', 'mainwp' ); ?></button>
         <?php if ( ! empty( $saved_segments ) ) : ?>
             <button class="ui mini button mainwp_module_log_filter_choose_segment"><?php esc_html_e( 'Load Segment', 'mainwp' ); ?></button>

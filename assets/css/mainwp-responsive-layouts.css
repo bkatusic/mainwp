@@ -283,6 +283,11 @@
 		width: auto !important;
 	}
 
+	.mainwp-individual-site-view #mainwp-top-header .mainwp-page-title .sub.header { text-overflow: ellipsis !important; }
+
+	.mainwp-individual-site-view #mainwp-top-header .mainwp-page-title i,
+	.mainwp-individual-site-view #mainwp-top-header .mainwp-page-title .image { display: none !important; }
+
 	#mainwp-top-header .ui.icon.button:not(#mainwp-mobile-menu-trigger):not(#mainwp-sync-sites) {
 		display: none !important;
 	}
