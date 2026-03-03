@@ -7,7 +7,7 @@ Plugin URI: https://mainwp.com
 Requires at least: 6.2
 Tested up to: 6.9.1
 Requires PHP: 7.4
-Stable tag: 6.0.1
+Stable tag: 6.0.2
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -147,6 +147,25 @@ Yes, we have a quick FAQ with many more questions and answers [here](https://mai
 11. Dashboard Insights
 
 == Changelog ==
+
+= 6.0.2 - 3-3-2026 =
+
+* Fixed: Fixed duplicate event titles appearing in the logs overview.
+* Fixed: Fixed REST API site data retrieval to correctly handle ability-based lookups, ensuring site information is properly returned in API responses.
+* Fixed: Fixed Abilities API pagination handling to ensure consistent integer values across client and update lists.
+* Fixed: Fixed an issue where the second-level navigation could cover a dropdown menu on some pages.
+* Updated: Enhanced event filtering to include related event variants for more accurate results.
+* Updated: Enhanced script loading by reorganizing the initialization sequence and explicitly defining resource dependencies for improved performance.
+* Updated: Added extensive translator comments throughout the application to provide better context for localization efforts, clarifying placeholder meanings and string usage patterns.
+* Updated: Improved translation domain consistency by adding explicit mainwp text domain parameters to translation functions.
+* Updated: Enhanced string formatting by standardizing placeholder styles for improved translation handling.
+* Updated: Refined WordPress filesystem integration for improved file handling reliability.
+* Updated: Updated the informational message shown when the "Network Activity" table becomes too large for better accuracy.
+* Updated: Improved Abilities API input validation for batch job operations.
+* Updated: Enhanced Abilities API site status checking with uptime-based monitoring support.
+* Updated: Standardized site naming format across all operations in the Abilities API.
+* Dev: Added the mainwp_module_logs_get_log_records hook.
+* Removed: Removed bundled moment.js and clipboard.js scripts and fell back to the versions included in WordPress core.
 
 = 6.0.1 - 2-26-2026 =
 

@@ -1,7 +1,7 @@
 
 (function ($) {
-    if (!window.mainwpPopup) {
-        window.mainwpPopup = function (selector) {
+    if (!globalThis.mainwpPopup) {
+        globalThis.mainwpPopup = function (selector) {
             let popup = mainwpListPopups.getItem(selector);
             if (popup === null) {
                 popup = new Mainwp_InstancePopup();
@@ -89,14 +89,14 @@
                         this.$overlayElementId.find('.header').html(this.title);
                     }
 
-                    if (!this.progressMax)
-                        this.$overlayElementId.find('.mainwp-modal-progress').hide(); // hide status and progress.
-                    else
+                    if (this.progressMax)
                         this.$overlayElementId.find('.mainwp-modal-progress').show();
-                    let self = this;
+                    else
+                        this.$overlayElementId.find('.mainwp-modal-progress').hide(); // hide status and progress.
+
                     this.$overlayElementId.modal({
-                        onHide: function () {
-                            self.onHideModal();
+                        onHide:  () => {
+                            this.onHideModal();
                         },
                         allowMultiple: this.allowMultiple ?? false
                     }).modal('setting', 'closable', false).modal('show').modal('set active'); // trick to fix diplay issue.
@@ -108,14 +108,11 @@
                     }
                 },
                 bindEvents: function () {
-                    let self = this;
-                    let closebuttonEl = this.$overlayElementId.find('.mainwp-modal-close');
-                    if (closebuttonEl.length > 0) {
-                        $(closebuttonEl).on('click', function () {
-                            self.close(true);
-                        });
-                    }
+                    const closebuttonEl = this.$overlayElementId.find('.mainwp-modal-close');
 
+                    if (closebuttonEl.length) {
+                        closebuttonEl.on('click', () => this.close(true));
+                    }
                 },
                 setTitle: function (title) {
                     this.$overlayElementId.find('.header').html(title);
@@ -167,7 +164,7 @@
                 },
                 // close modal with executing callback or not executing callback.
                 close: function (execCallback) {
-                    this.doCloseCallback = typeof execCallback !== 'undefined' && execCallback; // do not do callback.
+                    this.doCloseCallback = execCallback !== undefined && execCallback; // do not do callback.
                     this.closePopup();
                 },
                 closePopup: function () {
