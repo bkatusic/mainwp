@@ -918,6 +918,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                             <div class="sub header">
                                 <?php
                                 printf(
+                                    /* translators: %s: number of enabled add-ons */
                                     esc_html__( '%s add-ons enabled • Missing License key • Updates Disabled', 'mainwp' ),
                                     esc_html( $count_enabled )
                                 );
@@ -931,6 +932,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                             <div class="content">
                             <?php
                             printf(
+                                /* translators: %s: number of add-ons not activated */
                                 esc_html( _n( '%s add-on not activated', '%s add-ons not activated', $count_not_activated, 'mainwp' ) ),
                                 esc_html( $count_not_activated )
                             );
@@ -938,6 +940,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                             <div class="sub header">
                                 <?php
                                 printf(
+                                    /* translators: 1: number of enabled add-ons, 2: number of activated add-ons */
                                     esc_html__( '%1$s add-ons enabled • %2$s activated • Updates enabled for activated add-ons', 'mainwp' ),
                                     esc_html( $count_enabled ),
                                     esc_html( $count_activated )
@@ -954,6 +957,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
                             <div class="sub header">
                                 <?php
                                 printf(
+                                    /* translators: %s: number of enabled add-ons */
                                     esc_html__( '%s add-ons enabled • All activated • Updates enabled', 'mainwp' ),
                                     esc_html( $count_enabled )
                                 );

@@ -1504,6 +1504,13 @@ class MainWP_System_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
         $base_dir = $dirs[0];
         $base_url = $dirs[1];
 
+        /**
+         * WordPress files system object.
+         *
+         * @global object
+         */
+        global $wp_filesystem;
+
         $output   = array();
         $filename = '';
         $filepath = '';
@@ -1553,7 +1560,7 @@ class MainWP_System_Utility { // phpcs:ignore Generic.Classes.OpeningBraceSameLi
                     $dest_file = $base_dir . '/' . $file_name;
                     $dest_file = dirname( $dest_file ) . '/' . wp_unique_filename( dirname( $dest_file ), basename( $dest_file ) );
 
-                    if ( move_uploaded_file( $tmp_file, $dest_file ) ) {
+                    if ( $wp_filesystem->put_contents( $dest_file, $wp_filesystem->get_contents( $tmp_file ) ) ) {
                         if ( file_exists( $dest_file ) ) {
                             list( $width, $height ) = getimagesize( $dest_file );
                         }

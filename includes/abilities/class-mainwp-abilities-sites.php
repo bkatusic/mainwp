@@ -2882,6 +2882,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                 'remote_param'    => 'plugin',
                 'formatter'       => array( MainWP_Abilities_Util::class, 'format_plugin_for_output' ),
                 'empty_error'     => __( 'No plugins specified.', 'mainwp' ),
+                /* translators: %s: plugin name */
                 'active_warning'  => __( 'Plugin %s is currently active.', 'mainwp' ),
                 'active_singular' => false,
             )
@@ -3238,6 +3239,7 @@ class MainWP_Abilities_Sites { //phpcs:ignore -- NOSONAR - multi methods.
                 'remote_param'    => 'theme',
                 'formatter'       => array( MainWP_Abilities_Util::class, 'format_theme_for_output' ),
                 'empty_error'     => __( 'No themes specified.', 'mainwp' ),
+                /* translators: %s: theme name */
                 'active_warning'  => __( 'Theme %s is the currently active theme.', 'mainwp' ),
                 'active_singular' => true,
             )
