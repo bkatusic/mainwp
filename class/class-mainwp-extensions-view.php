@@ -1605,7 +1605,7 @@ class MainWP_Extensions_View { // phpcs:ignore Generic.Classes.OpeningBraceSameL
             ),
             'mainwp-patchstack-extension'             =>
             array(
-                'type'                 => 'pro',
+                'type'                 => 'free',
                 'model'                => 'integration',
                 'slug'                 => 'mainwp-patchstack-extension',
                 'title'                => 'Patchstack Integration',
