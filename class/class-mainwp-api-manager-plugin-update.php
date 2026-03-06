@@ -171,6 +171,8 @@ class MainWP_Api_Manager_Plugin_Update { // phpcs:ignore Generic.Classes.Opening
 
         $params = apply_filters( 'mainwp_plugin_information_sslverify', $default, $args );
 
+        MainWP_Logger::instance()->log_events( 'extension-updates-check', sprintf( '[target_url=%s] :: [params=%s] :: [bulk_check=%s]', $target_url, print_r( $args, true ), $bulk_check ? 'true' : 'false' ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions -- print_r used for debugging.
+
         $request = wp_remote_get(
             $target_url,
             $params
@@ -181,6 +183,8 @@ class MainWP_Api_Manager_Plugin_Update { // phpcs:ignore Generic.Classes.Opening
         }
 
         $response = wp_remote_retrieve_body( $request );
+
+        MainWP_Logger::instance()->log_events( 'extension-updates-check', sprintf( '[response=%s]', $response ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions -- print_r used for debugging.
 
         if ( isset( $args['json'] ) ) { // bulkupdatecheck: json.
             $response = json_decode( $response, true );
