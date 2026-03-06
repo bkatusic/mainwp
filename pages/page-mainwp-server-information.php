@@ -1743,6 +1743,7 @@ class MainWP_Server_Information { // phpcs:ignore Generic.Classes.OpeningBraceSa
                         <?php
                         // phpcs:enable
                         if ( is_array( $specific_logs ) && ! empty( $specific_logs ) ) {
+                            asort($specific_logs);
                             foreach ( $specific_logs as $spec_log => $spec_title ) {
                                 ?>
                             <option value="specific_<?php echo intval( $spec_log ); ?>" <?php echo (int) $spec_log === (int) $enabled ? 'selected' : ''; ?>>

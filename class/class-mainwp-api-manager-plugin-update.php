@@ -171,7 +171,12 @@ class MainWP_Api_Manager_Plugin_Update { // phpcs:ignore Generic.Classes.Opening
 
         $params = apply_filters( 'mainwp_plugin_information_sslverify', $default, $args );
 
-        MainWP_Logger::instance()->log_events( 'extension-updates-check', sprintf( '[target_url=%s] :: [params=%s] :: [bulk_check=%s]', $target_url, print_r( $args, true ), $bulk_check ? 'true' : 'false' ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions -- print_r used for debugging.
+        $log_args = $args;
+        if ( isset( $log_args['api_key'] ) ) {
+            $log_args['api_key'] = '***';
+        }
+
+        MainWP_Logger::instance()->log_events( 'extension-updates-check', sprintf( '[target_url=%s] :: [params=%s] :: [bulk_check=%s]', $target_url, print_r( $log_args, true ), $bulk_check ? 'true' : 'false' ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions -- print_r used for debugging.
 
         $request = wp_remote_get(
             $target_url,
