@@ -260,7 +260,7 @@ class MainWP_Rest_Api_Page { // phpcs:ignore Generic.Classes.OpeningBraceSameLin
 
         MainWP_Menu::add_left_menu(
             array(
-                'title'      => esc_html__( 'API Access', 'mainwp' ),
+                'title'      => esc_html__( 'Access', 'mainwp' ),
                 'parent_key' => 'mainwp_tab',
                 'slug'       => 'RESTAPI',
                 'href'       => $root_href,
