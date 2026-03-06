@@ -176,6 +176,12 @@ class MainWP_Api_Manager_Plugin_Update { // phpcs:ignore Generic.Classes.Opening
             $log_args['api_key'] = '***';
         }
 
+        if ( ! empty( $log_args['extensions'] ) ) {
+            $log_exts                        = json_decode( base64_decode( $log_args['extensions'] ), true ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions -- NOSONAR base64_decode used for http encoding compatible.
+            $log_args['_decoded_extensions'] = is_array( $log_exts ) ? $log_exts : array();
+            unset( $log_args['extensions'] );
+        }
+
         MainWP_Logger::instance()->log_events( 'extension-updates-check', sprintf( '[target_url=%s] :: [params=%s] :: [bulk_check=%s]', $target_url, print_r( $log_args, true ), $bulk_check ? 'true' : 'false' ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions -- print_r used for debugging.
 
         $request = wp_remote_get(
