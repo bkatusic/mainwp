@@ -2224,7 +2224,10 @@ class MainWP_DB extends MainWP_DB_Base { // phpcs:ignore Generic.Classes.Opening
         }
 
         if ( ( false !== $offset ) && ( false !== $rowcount ) ) {
-            $qry .= ' LIMIT ' . $offset . ', ' . $rowcount;
+            // When cache IDs are provided, they already represent the page-specific subset,
+            // so the effective offset within that subset is always 0.
+            $effective_offset = ! empty( $_included_cache_ids ) ? 0 : $offset;
+            $qry             .= ' LIMIT ' . $effective_offset . ', ' . $rowcount;
         } elseif ( false !== $rowcount ) {
             $qry .= ' LIMIT ' . $rowcount;
         }
