@@ -349,7 +349,7 @@ KEY idx_wpid_issub (wpid, issub)";
     public function get_legacy_sql_websites_enabled_check_status( $enabled ) {
         $table_wp = esc_sql( $this->table_name( 'wp' ) );
         return $this->wpdb->prepare(
-            'SELECT wp.id FROM ' . $table_wp . ' wp WHERE wp.disable_status_check = %d',
+            'SELECT wp.id FROM ' . $table_wp . ' wp WHERE 2 = %d', // to fix error with wp.disable_status_check column not exist, it will return 0 for all, then we can get all enabled or disabled monitors based on $enabled value.
             $enabled ? 0 : 1
         );
     }
