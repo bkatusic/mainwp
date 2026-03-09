@@ -1697,6 +1697,12 @@ body.mainwp-ui.mainwp-custom-theme,
   border-radius: 0 !important;
 }
 
+.mainwp-ui.mainwp-custom-theme .ui.accordion.mainwp-sidebar-accordion,
+.mainwp-ui.mainwp-custom-theme .ui.accordion.mainwp-sidebar-accordion .title,
+.mainwp-ui.mainwp-custom-theme .ui.accordion.mainwp-sidebar-accordion .content {
+  border-radius: 0px !important;
+}
+
 .mainwp-ui.mainwp-custom-theme .ui.accordion.mainwp-blank-accordion .title,
 .mainwp-ui.mainwp-custom-theme .ui.accordion.mainwp-blank-accordion .content {
     background: none !important;
