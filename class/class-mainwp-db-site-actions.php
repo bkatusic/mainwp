@@ -140,6 +140,9 @@ class MainWP_DB_Site_Actions extends MainWP_DB { // phpcs:ignore Generic.Classes
             return false;
         }
         $table_actions = esc_sql( $this->table_name( 'wp_actions' ) );
+        if ( ! $this->wpdb->get_var( 'SHOW TABLES LIKE ' . $this->wpdb->prepare( '%s', $this->table_name( 'wp_actions' ) ) ) ) {
+            return false;
+        }
         if ( 'action_id' === $by ) {
             if ( $this->wpdb->query( $this->wpdb->prepare( "DELETE FROM {$table_actions} WHERE action_id=%d ", $value ) ) ) {
                 return true;
