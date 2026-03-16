@@ -957,6 +957,7 @@ class MainWP_System { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
 
         $exctime = MainWP_Execution_Helper::get_run_time();
         MainWP_Logger::instance()->log_events( 'execution-time', 'Shutdown :: ' . $exctime );
+        MainWP_Logger::instance()->log_execution_sync( 'end' );
     }
 
     /**
