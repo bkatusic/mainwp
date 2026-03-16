@@ -39,7 +39,7 @@ class MainWP_Logger { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
     const UNHOOKS_LOG_PRIORITY                 = 20250901;
     const WARM_CACHE_LOG_PRIORITY              = 20250915;
     const EXTENSION_UPDATES_CHECK_LOG_PRIORITY = 2026306;
-    const EXTENSION_SYNC_LOG_PRIORITY          = 20260316;
+    const EXECUTION_SYNC_LOG_PRIORITY          = 20260316;
 
     const DISABLED = - 1;
     const LOG      = 0;
@@ -374,7 +374,7 @@ class MainWP_Logger { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
                         $this->log_action( '[Execution time] :: ' . $text, static::EXECUTION_TIME_LOG_PRIORITY, $color );
                         break;
                     case 'execution-sync':
-                        $this->log_action( '[Execution Sync] :: ' . $text, static::EXTENSION_SYNC_LOG_PRIORITY, $color, false, $log_type );
+                        $this->log_action( '[Execution Sync] :: ' . $text, static::EXECUTION_SYNC_LOG_PRIORITY, $color, false, $log_type );
                         break;
                     case 'warm-cache':
                         $this->log_action( '[Warm cache] :: ' . $text, static::WARM_CACHE_LOG_PRIORITY, $color );

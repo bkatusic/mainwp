@@ -1708,7 +1708,7 @@ class MainWP_Server_Information { // phpcs:ignore Generic.Classes.OpeningBraceSa
             MainWP_Logger::LOGS_REGULAR_SCHEDULE        => esc_html__( 'Regular Schedule', 'mainwp' ),
             MainWP_Logger::DEBUG_UPDATES_SCHEDULE       => esc_html__( 'Debug updates crons', 'mainwp' ),
             MainWP_Logger::EXECUTION_TIME_LOG_PRIORITY  => esc_html__( 'Execution time', 'mainwp' ),
-            MainWP_Logger::EXTENSION_SYNC_LOG_PRIORITY  => esc_html__( 'Extension Sync', 'mainwp' ),
+            MainWP_Logger::EXECUTION_SYNC_LOG_PRIORITY  => esc_html__( 'Execution Sync', 'mainwp' ),
             MainWP_Logger::LOGS_AUTO_PURGE_LOG_PRIORITY => esc_html__( 'Auto Archive Network Activity', 'mainwp' ),
             MainWP_Logger::CONNECT_LOG_PRIORITY         => esc_html__( 'Dashboard Connect', 'mainwp' ),
             MainWP_Logger::SITES_CHANGES_LOG_PRIORITY   => esc_html__( 'Network Activity', 'mainwp' ),
