@@ -1680,7 +1680,7 @@ class MainWP_UI { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.ContentAf
                 $website = MainWP_DB::instance()->get_website_by_id( $id );
 
                 // To avoid error in case of direct access to page with wrong id.
-                if ( empty( $website ) || empty( $website->url ) ) {
+                if ( ! empty( $website ) && ! empty( $website->url ) ) {
                     ?>
                     <img alt="<?php esc_attr_e( 'Website preview', 'mainwp' ); ?>" src="//s0.wp.com/mshots/v1/<?php echo esc_html( rawurlencode( $website->url ) ); ?>?w=170" id="mainwp-site-preview-image">
                     <?php
