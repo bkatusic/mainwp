@@ -51,8 +51,8 @@ class MainWP_Logger { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
     const LOG_COLOR     = '#999999';
     const DEBUG_COLOR   = '#666666';
     const INFO_COLOR    = '#276f86';
-    const NOTICE_COLOR  = '#eb7609;';
-    const WARNING_COLOR = '#9f3a38;';
+    const NOTICE_COLOR  = '#eb7609';
+    const WARNING_COLOR = '#9f3a38';
 
     /**
      * Private variable to hold time start.
@@ -551,10 +551,17 @@ class MainWP_Logger { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
 
         $type = false !== $log_type ? (int) $log_type : (int) $priority;
 
-        $data['log_content']   = $text;
-        $data['log_user']      = $user;
-        $data['log_type']      = $type;
-        $data['log_color']     = sanitize_hex_color( $log_color );
+        $data['log_content'] = $text;
+        $data['log_user']    = $user;
+        $data['log_type']    = $type;
+
+        if ( is_int( $log_color ) || ctype_digit( (string) $log_color ) ) {
+            $data['log_color'] = (int) $log_color;
+        } else {
+            $hex               = sanitize_hex_color( $log_color );
+            $data['log_color'] = $hex ? $hex : '';
+        }
+
         $data['log_timestamp'] = time();
 
         $data = apply_filters( 'mainwp_log_to_db_data', $data );
