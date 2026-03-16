@@ -795,14 +795,14 @@ class MainWP_Logger { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
      */
     public function log_execution_sync( $progress = '', $text = '' ) {
 
-        static $initinized = false;
+        static $initialized = false;
 
-        if ( 'init' === $progress && ! $initinized ) {
-            $initinized = true;
+        if ( 'init' === $progress && ! $initialized ) {
+            $initialized = true;
         }
 
         // If the process has ended and the sync event log is not initialized, do not log.
-        if ( 'end' === $progress && ! $initinized ) {
+        if ( 'end' === $progress && ! $initialized ) {
             return;
         }
 
