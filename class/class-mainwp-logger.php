@@ -786,12 +786,12 @@ class MainWP_Logger { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
     }
 
     /**
-     * Method log_execution_time().
+     * Method log_execution_sync().
      *
      * @param string $progress Log progress value.
      * @param string $text Log record text.
      *
-     * Log the execution time value.
+     * Log the execution sync time value.
      */
     public function log_execution_sync( $progress = '', $text = '' ) {
 
