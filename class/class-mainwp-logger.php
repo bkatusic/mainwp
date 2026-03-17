@@ -38,7 +38,7 @@ class MainWP_Logger { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Conte
     const DB_QUERIES_LOG_PRIORITY              = 20250827;
     const UNHOOKS_LOG_PRIORITY                 = 20250901;
     const WARM_CACHE_LOG_PRIORITY              = 20250915;
-    const EXTENSION_UPDATES_CHECK_LOG_PRIORITY = 2026306;
+    const EXTENSION_UPDATES_CHECK_LOG_PRIORITY = 20260306;
     const EXECUTION_SYNC_LOG_PRIORITY          = 20260316;
 
     const DISABLED = - 1;
