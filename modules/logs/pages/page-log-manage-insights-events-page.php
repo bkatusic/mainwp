@@ -202,9 +202,10 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
          */
         do_action( 'mainwp_logs_manage_table_top', 'recent_events' );
         ?>
-        <div id="mainwp-message-zone" style="display:none;" class="ui message"></div>
+        <div id="mainwp-message-zone" style="display:none;margin:2rem 2rem 0 2rem;" class="ui message"></div>
         <div id="mainwp-message-zone-top" style="display: none;" class="ui message"></div>
         <?php
+        $this->render_big_child_logs_db_notice();
         MainWP_UI::generate_wp_nonce( 'mainwp-admin-nonce' );
         $this->list_events_table->display();
 
@@ -220,6 +221,61 @@ class Log_Manage_Insights_Events_Page { // phpcs:ignore Generic.Classes.OpeningB
         </div>
         <?php
         $this->render_screen_options();
+    }
+
+    /**
+     * Method render_big_child_logs_db_notice()
+     *
+     * @return void
+     */
+    public function render_big_child_logs_db_notice() {
+        $child_logs_db_size = Log_DB_Helper::instance()->get_child_logs_db_size();
+        $big_db_size        = array();
+
+        if ( is_array( $child_logs_db_size ) ) {
+            foreach ( $child_logs_db_size as $website ) {
+                if ( ! isset( $website->dbsize_activitylogs ) ) {
+                    continue;
+                }
+                // Convert to MB.
+                $total_mb = $website->dbsize_activitylogs / 1048576;
+                $total_mb = round( $total_mb, 2 ); // e.g. 12.34 MB.
+
+                if ( $total_mb >= 25 ) { // if child logs db size is bigger than 25MB but not more than 100MB, show notice.
+                    $big_db_size[ $website->id ] = $website; // store big db size for notice at the end of loop.
+                }
+            }
+        }
+
+        if ( ! empty( $big_db_size ) ) {
+            ?>
+            <div class="ui padded segment">
+                <div class="ui message">
+                    <i class="close icon mainwp-notice-dismiss" notice-id="acts_logs_big_db_cleanup"></i>
+                    <div class="header"><?php esc_html_e( 'Network Activity tables need cleanup', 'mainwp' ); ?></div>
+                    <p><?php esc_html_e( 'These local Network Activity logs on child sites have grown large.', 'mainwp' ); ?></p>
+                    <p><?php esc_html_e( 'Before running cleanup, we recommend syncing the affected child site with your MainWP Dashboard and creating a database backup. Cleanup removes local log records from the child site only. If some records have not been synced yet, cleanup may permanently remove that unsynced data.', 'mainwp' ); ?></p>
+                    <div class="ui middle aligned divided list">
+                    <?php
+                    foreach ( $big_db_size as $site_id => $website ) {
+                        $color = ( $website->dbsize_activitylogs >= 100 * 1024 * 1024 ) ? 'red' : 'yellow';
+                        ?>
+                        <div class="red item">
+                            <div class="ui middle aligned grid">
+                                <div class="four wide column"><?php MainWP_Utility::mainwp_display_site( $website->id, true, true ); ?></div>
+                                <div class="two wide column"><span class="ui <?php echo esc_attr( $color ); ?> text"><?php echo esc_html( size_format( $website->dbsize_activitylogs ) ); ?></span></div>
+                                <div class="ten wide right aligned column"><a href="javascript:void(0)" class="mainwp-acts-logs-big-child-db-cleanup-btn ui mini basic button" data-siteid="<?php echo intval( $site_id ); ?>"><?php esc_html_e( 'Run Cleanup Now', 'mainwp' ); ?></a></div>
+                            </div>
+                        </div>
+                        <?php
+                    }
+                    ?>
+                    </div>
+                    <p><?php esc_html_e( 'To reduce future database growth, lower the Retention Period for Network Activity Logs Stored on Child Sites in MainWP > Settings > Network Activity Settings. Recommended retention for high-activity sites: 1–3 days.', 'mainwp' ); ?></p>
+                </div>
+            </div>
+            <?php
+        }
     }
 
     /**
