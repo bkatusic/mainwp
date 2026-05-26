@@ -2092,13 +2092,6 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         do_action( 'mainwp_updates_before_actions_bar' );
         ?>
 
-        <?php
-        $show_actions_bar = ( 'plugins-updates' === $current_tab && 0 < $total_plugin_upgrades )
-            || ( 'themes-updates' === $current_tab && 0 < $total_theme_upgrades )
-            || ( 'wordpress-updates' === $current_tab && 0 < $total_wp_upgrades )
-            || ( 'translations-updates' === $current_tab && 0 < $total_translation_upgrades )
-            || in_array( $current_tab, array( 'abandoned-plugins', 'abandoned-themes' ), true );
-        ?>
         <?php if ( ! $hide_show_updates_per || $show_select_staging_sites ) : ?>
             <?php if ( $show_updates_actions_bar ) : ?>
                 <div class="mainwp-sub-header">
@@ -2338,12 +2331,12 @@ class MainWP_Updates { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
                     static::set_continue_update_html_selector( 'plugins_global_upgrade_all' );
                     ?>
                     <a href="javascript:void(0)" onClick="updatesoverview_plugins_global_upgrade_all( false, true ); return false;" class="mainwp-update-selected-button ui mini green basic button"><?php esc_html_e( 'Update Selected Plugins', 'mainwp' ); ?></a>
-                    <a href="javascript:void(0)" onClick="updatesoverview_plugins_global_upgrade_all(); return false;" class="mainwp-update-all-button ui mini green button"><?php esc_html_e( 'Update All Sites', 'mainwp' ); ?></a>
+                    <a href="javascript:void(0)" onClick="updatesoverview_plugins_global_upgrade_all(); return false;" class="mainwp-update-all-button ui mini green button"><?php esc_html_e( 'Update All Plugins', 'mainwp' ); ?></a>
                     <?php
                 } else {
                     ?>
                     <a href="javascript:void(0)" class="mainwp-update-selected-button ui mini green basic disabled button" aria-disabled="true" tabindex="-1"><?php esc_html_e( 'Update Selected Plugins', 'mainwp' ); ?></a>
-                    <a href="javascript:void(0)" class="mainwp-update-all-button ui mini green disabled button" aria-disabled="true" tabindex="-1"><?php esc_html_e( 'Update All Sites', 'mainwp' ); ?></a>
+                    <a href="javascript:void(0)" class="mainwp-update-all-button ui mini green disabled button" aria-disabled="true" tabindex="-1"><?php esc_html_e( 'Update All Plugins', 'mainwp' ); ?></a>
                     <?php
                 }
             }

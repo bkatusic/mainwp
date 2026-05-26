@@ -1,13 +1,13 @@
-=== MainWP Dashboard: Self-hosted WordPress Management for Agencies  ===
+=== MainWP Dashboard: Self-hosted WordPress Management for Agencies ===
 Contributors: mainwp
 Tags: manage multiple WordPress sites, WordPress maintenance, update, backups, security
 Author: mainwp
 Author URI: https://mainwp.com
 Plugin URI: https://mainwp.com
 Requires at least: 6.2
-Tested up to: 6.9.4
+Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 6.0.12
+Stable tag: 6.1
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -41,7 +41,7 @@ All of this makes MainWP the best non-SaaS alternative to ManageWP, InfiniteWP, 
 
 MainWP is designed to be user-friendly and intuitive, even for those new to WordPress management plugins. With a straightforward setup process and a clean, organized dashboard, you'll be able to start managing your WordPress sites efficiently in no time.
 
-* Setting up MainWP is straightforward—install the dashboard on a private WordPress site, add the MainWP Child plugin to your other WordPress sites, and take control.
+* Setting up MainWP is straightforward, install the dashboard on a private WordPress site, add the MainWP Child plugin to your other WordPress sites, and take control.
 
 **Your Guarantee of Privacy**
 
@@ -54,10 +54,10 @@ MainWP Dashboard is [100% FREE](https://mainwp.com/mainwp-free-features/) and al
 We make money by offering [MainWP Pro](https://mainwp.com/signup/), which provides access to a wide range of premium add-ons. These premium add-ons are organized into two clear categories:
 
 - **Integrations:**
-  Add-ons in this category enable seamless connections with popular third-party services and plugins, allowing you to integrate the tools you already use directly into your MainWP Dashboard.
+ Add-ons in this category enable seamless connections with popular third-party services and plugins, allowing you to integrate the tools you already use directly into your MainWP Dashboard.
 
 - **Extensions:**
-  These are custom-built, standalone add-ons developed exclusively for the MainWP Dashboard, designed to add unique and specialized functionality to enhance your WordPress management experience.
+ These are custom-built, standalone add-ons developed exclusively for the MainWP Dashboard, designed to add unique and specialized functionality to enhance your WordPress management experience.
 
 For more details, visit our [Premium Add-ons](https://mainwp.com/mainwp-add-ons/) page and see how our free and pro features compare at [Free vs. Pro: Know the Difference](https://mainwp.com/free-vs-pro/).
 
@@ -147,6 +147,29 @@ Yes, we have a quick FAQ with many more questions and answers [here](https://mai
 11. Dashboard Insights
 
 == Changelog ==
+
+= 6.1 - 5-26-2026 =
+
+* Important: Version 6.1 includes internal connection handling changes. Rolling back to a version earlier than 6.1 may temporarily disconnect child sites from your MainWP Dashboard. If this happens, reconnect the affected sites from the Manage Sites page using the Reconnect bulk action.
+* Security: Strengthened protection for internal key files by replacing predictable file names with secure, non-guessable identifiers and tightening directory permissions for related storage locations.
+* Security: Improved protection of stored extension license keys by encrypting them at rest and avoiding unnecessary plaintext caching.
+* Security: Updated API credential fields to display masked placeholders instead of stored values, preventing sensitive keys from being exposed in page HTML.
+* Security: Removed sensitive authentication fields from REST API site responses to prevent credentials from being exposed through API requests.
+* Security: Improved REST API key storage by hashing new consumer secrets at rest while maintaining compatibility with existing keys.
+* Security: Removed unused legacy connection and API key handling paths, with safer comparison handling for any existing legacy records.
+* Fixed: Improved validation when restoring saved table layouts to ensure saved column structures match the current table, preventing broken or incorrect table displays after updates.
+* Fixed: Resolved an issue with saving plugin and theme notes on Auto Update pages.
+* Fixed: Resolved an issue with fetching child site favicons when connecting a site.
+* Fixed: Resolved an issue where installed plugin and theme names were not displayed in the Object column in Network Activity.
+* Fixed: Enhanced application stability by refining initialization conditions for admin notifications related to log database monitoring.
+* Fixed: Improved group visibility filtering to ensure users without management permissions only see groups they are authorized to access.
+* Fixed: Typos and inconsistencies in user login event log descriptions and action identifiers for improved clarity and consistency across Network Activity logs.
+* Updated: Improved code quality and internal handling in several areas.
+* Updated: Improved uptime column rendering in the sites list with intelligent caching for faster display of uptime information.
+* Updated: Updated the PHPSecLib library to the latest version.
+* Updated: Refreshed the light theme using the newer dark theme structure for improved consistency across the Dashboard UI.
+* Updated: Tuned the light theme shell, navigation, top bar, shadows, and client icon rendering for a more polished interface.
+* Updated: Improved the "Manage Updates" action for outdated themes in Site Hardening to open the relevant "Theme Updates" tab.
 
 = 6.0.12 - 5-5-2026 =
 

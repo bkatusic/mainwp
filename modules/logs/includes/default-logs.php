@@ -506,9 +506,9 @@ return array(
     // User.
     1570 => array(
         'type_id'     => 1570,
-        'desc'        => esc_html__( 'Successfully logged in', 'mainwp' ),
+        'desc'        => esc_html__( 'Successfully logged-in', 'mainwp' ),
         'context'     => 'user',
-        'action_name' => 'logined-in',
+        'action_name' => 'logged-in',
     ),
     1575 => array(
         'type_id'     => 1575,
@@ -520,7 +520,7 @@ return array(
         'type_id'     => 1580,
         'desc'        => esc_html__( 'Successful log in but other sessions exist for user', 'mainwp' ),
         'context'     => 'user',
-        'action_name' => 'logined-in',
+        'action_name' => 'logged-in',
     ),
     1585 => array(
         'type_id'     => 1585,
@@ -538,13 +538,13 @@ return array(
         'type_id'     => 1595,
         'desc'        => esc_html__( 'Switched to another user', 'mainwp' ),
         'context'     => 'user',
-        'action_name' => 'logined-in',
+        'action_name' => 'logged-in',
     ),
     1596 => array(
         'type_id'     => 1596,
         'desc'        => esc_html__( 'User login from dashboard', 'mainwp' ),
         'context'     => 'user',
-        'action_name' => 'logined-in',
+        'action_name' => 'logged-in',
     ),
     1600 => array(
         'type_id'     => 1600,
@@ -1004,6 +1004,7 @@ return array(
     1965 => array(
         'type_id'     => 1965,
         'desc'        => esc_html__( 'Plugin installed.', 'mainwp' ),
+        'object_msg'  => esc_html__( '%plugin% plugin', 'mainwp' ),
         'context'     => 'plugin',
         'action_name' => 'installed',
     ),
