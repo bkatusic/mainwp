@@ -432,6 +432,7 @@ class MainWP_Keys_Manager { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
     public static function register_migration_hooks() {
         add_action( 'mainwp_db_after_update', array( static::class, 'migrate_private_filenames' ), 10, 2 );
         add_action( 'mainwp_db_after_update', array( static::class, 'migrate_sibling_dir_perms' ), 10, 2 );
+        add_action( 'mainwp_db_after_update', array( static::class, 'fix_sibling_dir_perms_9023' ), 10, 2 );
     }
 
     /**
@@ -463,8 +464,8 @@ class MainWP_Keys_Manager { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
         }
 
         // Tighten directory permissions; 0700 preferred, 0750 if a shared web group needs read access.
-        if ( ! @chmod( $key_dir, 0700 ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors -- best-effort hardening.
-            @chmod( $key_dir, 0750 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors -- best-effort hardening.
+        if ( ! @chmod( $key_dir, 0700 ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort hardening.
+            @chmod( $key_dir, 0750 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort hardening.
         }
 
         // Rename legacy pk files to opaque HMAC-derived names.
@@ -519,7 +520,7 @@ class MainWP_Keys_Manager { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
         $base = rtrim( $dirs[0], '/\\' ) . DIRECTORY_SEPARATOR;
 
         // mainwp/ root: 0755 (public-asset convention, holds index.php + subdirs).
-        @chmod( rtrim( $base, '/\\' ), 0755 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors -- NOSONAR - best-effort hardening.
+        @chmod( rtrim( $base, '/\\' ), 0755 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort hardening.
 
         // Public-asset subdirs. cost-tracker-products-icons is module-specific (constant-gated)
         // but uses the same get_mainwp_dir(..., true) public pattern, so legacy installs that ran
@@ -527,7 +528,7 @@ class MainWP_Keys_Manager { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
         foreach ( array( 'icons', 'plugin-icons', 'theme-icons', 'client-images', 'site-icons', 'themes', 'cost-tracker-products-icons' ) as $sub ) {
             $p = $base . $sub;
             if ( is_dir( $p ) ) {
-                @chmod( $p, 0755 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors -- NOSONAR - best-effort hardening.
+                @chmod( $p, 0755 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort hardening.
             }
         }
 
@@ -535,7 +536,7 @@ class MainWP_Keys_Manager { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
         foreach ( array( 'cookies', 'templates', 'templates' . DIRECTORY_SEPARATOR . 'emails', 'bulk' ) as $sub ) {
             $p = $base . $sub;
             if ( is_dir( $p ) ) {
-                @chmod( $p, 0750 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors -- NOSONAR - best-effort hardening.
+                @chmod( $p, 0750 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort hardening.
             }
         }
 
@@ -543,20 +544,101 @@ class MainWP_Keys_Manager { // phpcs:ignore Generic.Classes.OpeningBraceSameLine
         // <siteid>/ dirs from get_mainwp_specific_dir($website->id), and any deeper paths
         // that backup_download_file() may have materialized via dirname($pFile) on legacy
         // installs with custom backup filenames. All private (0750).
-        $chmod_recursive = function ( $dir ) use ( &$chmod_recursive ) {
-            @chmod( $dir, 0750 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors -- NOSONAR - best-effort hardening.
-            $subs = @glob( $dir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR ); // phpcs:ignore WordPress.PHP.NoSilencedErrors -- NOSONAR - best-effort directory walk.
+
+        $public_access_dirs = array( 'favorites' );
+
+        $chmod_recursive = function ( $dir ) use ( &$chmod_recursive, $public_access_dirs ) {
+            @chmod( $dir, 0750 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort hardening.
+            $subs = @glob( $dir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort directory walk.
             if ( is_array( $subs ) ) {
                 foreach ( $subs as $s ) {
+                    if ( in_array( basename( $s ), $public_access_dirs, true ) ) {
+                        @chmod( $s, 0755 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort hardening.
+                        continue;
+                    }
                     $chmod_recursive( $s );
                 }
             }
         };
 
-        $userdirs = @glob( $base . '[0-9]*', GLOB_ONLYDIR ); // phpcs:ignore WordPress.PHP.NoSilencedErrors -- NOSONAR - best-effort directory walk.
+        $userdirs = @glob( $base . '[0-9]*', GLOB_ONLYDIR );  // phpcs:ignore WordPress.PHP.NoSilencedErrors -- NOSONAR - best-effort directory walk.
+
         if ( is_array( $userdirs ) ) {
             foreach ( $userdirs as $udir ) {
-                $chmod_recursive( $udir );
+                @chmod( $udir, 0751 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort hardening.
+                $subs = @glob( $udir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort directory walk.
+                if ( is_array( $subs ) ) {
+                    foreach ( $subs as $s ) {
+                        if ( in_array( basename( $s ), $public_access_dirs, true ) ) {
+                            @chmod( $s, 0755 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort hardening.
+                            continue;
+                        }
+                        $chmod_recursive( $s );
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Method fix_sibling_dir_perms_9023()
+     *
+     * One-time chmod sweep for MWP-1566: fix a small number of installs that ran the MWP-1558/1566
+     * follow-up sweep (MWP-1566) on.
+     *
+     * @param string $from_version Pre-upgrade mainwp_db_version.
+     * @param string $to_version   Post-upgrade mainwp_db_version.
+     *
+     * @return void
+     */
+    public static function fix_sibling_dir_perms_9023( $from_version, $to_version ) {
+
+        if ( empty( $from_version ) || version_compare( $from_version, '9.0.2.1', '<' ) || version_compare( $from_version, '9.0.2.3', '>=' ) ) {
+            return;
+        }
+
+        $dirs = MainWP_System_Utility::get_mainwp_dir();
+        if ( empty( $dirs[0] ) || ! is_dir( $dirs[0] ) ) {
+            return;
+        }
+        $base = rtrim( $dirs[0], '/\\' ) . DIRECTORY_SEPARATOR;
+
+        // Per-user dirs and all descendants: mainwp/<userid>/, /<userid>/bulk/, per-site
+        // <siteid>/ dirs from get_mainwp_specific_dir($website->id), and any deeper paths
+        // that backup_download_file() may have materialized via dirname($pFile) on legacy
+        // installs with custom backup filenames. All private (0750).
+
+        $public_access_dirs = array( 'favorites' );
+
+        $chmod_recursive = function ( $dir ) use ( &$chmod_recursive, $public_access_dirs ) {
+            @chmod( $dir, 0750 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort hardening.
+            $subs = @glob( $dir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR ); // phpcs:ignore WordPress.PHP.NoSilencedErrors -- NOSONAR - best-effort directory walk.
+            if ( is_array( $subs ) ) {
+                foreach ( $subs as $s ) {
+                    if ( in_array( basename( $s ), $public_access_dirs, true ) ) {
+                        @chmod( $s, 0755 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort hardening.
+                        continue;
+                    }
+                    $chmod_recursive( $s );
+                }
+            }
+        };
+
+        $userdirs = @glob( $base . '[0-9]*', GLOB_ONLYDIR );  // phpcs:ignore WordPress.PHP.NoSilencedErrors -- NOSONAR - best-effort directory walk.
+
+        if ( is_array( $userdirs ) ) {
+            foreach ( $userdirs as $udir ) {
+                @chmod( $udir, 0751 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort hardening.
+                $subs = @glob( $udir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort directory walk.
+                if ( is_array( $subs ) ) {
+                    foreach ( $subs as $s ) {
+                        if ( in_array( basename( $s ), $public_access_dirs, true ) ) {
+                            @chmod( $s, 0755 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors,WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- NOSONAR - best-effort hardening.
+                            continue;
+                        }
+                        $chmod_recursive( $s );
+                    }
+                }
             }
         }
     }
