@@ -891,10 +891,6 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
                     );
                 }
 
-                if ( ! empty( $updated_status['wp'] ) ) {
-                    continue; // updated ?.
-                }
-
                 $updated_status['auto_updates_processed']['wp'] = $info;
 
                 // Clear previous errors before processing.
