@@ -329,7 +329,7 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
                     $_update_now = true;
                 }
 
-                if ( $_update_now && empty( $updated_status['wp'] ) ) {
+                if ( $_update_now && ( empty( $updated_status['wp'] ) || empty( $updated_status['wp']['lasttime_error'] ) || ( ! empty( $updated_status['wp']['lasttime_error'] ) && (int) $updated_status['wp']['lasttime_error'] + 6 * HOUR_IN_SECONDS < time() ) ) ) {
                     $coreToUpdateNow[ $website->id ] = $item;
                     ++$found_updates;
                 }
@@ -896,6 +896,16 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
                 }
 
                 $updated_status['auto_updates_processed']['wp'] = $info;
+
+                // Clear previous errors before processing.
+                if ( isset( $updated_status['wp']['error'] ) ) {
+                    unset( $updated_status['wp']['error'] );
+                }
+
+                if ( isset( $updated_status['wp']['lasttime_error'] ) ) {
+                    unset( $updated_status['wp']['lasttime_error'] );
+                }
+
                 MainWP_DB::instance()->update_website_option( $websiteId, 'bulk_updates_info', wp_json_encode( $updated_status ) );
 
                 MainWP_Logger::instance()->log_update_check( 'Automatic updates core [siteid=' . $websiteId . ']' );
@@ -907,7 +917,8 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
                     MainWP_Updates_Handler::activity_log_upgrade( $website, $upgrade_information );
 
                 } catch ( \Exception $e ) {
-                    $updated_status['wp']['error'] = $e->getMessage();
+                    $updated_status['wp']['error']          = $e->getMessage();
+                    $updated_status['wp']['lasttime_error'] = time();
                     MainWP_DB::instance()->update_website_option( $website, 'bulk_updates_info', wp_json_encode( $updated_status ) );
                 }
             }
