@@ -151,8 +151,8 @@ function mainwp_search_in_array( $data, $search_str, $params = array() ) { //php
                         } else {
                             $results[] = $value;
                         }
+                        break;
                     }
-                    break;
                 }
             }
         }
