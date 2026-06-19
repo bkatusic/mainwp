@@ -75,9 +75,11 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
         if ( $auto_updates_running ) {
             $start_time = get_option( 'mainwp_automatic_updates_start_lasttime', 0 );
             if ( ! empty( $start_time ) && $local_timestamp > (int) $start_time + 4 * HOUR_IN_SECONDS ) {
+                MainWP_Logger::instance()->log_events( 'debug-updates-crons', 'Auto Updates: Stopped — timeout reached.' );
                 $this->finished_auto_updates();
                 return false;
             }
+            MainWP_Logger::instance()->log_events( 'debug-updates-crons', 'Auto Updates: Running.' );
             return true;
         } else {
             $time_to_auto_updates = get_option( 'mainwp_automatic_update_next_run_timestamp', 0 );
@@ -106,6 +108,7 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
                     MainWP_DB::instance()->update_website_option( $website, 'bulk_updates_info', wp_json_encode( array() ) );
                 }
                 MainWP_DB::free_result( $websites );
+                MainWP_Logger::instance()->log_events( 'debug-updates-crons', 'Auto Updates: Starting run.' );
                 return true;
             }
         }
@@ -144,6 +147,7 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
             $this->finished_auto_updates();
             MainWP_Logger::instance()->info( 'Automatic updates finished' );
             MainWP_Logger::instance()->log_update_check( 'Automatic updates finished' );
+            MainWP_Logger::instance()->log_events( 'debug-updates-crons', 'Auto Updates: Finished.' );
 
             // Legacy logs.
             if ( ! empty( $lasttime_start ) ) {
@@ -299,6 +303,14 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
             if ( ! is_array( $updated_status ) ) {
                 $updated_status = array();
             }
+
+            MainWP_Logger::instance()->log_events(
+                'debug-updates-crons',
+                'Auto Updates: site: [siteid=' . intval( $website->id ) . '] :: bulk_updates_info :: ' . print_r( // phpcs:ignore -- NOSONAR - debug mode only.
+                    $updated_status,
+                    true
+                )
+            );
 
             if ( ! isset( $updated_status['auto_updates_processed'] ) ) {
                 $updated_status['auto_updates_processed'] = array(
@@ -614,6 +626,14 @@ class MainWP_Cron_Jobs_Auto_Updates { // phpcs:ignore Generic.Classes.OpeningBra
         } else {
             $sitesCheckCompleted = null;
         }
+
+        MainWP_Logger::instance()->log_events(
+            'debug-updates-crons',
+            'Auto Updates: Starting process :: ' . print_r( // phpcs:ignore -- NOSONAR - debug mode only.
+                compact( 'coreToUpdateNow', 'pluginsToUpdateNow', 'themesToUpdateNow', 'transToUpdateNow' ),
+                true
+            )
+        );
 
         /**  Auto updates part. */
         if ( 1 === (int) $plugin_automaticDailyUpdate ) {
