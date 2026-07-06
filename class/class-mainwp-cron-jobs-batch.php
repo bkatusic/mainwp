@@ -349,7 +349,7 @@ class MainWP_Cron_Jobs_Batch { // phpcs:ignore Generic.Classes.OpeningBraceSameL
             }
 
             // batch processing limits.
-            if ( $count_processed_now < $items_limit && ! empty( $coreToUpdate ) && empty( $updated_status['wp'] ) ) {
+            if ( $count_processed_now < $items_limit && ! empty( $coreToUpdate ) ) {
 
                 $info = $coreToUpdate;
 
