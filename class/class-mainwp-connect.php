@@ -206,8 +206,13 @@ class MainWP_Connect { // phpcs:ignore Generic.Classes.OpeningBraceSameLine.Cont
         $ip     = false;
         $target = false;
 
+        // Ask only for the record types read below. dns_get_record() defaults to DNS_ANY, which
+        // most resolvers now refuse or answer with a stub (RFC 8482), so it buys retries and
+        // timeouts instead of answers. Names that exist only in the hosts file are not resolved
+        // here at all -- dns_get_record() never reads the hosts file -- they fall through to the
+        // gethostbynamel() call below.
         $found     = false;
-        $dnsRecord = @dns_get_record( $host );
+        $dnsRecord = @dns_get_record( $host, DNS_A | DNS_AAAA | DNS_CNAME );
         MainWP_Logger::instance()->debug( ' :: tryVisit :: [dnsRecord=' . MainWP_Utility::value_to_string( $dnsRecord, 1 ) . ']' );
 
         if ( false !== $dnsRecord && is_array( $dnsRecord ) ) {
